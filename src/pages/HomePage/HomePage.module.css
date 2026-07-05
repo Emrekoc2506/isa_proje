@@ -1,0 +1,12 @@
+/* ============================================================
+   HOME PAGE
+   ============================================================ */
+
+.main {
+  min-height: 100vh;
+}
+
+/* Sale bölümü için farklı arka plan */
+.saleSection {
+  background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-mid) 50%, var(--bg-dark) 100%);
+}

@@ -1,0 +1,228 @@
+/* ============================================================
+   HERO SLIDER — Mystik Dark Gold
+   ============================================================ */
+
+.slider {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border-gold);
+}
+
+.track {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 5.5;
+  min-height: 320px;
+  max-height: 540px;
+  overflow: hidden;
+}
+
+/* ── Slide ──────────────────────────────────────────────────── */
+
+.slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.slideImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* ── Overlay — Mistik gradient karartma ─────────────────────── */
+
+.slideOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(18, 9, 31, 0.8) 0%,
+    rgba(18, 9, 31, 0.4) 50%,
+    rgba(18, 9, 31, 0.1) 100%
+  );
+}
+
+/* ── Slide İçeriği ──────────────────────────────────────────── */
+
+.slideContent {
+  position: absolute;
+  top: 50%;
+  left: 8%;
+  transform: translateY(-50%);
+  max-width: 500px;
+  z-index: 2;
+}
+
+.slideSubtitle {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-sm);
+  font-family: var(--font-primary);
+}
+
+.slideTitle {
+  font-family: var(--font-heading);
+  font-size: clamp(24px, 4vw, 48px);
+  font-weight: 700;
+  color: var(--text-white);
+  line-height: 1.2;
+  margin-bottom: var(--space-lg);
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  letter-spacing: 0.03em;
+}
+
+.slideCta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--bg-deep);
+  padding: 12px var(--space-xl);
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: var(--text-base);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    transform var(--transition-spring),
+    box-shadow var(--transition-base),
+    background var(--transition-base);
+  box-shadow: 0 4px 20px rgba(201, 162, 39, 0.4);
+}
+
+.slideCta:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 30px rgba(201, 162, 39, 0.6);
+  color: var(--bg-deep);
+}
+
+.ctaArrow {
+  transition: transform var(--transition-base);
+}
+
+.slideCta:hover .ctaArrow {
+  transform: translateX(4px);
+}
+
+/* ── Navigasyon Butonları ────────────────────────────────────── */
+
+.navBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  background: rgba(18, 9, 31, 0.7);
+  color: var(--gold);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-circle);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-spring),
+    box-shadow var(--transition-base);
+  backdrop-filter: blur(8px);
+}
+
+.navBtn:hover {
+  background: var(--gold);
+  color: var(--bg-deep);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: var(--shadow-gold);
+}
+
+.prevBtn { left: var(--space-md); }
+.nextBtn { right: var(--space-md); }
+
+/* ── Pagination Dots ─────────────────────────────────────────── */
+
+.pagination {
+  position: absolute;
+  bottom: var(--space-md);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-sm);
+  z-index: 3;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-circle);
+  background: rgba(255,255,255,0.35);
+  border: 1px solid rgba(201, 162, 39, 0.4);
+  cursor: pointer;
+  transition:
+    width var(--transition-base),
+    background var(--transition-base);
+}
+
+.dotActive {
+  width: 28px;
+  background: var(--gold);
+  border-color: var(--gold);
+  border-radius: 4px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .track {
+    aspect-ratio: 4 / 3;
+    max-height: 400px;
+  }
+
+  .slideOverlay {
+    background: linear-gradient(
+      to top,
+      rgba(18, 9, 31, 0.9) 0%,
+      rgba(18, 9, 31, 0.3) 60%,
+      rgba(18, 9, 31, 0.1) 100%
+    );
+  }
+
+  .slideContent {
+    top: auto;
+    bottom: var(--space-2xl);
+    left: var(--space-md);
+    transform: none;
+    max-width: calc(100% - 2 * var(--space-md));
+  }
+
+  .slideTitle {
+    font-size: clamp(20px, 5vw, 30px);
+  }
+
+  .navBtn {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .track {
+    aspect-ratio: 1;
+    max-height: 320px;
+  }
+}

@@ -1,0 +1,95 @@
+/* ============================================================
+   AROMANTRA — MYSTIK DARK GOLD TEMA
+   Renk paleti: örnek resim (mysticvelorastore) bazlı
+   ============================================================ */
+
+:root {
+  /* ── Arka Plan Renkleri ─────────────────────────────────── */
+  --bg-deep:        #12091F;   /* Koyu gece / derin mor-siyah */
+  --bg-dark:        #1C0F35;   /* Section arkaplanı           */
+  --bg-mid:         #2A1845;   /* Kart arka planı             */
+  --bg-light:       #3D2060;   /* Hover, vurgu                */
+  --bg-overlay:     rgba(18, 9, 31, 0.85);
+
+  /* ── Altın Tonları (Gold) ───────────────────────────────── */
+  --gold:           #C9A227;   /* Ana altın                   */
+  --gold-light:     #E8C547;   /* Parlak altın                */
+  --gold-pale:      #F5DFA0;   /* Soluk altın                 */
+  --gold-dark:      #9B7A18;   /* Koyu altın                  */
+  --gold-glow:      rgba(232, 197, 71, 0.25);
+  --gold-border:    rgba(201, 162, 39, 0.35);
+
+  /* ── Metin Renkleri ─────────────────────────────────────── */
+  --text-primary:   #EDE0C8;   /* Warm cream                  */
+  --text-secondary: #A89BC2;   /* Açık mor                    */
+  --text-muted:     #6B5A85;   /* Soluk                       */
+  --text-gold:      #C9A227;   /* Altın metin                 */
+  --text-white:     #FFFFFF;
+
+  /* ── Vurgu / Aksan Renkleri ─────────────────────────────── */
+  --accent-purple:  #7B4EA6;   /* Mor vurgu                   */
+  --nebula-red:     #8B2252;   /* Discount badge              */
+  --nebula-blue:    #1A1060;   /* Mavi nebula                 */
+  --star-pink:      #C45079;   /* Yıldız pembesi              */
+
+  /* ── Kenarlık ───────────────────────────────────────────── */
+  --border-dark:    rgba(61, 32, 96, 0.6);
+  --border-gold:    rgba(201, 162, 39, 0.35);
+  --border-mid:     rgba(168, 155, 194, 0.15);
+
+  /* ── Gölgeler ───────────────────────────────────────────── */
+  --shadow-card:    0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-gold:    0 0 20px rgba(201, 162, 39, 0.3);
+  --shadow-hover:   0 8px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(201, 162, 39, 0.2);
+  --shadow-header:  0 2px 20px rgba(0, 0, 0, 0.6);
+
+  /* ── Tipografi ──────────────────────────────────────────── */
+  --font-primary:   'Roboto', 'Segoe UI', sans-serif;
+  --font-heading:   'Cinzel', 'Roboto', serif;   /* Mystik heading fontu */
+  --font-body:      'Roboto', sans-serif;
+
+  --text-xs:        11px;
+  --text-sm:        13px;
+  --text-base:      14px;
+  --text-md:        15px;
+  --text-lg:        18px;
+  --text-xl:        22px;
+  --text-2xl:       26px;
+  --text-3xl:       32px;
+  --text-4xl:       42px;
+
+  /* ── Spacing ─────────────────────────────────────────────── */
+  --space-xs:       4px;
+  --space-sm:       8px;
+  --space-md:       16px;
+  --space-lg:       24px;
+  --space-xl:       32px;
+  --space-2xl:      48px;
+  --space-3xl:      64px;
+
+  /* ── Border Radius ───────────────────────────────────────── */
+  --radius-sm:      4px;
+  --radius-md:      8px;
+  --radius-lg:      12px;
+  --radius-xl:      20px;
+  --radius-pill:    50px;
+  --radius-circle:  50%;
+
+  /* ── Geçiş / Animasyon ───────────────────────────────────── */
+  --transition-fast:    0.15s ease;
+  --transition-base:    0.25s ease;
+  --transition-slow:    0.4s ease;
+  --transition-spring:  0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Container ───────────────────────────────────────────── */
+  --container-max:  1200px;
+  --container-pad:  16px;
+
+  /* ── Z-index katmanları ──────────────────────────────────── */
+  --z-base:     1;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  300;
+  --z-modal:    400;
+  --z-toast:    500;
+}

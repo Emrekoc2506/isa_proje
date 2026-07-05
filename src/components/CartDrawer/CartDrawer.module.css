@@ -1,0 +1,353 @@
+/* ============================================================
+   CART DRAWER — Mystic Dark Gold
+   ============================================================ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: calc(var(--z-modal) - 1);
+  backdrop-filter: blur(4px);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  max-width: 100vw;
+  background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-deep) 100%);
+  border-left: 1px solid var(--border-gold);
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Başlık ─────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-lg) var(--space-xl);
+  border-bottom: 1px solid var(--border-gold);
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.headerIcon {
+  font-size: 24px;
+  color: var(--gold);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--gold-pale);
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.closeBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-circle);
+  background: var(--bg-mid);
+  border: 1px solid var(--border-gold);
+  color: var(--text-secondary);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    color var(--transition-base),
+    background var(--transition-base);
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  color: var(--gold-light);
+  background: var(--bg-light);
+}
+
+/* ── Ürün Listesi ───────────────────────────────────────────── */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md) var(--space-xl);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-gold) transparent;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  height: 100%;
+  text-align: center;
+  padding: var(--space-3xl) 0;
+}
+
+.emptyIcon {
+  font-size: 56px;
+  opacity: 0.4;
+}
+
+.emptyText {
+  font-size: var(--text-md);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.continueBtn {
+  background: none;
+  border: 1px solid var(--border-gold);
+  color: var(--gold);
+  padding: 10px var(--space-xl);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+}
+
+.continueBtn:hover {
+  background: rgba(201, 162, 39, 0.1);
+  color: var(--gold-light);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ── Ürün Satırı ────────────────────────────────────────────── */
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  transition: border-color var(--transition-base);
+}
+
+.item:hover {
+  border-color: var(--border-gold);
+}
+
+.itemImg {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  background: var(--bg-mid);
+  flex-shrink: 0;
+  padding: 4px;
+}
+
+.itemInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itemName {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.itemPrice {
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  color: var(--gold-light);
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Miktar */
+.qtyRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: 4px;
+}
+
+.qtyBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-circle);
+  background: var(--bg-mid);
+  border: 1px solid var(--border-gold);
+  color: var(--gold);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+  flex-shrink: 0;
+}
+
+.qtyBtn:hover {
+  background: var(--gold);
+  color: var(--bg-deep);
+  border-color: var(--gold);
+}
+
+.qty {
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--gold-pale);
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Sil */
+.removeBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-circle);
+  background: none;
+  border: 1px solid rgba(139, 34, 82, 0.25);
+  color: var(--text-muted);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    color var(--transition-base),
+    background var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.removeBtn:hover {
+  color: #e05594;
+  background: rgba(139, 34, 82, 0.12);
+  border-color: #e05594;
+}
+
+/* ── Alt Bölüm ──────────────────────────────────────────────── */
+.footer {
+  padding: var(--space-lg) var(--space-xl) var(--space-xl);
+  border-top: 1px solid var(--border-gold);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background: rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.totalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-mid);
+}
+
+.totalLabel {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.totalValue {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--gold-light);
+  font-weight: 700;
+}
+
+.checkoutBtn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--bg-deep);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-spring);
+  box-shadow: 0 4px 20px rgba(201, 162, 39, 0.35);
+}
+
+.checkoutBtn:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  box-shadow: 0 8px 30px rgba(201, 162, 39, 0.5);
+  transform: translateY(-1px);
+}
+
+.clearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: 1px solid rgba(139, 34, 82, 0.3);
+  border-radius: var(--radius-pill);
+  color: #e05594;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.clearBtn:hover {
+  background: rgba(139, 34, 82, 0.1);
+  border-color: #e05594;
+}
+
+@media (max-width: 480px) {
+  .drawer {
+    width: 100vw;
+  }
+}

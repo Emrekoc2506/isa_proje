@@ -1,0 +1,246 @@
+/* ============================================================
+   CATEGORY NAV — Mystik Dark Gold
+   ============================================================ */
+
+.nav {
+  background: linear-gradient(180deg, var(--bg-mid), var(--bg-dark));
+  border-bottom: 1px solid var(--border-gold);
+  position: sticky;
+  top: 85px; /* header yüksekliği kadar */
+  z-index: calc(var(--z-sticky) - 1);
+}
+
+.inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Nav Item ─────────────────────────────────────────────── */
+
+.item {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 14px var(--space-sm);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    color var(--transition-base),
+    background var(--transition-base);
+  border-bottom: 2px solid transparent;
+  letter-spacing: 0.02em;
+}
+
+.link:hover,
+.link.active {
+  color: var(--gold-light);
+  border-bottom-color: var(--gold);
+}
+
+.chevron {
+  font-size: 12px;
+  transition: transform var(--transition-base);
+  opacity: 0.7;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Dropdown ────────────────────────────────────────────── */
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 1px);
+  left: 0;
+  min-width: 200px;
+  background: var(--bg-mid);
+  border: 1px solid var(--border-gold);
+  border-top: 2px solid var(--gold);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(201,162,39,0.1);
+  overflow: hidden;
+  z-index: var(--z-dropdown);
+}
+
+.dropdownLink {
+  display: block;
+  padding: 10px var(--space-md);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition:
+    color var(--transition-base),
+    background var(--transition-base),
+    padding-left var(--transition-base);
+  border-bottom: 1px solid var(--border-mid);
+}
+
+.dropdownLink:last-child {
+  border-bottom: none;
+}
+
+.dropdownLink:hover {
+  color: var(--gold-light);
+  background: var(--bg-light);
+  padding-left: var(--space-lg);
+}
+
+/* ── Mobil Overlay ───────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: calc(var(--z-overlay) - 1);
+  backdrop-filter: blur(4px);
+}
+
+/* ── Mobil Panel ─────────────────────────────────────────── */
+
+.mobilePanel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(320px, 90vw);
+  background: var(--bg-dark);
+  border-right: 1px solid var(--border-gold);
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.mobilePanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border-gold);
+  background: var(--bg-mid);
+}
+
+.mobilePanelTitle {
+  font-family: var(--font-heading);
+  color: var(--gold-light);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.mobileClose {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-base);
+}
+
+.mobileClose:hover {
+  color: var(--gold-light);
+}
+
+.mobileList {
+  padding: var(--space-sm) 0;
+}
+
+.mobileItem {
+  border-bottom: 1px solid var(--border-mid);
+}
+
+.mobileDetails {
+  width: 100%;
+}
+
+.mobileDetails[open] .mobileChevron {
+  transform: rotate(180deg);
+}
+
+.mobileSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  list-style: none;
+  cursor: pointer;
+}
+
+.mobileSummary::-webkit-details-marker {
+  display: none;
+}
+
+.mobileSummary a {
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+
+.mobileSummary:hover a {
+  color: var(--gold-light);
+}
+
+.mobileChevron {
+  color: var(--text-muted);
+  font-size: 14px;
+  transition: transform var(--transition-base);
+}
+
+.mobileSub {
+  background: var(--bg-mid);
+  padding: var(--space-xs) 0;
+}
+
+.mobileSubLink {
+  display: block;
+  padding: 10px var(--space-xl);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+
+.mobileSubLink:hover {
+  color: var(--gold);
+}
+
+/* ── Nav Responsive ────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .nav {
+    display: none; /* mobil menü panel ile değiştirildi */
+  }
+}
+
+@media (min-width: 769px) {
+  .overlay,
+  .mobilePanel {
+    display: none;
+  }
+}

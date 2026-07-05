@@ -1,0 +1,620 @@
+/* ============================================================
+   AUTH PAGE — Login & Register — Mystic Dark Gold
+   ============================================================ */
+
+/* ── Tam sayfa arka plan ────────────────────────────────────── */
+.page {
+  min-height: 100vh;
+  background: var(--bg-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl) var(--space-md);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Dekoratif parlayan küreler ─────────────────────────────── */
+.bgOrb1,
+.bgOrb2,
+.bgOrb3 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+.bgOrb1 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(201, 162, 39, 0.15) 0%, transparent 70%);
+  top: -100px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.bgOrb2 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(103, 58, 183, 0.2) 0%, transparent 70%);
+  bottom: -80px;
+  right: -80px;
+  animation-delay: 1.5s;
+}
+
+.bgOrb3 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(139, 34, 82, 0.15) 0%, transparent 70%);
+  top: 50%;
+  right: 20%;
+  animation-delay: 3s;
+}
+
+/* ── İçerik Sarmalayıcı ────────────────────────────────────── */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xl);
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+}
+
+/* ── Logo ───────────────────────────────────────────────────── */
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  text-decoration: none;
+}
+
+.logoImg {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(1.1) saturate(0.8);
+}
+
+.brandName {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 0.05em;
+}
+
+/* ── Kart ───────────────────────────────────────────────────── */
+.card {
+  width: 100%;
+  background: linear-gradient(
+    145deg,
+    rgba(30, 18, 50, 0.95) 0%,
+    rgba(22, 12, 38, 0.98) 100%
+  );
+  border: 1px solid var(--border-gold);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(201, 162, 39, 0.1),
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 80px rgba(201, 162, 39, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+}
+
+/* ── Sekmeler ───────────────────────────────────────────────── */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+  border-bottom: 1px solid var(--border-gold);
+  background: rgba(18, 9, 31, 0.6);
+}
+
+.tab {
+  padding: 16px var(--space-md);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color var(--transition-base);
+  position: relative;
+  z-index: 1;
+}
+
+.tab:hover {
+  color: var(--gold);
+}
+
+.tabActive {
+  color: var(--gold-light);
+}
+
+/* Kayan gösterge çizgisi */
+.tabIndicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 0 8px rgba(201, 162, 39, 0.6);
+}
+
+/* ── Form ───────────────────────────────────────────────────── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-2xl) var(--space-xl) var(--space-xl);
+}
+
+.formTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--gold-pale);
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.formSub {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: -8px 0 var(--space-sm);
+  letter-spacing: 0.03em;
+}
+
+/* ── Input Kutusu ───────────────────────────────────────────── */
+.inputBox {
+  position: relative;
+  width: 100%;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 16px;
+  pointer-events: none;
+  transition: color var(--transition-base);
+  z-index: 1;
+}
+
+.input {
+  width: 100%;
+  padding: 16px 48px 16px 42px;
+  background: rgba(255, 255, 255, 0.03);
+  border: none;
+  border-left: 2px solid var(--border-gold);
+  border-bottom: 2px solid var(--border-gold);
+  border-bottom-left-radius: 8px;
+  border-radius: 0 8px 8px 0;
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-family: var(--font-primary);
+  outline: none;
+  transition:
+    border-color 0.4s ease,
+    background 0.3s ease,
+    border-radius 0.3s ease;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: transparent;
+}
+
+/* Label — animasyonlu float */
+.label {
+  position: absolute;
+  left: 42px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  transition: all 0.4s ease;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* Input dolu veya odaklanmış → label yukarı uçar */
+.input:valid ~ .label,
+.input:focus ~ .label {
+  top: 0;
+  left: auto;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 0.7em;
+  letter-spacing: 0.15em;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--bg-deep);
+  font-weight: 700;
+}
+
+/* Input odaklanmış → tam border ve yuvarlak */
+.input:valid,
+.input:focus {
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  background: rgba(201, 162, 39, 0.05);
+}
+
+.input:focus ~ .inputIcon {
+  color: var(--gold);
+}
+
+/* Alt çizgi efekti */
+.inputLine {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+  transition: width 0.4s ease;
+  border-radius: 0 0 0 8px;
+}
+
+/* ── Göz Butonu ─────────────────────────────────────────────── */
+.eyeBtn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  transition: color var(--transition-base);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+}
+
+.eyeBtn:hover {
+  color: var(--gold);
+}
+
+/* ── Şifremi unuttum ────────────────────────────────────────── */
+.forgotLink {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-decoration: none;
+  text-align: right;
+  letter-spacing: 0.03em;
+  transition: color var(--transition-base);
+  margin-top: -8px;
+}
+
+.forgotLink:hover {
+  color: var(--gold);
+}
+
+/* ── Gönder Butonu ──────────────────────────────────────────── */
+.submitBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: 14px var(--space-xl);
+  background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 50%, var(--gold-light) 100%);
+  background-size: 200% 100%;
+  color: var(--bg-deep);
+  border: none;
+  border-radius: 50px;
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: var(--space-sm);
+  box-shadow:
+    0 4px 20px rgba(201, 162, 39, 0.4),
+    0 0 40px rgba(201, 162, 39, 0.1);
+  transition:
+    background-position 0.4s ease,
+    box-shadow var(--transition-base);
+}
+
+.submitBtn:hover {
+  background-position: right center;
+  box-shadow:
+    0 8px 30px rgba(201, 162, 39, 0.6),
+    0 0 60px rgba(201, 162, 39, 0.2);
+}
+
+.btnArrow {
+  font-size: 18px;
+  transition: transform var(--transition-base);
+}
+
+.submitBtn:hover .btnArrow {
+  transform: translateX(4px);
+}
+
+/* ── Geçiş Metni ────────────────────────────────────────────── */
+.switchText {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-mid);
+}
+
+.switchBtn {
+  background: none;
+  border: none;
+  color: var(--gold);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition:
+    color var(--transition-base),
+    text-decoration-color var(--transition-base);
+}
+
+.switchBtn:hover {
+  color: var(--gold-light);
+  text-decoration-color: var(--gold-light);
+}
+
+/* ── Giriş Hata Mesajı ──────────────────────────────────────── */
+.loginErrorMsg {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  background: rgba(139, 34, 82, 0.12);
+  border: 1px solid rgba(139, 34, 82, 0.35);
+  border-radius: var(--radius-md);
+  padding: 10px var(--space-md);
+  font-size: var(--text-xs);
+  color: #e05594;
+  line-height: 1.5;
+}
+
+.loginErrorMsg svg {
+  flex-shrink: 0;
+  font-size: 15px;
+  margin-top: 1px;
+}
+
+.loginErrorMsg strong {
+  color: var(--gold);
+  font-family: var(--font-heading);
+  letter-spacing: 0.05em;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .form {
+    padding: var(--space-xl) var(--space-md) var(--space-lg);
+  }
+
+  .formTitle {
+    font-size: var(--text-xl);
+  }
+
+  .brandName {
+    font-size: 20px;
+  }
+}
+
+/* ============================================================
+   E-POSTA DOĞRULAMA EKRANı
+   ============================================================ */
+
+/* ── Geri Butonu ────────────────────────────────────────────── */
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: var(--space-sm);
+  transition: color var(--transition-base);
+  letter-spacing: 0.03em;
+}
+
+.backBtn:hover {
+  color: var(--gold);
+}
+
+/* ── E-posta İkon Sarmalayıcı ────────────────────────────────── */
+.verifyIconWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-md);
+}
+
+.verifyIconBg {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(201, 162, 39, 0.15), rgba(103, 58, 183, 0.2));
+  border: 1px solid var(--border-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px rgba(201, 162, 39, 0.2);
+  animation: glow-pulse 2.5s ease-in-out infinite;
+}
+
+.verifyIcon {
+  font-size: 30px;
+  color: var(--gold-light);
+}
+
+/* ── Demo Bilgi Bandı ─────────────────────────────────────────── */
+.demoBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: linear-gradient(135deg, rgba(201, 162, 39, 0.1), rgba(103, 58, 183, 0.1));
+  border: 1px dashed var(--border-gold);
+  border-radius: var(--radius-md);
+  padding: 10px var(--space-md);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-sm);
+}
+
+.demoBadgeIcon {
+  color: var(--gold);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.demoBadge strong {
+  color: var(--gold-light);
+  font-family: var(--font-heading);
+  letter-spacing: 0.15em;
+}
+
+/* ── OTP Satırı ─────────────────────────────────────────────── */
+.otpRow {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  margin: var(--space-md) 0 var(--space-xs);
+}
+
+/* Shake animasyonu */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-8px); }
+  30%       { transform: translateX(8px); }
+  45%       { transform: translateX(-6px); }
+  60%       { transform: translateX(6px); }
+  75%       { transform: translateX(-4px); }
+  90%       { transform: translateX(4px); }
+}
+
+.otpShake {
+  animation: shake 0.5s ease forwards;
+}
+
+/* ── OTP Tek Hücre ──────────────────────────────────────────── */
+.otpInput {
+  width: 52px;
+  height: 60px;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--gold-light);
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  outline: none;
+  caret-color: var(--gold);
+  transition:
+    border-color var(--transition-base),
+    background var(--transition-base),
+    box-shadow var(--transition-base),
+    transform 0.15s ease;
+}
+
+.otpInput:focus {
+  border-color: var(--gold);
+  background: rgba(201, 162, 39, 0.08);
+  box-shadow: 0 0 0 3px var(--gold-glow), 0 0 20px rgba(201, 162, 39, 0.15);
+  transform: scale(1.08);
+}
+
+.otpFilled {
+  border-color: var(--gold);
+  background: rgba(201, 162, 39, 0.06);
+}
+
+.otpError {
+  border-color: var(--nebula-red) !important;
+  background: rgba(139, 34, 82, 0.1) !important;
+  color: #e05594 !important;
+  box-shadow: 0 0 0 2px rgba(139, 34, 82, 0.3) !important;
+}
+
+/* ── Hata Mesajı ────────────────────────────────────────────── */
+.errorMsg {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: #e05594;
+  letter-spacing: 0.03em;
+  margin: 0;
+}
+
+.errorMsg strong {
+  font-family: var(--font-heading);
+  letter-spacing: 0.15em;
+  color: var(--gold);
+}
+
+/* ── Submit devre dışı ──────────────────────────────────────── */
+.submitBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Başarı Ekranı ──────────────────────────────────────────── */
+.successBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-md);
+  padding: var(--space-md) 0;
+}
+
+.successIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(14, 138, 86, 0.2), rgba(201, 162, 39, 0.15));
+  border: 2px solid #0e8a56;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: #2ecc71;
+  box-shadow: 0 0 40px rgba(46, 204, 113, 0.25);
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@media (max-width: 480px) {
+  .otpInput {
+    width: 42px;
+    height: 52px;
+    font-size: var(--text-xl);
+  }
+}
+

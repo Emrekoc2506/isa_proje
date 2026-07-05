@@ -1,0 +1,373 @@
+/* ============================================================
+   HEADER — Mystik Dark Gold Tema
+   ============================================================ */
+
+.announcement {
+  background: linear-gradient(90deg, var(--bg-dark), var(--bg-mid), var(--bg-dark));
+  border-bottom: 1px solid var(--border-gold);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  text-align: center;
+  padding: var(--space-xs) var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  letter-spacing: 0.05em;
+}
+
+.announcement strong {
+  color: var(--gold-light);
+}
+
+.announcementIcon {
+  color: var(--gold);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* ── Header Ana ─────────────────────────────────────────────── */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border-gold);
+  transition:
+    background var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.header.sticky {
+  background: rgba(18, 9, 31, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-header);
+}
+
+.inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-md) var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+/* ── Logo ──────────────────────────────────────────────────── */
+
+.logo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  filter: brightness(1.1) saturate(0.8) sepia(0.2) hue-rotate(10deg);
+  transition: filter var(--transition-base);
+  text-decoration: none;
+}
+
+.brandName {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 0.05em;
+}
+
+.logo:hover {
+  filter: brightness(1.3) saturate(1) sepia(0);
+}
+
+.logo img {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ── Bildirim Sarmalayıcı ───────────────────────────────────── */
+.notifWrapper {
+  position: relative;
+}
+
+.notifBadge {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  background: var(--nebula-red);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: var(--radius-circle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 1.5px solid var(--bg-dark);
+  pointer-events: none;
+}
+
+.wishlistWrapper {
+  position: relative;
+}
+
+.wishlistBadge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background: #C45079;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: var(--radius-circle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--bg-dark);
+  pointer-events: none;
+}
+
+.actionActive {
+  color: var(--gold-light) !important;
+  background: var(--bg-mid) !important;
+}
+
+/* ── Arama ─────────────────────────────────────────────────── */
+
+.searchWrapper {
+  flex: 1;
+  max-width: 480px;
+}
+
+.searchForm {
+  display: flex;
+  align-items: center;
+  background: var(--bg-mid);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.searchForm:focus-within {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+}
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 10px var(--space-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.searchBtn {
+  background: none;
+  border: none;
+  color: var(--gold);
+  padding: 10px var(--space-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  transition: color var(--transition-base);
+}
+
+.searchBtn:hover {
+  color: var(--gold-light);
+}
+
+/* ── Aksiyonlar ────────────────────────────────────────────── */
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-left: auto;
+}
+
+.actionBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-secondary);
+  font-size: 20px;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition:
+    color var(--transition-base),
+    background var(--transition-base);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.actionBtn:hover {
+  color: var(--gold-light);
+  background: var(--bg-mid);
+}
+
+.actionLabel {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: currentColor;
+}
+
+/* ── Sepet Butonu ──────────────────────────────────────────── */
+
+.cartBtn {
+  position: relative;
+  flex-direction: row;
+  gap: var(--space-sm);
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--bg-deep) !important;
+  border-radius: var(--radius-pill);
+  padding: var(--space-sm) var(--space-md);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.cartBtn .actionLabel {
+  font-size: var(--text-sm);
+  color: var(--bg-deep);
+}
+
+.cartBtn:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: var(--bg-deep);
+}
+
+.cartBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--nebula-red);
+  color: #fff;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: var(--radius-circle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* ── Mobil Arama Paneli ────────────────────────────────────── */
+
+.mobileSearchPanel {
+  background: var(--bg-mid);
+  border-top: 1px solid var(--border-gold);
+  overflow: hidden;
+}
+
+.mobileSearchForm {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+
+.mobileSearchInput {
+  flex: 1;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-pill);
+  padding: 10px var(--space-md);
+  color: var(--text-primary);
+  outline: none;
+  font-size: var(--text-sm);
+}
+
+.mobileSearchInput:focus {
+  border-color: var(--gold);
+}
+
+.mobileSearchSubmit {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--bg-deep);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 10px var(--space-lg);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  white-space: nowrap;
+  transition: background var(--transition-base);
+}
+
+.mobileSearchSubmit:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+}
+
+/* ── Gizlenenler / Mobil ─────────────────────────────────────── */
+
+.mobileSearch,
+.hamburger {
+  display: none;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .searchWrapper {
+    display: none;
+  }
+
+  .mobileSearch,
+  .hamburger {
+    display: flex;
+  }
+
+  .logo img {
+    height: 40px;
+  }
+
+  .brandName {
+    display: none;
+  }
+
+  .inner {
+    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .actionLabel {
+    display: none;
+  }
+
+  .cartBtn .actionLabel {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .actions {
+    gap: 2px;
+  }
+
+  .actionBtn {
+    padding: var(--space-xs);
+    font-size: 18px;
+  }
+}
