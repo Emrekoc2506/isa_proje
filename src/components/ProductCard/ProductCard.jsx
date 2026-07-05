@@ -1,5 +1,6 @@
 import styles from './ProductCard.module.css';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiShoppingCart, FiHeart, FiCheck } from 'react-icons/fi';
 import { FaHeart } from 'react-icons/fa'; // Filled heart
@@ -12,9 +13,11 @@ export default function ProductCard({ product }) {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
+  const navigate = useNavigate();
 
   const productId = id || name;
   const isFavorite = isInWishlist(productId);
+  const detailHref = `/urun/${productId}`;
 
   const handleAdd = () => {
     addToCart({ id: productId, name, price, image });
@@ -51,14 +54,14 @@ export default function ProductCard({ product }) {
       </button>
 
       {/* ── Görsel ─────────────────────────────────────────── */}
-      <a href={href} className={styles.imgWrapper} tabIndex={-1}>
+      <a href={detailHref} className={styles.imgWrapper} tabIndex={-1} onClick={(e) => { e.preventDefault(); navigate(detailHref); }}>
         <img src={image} alt={name} className={styles.img} loading="lazy" />
         <div className={styles.imgOverlay} />
       </a>
 
       {/* ── İçerik ─────────────────────────────────────────── */}
       <div className={styles.content}>
-        <a href={href} className={styles.name} title={name}>
+        <a href={detailHref} className={styles.name} title={name} onClick={(e) => { e.preventDefault(); navigate(detailHref); }}>
           {name}
         </a>
 

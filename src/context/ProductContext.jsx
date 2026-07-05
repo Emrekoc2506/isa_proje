@@ -117,14 +117,14 @@ export function ProductProvider({ children }) {
     const newProduct = {
       id: Date.now(),
       name: productData.name,
-      price: productData.price + ' €',
+      price: productData.price + ' ₺',
       image: productData.image || 'https://images.unsplash.com/photo-1602928321679-560bb453f190?w=500',
       categoryId: productData.categoryId,
       subcategory: productData.subcategory || null,
       isNew: productData.isNew || false,
       isSale: productData.isSale || false,
       isFeatured: productData.isFeatured || false,
-      oldPrice: productData.oldPrice ? productData.oldPrice + ' €' : null,
+      oldPrice: productData.oldPrice ? productData.oldPrice + ' ₺' : null,
       discount: productData.oldPrice ? `-%${Math.round(((productData.oldPrice - productData.price) / productData.oldPrice) * 100)}` : null
     };
 
@@ -150,7 +150,7 @@ export function ProductProvider({ children }) {
   const updateProductPrice = (id, newPrice) => {
     setProducts(prev => prev.map(p => {
       if (p.id === id) {
-        return { ...p, price: parseFloat(newPrice).toFixed(2) + ' €' };
+        return { ...p, price: Math.round(parseFloat(newPrice)) + ' ₺' };
       }
       return p;
     }));

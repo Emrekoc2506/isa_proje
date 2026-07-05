@@ -153,7 +153,7 @@ export default function AdminPage({ onLogout }) {
 
   // Toplam Satış Ciro Hesabı
   const totalSales = orders.reduce((sum, o) => {
-    const numeric = parseFloat(o.total.replace('€', '').trim());
+    const numeric = parseFloat(o.total.replace(/[^0-9.,]/g, '').replace(',', '.'));
     return sum + (isNaN(numeric) ? 0 : numeric);
   }, 0);
 
@@ -257,7 +257,7 @@ export default function AdminPage({ onLogout }) {
                   <div className={styles.statCard}>
                     <FiDollarSign className={styles.statIcon} style={{ color: '#2ecc71' }} />
                     <div>
-                      <h3>{totalSales.toFixed(2)} €</h3>
+                      <h3>{Math.round(totalSales).toLocaleString('tr-TR')} ₺</h3>
                       <p>Toplam Ciro</p>
                     </div>
                   </div>
@@ -333,13 +333,13 @@ export default function AdminPage({ onLogout }) {
 
                     <div className={styles.formGridRowThree}>
                       <div className={styles.formField}>
-                        <label>Fiyat (€) *</label>
+                        <label>Fiyat (₺) *</label>
                         <div className={styles.inputWrapper}>
                           <input type="number" step="0.01" required value={prodPrice} onChange={e => setProdPrice(e.target.value)} placeholder="0.00" />
                         </div>
                       </div>
                       <div className={styles.formField}>
-                        <label>Eski Fiyat (€)</label>
+                        <label>Eski Fiyat (₺)</label>
                         <div className={styles.inputWrapper}>
                           <input type="number" step="0.01" value={prodOldPrice} onChange={e => setProdOldPrice(e.target.value)} placeholder="0.00" />
                         </div>
@@ -417,11 +417,11 @@ export default function AdminPage({ onLogout }) {
                               <input 
                                 type="number" 
                                 step="0.01" 
-                                defaultValue={parseFloat(p.price.replace('€', '').trim())}
+                                defaultValue={parseFloat(p.price.replace(/[^0-9.,]/g, '').replace(',', '.'))}
                                 onBlur={(e) => handlePriceUpdate(p.id, e.target.value)}
                                 className={styles.tablePriceInput}
                               />
-                              <span className={styles.tablePriceEuro}>€</span>
+                              <span className={styles.tablePriceEuro}>₺</span>
                             </div>
                           </td>
                           <td>{p.categoryId}</td>

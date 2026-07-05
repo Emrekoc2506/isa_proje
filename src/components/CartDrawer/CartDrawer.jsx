@@ -111,7 +111,7 @@ export default function CartDrawer({ open, onClose }) {
               <div className={styles.footer}>
                 <div className={styles.totalRow}>
                   <span className={styles.totalLabel}>Toplam</span>
-                  <span className={styles.totalValue}>{totalPrice.toFixed(2)} €</span>
+                  <span className={styles.totalValue}>{Math.round(totalPrice).toLocaleString('tr-TR')} ₺</span>
                 </div>
                 <button className={styles.checkoutBtn}>
                   Siparişi Tamamla →

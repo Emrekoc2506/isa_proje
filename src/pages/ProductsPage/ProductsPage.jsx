@@ -20,13 +20,13 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState(categoryParam);
   const [selectedSubcategory, setSelectedSubcategory] = useState(subcategoryParam);
   const [searchQuery, setSearchQuery] = useState(searchParam);
-  const [priceRange, setPriceRange] = useState(100); // Max fiyat
+  const [priceRange, setPriceRange] = useState(4000); // Max fiyat (₺)
 
   // Geçici State'ler (Kullanıcı etkileşimde bulunurken anlık güncellenir)
   const [tempCategory, setTempCategory] = useState(categoryParam);
   const [tempSubcategory, setTempSubcategory] = useState(subcategoryParam);
   const [tempSearchQuery, setTempSearchQuery] = useState(searchParam);
-  const [tempPriceRange, setTempPriceRange] = useState(100);
+  const [tempPriceRange, setTempPriceRange] = useState(4000);
 
   // Özel Dropdown Arayüzü State'leri
   const [catDropdownOpen, setCatDropdownOpen] = useState(false);
@@ -61,7 +61,7 @@ export default function ProductsPage() {
     const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     
     // Fiyata göre filtrele
-    const priceNum = parseFloat(p.price.replace('€', '').trim());
+    const priceNum = parseFloat(p.price.replace(/[^0-9.,]/g, '').replace(',', '.'));
     const matchPrice = isNaN(priceNum) || priceNum <= priceRange;
 
     return matchCategory && matchSubcategory && matchSearch && matchPrice;
@@ -72,7 +72,7 @@ export default function ProductsPage() {
     const matchCategory = tempCategory === 'hepsi' || p.categoryId === tempCategory;
     const matchSubcategory = !tempSubcategory || p.subcategory === tempSubcategory;
     const matchSearch = p.name.toLowerCase().includes(tempSearchQuery.toLowerCase());
-    const priceNum = parseFloat(p.price.replace('€', '').trim());
+    const priceNum = parseFloat(p.price.replace(/[^0-9.,]/g, '').replace(',', '.'));
     const matchPrice = isNaN(priceNum) || priceNum <= tempPriceRange;
 
     return matchCategory && matchSubcategory && matchSearch && matchPrice;
@@ -337,12 +337,13 @@ export default function ProductsPage() {
               <div className={styles.filterGroup}>
                 <div className={styles.priceLabelRow}>
                   <label className={styles.filterLabel}>Maksimum Fiyat</label>
-                  <span className={styles.priceValue}>{tempPriceRange} €</span>
+                  <span className={styles.priceValue}>{tempPriceRange.toLocaleString('tr-TR')} ₺</span>
                 </div>
                 <input 
                   type="range" 
                   min="0" 
-                  max="100" 
+                  max="4000" 
+                  step="50"
                   value={tempPriceRange} 
                   onChange={e => setTempPriceRange(Number(e.target.value))}
                   className={styles.rangeInput}

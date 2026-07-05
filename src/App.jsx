@@ -10,6 +10,7 @@ import AuthPage from './pages/AuthPage/AuthPage';
 import DashboardPage from './pages/DashboardPage/DashboardPage';
 import AdminPage from './pages/AdminPage/AdminPage';
 import ProductsPage from './pages/ProductsPage/ProductsPage';
+import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage';
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ function AppRoutes() {
       <Route path="/panel" element={<DashboardPage onLogout={() => navigate('/giris')} />} />
       <Route path="/admin" element={<AdminPage onLogout={() => navigate('/giris')} />} />
       <Route path="/urunler" element={<ProductsPage />} />
+      <Route path="/urun/:id" element={<ProductDetailPage />} />
     </Routes>
   );
 }
