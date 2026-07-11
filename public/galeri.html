@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ürün Görselleri Galerisi</title>
+    <style>
+        body {
+            background-color: #0f0320;
+            color: #fff;
+            font-family: sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(201, 162, 39, 0.3);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .title {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #c9a227;
+        }
+    </style>
+</head>
+<body>
+    <h1>Müşterinin Gönderdiği Ürün Görselleri (1-14)</h1>
+    <p>Bu sayfayı görsellerin ne olduğunu analiz etmek için kullanıyoruz.</p>
+    <div class="grid">
+        <script>
+            const grid = document.querySelector('.grid');
+            for(let i=1; i<=14; i++) {
+                grid.innerHTML += `
+                    <div class="card">
+                        <img src="/images/urunler/urun_${i}.jpg" alt="Ürün ${i}">
+                        <div class="title">urun_${i}.jpg</div>
+                    </div>
+                `;
+            }
+        </script>
+    </div>
+</body>
+</html>

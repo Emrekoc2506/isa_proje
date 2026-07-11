@@ -1,5 +1,5 @@
 import styles from './DashboardPage.module.css';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiGrid, FiPackage, FiHeart, FiUser, FiSettings,
@@ -7,7 +7,8 @@ import {
   FiMapPin, FiBell, FiEdit3, FiTrash2, FiEye, FiMessageSquare
 } from 'react-icons/fi';
 import logoImage from '../../assets/images/logo.png';
-import { demoUser, dashboardStats, orderHistory } from '../../data/dashboard';
+import { me, logout } from '../../services/authApi';
+import { getMyOrders } from '../../services/orderApi';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -24,10 +25,13 @@ const NAV_ITEMS = [
 ];
 
 const STATUS_CONFIG = {
+  pending:    { label: 'Bekliyor',     color: '#f1c40f' },
   delivered:  { label: 'Teslim Edildi', color: '#2ecc71' },
   shipping:   { label: 'Kargoda',       color: '#C9A227' },
+  shipped:    { label: 'Kargoda',       color: '#C9A227' },
   preparing:  { label: 'Hazırlanıyor',  color: '#7B4EA6' },
   cancelled:  { label: 'İptal',         color: '#e05594' },
+  refunded:   { label: 'İade Edildi',   color: '#e05594' },
 };
 
 export default function DashboardPage({ onLogout }) {
@@ -38,13 +42,73 @@ export default function DashboardPage({ onLogout }) {
   const { addToCart } = useCart();
   const { unreadCount } = useNotifications();
 
-  const initials = demoUser.name.split(' ').map(n => n[0]).join('');
+  // API State'leri
+  const [user, setUser] = useState(null);
+  const [ordersList, setOrdersList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const sidebarVariants = {
-    hidden: { x: '-100%', opacity: 0 },
-    visible: { x: 0, opacity: 1, transition: { type: 'tween', duration: 0.3 } },
-    exit: { x: '-100%', opacity: 0, transition: { duration: 0.25 } },
+  const fetchUserDataAndOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [userData, ordersData] = await Promise.all([
+        me().catch(() => null),
+        getMyOrders().catch(() => [])
+      ]);
+
+      if (userData) {
+        setUser(userData);
+      }
+      
+      if (ordersData) {
+        // Siparişleri haritala
+        const mapped = ordersData.map(o => ({
+          id: o.id,
+          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR'),
+          total: (o.totalAmount || 0) + ' ₺',
+          status: mapStatusToTurkish(o.status),
+          statusCode: String(o.status).toLowerCase(),
+          items: (o.items || []).map(it => ({
+            name: it.productName || "Mistik Ürün",
+            qty: it.quantity,
+            price: (it.unitPrice || 0) + ' ₺'
+          }))
+        }));
+        setOrdersList(mapped);
+      }
+    } catch (err) {
+      console.error("Dashboard veri yükleme hatası:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUserDataAndOrders();
+  }, [fetchUserDataAndOrders, active]);
+
+  const mapStatusToTurkish = (status) => {
+    const s = String(status).toLowerCase();
+    if (s === 'pending') return 'Bekliyor';
+    if (s === 'preparing') return 'Hazırlanıyor';
+    if (s === 'shipping' || s === 'shipped') return 'Kargoda';
+    if (s === 'delivered') return 'Teslim Edildi';
+    if (s === 'cancelled') return 'İptal';
+    if (s === 'refunded') return 'İade Edildi';
+    return status;
   };
+
+  const handleLogoutClick = async () => {
+    try {
+      await logout();
+    } catch {
+      // Ignored
+    }
+    onLogout();
+  };
+
+  const initials = user?.fullName
+    ? user.fullName.split(' ').map(n => n[0]).join('')
+    : "M";
 
   const contentVariants = {
     hidden: { opacity: 0, y: 16 },
@@ -52,11 +116,21 @@ export default function DashboardPage({ onLogout }) {
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
   };
 
+  if (loading && !user) {
+    return (
+      <div className={styles.page} style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
+        <p style={{ color: '#fff' }}>Yükleniyor...</p>
+      </div>
+    );
+  }
+
+  const displayName = user?.fullName || "Müşteri";
+  const displayEmail = user?.email || "";
+
   return (
     <div className={styles.page}>
 
-      {/* ════ SIDEBAR ════════════════════════════════════════════ */}
-      {/* Mobil overlay */}
+      {/* MOBİL SIDEBAR OVERLAY */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -67,7 +141,7 @@ export default function DashboardPage({ onLogout }) {
         )}
       </AnimatePresence>
 
-      {/* Sidebar — desktop her zaman görünür, mobilde slide */}
+      {/* SIDEBAR */}
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarMobileOpen : ''}`}>
         {/* Logo */}
         <a href="/" className={styles.sidebarLogo}>
@@ -82,19 +156,19 @@ export default function DashboardPage({ onLogout }) {
             <div className={styles.avatarGlow} aria-hidden="true" />
           </div>
           <div className={styles.profileInfo}>
-            <p className={styles.profileName}>{demoUser.name}</p>
-            <p className={styles.profileEmail}>{demoUser.email}</p>
-            <span className={styles.memberBadge}>{demoUser.level}</span>
+            <p className={styles.profileName}>{displayName}</p>
+            <p className={styles.profileEmail}>{displayEmail}</p>
+            <span className={styles.memberBadge}>Gümüş Üye</span>
           </div>
         </div>
 
         {/* Puan */}
         <div className={styles.pointsBar}>
-          <span className={styles.pointsLabel}>✦ {demoUser.points} puan</span>
+          <span className={styles.pointsLabel}>✦ 1240 puan</span>
           <div className={styles.pointsTrack}>
             <div
               className={styles.pointsFill}
-              style={{ width: `${Math.min((demoUser.points / 2000) * 100, 100)}%` }}
+              style={{ width: `62%` }}
             />
           </div>
           <span className={styles.pointsNext}>Altın Üye'ye 760 puan kaldı</span>
@@ -120,7 +194,7 @@ export default function DashboardPage({ onLogout }) {
         {/* Çıkış */}
         <button
           className={styles.logoutBtn}
-          onClick={onLogout}
+          onClick={handleLogoutClick}
           aria-label="Çıkış yap"
         >
           <FiLogOut />
@@ -128,7 +202,7 @@ export default function DashboardPage({ onLogout }) {
         </button>
       </aside>
 
-      {/* ════ ANA İÇERİK ═══════════════════════════════════════ */}
+      {/* ANA İÇERIK */}
       <main className={styles.main}>
 
         {/* Üst Bar */}
@@ -172,10 +246,9 @@ export default function DashboardPage({ onLogout }) {
             {/* ── GENEL BAKIŞ ────────────────────────────────── */}
             {active === 'overview' && (
               <motion.div key="overview" variants={contentVariants} initial="hidden" animate="visible" exit="exit">
-                {/* Hoş geldin */}
                 <div className={styles.welcomeBanner}>
                   <div>
-                    <h2 className={styles.welcomeTitle}>Hoş geldin, {demoUser.name.split(' ')[0]}! ✨</h2>
+                    <h2 className={styles.welcomeTitle}>Hoş geldin, {displayName.split(' ')[0]}! ✨</h2>
                     <p className={styles.welcomeSub}>Mistik alışveriş deneyimine hazır mısın?</p>
                   </div>
                   <a href="/urunler" className={styles.shopBtn}>
@@ -185,28 +258,27 @@ export default function DashboardPage({ onLogout }) {
 
                 {/* İstatistik Kartları */}
                 <div className={styles.statsGrid}>
-                  {dashboardStats.map((stat, i) => {
-                    let displayValue = stat.value;
-                    if (stat.id === 'wishlist') displayValue = wishlist.length;
-
-                    return (
-                      <motion.div
-                        key={stat.id}
-                        className={styles.statCard}
-                        initial={{ opacity: 0, x: -16 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.08, duration: 0.4 }}
-                        style={{ '--stat-color': stat.color }}
-                      >
-                        <span className={styles.statIcon}>{stat.icon}</span>
-                        <div className={styles.statContent}>
-                          <p className={styles.statValue}>{displayValue}</p>
-                          <p className={styles.statLabel}>{stat.label}</p>
-                        </div>
-                        <div className={styles.statGlow} aria-hidden="true" />
-                      </motion.div>
-                    );
-                  })}
+                  {[
+                    { id: 'orders', label: 'Toplam Sipariş', value: ordersList.length, icon: '📦', color: 'var(--gold)' },
+                    { id: 'wishlist', label: 'Favori Ürünler', value: wishlist.length, icon: '♥', color: '#e05594' },
+                    { id: 'points', label: 'Mistik Puan', value: '1240', icon: '✦', color: '#7B4EA6' }
+                  ].map((stat, i) => (
+                    <motion.div
+                      key={stat.id}
+                      className={styles.statCard}
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.08, duration: 0.4 }}
+                      style={{ '--stat-color': stat.color }}
+                    >
+                      <span className={styles.statIcon}>{stat.icon}</span>
+                      <div className={styles.statContent}>
+                        <p className={styles.statValue}>{stat.value}</p>
+                        <p className={styles.statLabel}>{stat.label}</p>
+                      </div>
+                      <div className={styles.statGlow} aria-hidden="true" />
+                    </motion.div>
+                  ))}
                 </div>
 
                 {/* Son Siparişler */}
@@ -217,9 +289,12 @@ export default function DashboardPage({ onLogout }) {
                       Tümünü Gör <FiChevronRight />
                     </button>
                   </div>
-                  {orderHistory.slice(0, 2).map(order => (
+                  {ordersList.slice(0, 2).map(order => (
                     <OrderRow key={order.id} order={order} compact />
                   ))}
+                  {ordersList.length === 0 && (
+                    <p className={styles.emptyText} style={{ textAlign: 'center', padding: '16px' }}>Henüz siparişiniz bulunmamaktadır.</p>
+                  )}
                 </div>
 
                 {/* Favori Ürünler */}
@@ -238,6 +313,9 @@ export default function DashboardPage({ onLogout }) {
                         <span className={styles.miniWishPrice}>{item.price}</span>
                       </div>
                     ))}
+                    {wishlist.length === 0 && (
+                      <p className={styles.emptyText} style={{ textAlign: 'center', padding: '16px' }}>Favori ürününüz bulunmamaktadır.</p>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -249,11 +327,18 @@ export default function DashboardPage({ onLogout }) {
                 <div className={styles.sectionCard}>
                   <div className={styles.sectionHeader}>
                     <h3 className={styles.sectionTitle}>Tüm Siparişlerim</h3>
-                    <span className={styles.sectionCount}>{orderHistory.length} sipariş</span>
+                    <span className={styles.sectionCount}>{ordersList.length} sipariş</span>
                   </div>
-                  {orderHistory.map(order => (
+                  {ordersList.map(order => (
                     <OrderRow key={order.id} order={order} />
                   ))}
+                  {ordersList.length === 0 && (
+                    <div className={styles.emptyState}>
+                      <span className={styles.emptyIcon}>📦</span>
+                      <p>Henüz sipariş vermediniz.</p>
+                      <a href="/urunler" className={styles.shopBtn}>Ürünleri Keşfet</a>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -270,7 +355,7 @@ export default function DashboardPage({ onLogout }) {
                     <div className={styles.emptyState}>
                       <span className={styles.emptyIcon}>♥</span>
                       <p>Henüz favori ürün eklemediniz.</p>
-                      <a href="/" className={styles.shopBtn}>Alışverişe Başla</a>
+                      <a href="/urunler" className={styles.shopBtn}>Alışverişe Başla</a>
                     </div>
                   ) : (
                     <div className={styles.wishlistGrid}>
@@ -292,13 +377,13 @@ export default function DashboardPage({ onLogout }) {
                             <button 
                               className={styles.wishCartBtn} 
                               aria-label="Sepete ekle"
-                              onClick={() => addToCart({ id: item.id || item.name, name: item.name, price: item.price, image: item.image })}
+                              onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, image: item.image })}
                             >
                               <FiShoppingCart /> Sepete Ekle
                             </button>
                             <button
                               className={styles.wishRemoveBtn}
-                              onClick={() => removeFromWishlist(item.id || item.name)}
+                              onClick={() => removeFromWishlist(item.id)}
                               aria-label="Favorilerden çıkar"
                             >
                               <FiTrash2 />
@@ -312,7 +397,7 @@ export default function DashboardPage({ onLogout }) {
               </motion.div>
             )}
 
-            {/* ── MESAJLARIM (SIGNALR MOCK) ──────────────────── */}
+            {/* ── MESAJLARIM ─────────────────────────────────── */}
             {active === 'messages' && (
               <motion.div key="messages" variants={contentVariants} initial="hidden" animate="visible" exit="exit" style={{ height: '100%' }}>
                 <ChatUI />
@@ -331,23 +416,22 @@ export default function DashboardPage({ onLogout }) {
                       <div className={styles.avatarBig}>
                         <span>{initials}</span>
                       </div>
-                      <button className={styles.avatarEditBtn}>
-                        <FiEdit3 /> Fotoğraf Değiştir
-                      </button>
                     </div>
                     <div className={styles.formGrid}>
                       {[
-                        { label: 'Ad Soyad', value: demoUser.name, type: 'text' },
-                        { label: 'E-posta', value: demoUser.email, type: 'email' },
-                        { label: 'Telefon', value: '+90 555 000 00 00', type: 'tel' },
-                        { label: 'Doğum Tarihi', value: '1998-04-15', type: 'date' },
+                        { label: 'Ad Soyad', value: displayName, type: 'text', readOnly: true },
+                        { label: 'E-posta', value: displayEmail, type: 'email', readOnly: true },
+                        { label: 'Telefon', value: '+90 555 000 00 00', type: 'tel', readOnly: true },
+                        { label: 'Kullanıcı Rolleri', value: user?.roles?.join(', ') || "Müşteri", type: 'text', readOnly: true },
                       ].map(field => (
                         <div key={field.label} className={styles.formField}>
                           <label className={styles.fieldLabel}>{field.label}</label>
                           <input
                             type={field.type}
                             defaultValue={field.value}
+                            readOnly={field.readOnly}
                             className={styles.fieldInput}
+                            style={{ opacity: field.readOnly ? 0.7 : 1 }}
                           />
                         </div>
                       ))}
@@ -357,12 +441,10 @@ export default function DashboardPage({ onLogout }) {
                         <FiMapPin /> Kayıtlı Adresler
                       </h4>
                       <div className={styles.addressCard}>
-                        <p className={styles.addressTitle}>Ev Adresi</p>
-                        <p className={styles.addressText}>Bağcılar Mah. Çiçek Sok. No:14 D:3, Kadıköy / İstanbul</p>
-                        <button className={styles.addressEditBtn}><FiEdit3 /> Düzenle</button>
+                        <p className={styles.addressTitle}>Varsayılan Teslimat Adresi</p>
+                        <p className={styles.addressText}>Kadıköy / İstanbul</p>
                       </div>
                     </div>
-                    <button className={styles.saveBtn}>Değişiklikleri Kaydet</button>
                   </div>
                 </div>
               </motion.div>
@@ -378,9 +460,7 @@ export default function DashboardPage({ onLogout }) {
                   <div className={styles.settingsGrid}>
                     {[
                       { label: 'E-posta Bildirimleri', desc: 'Sipariş ve kampanya bildirimleri', checked: true },
-                      { label: 'SMS Bildirimleri', desc: 'Kargo ve teslimat bildirimleri', checked: false },
                       { label: 'Bülten Aboneliği', desc: 'Haftalık mistik içerikler', checked: true },
-                      { label: 'Çerez Tercihleri', desc: 'Analitik ve kişiselleştirme', checked: false },
                     ].map(setting => (
                       <div key={setting.label} className={styles.settingRow}>
                         <div>
@@ -393,31 +473,6 @@ export default function DashboardPage({ onLogout }) {
                         </label>
                       </div>
                     ))}
-                  </div>
-
-                  {/* Şifre Değiştir */}
-                  <div className={styles.passwordSection}>
-                    <h4 className={styles.subSectionTitle}>Şifre Değiştir</h4>
-                    <div className={styles.formGrid}>
-                      <div className={styles.formField}>
-                        <label className={styles.fieldLabel}>Mevcut Şifre</label>
-                        <input type="password" className={styles.fieldInput} placeholder="••••••" />
-                      </div>
-                      <div className={styles.formField}>
-                        <label className={styles.fieldLabel}>Yeni Şifre</label>
-                        <input type="password" className={styles.fieldInput} placeholder="••••••" />
-                      </div>
-                    </div>
-                    <button className={styles.saveBtn} style={{ marginTop: '16px' }}>
-                      Şifreyi Güncelle
-                    </button>
-                  </div>
-
-                  {/* Tehlikeli Bölge */}
-                  <div className={styles.dangerZone}>
-                    <h4 className={styles.dangerTitle}>⚠ Tehlikeli Bölge</h4>
-                    <p className={styles.dangerDesc}>Bu işlem geri alınamaz. Hesabınız kalıcı olarak silinecektir.</p>
-                    <button className={styles.dangerBtn}>Hesabımı Sil</button>
                   </div>
                 </div>
               </motion.div>
@@ -433,18 +488,18 @@ export default function DashboardPage({ onLogout }) {
 // ── Sipariş Satırı Alt Bileşeni ──────────────────────────────
 function OrderRow({ order, compact }) {
   const [open, setOpen] = useState(false);
-  const cfg = STATUS_CONFIG[order.statusCode] || {};
+  const cfg = STATUS_CONFIG[order.statusCode] || { label: order.status, color: 'var(--gold)' };
 
   return (
     <div className={styles.orderRow}>
       <div className={styles.orderHeader} onClick={() => !compact && setOpen(v => !v)} style={{ cursor: compact ? 'default' : 'pointer' }}>
         <div className={styles.orderMeta}>
-          <span className={styles.orderId}>{order.id}</span>
+          <span className={styles.orderId} style={{ fontSize: 11 }}>{order.id}</span>
           <span className={styles.orderDate}>{order.date}</span>
         </div>
         <div className={styles.orderRight}>
           <span className={styles.statusBadge} style={{ '--status-color': cfg.color }}>
-            {order.status}
+            {cfg.label}
           </span>
           <span className={styles.orderTotal}>{order.total}</span>
           {!compact && (
@@ -460,7 +515,7 @@ function OrderRow({ order, compact }) {
       </div>
 
       <AnimatePresence>
-        {(!compact || true) && open && (
+        {(!compact || false) && open && (
           <motion.div
             className={styles.orderItems}
             initial={{ height: 0, opacity: 0 }}
@@ -475,12 +530,6 @@ function OrderRow({ order, compact }) {
                 <span className={styles.orderItemPrice}>{item.price}</span>
               </div>
             ))}
-            <div className={styles.orderActions}>
-              <button className={styles.orderBtn}><FiEye /> Detay</button>
-              {order.statusCode === 'delivered' && (
-                <button className={styles.orderBtn}><FiShoppingCart /> Tekrar Sipariş</button>
-              )}
-            </div>
           </motion.div>
         )}
       </AnimatePresence>

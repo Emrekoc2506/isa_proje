@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiUser, FiLock, FiMail, FiEye, FiEyeOff, FiCheckCircle, FiArrowLeft, FiAlertCircle } from 'react-icons/fi';
 import logoImage from '../../assets/images/logo.png';
-import { demoUser } from '../../data/dashboard';
+import { login, register } from '../../services/authApi';
 
 const DEMO_CODE = '000000'; // Demo doğrulama kodu
 
@@ -14,7 +14,7 @@ export default function AuthPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [verified, setVerified]     = useState(false);
   const [verifyError, setVerifyError] = useState(false);
-  const [loginError, setLoginError] = useState(false);
+  const [loginError, setLoginError] = useState(null);
   const navigate = useNavigate();
 
   // OTP giriş kutucukları için state
@@ -27,31 +27,57 @@ export default function AuthPage() {
   const isLogin = mode === 'login';
 
   // Giriş formını gönder → kimlik doğrula
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     const email = e.target.querySelector('#login-email').value;
     const password = e.target.querySelector('#login-password').value;
     
-    if (email === 'admin@gmail.com' && password === '123456') {
-      setLoginError(false);
-      navigate('/admin');
-    } else if (email === demoUser.email && password === demoUser.password) {
-      setLoginError(false);
-      navigate('/panel');
-    } else {
-      setLoginError(true);
+    try {
+      setLoginError(null);
+      const res = await login({ email, password });
+      
+      const roles = res.user?.roles || [];
+      if (roles.includes("SuperAdmin") || roles.includes("Admin")) {
+        navigate('/admin');
+      } else {
+        navigate('/panel');
+      }
+    } catch (err) {
+      setLoginError(err.message || err.Message || "E-posta veya şifre hatalı.");
     }
   };
 
   // Kayıt formunu gönder → doğrulama ekranına geç
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setOtp(['', '', '', '', '', '']);
-    setVerifyError(false);
-    setVerified(false);
-    setMode('verify');
-    // İlk kutuya odaklan
-    setTimeout(() => otpRefs[0].current?.focus(), 100);
+    const name = e.target.querySelector('#reg-name').value;
+    const email = e.target.querySelector('#reg-email').value;
+    const password = e.target.querySelector('#reg-password').value;
+    const confirm = e.target.querySelector('#reg-confirm').value;
+
+    if (password !== confirm) {
+      alert("Şifreler uyuşmuyor!");
+      return;
+    }
+
+    try {
+      // Kayıt isteği gönder
+      await register({
+        fullName: name,
+        email: email,
+        password: password,
+        phoneNumber: "+905550000000"
+      });
+
+      setOtp(['', '', '', '', '', '']);
+      setVerifyError(false);
+      setVerified(false);
+      setMode('verify');
+      // İlk kutuya odaklan
+      setTimeout(() => otpRefs[0].current?.focus(), 100);
+    } catch (err) {
+      alert(err.message || err.Message || "Kayıt işlemi başarısız.");
+    }
   };
 
   // OTP kutucuk değişimi
@@ -92,7 +118,6 @@ export default function AuthPage() {
       setVerifyError(false);
     } else {
       setVerifyError(true);
-      // Titreme animasyonu için state sıfırla
       setOtp(['', '', '', '', '', '']);
       setTimeout(() => otpRefs[0].current?.focus(), 50);
     }
@@ -190,7 +215,7 @@ export default function AuthPage() {
                       exit={{ opacity: 0 }}
                     >
                       <FiAlertCircle />
-                      <span>E-posta veya şifre hatalı. Demo: <strong>ogrenci@gmail.com</strong> / <strong>123456</strong></span>
+                      <span>{loginError}</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -296,17 +321,19 @@ export default function AuthPage() {
                     </div>
                     <h2 className={styles.formTitle}>E-posta Doğrulandı!</h2>
                     <p className={styles.formSub}>Hesabınız başarıyla oluşturuldu. Artık giriş yapabilirsiniz.</p>
-                    <motion.a
-                      href="/giris"
+                    <motion.button
                       className={styles.submitBtn}
-                      style={{ display: 'flex', marginTop: '8px', textDecoration: 'none', justifyContent: 'center' }}
+                      style={{ display: 'flex', marginTop: '16px', justifyContent: 'center', width: '100%' }}
                       whileHover={{ scale: 1.03, y: -2 }}
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => setMode('login')}
+                      onClick={() => {
+                        // Zaten token'larımız var, doğrudan panele (müşteri) yönlendir
+                        navigate('/panel');
+                      }}
                     >
-                      <span>Giriş Yap</span>
+                      <span>Hesabıma Git</span>
                       <span className={styles.btnArrow}>→</span>
-                    </motion.a>
+                    </motion.button>
                   </motion.div>
                 ) : (
                   /* Doğrulama formu */

@@ -1,10 +1,10 @@
 import styles from './ProductDetailPage.module.css';
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiShoppingCart, FiHeart, FiCheck, FiStar,
-  FiChevronLeft, FiChevronRight, FiPackage, FiTruck,
+  FiChevronRight, FiPackage, FiTruck,
   FiShield, FiMinus, FiPlus, FiShare2, FiAward,
   FiZap, FiChevronDown, FiMessageCircle
 } from 'react-icons/fi';
@@ -12,7 +12,7 @@ import { FaHeart, FaWhatsapp, FaInstagram } from 'react-icons/fa';
 import { useProducts } from '../../context/ProductContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
-import { productDetails, defaultProductDetail } from '../../data/productDetails';
+import { getProductById, getProductBySlug, getProductReviews, createProductReview } from '../../services/productApi';
 import MainLayout from '../../layouts/MainLayout/MainLayout';
 
 /* ─── Animasyon Varyantları ──────────────────────────────── */
@@ -50,13 +50,10 @@ function Stars({ rating, size = 14 }) {
 
 /* ─── Ortalama Hesapla ───────────────────────────────────── */
 function avg(reviews) {
-  if (!reviews?.length) return 0;
+  if (!reviews?.length) return 5; // Varsayılan puan
   return reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ANA COMPONENT
-═══════════════════════════════════════════════════════════ */
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -64,18 +61,52 @@ export default function ProductDetailPage() {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
+  /* ─── API State'leri ────────────────────────────────── */
+  const [productDetail, setProductDetail] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [loadingDetail, setLoadingDetail] = useState(true);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+
   /* ─── Ürünü Bul ─────────────────────────────────────── */
-  const product = products.find(p => String(p.id) === String(id));
-  const detail = productDetails[id] || productDetails[Number(id)] || defaultProductDetail;
+  const product = products.find(p => String(p.id) === String(id) || p.slug === id);
+
+  useEffect(() => {
+    async function fetchDetail() {
+      try {
+        setLoadingDetail(true);
+        // id Guid mi kontrol et
+        const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+        let detailData = null;
+        
+        if (isGuid) {
+          detailData = await getProductById(id);
+        } else {
+          detailData = await getProductBySlug(id);
+        }
+
+        if (detailData) {
+          setProductDetail(detailData);
+          // Yorumları getir
+          const reviewsData = await getProductReviews(detailData.id).catch(() => []);
+          setReviews(reviewsData || []);
+        }
+      } catch (err) {
+        console.error("Detay yükleme hatası:", err);
+      } finally {
+        setLoadingDetail(false);
+      }
+    }
+    fetchDetail();
+  }, [id]);
 
   /* ─── Benzer Ürünler (Random) ───────────────────────── */
   const relatedProducts = useMemo(() => {
-    if (!products.length || !product) return [];
-    const others = products.filter(p => String(p.id) !== String(id));
-    // Shuffle
+    if (!products.length || !productDetail) return [];
+    const others = products.filter(p => String(p.id) !== String(productDetail.id));
     const shuffled = [...others].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 8);
-  }, [products, id, product]);
+  }, [products, productDetail]);
 
   /* ─── State'ler ─────────────────────────────────────── */
   const [activeImg, setActiveImg] = useState(0);
@@ -87,10 +118,17 @@ export default function ProductDetailPage() {
 
   /* ─── Medya Listesi ─────────────────────────────────── */
   const mediaList = useMemo(() => {
-    if (detail.media?.length) return detail.media;
-    if (product) return [{ type: 'image', src: product.image, alt: product.name }];
+    if (productDetail?.images?.length) {
+      return productDetail.images.map(img => ({ type: 'image', src: img.url, alt: productDetail.name }));
+    }
+    if (productDetail?.imageUrl) {
+      return [{ type: 'image', src: productDetail.imageUrl, alt: productDetail.name }];
+    }
+    if (product) {
+      return [{ type: 'image', src: product.image, alt: product.name }];
+    }
     return [];
-  }, [detail, product]);
+  }, [productDetail, product]);
 
   /* ─── Related Scroll Ref ────────────────────────────── */
   const relatedRef = useRef(null);
@@ -99,35 +137,42 @@ export default function ProductDetailPage() {
     relatedRef.current.scrollBy({ left: dir * 280, behavior: 'smooth' });
   };
 
-  if (!product && products.length > 0) {
-    navigate('/urunler', { replace: true });
-    return null;
-  }
-
-  if (!product) {
+  if (loadingDetail) {
     return (
       <MainLayout>
         <div className={styles.loadingScreen}>
           <div className={styles.spinner} />
-          <p>Yükleniyor...</p>
+          <p>Ürün detayları yükleniyor...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!productDetail) {
+    return (
+      <MainLayout>
+        <div className={styles.loadingScreen}>
+          <p>Ürün bulunamadı.</p>
+          <Link to="/urunler" className={styles.buyBtn} style={{ marginTop: '16px', textDecoration: 'none', display: 'inline-block' }}>Mağazaya Dön</Link>
         </div>
       </MainLayout>
     );
   }
 
   /* ─── Hesaplamalar ──────────────────────────────────── */
-  const isFav = isInWishlist(product.id);
-  const priceNum = parseFloat(String(product.price).replace(/[^0-9.,]/g, '').replace(',', '.')) || 0;
-  const oldPriceNum = product.oldPrice
-    ? parseFloat(String(product.oldPrice).replace(/[^0-9.,]/g, '').replace(',', '.'))
-    : null;
-  const rating = avg(detail.reviews);
-  const visibleReviews = showAllReviews ? detail.reviews : (detail.reviews || []).slice(0, 3);
+  const isFav = isInWishlist(productDetail.id);
+  const rating = avg(reviews);
+  const visibleReviews = showAllReviews ? reviews : (reviews || []).slice(0, 3);
 
   /* ─── Handlers ──────────────────────────────────────── */
   const handleAddToCart = () => {
     for (let i = 0; i < qty; i++) {
-      addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
+      addToCart({ 
+        id: productDetail.id, 
+        name: productDetail.name, 
+        price: productDetail.price + ' ₺', 
+        image: productDetail.imageUrl || (productDetail.images?.[0]?.url || '') 
+      });
     }
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2200);
@@ -140,47 +185,53 @@ export default function ProductDetailPage() {
   const handlePrev = () => setActiveImg(p => (p === 0 ? mediaList.length - 1 : p - 1));
   const handleNext = () => setActiveImg(p => (p === mediaList.length - 1 ? 0 : p + 1));
 
-  const whatsappUrl = `https://wa.me/${detail.whatsapp || '905551234567'}?text=${encodeURIComponent(`Merhaba! ${product.name} hakkında bilgi almak istiyorum.`)}`;
-  const instagramUrl = `https://www.instagram.com/${detail.instagramHandle || 'aromantra'}`;
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!reviewText.trim()) return;
+
+    try {
+      await createProductReview(productDetail.id, {
+        rating: reviewRating,
+        comment: reviewText.trim()
+      });
+      alert("Yorumunuz onaylanmak üzere gönderildi.");
+      setReviewText("");
+      // Yorumları tekrar yükle
+      const updated = await getProductReviews(productDetail.id);
+      setReviews(updated || []);
+    } catch (err) {
+      alert(err.message || "Yorum eklenirken hata oluştu. Lütfen giriş yaptığınızdan emin olun.");
+    }
+  };
+
+  const whatsappUrl = `https://wa.me/905551234567?text=${encodeURIComponent(`Merhaba! ${productDetail.name} hakkında bilgi almak istiyorum.`)}`;
+  const instagramUrl = `https://www.instagram.com/mysticvelora`;
 
   /* ─── Tabs ──────────────────────────────────────────── */
   const tabs = [
     { key: 'description', label: 'Açıklama' },
     { key: 'specs', label: 'Özellikler' },
-    { key: 'reviews', label: `Yorumlar (${detail.reviews?.length || 0})` },
+    { key: 'reviews', label: `Yorumlar (${reviews.length || 0})` },
   ];
 
-  /* ══════════════════════════════════════════════════════
-     RENDER
-  ══════════════════════════════════════════════════════ */
   return (
     <MainLayout>
       <div className={styles.page}>
 
         {/* ════ BREADCRUMB ══════════════════════════════════ */}
-        <motion.nav
-          className={styles.breadcrumb}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
+        <nav className={styles.breadcrumb}>
           <Link to="/" className={styles.breadLink}>Ana Sayfa</Link>
           <FiChevronRight className={styles.breadSep} />
           <Link to="/urunler" className={styles.breadLink}>Mağaza</Link>
           <FiChevronRight className={styles.breadSep} />
-          <span className={styles.breadCurrent}>{product.name}</span>
-        </motion.nav>
+          <span className={styles.breadCurrent}>{productDetail.name}</span>
+        </nav>
 
         {/* ════ 2-SÜTUN ANA BÖLÜM ═══════════════════════════ */}
         <div className={styles.mainGrid}>
 
           {/* ── SOL: GALERİ ─────────────────────────────── */}
-          <motion.div
-            className={styles.galleryCol}
-            variants={fadeLeft}
-            initial="hidden"
-            animate="visible"
-          >
+          <div className={styles.galleryCol}>
             {/* Ana Görsel Kutusu */}
             <div
               className={`${styles.mainFrame} ${isZoomed ? styles.zoomed : ''}`}
@@ -189,23 +240,28 @@ export default function ProductDetailPage() {
             >
               {/* Badge'ler */}
               <div className={styles.frameBadges}>
-                {product.isNew && <span className={`${styles.badge} ${styles.bNew}`}>YENİ</span>}
-                {product.isSale && product.discount && (
-                  <span className={`${styles.badge} ${styles.bSale}`}>{product.discount}</span>
+                {productDetail.isNew && <span className={`${styles.badge} ${styles.bNew}`}>YENİ</span>}
+                {productDetail.isSale && productDetail.discount && (
+                  <span className={`${styles.badge} ${styles.bSale}`}>{productDetail.discount}</span>
                 )}
               </div>
 
               {/* Favori (galeri üstünde) */}
               <motion.button
                 className={`${styles.favOverlay} ${isFav ? styles.favOn : ''}`}
-                onClick={() => toggleWishlist({ id: product.id, name: product.name, price: product.price, image: product.image })}
+                onClick={() => toggleWishlist({ 
+                  id: productDetail.id, 
+                  name: productDetail.name, 
+                  price: productDetail.price + ' ₺', 
+                  image: productDetail.imageUrl || (productDetail.images?.[0]?.url || '') 
+                })}
                 whileTap={{ scale: 0.85 }}
                 aria-label="Favorilere ekle"
               >
                 {isFav ? <FaHeart /> : <FiHeart />}
               </motion.button>
 
-              {/* Görsel / Video */}
+              {/* Görsel */}
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeImg}
@@ -215,19 +271,11 @@ export default function ProductDetailPage() {
                   exit={{ opacity: 0, scale: 1.03 }}
                   transition={{ duration: 0.35 }}
                 >
-                  {mediaList[activeImg]?.type === 'video' ? (
-                    <video
-                      src={mediaList[activeImg].src}
-                      className={styles.mainVideo}
-                      autoPlay muted loop playsInline
-                    />
-                  ) : (
-                    <img
-                      src={mediaList[activeImg]?.src || product.image}
-                      alt={mediaList[activeImg]?.alt || product.name}
-                      className={styles.mainImg}
-                    />
-                  )}
+                  <img
+                    src={mediaList[activeImg]?.src || "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=500"}
+                    alt={mediaList[activeImg]?.alt || productDetail.name}
+                    className={styles.mainImg}
+                  />
                 </motion.div>
               </AnimatePresence>
 
@@ -235,10 +283,10 @@ export default function ProductDetailPage() {
               {mediaList.length > 1 && (
                 <>
                   <button className={`${styles.navBtn} ${styles.navLeft}`} onClick={handlePrev} aria-label="Önceki">
-                    <FiChevronLeft />
+                    &#10094;
                   </button>
                   <button className={`${styles.navBtn} ${styles.navRight}`} onClick={handleNext} aria-label="Sonraki">
-                    <FiChevronRight />
+                    &#10095;
                   </button>
                 </>
               )}
@@ -262,19 +310,14 @@ export default function ProductDetailPage() {
             {mediaList.length > 1 && (
               <div className={styles.thumbRow}>
                 {mediaList.map((m, i) => (
-                  <motion.button
+                  <button
                     key={i}
                     className={`${styles.thumb} ${i === activeImg ? styles.thumbActive : ''}`}
                     onClick={() => setActiveImg(i)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                     aria-label={`Görsel ${i + 1}`}
                   >
-                    {m.type === 'video'
-                      ? <span className={styles.thumbPlay}>▶</span>
-                      : <img src={m.src} alt={m.alt} loading="lazy" />
-                    }
-                  </motion.button>
+                    <img src={m.src} alt={m.alt} loading="lazy" />
+                  </button>
                 ))}
               </div>
             )}
@@ -282,74 +325,50 @@ export default function ProductDetailPage() {
             {/* Paylaş Butonu */}
             <button
               className={styles.shareBtn}
-              onClick={() => navigator.share?.({ title: product.name, url: window.location.href })}
+              onClick={() => navigator.share?.({ title: productDetail.name, url: window.location.href })}
               aria-label="Paylaş"
             >
               <FiShare2 /> <span>Paylaş</span>
             </button>
-          </motion.div>
+          </div>
 
           {/* ── SAĞ: ÜRÜN BİLGİLERİ ─────────────────────── */}
-          <motion.div
-            className={styles.infoCol}
-            variants={fadeRight}
-            initial="hidden"
-            animate="visible"
-          >
-            {/* Ürün Adı */}
-            <h1 className={styles.productTitle}>{product.name}</h1>
+          <div className={styles.infoCol}>
+            <h1 className={styles.productTitle}>{productDetail.name}</h1>
             <div className={styles.titleAccent} />
 
             {/* Rating Satırı */}
-            {detail.reviews?.length > 0 && (
-              <div className={styles.ratingRow}>
-                <Stars rating={rating} size={15} />
-                <span className={styles.ratingNum}>{rating.toFixed(1)}</span>
-                <span className={styles.ratingCount}>({detail.reviews.length} değerlendirme)</span>
-                <button className={styles.ratingLink} onClick={() => setActiveTab('reviews')}>
-                  Yorumları gör →
-                </button>
-              </div>
-            )}
+            <div className={styles.ratingRow}>
+              <Stars rating={rating} size={15} />
+              <span className={styles.ratingNum}>{rating.toFixed(1)}</span>
+              <span className={styles.ratingCount}>({reviews.length} değerlendirme)</span>
+              <button className={styles.ratingLink} onClick={() => setActiveTab('reviews')}>
+                Yorumları gör →
+              </button>
+            </div>
 
             {/* Fiyat Bloğu */}
             <div className={styles.priceBlock}>
-              {oldPriceNum && (
+              {productDetail.oldPrice && (
                 <div className={styles.oldPriceRow}>
-                  <span className={styles.oldPrice}>{product.oldPrice}</span>
-                  {product.discount && (
-                    <span className={styles.discountBadge}>{product.discount}</span>
+                  <span className={styles.oldPrice}>{productDetail.oldPrice} ₺</span>
+                  {productDetail.discount && (
+                    <span className={styles.discountBadge}>{productDetail.discount}</span>
                   )}
                 </div>
               )}
               <div className={styles.currentPrice}>
-                {product.price}
-                {product.unit && <span className={styles.priceUnit}>/ {product.unit}</span>}
+                {productDetail.price} ₺
+                {productDetail.unit && <span className={styles.priceUnit}>/ {productDetail.unit}</span>}
               </div>
-              {oldPriceNum && priceNum > 0 && (
-                  <p className={styles.savingLine}>
-                    💰 {Math.round(oldPriceNum - priceNum).toLocaleString('tr-TR')} ₺ tasarruf ediyorsunuz
-                  </p>
-              )}
             </div>
 
             <div className={styles.hr} />
 
-            {/* Öne Çıkanlar */}
-            {detail.highlights?.length > 0 && (
-              <motion.ul
-                className={styles.highlights}
-                variants={stagger}
-                initial="hidden"
-                animate="visible"
-              >
-                {detail.highlights.map((h, i) => (
-                  <motion.li key={i} className={styles.highlightItem} variants={staggerItem}>
-                    {h}
-                  </motion.li>
-                ))}
-              </motion.ul>
-            )}
+            {/* Kısa Açıklama */}
+            <p style={{ color: 'var(--text-muted)', lineHeight: '1.6' }}>
+              {productDetail.shortDescription || "Mistik şifa enerjileri barındıran bu özel ürün, ritüellerinizde ve günlük yaşamınızda huzuru yakalamanıza yardımcı olur."}
+            </p>
 
             <div className={styles.hr} />
 
@@ -374,51 +393,39 @@ export default function ProductDetailPage() {
                 </button>
               </div>
               <span className={styles.stockLabel}>
-                <FiZap className={styles.stockIcon} /> Stokta Mevcut
+                <FiZap className={styles.stockIcon} /> Stokta Mevcut ({productDetail.stockQuantity} Adet)
               </span>
             </div>
 
             {/* CTA Butonları */}
             <div className={styles.ctaGroup}>
-              <motion.button
+              <button
                 className={`${styles.cartBtn} ${addedToCart ? styles.cartAdded : ''}`}
                 onClick={handleAddToCart}
-                whileTap={{ scale: 0.97 }}
-                whileHover={{ scale: addedToCart ? 1 : 1.02 }}
               >
-                <AnimatePresence mode="wait">
-                  {addedToCart ? (
-                    <motion.span key="ok"
-                      initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                      <FiCheck /> Sepete Eklendi!
-                    </motion.span>
-                  ) : (
-                    <motion.span key="add"
-                      initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                      <FiShoppingCart /> Sepete Ekle
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </motion.button>
+                {addedToCart ? (
+                  <span><FiCheck /> Sepete Eklendi!</span>
+                ) : (
+                  <span><FiShoppingCart /> Sepete Ekle</span>
+                )}
+              </button>
 
-              <motion.button
-                className={styles.buyBtn}
-                onClick={handleBuyNow}
-                whileTap={{ scale: 0.97 }}
-                whileHover={{ scale: 1.02 }}
-              >
+              <button className={styles.buyBtn} onClick={handleBuyNow}>
                 ✨ Hemen Satın Al
-              </motion.button>
+              </button>
 
-              <motion.button
+              <button
                 className={`${styles.wishBtn} ${isFav ? styles.wishOn : ''}`}
-                onClick={() => toggleWishlist({ id: product.id, name: product.name, price: product.price, image: product.image })}
-                whileTap={{ scale: 0.88 }}
-                whileHover={{ scale: 1.1 }}
+                onClick={() => toggleWishlist({ 
+                  id: productDetail.id, 
+                  name: productDetail.name, 
+                  price: productDetail.price + ' ₺', 
+                  image: productDetail.imageUrl || (productDetail.images?.[0]?.url || '') 
+                })}
                 aria-label={isFav ? 'Favorilerden çıkar' : 'Favorilere ekle'}
               >
                 {isFav ? <FaHeart /> : <FiHeart />}
-              </motion.button>
+              </button>
             </div>
 
             {/* İletişim Kanalları */}
@@ -452,34 +459,12 @@ export default function ProductDetailPage() {
                   <span>SSL şifreleme</span>
                 </div>
               </div>
-              <div className={styles.trustItem}>
-                <FiPackage className={styles.trustIcon} />
-                <div>
-                  <b>Kolay İade</b>
-                  <span>30 gün iade hakkı</span>
-                </div>
-              </div>
-              <div className={styles.trustItem}>
-                <FiAward className={styles.trustIcon} />
-                <div>
-                  <b>2 Yıl Garanti</b>
-                  <span>Tüm ürünlerde</span>
-                </div>
-              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* ════ TAB SİSTEMİ ═════════════════════════════════ */}
-        <motion.section
-          className={styles.tabSection}
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-60px' }}
-          id="reviews"
-        >
-          {/* Tab Başlıkları */}
+        <section className={styles.tabSection} id="reviews">
           <div className={styles.tabBar}>
             {tabs.map(t => (
               <button
@@ -490,161 +475,143 @@ export default function ProductDetailPage() {
                 aria-selected={activeTab === t.key}
               >
                 {t.label}
-                {activeTab === t.key && (
-                  <motion.div className={styles.tabIndicator} layoutId="tabIndicator" />
-                )}
               </button>
             ))}
           </div>
 
           {/* Tab İçeriği */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              className={styles.tabContent}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -14 }}
-              transition={{ duration: 0.28 }}
-            >
+          <div className={styles.tabContent}>
+            {/* Açıklama */}
+            {activeTab === 'description' && (
+              <div className={styles.descWrap}>
+                {(productDetail.description || 'Bu mistik ürün hakkında açıklama bulunmamaktadır.').split('\n\n').map((para, i) => (
+                  <p key={i} className={styles.descPara}>{para}</p>
+                ))}
+              </div>
+            )}
 
-              {/* ── Açıklama ─────────────────────────────── */}
-              {activeTab === 'description' && (
-                <div className={styles.descWrap}>
-                  {(detail.description || '').split('\n\n').map((para, i) => (
-                    <p key={i} className={styles.descPara}>{para}</p>
-                  ))}
+            {/* Özellikler */}
+            {activeTab === 'specs' && (
+              <div className={styles.specsWrap}>
+                <table className={styles.specsTable}>
+                  <tbody>
+                    <tr className={styles.specRow}>
+                      <td className={styles.specKey}>Stok Durumu</td>
+                      <td className={styles.specVal}>{productDetail.stockQuantity} Adet</td>
+                    </tr>
+                    <tr className={styles.specRow}>
+                      <td className={styles.specKey}>Kategori</td>
+                      <td className={styles.specVal}>{productDetail.categoryName || "Mistik Ürünler"}</td>
+                    </tr>
+                    {productDetail.subcategory && (
+                      <tr className={styles.specRow}>
+                        <td className={styles.specKey}>Alt Kategori</td>
+                        <td className={styles.specVal}>{productDetail.subcategory}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-                  {/* Feature Icon Grid */}
-                  {detail.features?.length > 0 && (
-                    <motion.div
-                      className={styles.featureGrid}
-                      variants={stagger}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={{ once: true }}
-                    >
-                      {detail.features.map((f, i) => (
-                        <motion.div key={i} className={styles.featureCard} variants={staggerItem}>
-                          <span className={styles.featureIcon}>{f.icon}</span>
-                          <b className={styles.featureTitle}>{f.title}</b>
-                          <p className={styles.featureText}>{f.text}</p>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </div>
-              )}
-
-              {/* ── Özellikler ───────────────────────────── */}
-              {activeTab === 'specs' && (
-                <div className={styles.specsWrap}>
-                  {detail.specs?.length > 0 ? (
-                    <table className={styles.specsTable}>
-                      <tbody>
-                        {detail.specs.map((s, i) => (
-                          <tr key={i} className={styles.specRow}>
-                            <td className={styles.specKey}>{s.label}</td>
-                            <td className={styles.specVal}>{s.value}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <p className={styles.emptyMsg}>Özellik bilgisi yakında eklenecek.</p>
-                  )}
-                </div>
-              )}
-
-              {/* ── Yorumlar ─────────────────────────────── */}
-              {activeTab === 'reviews' && (
-                <div className={styles.reviewsWrap}>
-                  {detail.reviews?.length > 0 ? (
-                    <>
-                      {/* Özet */}
-                      <div className={styles.reviewSummary}>
-                        <div className={styles.avgBlock}>
-                          <span className={styles.avgNum}>{rating.toFixed(1)}</span>
-                          <Stars rating={rating} size={22} />
-                          <span className={styles.avgSub}>{detail.reviews.length} değerlendirme</span>
-                        </div>
-                        <div className={styles.barChart}>
-                          {[5, 4, 3, 2, 1].map(star => {
-                            const cnt = detail.reviews.filter(r => r.rating === star).length;
-                            const pct = (cnt / detail.reviews.length) * 100;
-                            return (
-                              <div key={star} className={styles.barRow}>
-                                <span className={styles.barLabel}>{star} ⭐</span>
-                                <div className={styles.barTrack}>
-                                  <motion.div
-                                    className={styles.barFill}
-                                    initial={{ width: 0 }}
-                                    whileInView={{ width: `${pct}%` }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.7, ease: 'easeOut' }}
-                                  />
-                                </div>
-                                <span className={styles.barCnt}>{cnt}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Yorum Kartları */}
-                      <motion.div
-                        className={styles.reviewList}
-                        variants={stagger}
-                        initial="hidden"
-                        animate="visible"
-                      >
-                        {visibleReviews.map(rv => (
-                          <motion.div key={rv.id} className={styles.reviewCard} variants={staggerItem}>
-                            <div className={styles.rvHeader}>
-                              <div className={styles.rvAvatar}>{rv.avatar}</div>
-                              <div className={styles.rvMeta}>
-                                <span className={styles.rvName}>{rv.name}</span>
-                                <Stars rating={rv.rating} size={12} />
-                              </div>
-                              <span className={styles.rvDate}>{rv.date}</span>
-                            </div>
-                            <p className={styles.rvText}>{rv.text}</p>
-                          </motion.div>
-                        ))}
-                      </motion.div>
-
-                      {detail.reviews.length > 3 && (
+            {/* Yorumlar */}
+            {activeTab === 'reviews' && (
+              <div className={styles.reviewsWrap}>
+                
+                {/* Yorum Yazma Formu */}
+                <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                  <h4 style={{ color: 'var(--gold-light)', marginBottom: '16px' }}>Bu Ürünü Değerlendirin</h4>
+                  <form onSubmit={handleReviewSubmit}>
+                    <div style={{ marginBottom: '12px' }}>
+                      <span style={{ marginRight: '12px', color: 'var(--text-muted)' }}>Puanınız:</span>
+                      {[1,2,3,4,5].map(star => (
                         <button
-                          className={styles.showMoreBtn}
-                          onClick={() => setShowAllReviews(v => !v)}
+                          key={star}
+                          type="button"
+                          onClick={() => setReviewRating(star)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0 4px' }}
                         >
-                          {showAllReviews ? 'Daha az göster' : `Tümünü gör (${detail.reviews.length})`}
-                          <FiChevronDown className={showAllReviews ? styles.chevUp : ''} />
+                          <FiStar style={{ fill: star <= reviewRating ? 'var(--gold)' : 'none', color: 'var(--gold)' }} />
                         </button>
-                      )}
-                    </>
-                  ) : (
-                    <div className={styles.noReview}>
-                      <span className={styles.noReviewIcon}>💬</span>
-                      <p>Henüz yorum yok. İlk değerlendirmeyi siz yapın!</p>
+                      ))}
                     </div>
-                  )}
+                    <textarea
+                      required
+                      placeholder="Yorumunuzu buraya yazın..."
+                      value={reviewText}
+                      onChange={e => setReviewText(e.target.value)}
+                      style={{
+                        width: '100%',
+                        height: '80px',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#fff',
+                        marginBottom: '12px',
+                        resize: 'none'
+                      }}
+                    />
+                    <button type="submit" className={styles.buyBtn} style={{ padding: '8px 24px', fontSize: '14px' }}>
+                      Yorumu Gönder
+                    </button>
+                  </form>
                 </div>
-              )}
 
-            </motion.div>
-          </AnimatePresence>
-        </motion.section>
+                {reviews.length > 0 ? (
+                  <>
+                    <div className={styles.reviewSummary}>
+                      <div className={styles.avgBlock}>
+                        <span className={styles.avgNum}>{rating.toFixed(1)}</span>
+                        <Stars rating={rating} size={22} />
+                        <span className={styles.avgSub}>{reviews.length} değerlendirme</span>
+                      </div>
+                    </div>
 
-        {/* ════ BENZERÜRÜNLer ════════════════════════════════ */}
+                    <div className={styles.reviewList}>
+                      {visibleReviews.map(rv => (
+                        <div key={rv.id} className={styles.reviewCard}>
+                          <div className={styles.rvHeader}>
+                            <div className={styles.rvAvatar}>
+                              {rv.customerName ? rv.customerName[0].toUpperCase() : "M"}
+                            </div>
+                            <div className={styles.rvMeta}>
+                              <span className={styles.rvName}>{rv.customerName || "Müşteri"}</span>
+                              <Stars rating={rv.rating} size={12} />
+                            </div>
+                            <span className={styles.rvDate}>
+                              {rv.createdAt ? new Date(rv.createdAt).toLocaleDateString('tr-TR') : ""}
+                            </span>
+                          </div>
+                          <p className={styles.rvText}>{rv.comment}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {reviews.length > 3 && (
+                      <button
+                        className={styles.showMoreBtn}
+                        onClick={() => setShowAllReviews(v => !v)}
+                      >
+                        {showAllReviews ? 'Daha az göster' : `Tümünü gör (${reviews.length})`}
+                        <FiChevronDown className={showAllReviews ? styles.chevUp : ''} />
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div className={styles.noReview}>
+                    <span className={styles.noReviewIcon}>💬</span>
+                    <p>Henüz yorum yok. İlk değerlendirmeyi siz yapın!</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ════ BENZER ÜRÜNLER ════════════════════════════════ */}
         {relatedProducts.length > 0 && (
-          <motion.section
-            className={styles.relatedSection}
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-80px' }}
-          >
+          <section className={styles.relatedSection}>
             <div className={styles.relatedHeader}>
               <h2 className={styles.relatedTitle}>
                 <span className={styles.relatedTitleAccent}>✦</span>
@@ -653,10 +620,10 @@ export default function ProductDetailPage() {
               </h2>
               <div className={styles.relatedNav}>
                 <button className={styles.relNavBtn} onClick={() => scrollRelated(-1)} aria-label="Sola kaydır">
-                  <FiChevronLeft />
+                  &#10094;
                 </button>
                 <button className={styles.relNavBtn} onClick={() => scrollRelated(1)} aria-label="Sağa kaydır">
-                  <FiChevronRight />
+                  &#10095;
                 </button>
               </div>
             </div>
@@ -666,7 +633,7 @@ export default function ProductDetailPage() {
                 <RelatedCard key={rp.id || i} product={rp} navigate={navigate} addToCart={addToCart} />
               ))}
             </div>
-          </motion.section>
+          </section>
         )}
 
       </div>
@@ -688,11 +655,10 @@ function RelatedCard({ product, navigate, addToCart }) {
   };
 
   return (
-    <motion.div
+    <div
       className={styles.relCard}
       onClick={() => navigate(`/urun/${product.id}`)}
-      whileHover={{ y: -6, boxShadow: '0 16px 48px rgba(0,0,0,0.55), 0 0 24px rgba(201,162,39,0.15)' }}
-      transition={{ duration: 0.25 }}
+      style={{ cursor: 'pointer' }}
     >
       <div className={styles.relImgWrap}>
         {product.isNew && <span className={styles.relBadgeNew}>YENİ</span>}
@@ -721,6 +687,6 @@ function RelatedCard({ product, navigate, addToCart }) {
           {added ? <><FiCheck /> Eklendi</> : <><FiShoppingCart /> Sepete Ekle</>}
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 }

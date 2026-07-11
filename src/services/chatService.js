@@ -1,110 +1,104 @@
 import * as signalR from "@microsoft/signalr";
 
-/*
-  CROSS-TAB REAL-TIME CHAT SIMULATOR (SIGNALR MOCK)
-  ================================================
-  Müşteri ve Admin sekmeleri arasında gerçek zamanlı (real-time) iletişimi simüle etmek için
-  localStorage tabanlı bir StorageEvent dinleyicisi kullanıyoruz.
-*/
-
-let mockConnection = null;
-const eventHandlers = {};
-
-// localStorage'daki mesajları getir veya boş liste dön
-const getStoredMessages = () => {
-  const saved = localStorage.getItem('mv_chat_messages');
-  return saved ? JSON.parse(saved) : [
-    { id: '1', senderId: 'support-1', receiverId: 'user-1', content: 'Merhaba! Size nasıl yardımcı olabiliriz?', sentAt: new Date(Date.now() - 3600000).toISOString() },
-    { id: '2', senderId: 'user-1', receiverId: 'support-1', content: 'Siparişimin durumu hakkında bilgi almak istiyorum.', sentAt: new Date(Date.now() - 3500000).toISOString() }
-  ];
-};
-
-// Yeni mesajı localStorage'a yaz
-const saveMessage = (msg) => {
-  const current = getStoredMessages();
-  current.push(msg);
-  localStorage.setItem('mv_chat_messages', JSON.stringify(current));
-  // Kendi sekmemizde de tetiklenmesi için özel bir event atalım
-  window.dispatchEvent(new CustomEvent('mv_message_received', { detail: msg }));
-};
+const signalrUrl = import.meta.env.VITE_SIGNALR_BASE_URL ?? "https://localhost:7148/hubs";
+let connection = null;
 
 export const startChatConnection = async () => {
-  if (mockConnection) return mockConnection;
+  if (connection && connection.state === signalR.HubConnectionState.Connected) {
+    return connection;
+  }
 
-  console.log("Mock SignalR Hub Bağlanıyor...");
-
-  // Sekmeler arası canlı mesaj senkronizasyonu
-  const handleStorageChange = (e) => {
-    if (e.key === 'mv_chat_messages' && e.newValue) {
-      const messages = JSON.parse(e.newValue);
-      const lastMsg = messages[messages.length - 1];
-      if (lastMsg && eventHandlers["ReceiveMessage"]) {
-        eventHandlers["ReceiveMessage"].forEach(cb => cb(lastMsg));
-      }
-    }
-  };
-
-  const handleCustomEvent = (e) => {
-    if (e.detail && eventHandlers["ReceiveMessage"]) {
-      eventHandlers["ReceiveMessage"].forEach(cb => cb(e.detail));
-    }
-  };
-
-  window.addEventListener('storage', handleStorageChange);
-  window.addEventListener('mv_message_received', handleCustomEvent);
+  const token = localStorage.getItem("accessToken");
+  const guestSessionId = localStorage.getItem("mv_guest_session_id") || "";
   
-  mockConnection = {
-    state: signalR.HubConnectionState.Connected,
-    on: (eventName, callback) => {
-      if (!eventHandlers[eventName]) eventHandlers[eventName] = [];
-      eventHandlers[eventName].push(callback);
-    },
-    off: (eventName, callback) => {
-      if (!eventHandlers[eventName]) return;
-      eventHandlers[eventName] = eventHandlers[eventName].filter(cb => cb !== callback);
-    },
-    invoke: async (methodName, payload) => {
-      console.log(`Mock SignalR invoke [${methodName}]:`, payload);
-      
-      if (methodName === "SendMessage") {
-        const isMeAdmin = payload.senderId === 'support-1';
-        
-        const newMsg = {
-          id: Date.now().toString(),
-          senderId: isMeAdmin ? 'support-1' : 'user-1',
-          receiverId: isMeAdmin ? 'user-1' : 'support-1',
-          content: payload.content,
-          sentAt: new Date().toISOString()
-        };
-        
-        saveMessage(newMsg);
-      }
-      return true;
-    },
-    stop: async () => {
-      console.log("Mock SignalR Bağlantısı Kesiliyor...");
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('mv_message_received', handleCustomEvent);
-      mockConnection = null;
-    }
-  };
-
-  return mockConnection;
-};
-
-export const sendMessageLive = async (senderId, receiverId, content) => {
-  if (!mockConnection) await startChatConnection();
+  // URL'e guestSessionId ekleyelim (misafir sohbet desteği için)
+  let url = `${signalrUrl}/chat`;
+  const queryParams = [];
   
-  const payload = { senderId, receiverId, content };
-  await mockConnection.invoke("SendMessage", payload);
-  return true;
+  if (guestSessionId) {
+    queryParams.push(`guestSessionId=${encodeURIComponent(guestSessionId)}`);
+  }
+  
+  if (queryParams.length > 0) {
+    url += `?${queryParams.join("&")}`;
+  }
+
+  connection = new signalR.HubConnectionBuilder()
+    .withUrl(url, {
+      accessTokenFactory: () => {
+        const t = localStorage.getItem("accessToken");
+        return t ? t : undefined; // Token yoksa undefined dön, misafir olarak bağlansın
+      }
+    })
+    .withAutomaticReconnect()
+    .build();
+
+  try {
+    await connection.start();
+    console.log("Real-time Chat SignalR Hub bağlantısı kuruldu. Misafir/Üye aktif.");
+  } catch (err) {
+    console.error("SignalR Hub bağlantı hatası:", err);
+    connection = null;
+  }
+
+  return connection;
 };
 
 export const stopChatConnection = async () => {
-  if (mockConnection) {
-    await mockConnection.stop();
+  if (connection) {
+    await connection.stop();
+    console.log("SignalR Hub bağlantısı kapatıldı.");
+    connection = null;
   }
 };
 
-export const getChatConnection = () => mockConnection;
-export { getStoredMessages };
+export const getChatConnection = () => connection;
+
+// SignalR üzerinden canlı mesaj gönderme
+export const sendMessageLive = async (conversationId, message) => {
+  if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+    await startChatConnection();
+  }
+  
+  if (connection && connection.state === signalR.HubConnectionState.Connected) {
+    await connection.invoke("SendMessage", conversationId, message);
+    return true;
+  }
+  return false;
+};
+
+// SignalR üzerinden konuşmaya katılma
+export const joinConversationLive = async (conversationId) => {
+  if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+    await startChatConnection();
+  }
+
+  if (connection && connection.state === signalR.HubConnectionState.Connected) {
+    await connection.invoke("JoinConversation", conversationId);
+  }
+};
+
+// SignalR üzerinden konuşmadan ayrılma
+export const leaveConversationLive = async (conversationId) => {
+  if (connection && connection.state === signalR.HubConnectionState.Connected) {
+    await connection.invoke("LeaveConversation", conversationId);
+  }
+};
+
+// SignalR üzerinden yazıyor bilgisi gönderme
+export const sendTypingLive = async (conversationId) => {
+  if (connection && connection.state === signalR.HubConnectionState.Connected) {
+    await connection.invoke("Typing", conversationId);
+  }
+};
+
+// SignalR üzerinden admin destek paneline katılma
+export const adminJoinSupportPanelLive = async () => {
+  if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+    await startChatConnection();
+  }
+
+  if (connection && connection.state === signalR.HubConnectionState.Connected) {
+    await connection.invoke("AdminJoinSupportPanel");
+  }
+};
