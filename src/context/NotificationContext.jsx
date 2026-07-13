@@ -1,19 +1,21 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import * as signalR from "@microsoft/signalr";
-import { getMyNotifications, markNotificationAsRead } from '../services/notificationApi';
-import { me } from '../services/authApi';
+import { getMyNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '../services/notificationApi';
+import { useAuth } from './AuthContext';
 
 const NotificationContext = createContext(null);
 const signalrUrl = import.meta.env.VITE_SIGNALR_BASE_URL ?? "https://localhost:7148/hubs";
 
 export function NotificationProvider({ children }) {
+  const { isAuthenticated, user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [connection, setConnection] = useState(null);
 
-  // Bildirimleri API'den Çekme
   const fetchNotifications = useCallback(async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
+    if (!isAuthenticated) {
+      setNotifications([]);
+      return;
+    }
 
     try {
       const data = await getMyNotifications();
@@ -33,7 +35,7 @@ export function NotificationProvider({ children }) {
     } catch (err) {
       console.error("Bildirimler yüklenemedi:", err);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const mapNotificationTypeToEmoji = (type) => {
     const t = String(type).toLowerCase();
@@ -49,8 +51,13 @@ export function NotificationProvider({ children }) {
 
   // SignalR Hub Entegrasyonu
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
+    if (!isAuthenticated) {
+      if (connection) {
+        connection.stop().catch(() => null);
+        setConnection(null);
+      }
+      return;
+    }
 
     let hubConn = new signalR.HubConnectionBuilder()
       .withUrl(`${signalrUrl}/notifications`, {
@@ -64,10 +71,8 @@ export function NotificationProvider({ children }) {
         console.log("Notification Hub bağlantısı kuruldu.");
         setConnection(hubConn);
 
-        // Kullanıcı bilgisini çekip kendi grubuna katılalım
-        const userObj = await me().catch(() => null);
-        if (userObj && userObj.id) {
-          await hubConn.invoke("JoinMyNotifications", userObj.id).catch(console.error);
+        if (user && user.id) {
+          await hubConn.invoke("JoinMyNotifications", user.id).catch(console.error);
         }
       })
       .catch(err => {
@@ -93,45 +98,71 @@ export function NotificationProvider({ children }) {
 
     return () => {
       if (hubConn) {
-        hubConn.stop();
+        hubConn.stop().catch(() => null);
       }
     };
-  }, []);
+  }, [isAuthenticated, user]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  // Bildirimi okundu yap
   const markRead = useCallback(async (id) => {
     try {
       await markNotificationAsRead(id);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     } catch (err) {
       console.error("Bildirim okundu olarak işaretlenemedi:", err);
-      // API'de hata verse de lokalde işaretleyebiliriz (fallback)
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     }
   }, []);
 
-  // Tümünü okundu yap
   const markAllRead = useCallback(async () => {
     try {
-      // Backend'de "/notifications/read-all" olmayabilir, o yüzden bekleyenleri tek tek veya lokalde işaretleyelim
-      const unreadList = notifications.filter(n => !n.read);
-      await Promise.all(unreadList.map(n => markNotificationAsRead(n.id).catch(() => null)));
+      await markAllNotificationsAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (err) {
       console.error("Tümünü okundu işaretleme hatası:", err);
     }
+  }, []);
+
+  const deleteSingle = useCallback(async (id) => {
+    try {
+      await deleteNotification(id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch (err) {
+      console.error("Bildirim silinemedi:", err);
+    }
+  }, []);
+
+  const clearAll = useCallback(async () => {
+    // Delete unread / read notifications from backend
+    try {
+      await Promise.all(notifications.map(n => deleteNotification(n.id).catch(() => null)));
+      setNotifications([]);
+    } catch (err) {
+      console.error("Tüm bildirimleri silme hatası:", err);
+    }
   }, [notifications]);
 
-  // Tümünü sil (Lokal)
-  const clearAll = useCallback(() => setNotifications([]), []);
+  const value = {
+    notifications,
+    unreadCount,
+    markRead,
+    markAllRead,
+    deleteSingle,
+    clearAll,
+    refreshNotifications: fetchNotifications
+  };
 
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, markRead, markAllRead, clearAll, refreshNotifications: fetchNotifications }}>
+    <NotificationContext.Provider value={value}>
       {children}
     </NotificationContext.Provider>
   );
 }
 
-export const useNotifications = () => useContext(NotificationContext);
+export const useNotifications = () => {
+  const context = useContext(NotificationContext);
+  if (!context) {
+    throw new Error("useNotifications must be used within a NotificationProvider");
+  }
+  return context;
+};

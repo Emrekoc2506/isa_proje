@@ -19,17 +19,82 @@ import {
   updateAdminBannerStatus 
 } from '../services/bannerApi';
 import { 
-  getAdminOrders, 
   updateAdminOrderStatus 
 } from '../services/orderApi';
+
+import { 
+  newsProducts as mockNews, 
+  saleProducts as mockSale, 
+  featuredProducts as mockFeatured,
+  navCategories as mockCategories
+} from '../data/index';
+
+const INITIAL_PRODUCTS = [
+  ...mockNews.map(p => ({
+    id: p.id,
+    name: p.name,
+    price: String(p.price).includes('₺') ? p.price : `${p.price} ₺`,
+    oldPrice: p.oldPrice ? (String(p.oldPrice).includes('₺') ? p.oldPrice : `${p.oldPrice} ₺`) : null,
+    discount: p.discount || null,
+    unit: p.unit || 'adet',
+    image: p.image,
+    imageUrl: p.image,
+    isNew: true,
+    isSale: false,
+    isFeatured: false,
+    slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  })),
+  ...mockSale.map(p => ({
+    id: p.id,
+    name: p.name,
+    price: String(p.price).includes('₺') ? p.price : `${p.price} ₺`,
+    oldPrice: p.oldPrice ? (String(p.oldPrice).includes('₺') ? p.oldPrice : `${p.oldPrice} ₺`) : null,
+    discount: p.discount || null,
+    unit: p.unit || 'adet',
+    image: p.image,
+    imageUrl: p.image,
+    isNew: false,
+    isSale: true,
+    isFeatured: false,
+    slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  })),
+  ...mockFeatured.map(p => ({
+    id: p.id,
+    name: p.name,
+    price: String(p.price).includes('₺') ? p.price : `${p.price} ₺`,
+    oldPrice: p.oldPrice ? (String(p.oldPrice).includes('₺') ? p.oldPrice : `${p.oldPrice} ₺`) : null,
+    discount: p.discount || null,
+    unit: p.unit || 'adet',
+    image: p.image,
+    imageUrl: p.image,
+    isNew: false,
+    isSale: false,
+    isFeatured: true,
+    slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  }))
+];
+
+const INITIAL_SLIDES = [
+  {
+    id: 'default-1',
+    title: "Şifalı Taşlar & Ritüel Ürünleri",
+    subtitle: "Yeni Sezon Koleksiyonu Keşfedin",
+    image: "https://www.aromantra.com/data/include/img/links/1774962684_rwd_desktop.jpg",
+    imageMobile: "https://www.aromantra.com/data/include/img/links/1774962684_rwd_desktop.jpg",
+    href: "/urunler",
+    cta: "Keşfet",
+    isActive: true
+  }
+];
 
 const ProductContext = createContext(null);
 
 export function ProductProvider({ children }) {
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
+  // İlk yüklemede boş gelmemesi için mock verilerle başlatıyoruz (Stale-While-Revalidate)
+  const [categories, setCategories] = useState(mockCategories || []);
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [orders, setOrders] = useState([]);
-  const [slides, setSlides] = useState([]);
+  const [slides, setSlides] = useState(INITIAL_SLIDES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -42,7 +107,7 @@ export function ProductProvider({ children }) {
       // Kategori ve Banner (Afiş) verileri her zaman public'tir
       const [categoriesData, bannersData, productsData] = await Promise.all([
         getCategoryTree().catch(() => getCategories().catch(() => [])),
-        getBanners().catch(() => []),
+        getBanners(),
         getProducts({ pageSize: 100 }).catch(() => ({ items: [] }))
       ]);
 
@@ -50,44 +115,22 @@ export function ProductProvider({ children }) {
       setProducts(productsData?.items || []);
       
       // Slaytları/Bannerları map edelim (backend formatı -> frontend formatı)
-      const mappedSlides = (bannersData || []).map(b => ({
-        id: b.id,
-        title: b.title || b.cta || "Kampanya",
-        subtitle: b.subtitle || "",
-        cta: b.cta || "Keşfet",
-        href: b.href || "/urunler",
-        image: b.image || "https://www.aromantra.com/data/include/img/links/1774962684_rwd_desktop.jpg",
-        imageMobile: b.imageMobile || b.image || "https://www.aromantra.com/data/include/img/links/1774962684_rwd_desktop.jpg",
-        isActive: b.isActive ?? true
-      }));
-      setSlides(mappedSlides);
+      const mappedSlides = (bannersData || [])
+        .map(b => ({
+          id: b.id,
+          title: b.title ?? "",
+          subtitle: b.subtitle ?? "",
+          imageUrl: b.imageUrl ?? b.image ?? "",
+          mobileImageUrl: b.imageMobile ?? b.imageMobileUrl ?? "",
+          href: b.href ?? b.linkUrl ?? "",
+          cta: b.cta ?? "",
+          sortOrder: Number(b.sortOrder ?? 0),
+          isActive: b.isActive ?? true
+        }))
+        .filter(item => item.imageUrl)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
 
-      // Eğer admin token varsa siparişleri de çekelim
-      const token = localStorage.getItem("accessToken");
-      if (token) {
-        // Token'ın rolünü kontrol edelim (admin ise siparişleri yükle)
-        const adminOrders = await getAdminOrders().catch(() => null);
-        if (adminOrders) {
-          const ordersList = adminOrders.items || (Array.isArray(adminOrders) ? adminOrders : []);
-          // Admin siparişlerini map edelim
-          const mappedOrders = ordersList.map(o => ({
-            id: o.id,
-            customerName: o.customerName || "Misafir Müşteri",
-            customerEmail: o.customerEmail || "",
-            customerPhone: o.customerPhone || "",
-            date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR'),
-            total: (o.totalAmount || 0) + ' ₺',
-            status: mapOrderStatusToTurkish(o.status),
-            statusCode: String(o.status).toLowerCase(),
-            items: (o.items || []).map(it => ({
-              name: it.productName || "Ürün",
-              qty: it.quantity,
-              price: (it.unitPrice || 0) + ' ₺'
-            }))
-          }));
-          setOrders(mappedOrders);
-        }
-      }
+      setSlides(mappedSlides);
     } catch (err) {
       console.error("Veri yükleme hatası:", err);
       setError("Veriler yüklenirken bir hata oluştu.");

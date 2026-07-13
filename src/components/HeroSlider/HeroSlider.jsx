@@ -78,9 +78,9 @@ export default function HeroSlider() {
           >
             {/* Arka Plan Görseli */}
             <picture>
-              <source media="(max-width: 768px)" srcSet={slide.imageMobile} />
+              <source media="(max-width: 768px)" srcSet={slide.mobileImageUrl || slide.imageMobile || slide.imageUrl || slide.image} />
               <img
-                src={slide.image}
+                src={slide.imageUrl || slide.image}
                 alt={slide.title}
                 className={styles.slideImg}
                 loading={current === 0 ? 'eager' : 'lazy'}
@@ -99,7 +99,7 @@ export default function HeroSlider() {
             >
               <span className={styles.slideSubtitle}>{slide.subtitle}</span>
               <h1 className={styles.slideTitle}>{slide.title}</h1>
-              <a href={slide.href} className={styles.slideCta}>
+              <a href={slide.href || slide.linkUrl} className={styles.slideCta}>
                 {slide.cta}
                 <span className={styles.ctaArrow}>→</span>
               </a>

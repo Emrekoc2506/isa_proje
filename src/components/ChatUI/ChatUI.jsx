@@ -1,7 +1,7 @@
 import styles from './ChatUI.module.css';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSend, FiSearch, FiMoreVertical, FiCheckCircle, FiTrash2, FiCheck, FiX, FiPlusCircle } from 'react-icons/fi';
+import { FiSend, FiSearch, FiCheckCircle, FiPlusCircle, FiXCircle } from 'react-icons/fi';
 import { 
   startChatConnection, 
   stopChatConnection, 
@@ -18,7 +18,8 @@ import {
   sendMessage,
   getAdminConversations,
   getAdminConversationMessages,
-  sendAdminMessage
+  sendAdminMessage,
+  closeAdminConversation
 } from '../../services/chatApi';
 
 export default function ChatUI({ isAdmin = false }) {
@@ -28,7 +29,6 @@ export default function ChatUI({ isAdmin = false }) {
   const [newMessage, setNewMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef(null);
 
   const activeConvRef = useRef(null);
@@ -43,8 +43,10 @@ export default function ChatUI({ isAdmin = false }) {
           id: c.id,
           name: c.customerName || c.subject || 'Destek Sohbeti',
           initials: (c.customerName || c.subject || 'D')[0].toUpperCase(),
-          time: c.updatedAt ? new Date(c.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-          isOnline: true
+          time: c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          isOnline: true,
+          isClosed: c.isClosed,
+          lastMessage: c.lastMessage
         }));
         setConversations(mapped);
         
@@ -77,7 +79,7 @@ export default function ChatUI({ isAdmin = false }) {
             id: m.id,
             senderId: m.senderId,
             content: m.content,
-            sentAt: m.createdAt || new Date().toISOString()
+            sentAt: m.sentAt || m.createdAt || new Date().toISOString()
           }));
           setMessages(mappedMsgs);
         }
@@ -118,17 +120,11 @@ export default function ChatUI({ isAdmin = false }) {
           
           // Eğer gelen mesaj şu an açık olan konuşmaya ait ise ekrana ekle
           if (String(activeConvRef.current) === String(conversationId)) {
-            // Mesaj nesnesini haritalayalım
-            const mappedMsg = typeof messageObj === 'string' ? {
-              id: Date.now().toString(),
-              senderId: 'other',
-              content: messageObj,
-              sentAt: new Date().toISOString()
-            } : {
+            const mappedMsg = {
               id: messageObj.id || Date.now().toString(),
               senderId: messageObj.senderId,
               content: messageObj.content || messageObj.Message || messageObj,
-              sentAt: messageObj.createdAt || new Date().toISOString()
+              sentAt: messageObj.sentAt || messageObj.createdAt || new Date().toISOString()
             };
 
             setMessages(prev => {
@@ -179,13 +175,12 @@ export default function ChatUI({ isAdmin = false }) {
     setNewMessage('');
 
     try {
-      // Önce API üzerinden veritabanına kaydet
+      // Sadece REST API ile kaydedilir (SignalR'da SendMessage invoke edilmez)
       let response = null;
       if (isAdmin) {
         response = await sendAdminMessage(activeConvId, { content: msgContent });
       } else {
-        const guestSessionId = localStorage.getItem("mv_guest_session_id") || undefined;
-        response = await sendMessage(activeConvId, { content: msgContent, guestSessionId });
+        response = await sendMessage(activeConvId, { content: msgContent });
       }
 
       // Kendi mesajımızı ekrana ekleyelim (eğer anında SignalR'dan dönmezse)
@@ -196,12 +191,6 @@ export default function ChatUI({ isAdmin = false }) {
         sentAt: new Date().toISOString()
       };
       setMessages(prev => [...prev, myMessage]);
-
-      // SignalR üzerinden karşı tarafa yazıyor durumunu tetiklemek/bilgilendirmek için tetikle
-      const signalrConn = getChatConnection();
-      if (signalrConn) {
-        await signalrConn.invoke("SendMessage", activeConvId, msgContent).catch(() => null);
-      }
     } catch (err) {
       console.error("Mesaj gönderilemedi:", err);
       alert("Mesaj gönderilemedi.");
@@ -214,19 +203,11 @@ export default function ChatUI({ isAdmin = false }) {
       let payload = { subject: "Destek Talebi" };
 
       if (!token) {
-        // Misafir ise
-        let guestSessionId = localStorage.getItem("mv_guest_session_id");
-        if (!guestSessionId) {
-          guestSessionId = 'guest_' + Math.random().toString(36).substr(2, 9);
-          localStorage.setItem("mv_guest_session_id", guestSessionId);
-        }
-        
         const guestName = prompt("Lütfen adınızı girin:") || "Misafir Müşteri";
         const guestEmail = prompt("Lütfen e-postanızı girin:") || "guest@example.com";
 
         payload = {
           subject: `${guestName} - Destek Talebi`,
-          guestSessionId,
           guestName,
           guestEmail
         };
@@ -292,7 +273,7 @@ export default function ChatUI({ isAdmin = false }) {
             >
               <div className={styles.convAvatar}>
                 <span>{conv.initials}</span>
-                {conv.isOnline && <div className={styles.onlineDot} />}
+                {conv.isClosed && <div className={styles.onlineDot} style={{ background: '#e05594' }} title="Kapalı" />}
               </div>
               <div className={styles.convInfo}>
                 <div className={styles.convTop}>
@@ -300,9 +281,7 @@ export default function ChatUI({ isAdmin = false }) {
                   <span className={styles.convTime}>{conv.time}</span>
                 </div>
                 <p className={styles.convLastMsg}>
-                  {activeConvId === conv.id && messages.length > 0 
-                    ? messages[messages.length - 1].content 
-                    : 'Sohbet geçmişi...'}
+                  {conv.lastMessage || 'Sohbet geçmişi...'}
                 </p>
               </div>
             </div>
@@ -323,10 +302,37 @@ export default function ChatUI({ isAdmin = false }) {
                 <div className={styles.headerInfo}>
                   <h4>{activeConv?.name || 'Destek Talebi'}</h4>
                   <span className={styles.statusText}>
-                    {isConnected ? 'Real-time Canlı Bağlantı Aktif' : 'Sunucuya bağlanıyor...'}
+                    {activeConv?.isClosed ? (
+                      <span style={{ color: '#e05594', fontWeight: 600 }}>SOHBET KAPATILDI</span>
+                    ) : isConnected ? (
+                      'Canlı Bağlantı Aktif'
+                    ) : (
+                      'Sunucuya bağlanıyor...'
+                    )}
                   </span>
                 </div>
               </div>
+              {isAdmin && !activeConv?.isClosed && (
+                <button
+                  onClick={async () => {
+                    if (confirm("Bu sohbeti kapatmak istediğinize emin misiniz?")) {
+                      await closeAdminConversation(activeConvId);
+                      fetchConversations();
+                    }
+                  }}
+                  style={{
+                    background: 'rgba(224, 85, 148, 0.1)',
+                    border: '1px solid rgba(224, 85, 148, 0.3)',
+                    color: '#e05594',
+                    padding: '6px 12px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Sohbeti Kapat
+                </button>
+              )}
             </div>
 
             <div className={styles.messagesList}>
@@ -336,13 +342,7 @@ export default function ChatUI({ isAdmin = false }) {
 
               <AnimatePresence initial={false}>
                 {messages.map((msg) => {
-                  // Müşteri ekranında eğer admin gönderdiyse support'tur
-                  // Admin ekranında ise me admin'dir
-                  // senderId'si Guid olanlar müşteri ya da admin olabilir. me/other veya backend eşleşmesi:
-                  const token = localStorage.getItem("accessToken");
-                  // Çok basit bir mantıkla senderId'sine göre ayırt edelim:
-                  // Eğer mesajı gönderen admin ise ve biz admindiysek isMe true olur
-                  const isMe = msg.senderId === 'me' || (isAdmin && msg.senderId !== 'user-1' && msg.senderId !== 'customer');
+                  const isMe = msg.senderId === 'me' || (isAdmin && msg.senderId !== 'user-1' && msg.senderId !== 'customer') || msg.senderId === user?.id;
                   
                   return (
                     <div key={msg.id} className={styles.messageRow}>
@@ -386,22 +386,28 @@ export default function ChatUI({ isAdmin = false }) {
             </div>
 
             {/* Girdi Alanı */}
-            <form className={styles.inputArea} onSubmit={handleSend}>
-              <input 
-                type="text" 
-                placeholder="Mesajınızı yazın..." 
-                className={styles.messageInput}
-                value={newMessage}
-                onChange={handleInputChange}
-              />
-              <button 
-                type="submit" 
-                className={styles.sendBtn}
-                disabled={!newMessage.trim()}
-              >
-                <FiSend />
-              </button>
-            </form>
+            {activeConv?.isClosed ? (
+              <div style={{ padding: '16px', background: 'rgba(224, 85, 148, 0.05)', border: '1px solid rgba(224, 85, 148, 0.2)', borderRadius: '8px', color: '#e05594', fontSize: '13px', textAlign: 'center', margin: 16 }}>
+                Bu sohbet sonlandırılmıştır. Yeni bir destek talebi oluşturabilirsiniz.
+              </div>
+            ) : (
+              <form className={styles.inputArea} onSubmit={handleSend}>
+                <input 
+                  type="text" 
+                  placeholder="Mesajınızı yazın..." 
+                  className={styles.messageInput}
+                  value={newMessage}
+                  onChange={handleInputChange}
+                />
+                <button 
+                  type="submit" 
+                  className={styles.sendBtn}
+                  disabled={!newMessage.trim()}
+                >
+                  <FiSend />
+                </button>
+              </form>
+            )}
           </>
         ) : (
           <div className={styles.noChatSelected}>

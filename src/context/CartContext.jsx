@@ -1,72 +1,142 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { demoUser } from '../data/dashboard';
+import { useAuth } from './AuthContext';
+import * as cartApi from '../services/cartApi';
 
 const CartContext = createContext(null);
 
-// Kullanıcıya özel localStorage anahtarı
-const getKey = (email) => `mv_cart_${email || 'guest'}`;
-
 export function CartProvider({ children }) {
-  // Oturum açık kullanıcıyı takip et (basit demo: sabit kullanıcı)
-  const userEmail = demoUser.email;
-  const storageKey = getKey(userEmail);
+  const { isAuthenticated } = useAuth();
+  const [cartData, setCartData] = useState(null);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [items, setItems] = useState(() => {
+  const refreshCart = useCallback(async () => {
     try {
-      const stored = localStorage.getItem(storageKey);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
+      setLoading(true);
+      const data = await cartApi.getCart();
+      setCartData(data);
+      
+      const mapped = (data?.items || []).map(item => ({
+        ...item,
+        qty: item.quantity,            // Legacy compatibility
+        price: `${item.unitPrice} ₺`,  // Legacy compatibility
+        image: item.imageUrl,          // Legacy compatibility
+        name: item.productName         // Legacy compatibility
+      }));
+      setItems(mapped);
+    } catch (err) {
+      console.error("Cart fetch failed:", err);
+    } finally {
+      setLoading(false);
     }
-  });
+  }, []);
 
-  // items değişince localStorage'a yaz
+  // Sync cart on auth change
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(items));
-  }, [items, storageKey]);
-
-  // Sepete ekle (aynı ürün varsa qty artır)
-  const addToCart = useCallback((product) => {
-    setItems(prev => {
-      const existing = prev.find(i => i.id === product.id);
-      if (existing) {
-        return prev.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i);
-      }
-      return [...prev, { ...product, qty: 1 }];
-    });
-  }, []);
-
-  // Miktarı değiştir
-  const updateQty = useCallback((id, qty) => {
-    if (qty < 1) {
-      setItems(prev => prev.filter(i => i.id !== id));
+    if (isAuthenticated) {
+      // Try to merge guest cart into user cart
+      cartApi.mergeGuestCart()
+        .then(() => refreshCart())
+        .catch((err) => {
+          console.warn("Failed to merge guest cart, fetching cart directly:", err);
+          refreshCart();
+        });
     } else {
-      setItems(prev => prev.map(i => i.id === id ? { ...i, qty } : i));
+      refreshCart();
+    }
+  }, [isAuthenticated, refreshCart]);
+
+  const addToCart = useCallback(async (product, quantity = 1, variantId = null) => {
+    try {
+      const data = await cartApi.addCartItem({
+        productId: product.id,
+        productVariantId: variantId,
+        quantity
+      });
+      setCartData(data);
+      const mapped = (data?.items || []).map(item => ({
+        ...item,
+        qty: item.quantity,
+        price: `${item.unitPrice} ₺`,
+        image: item.imageUrl,
+        name: item.productName
+      }));
+      setItems(mapped);
+    } catch (err) {
+      console.error("Failed to add to cart:", err);
+      alert(err.message || "Ürün sepete eklenemedi.");
+      throw err;
     }
   }, []);
 
-  // Ürünü sil
-  const removeFromCart = useCallback((id) => {
-    setItems(prev => prev.filter(i => i.id !== id));
+  const updateQty = useCallback(async (itemId, qty) => {
+    if (qty < 1) {
+      return removeFromCart(itemId);
+    }
+
+    try {
+      const data = await cartApi.updateCartItem(itemId, { quantity: qty });
+      setCartData(data);
+      const mapped = (data?.items || []).map(item => ({
+        ...item,
+        qty: item.quantity,
+        price: `${item.unitPrice} ₺`,
+        image: item.imageUrl,
+        name: item.productName
+      }));
+      setItems(mapped);
+    } catch (err) {
+      console.error("Failed to update cart quantity:", err);
+      alert(err.message || "Sepet güncellenemedi.");
+    }
   }, []);
 
-  // Sepeti tamamen temizle
-  const clearCart = useCallback(() => setItems([]), []);
+  const removeFromCart = useCallback(async (itemId) => {
+    try {
+      await cartApi.removeCartItem(itemId);
+      await refreshCart();
+    } catch (err) {
+      console.error("Failed to remove item from cart:", err);
+      alert(err.message || "Ürün sepetten silinemedi.");
+    }
+  }, [refreshCart]);
 
-  // Toplam ürün adedi
-  const totalCount = items.reduce((s, i) => s + i.qty, 0);
+  const clearCart = useCallback(async () => {
+    try {
+      await cartApi.clearCart();
+      setCartData(null);
+      setItems([]);
+    } catch (err) {
+      console.error("Failed to clear cart:", err);
+    }
+  }, []);
 
-  // Toplam tutar (fiyatı parse et)
-  const totalPrice = items.reduce((s, i) => {
-    const price = parseFloat(String(i.price).replace(/[^0-9.]/g, '')) || 0;
-    return s + price * i.qty;
+  const totalCount = cartData?.totalQuantity || items.reduce((s, i) => s + i.qty, 0);
+  const totalPrice = cartData?.subtotal || items.reduce((s, i) => {
+    const p = parseFloat(String(i.price).replace(/[^0-9.]/g, '')) || 0;
+    return s + p * i.qty;
   }, 0);
 
-  return (
-    <CartContext.Provider value={{ items, addToCart, updateQty, removeFromCart, clearCart, totalCount, totalPrice }}>
-      {children}
-    </CartContext.Provider>
-  );
+  const value = {
+    cartData,
+    items,
+    loading,
+    addToCart,
+    updateQty,
+    removeFromCart,
+    clearCart,
+    totalCount,
+    totalPrice,
+    refreshCart
+  };
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
-export const useCart = () => useContext(CartContext);
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
+  return context;
+};

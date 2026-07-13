@@ -115,6 +115,20 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState('description');
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [selectedVariantId, setSelectedVariantId] = useState(null);
+
+  // Auto-select first variant on load if exists
+  useEffect(() => {
+    if (productDetail?.variants?.length > 0) {
+      setSelectedVariantId(productDetail.variants[0].id);
+    } else {
+      setSelectedVariantId(null);
+    }
+  }, [productDetail]);
+
+  const selectedVariant = useMemo(() => {
+    return productDetail?.variants?.find(v => v.id === selectedVariantId) || null;
+  }, [productDetail, selectedVariantId]);
 
   /* ─── Medya Listesi ─────────────────────────────────── */
   const mediaList = useMemo(() => {
@@ -166,14 +180,14 @@ export default function ProductDetailPage() {
 
   /* ─── Handlers ──────────────────────────────────────── */
   const handleAddToCart = () => {
-    for (let i = 0; i < qty; i++) {
-      addToCart({ 
-        id: productDetail.id, 
-        name: productDetail.name, 
-        price: productDetail.price + ' ₺', 
-        image: productDetail.imageUrl || (productDetail.images?.[0]?.url || '') 
-      });
-    }
+    const finalPrice = productDetail.price + (selectedVariant?.additionalPrice || 0);
+    addToCart({ 
+      id: productDetail.id, 
+      name: productDetail.name + (selectedVariant ? ` (${selectedVariant.name})` : ''), 
+      price: finalPrice + ' ₺', 
+      image: productDetail.imageUrl || (productDetail.images?.[0]?.url || '') 
+    }, qty, selectedVariantId);
+    
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2200);
   };
@@ -351,14 +365,14 @@ export default function ProductDetailPage() {
             <div className={styles.priceBlock}>
               {productDetail.oldPrice && (
                 <div className={styles.oldPriceRow}>
-                  <span className={styles.oldPrice}>{productDetail.oldPrice} ₺</span>
+                  <span className={styles.oldPrice}>{productDetail.oldPrice + (selectedVariant?.additionalPrice || 0)} ₺</span>
                   {productDetail.discount && (
                     <span className={styles.discountBadge}>{productDetail.discount}</span>
                   )}
                 </div>
               )}
               <div className={styles.currentPrice}>
-                {productDetail.price} ₺
+                {productDetail.price + (selectedVariant?.additionalPrice || 0)} ₺
                 {productDetail.unit && <span className={styles.priceUnit}>/ {productDetail.unit}</span>}
               </div>
             </div>
@@ -370,6 +384,38 @@ export default function ProductDetailPage() {
               {productDetail.shortDescription || "Mistik şifa enerjileri barındıran bu özel ürün, ritüellerinizde ve günlük yaşamınızda huzuru yakalamanıza yardımcı olur."}
             </p>
 
+            {/* VARYANT SEÇİMİ */}
+            {productDetail.variants?.length > 0 && (
+              <>
+                <div className={styles.hr} />
+                <div style={{ marginBottom: '16px' }}>
+                  <span style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Seçenekler</span>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {productDetail.variants.map(v => (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => { setSelectedVariantId(v.id); setQty(1); }}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          background: selectedVariantId === v.id ? 'rgba(201, 162, 39, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                          border: selectedVariantId === v.id ? '1px solid var(--gold)' : '1px solid rgba(255, 255, 255, 0.1)',
+                          color: selectedVariantId === v.id ? 'var(--gold-light)' : 'var(--text-secondary)',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {v.name} {v.additionalPrice > 0 ? `(+${v.additionalPrice} ₺)` : ''}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className={styles.hr} />
 
             {/* Miktar Seçici */}
@@ -379,6 +425,7 @@ export default function ProductDetailPage() {
                 <button
                   className={styles.qtyBtn}
                   onClick={() => setQty(q => Math.max(1, q - 1))}
+                  disabled={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0}
                   aria-label="Azalt"
                 >
                   <FiMinus />
@@ -386,14 +433,20 @@ export default function ProductDetailPage() {
                 <span className={styles.qtyVal}>{qty}</span>
                 <button
                   className={styles.qtyBtn}
-                  onClick={() => setQty(q => q + 1)}
+                  onClick={() => setQty(q => Math.min(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity, q + 1))}
+                  disabled={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0}
                   aria-label="Artır"
                 >
                   <FiPlus />
                 </button>
               </div>
               <span className={styles.stockLabel}>
-                <FiZap className={styles.stockIcon} /> Stokta Mevcut ({productDetail.stockQuantity} Adet)
+                <FiZap className={styles.stockIcon} /> 
+                {(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0 ? (
+                  <span style={{ color: '#e05594' }}>Tükendi</span>
+                ) : (
+                  <>Stokta Mevcut ({(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity)} Adet)</>
+                )}
               </span>
             </div>
 
@@ -402,15 +455,22 @@ export default function ProductDetailPage() {
               <button
                 className={`${styles.cartBtn} ${addedToCart ? styles.cartAdded : ''}`}
                 onClick={handleAddToCart}
+                disabled={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0}
               >
-                {addedToCart ? (
+                {(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0 ? (
+                  <span>Tükendi</span>
+                ) : addedToCart ? (
                   <span><FiCheck /> Sepete Eklendi!</span>
                 ) : (
                   <span><FiShoppingCart /> Sepete Ekle</span>
                 )}
               </button>
 
-              <button className={styles.buyBtn} onClick={handleBuyNow}>
+              <button 
+                className={styles.buyBtn} 
+                onClick={handleBuyNow}
+                disabled={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0}
+              >
                 ✨ Hemen Satın Al
               </button>
 
@@ -519,44 +579,50 @@ export default function ProductDetailPage() {
               <div className={styles.reviewsWrap}>
                 
                 {/* Yorum Yazma Formu */}
-                <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                  <h4 style={{ color: 'var(--gold-light)', marginBottom: '16px' }}>Bu Ürünü Değerlendirin</h4>
-                  <form onSubmit={handleReviewSubmit}>
-                    <div style={{ marginBottom: '12px' }}>
-                      <span style={{ marginRight: '12px', color: 'var(--text-muted)' }}>Puanınız:</span>
-                      {[1,2,3,4,5].map(star => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setReviewRating(star)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0 4px' }}
-                        >
-                          <FiStar style={{ fill: star <= reviewRating ? 'var(--gold)' : 'none', color: 'var(--gold)' }} />
-                        </button>
-                      ))}
-                    </div>
-                    <textarea
-                      required
-                      placeholder="Yorumunuzu buraya yazın..."
-                      value={reviewText}
-                      onChange={e => setReviewText(e.target.value)}
-                      style={{
-                        width: '100%',
-                        height: '80px',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        color: '#fff',
-                        marginBottom: '12px',
-                        resize: 'none'
-                      }}
-                    />
-                    <button type="submit" className={styles.buyBtn} style={{ padding: '8px 24px', fontSize: '14px' }}>
-                      Yorumu Gönder
-                    </button>
-                  </form>
-                </div>
+                {productDetail.hasPurchased ? (
+                  <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    <h4 style={{ color: 'var(--gold-light)', marginBottom: '16px' }}>Bu Ürünü Değerlendirin</h4>
+                    <form onSubmit={handleReviewSubmit}>
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{ marginRight: '12px', color: 'var(--text-muted)' }}>Puanınız:</span>
+                        {[1,2,3,4,5].map(star => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setReviewRating(star)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '0 4px' }}
+                          >
+                            <FiStar style={{ fill: star <= reviewRating ? 'var(--gold)' : 'none', color: 'var(--gold)' }} />
+                          </button>
+                        ))}
+                      </div>
+                      <textarea
+                        required
+                        placeholder="Yorumunuzu buraya yazın..."
+                        value={reviewText}
+                        onChange={e => setReviewText(e.target.value)}
+                        style={{
+                          width: '100%',
+                          height: '80px',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          color: '#fff',
+                          marginBottom: '12px',
+                          resize: 'none'
+                        }}
+                      />
+                      <button type="submit" className={styles.buyBtn} style={{ padding: '8px 24px', fontSize: '14px' }}>
+                        Yorumu Gönder
+                      </button>
+                    </form>
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)', fontSize: 13 }}>
+                    * Bu ürünü sadece satın almış olan doğrulanmış müşterilerimiz değerlendirebilir.
+                  </div>
+                )}
 
                 {reviews.length > 0 ? (
                   <>
@@ -575,8 +641,15 @@ export default function ProductDetailPage() {
                             <div className={styles.rvAvatar}>
                               {rv.customerName ? rv.customerName[0].toUpperCase() : "M"}
                             </div>
-                            <div className={styles.rvMeta}>
-                              <span className={styles.rvName}>{rv.customerName || "Müşteri"}</span>
+                            <div className={styles.rvMeta} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span className={styles.rvName} style={{ margin: 0 }}>{rv.customerName || "Müşteri"}</span>
+                                {rv.isVerifiedPurchase && (
+                                  <span style={{ fontSize: 10, background: 'rgba(46,204,113,0.15)', border: '1px solid #2ecc71', color: '#2ecc71', padding: '1px 6px', borderRadius: 4 }}>
+                                    Satın Aldı
+                                  </span>
+                                )}
+                              </div>
                               <Stars rating={rv.rating} size={12} />
                             </div>
                             <span className={styles.rvDate}>

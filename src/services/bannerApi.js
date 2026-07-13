@@ -6,16 +6,25 @@ export function getBanners() {
 }
 
 // Admin Banner İstekleri
+export function getAdminBanners() {
+  return request("/admin/banners");
+}
+
 export function createAdminBanner(payload) {
-  // payload: { title, subtitle, image, imageMobile, cta, href, sortOrder, isActive }
   return request("/admin/banners", {
     method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
+export function updateAdminBanner(id, payload) {
+  return request(`/admin/banners/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload)
+  });
+}
+
 export function updateAdminBannerStatus(id, isActive) {
-  // Kural: nesne gövdesi ister: { "isActive": true }
   return request(`/admin/banners/${id}/status`, {
     method: "PATCH",
     body: JSON.stringify({ isActive })

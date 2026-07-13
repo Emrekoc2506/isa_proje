@@ -1,17 +1,16 @@
 import { request } from "./apiClient";
 
-export function createGuestOrder(payload) {
-  // payload: { customerName, customerEmail, customerPhone, shippingAddress: { city, district, fullAddress }, items: [ { productId, quantity } ] }
-  return request("/orders/guest", {
+export function createOrder(payload) {
+  return request("/orders", {
     method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
-export function createAuthenticatedOrder(payload) {
-  // payload: { shippingAddress: { city, district, fullAddress }, items: [ { productId, quantity } ] }
-  // Not: backend controller rotası api/orders (ve [HttpPost] [Authorize] nitelikli)
-  return request("/orders", {
+export const createAuthenticatedOrder = createOrder;
+
+export function createGuestOrder(payload) {
+  return request("/orders/guest", {
     method: "POST",
     body: JSON.stringify(payload)
   });
@@ -25,15 +24,32 @@ export function getMyOrderById(id) {
   return request(`/orders/my/${id}`);
 }
 
-// Admin Sipariş Entegrasyonları
-export function getAdminOrders() {
-  return request("/admin/orders");
+export function trackGuestOrder(payload) {
+  return request("/orders/guest/track", {
+    method: "POST",
+    body: JSON.stringify({
+      orderNumber: payload.orderNumber,
+      email: payload.email
+    })
+  });
+}
+
+// Admin Sipariş Entegrasyonları (Read-only)
+export function getAdminOrders(params = {}) {
+  const query = new URLSearchParams();
+  if (params.page) query.append('page', params.page);
+  if (params.pageSize) query.append('pageSize', params.pageSize);
+  if (params.status) query.append('status', params.status);
+  
+  const queryString = query.toString() ? `?${query.toString()}` : '';
+  return request(`/admin/orders${queryString}`);
+}
+
+export function getAdminOrderById(id) {
+  return request(`/admin/orders/${id}`);
 }
 
 export function updateAdminOrderStatus(id, status) {
-  // payload formatı: { status: "Pending" | "Preparing" | "Shipped" | "Delivered" | "Cancelled" | "Refunded" }
-  return request(`/admin/orders/${id}/status`, {
-    method: "PUT",
-    body: JSON.stringify({ status })
-  });
+  console.warn("Order status updates are read-only on the backend.");
+  return Promise.resolve();
 }

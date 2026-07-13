@@ -15,3 +15,9 @@ export function markAllNotificationsAsRead() {
     method: "PUT"
   });
 }
+
+export function deleteNotification(id) {
+  return request(`/notifications/${id}`, {
+    method: "DELETE"
+  });
+}

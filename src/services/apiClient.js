@@ -1,4 +1,19 @@
+import { getGuestSessionId } from "../utils/guestSession";
+import { parseResponseError, ApiError, translateErrorMessage } from "../api/apiError";
+
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7148/api";
+
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function subscribeTokenRefresh(cb) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token) {
+  refreshSubscribers.map((cb) => cb(token));
+  refreshSubscribers = [];
+}
 
 async function request(path, options = {}) {
   const token = localStorage.getItem("accessToken");
@@ -8,40 +23,137 @@ async function request(path, options = {}) {
     headers.set("Content-Type", "application/json");
   }
 
+  // Guest Session Headers
+  const guestSessionId = getGuestSessionId();
+  if (guestSessionId) {
+    headers.set("X-Guest-Session-Id", guestSessionId);
+    headers.set("X-Guest-SessionId", guestSessionId); // Legacy compatibility
+  }
+
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    ...options,
-    headers
+  try {
+    const response = await fetch(`${apiBaseUrl}${path}`, {
+      ...options,
+      headers
+    });
+
+    if (response.ok) {
+      if (response.status === 204) {
+        return null;
+      }
+      return response.json();
+    }
+
+    // Handle 401 Unauthorized
+    if (response.status === 401 && !path.includes("/auth/refresh-token") && !path.includes("/auth/login")) {
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (!refreshToken) {
+        handleLogoutRedirect();
+        throw new ApiError({ message: "Oturum süresi doldu.", status: 401, code: "unauthorized" });
+      }
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+        refreshAccessToken(refreshToken)
+          .then((newAccessToken) => {
+            isRefreshing = false;
+            onRefreshed(newAccessToken);
+          })
+          .catch((err) => {
+            isRefreshing = false;
+            handleLogoutRedirect();
+            processQueueReject(err);
+          });
+      }
+
+      // Queue the original request
+      const retryOriginalRequest = new Promise((resolve, reject) => {
+        subscribeTokenRefresh((newAccessToken) => {
+          // Clone request options with the new authorization header
+          const newOptions = { ...options };
+          const newHeaders = new Headers(options.headers || {});
+          if (!(options.body instanceof FormData)) {
+            newHeaders.set("Content-Type", "application/json");
+          }
+          if (guestSessionId) {
+            newHeaders.set("X-Guest-Session-Id", guestSessionId);
+            newHeaders.set("X-Guest-SessionId", guestSessionId);
+          }
+          newHeaders.set("Authorization", `Bearer ${newAccessToken}`);
+          newOptions.headers = newHeaders;
+
+          fetch(`${apiBaseUrl}${path}`, newOptions)
+            .then((res) => {
+              if (res.ok) {
+                if (res.status === 204) resolve(null);
+                else resolve(res.json());
+              } else {
+                parseResponseError(res).then(reject);
+              }
+            })
+            .catch(reject);
+        });
+      });
+
+      return retryOriginalRequest;
+    }
+
+    // Process regular error response
+    const apiErr = await parseResponseError(response);
+    throw apiErr;
+  } catch (err) {
+    if (err instanceof ApiError) {
+      throw err;
+    }
+    // Network errors or others
+    throw new ApiError({
+      message: translateErrorMessage(err.message) || "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.",
+      status: 500,
+      code: "network_error"
+    });
+  }
+}
+
+async function refreshAccessToken(refreshToken) {
+  const response = await fetch(`${apiBaseUrl}/auth/refresh-token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ refreshToken })
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      // Kullanıcıyı login sayfasına yönlendir
-      window.location.href = "/giris";
-      throw new Error("Oturum süresi doldu, lütfen tekrar giriş yapın.");
-    }
-
-    let errorData = null;
-    try {
-      errorData = await response.json();
-    } catch {
-      errorData = { message: `İstek başarısız oldu (Durum: ${response.status})` };
-    }
-
-    // Standart hata formatı: { success, message, errors, traceId }
-    throw errorData || new Error(`İstek başarısız oldu: ${response.status}`);
+    throw new Error("Refresh token rotation failed");
   }
 
-  if (response.status === 204) {
-    return null;
+  const data = await response.json();
+  if (data.accessToken && data.refreshToken) {
+    localStorage.setItem("accessToken", data.accessToken);
+    localStorage.setItem("refreshToken", data.refreshToken);
+    return data.accessToken;
   }
+  throw new Error("Invalid token response");
+}
 
-  return response.json();
+function processQueueReject(err) {
+  // Clear any subscribers
+  refreshSubscribers = [];
+}
+
+function handleLogoutRedirect() {
+  const hadToken = localStorage.getItem("accessToken") || localStorage.getItem("refreshToken");
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  
+  // Only force redirect to login if the user was actually authenticated before
+  if (hadToken && typeof window !== "undefined" && window.location.pathname !== "/giris" && window.location.pathname !== "/uye-ol") {
+    window.location.href = "/giris";
+  }
 }
 
 export { apiBaseUrl, request };

@@ -1,4 +1,5 @@
 import { request } from "./apiClient";
+import { getGuestSessionId } from "../utils/guestSession";
 
 // Müşteri Sohbet İstekleri
 export function getMyConversations() {
@@ -6,10 +7,18 @@ export function getMyConversations() {
 }
 
 export function createConversation(payload) {
-  // payload: { subject?, initialMessage? }
+  const guestSessionId = getGuestSessionId();
+  const clientMessageId = crypto.randomUUID ? crypto.randomUUID() : 'conv-' + Date.now();
   return request("/chat/conversations", {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      guestSessionId: guestSessionId || null,
+      guestName: payload.guestName || null,
+      guestEmail: payload.guestEmail || null,
+      subject: payload.subject || "Destek Sohbeti",
+      message: payload.message || null,
+      clientMessageId
+    })
   });
 }
 
@@ -18,10 +27,15 @@ export function getConversationMessages(id) {
 }
 
 export function sendMessage(id, payload) {
-  // payload: { content }
+  const guestSessionId = getGuestSessionId();
+  const clientMessageId = crypto.randomUUID ? crypto.randomUUID() : 'msg-' + Date.now();
   return request(`/chat/conversations/${id}/messages`, {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      content: payload.content,
+      guestSessionId: guestSessionId || null,
+      clientMessageId
+    })
   });
 }
 
@@ -35,9 +49,18 @@ export function getAdminConversationMessages(id) {
 }
 
 export function sendAdminMessage(id, payload) {
-  // payload: { content }
+  const clientMessageId = crypto.randomUUID ? crypto.randomUUID() : 'msg-admin-' + Date.now();
   return request(`/admin/chat/conversations/${id}/messages`, {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      content: payload.content,
+      clientMessageId
+    })
+  });
+}
+
+export function closeAdminConversation(id) {
+  return request(`/admin/chat/conversations/${id}/close`, {
+    method: "POST"
   });
 }

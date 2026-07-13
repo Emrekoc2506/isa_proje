@@ -526,40 +526,102 @@
   cursor: pointer;
 }
 
-/* ── Alt Kategori Styles ───────────────────────────────── */
-.subCategoryTags {
+/* ── Alt Kategori Tree Styles ──────────────────────────── */
+.categoryTree {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
 }
 
-.subTag {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-light);
-  color: var(--text-secondary);
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  display: inline-flex;
+.categoryTitle {
+  font-weight: bold;
+  color: var(--text-light);
+  font-size: 15px;
+}
+
+.subList {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 1.5px dashed rgba(201, 162, 39, 0.2);
+}
+
+.subItem {
+  padding-left: 12px;
+  position: relative;
+}
+
+.subItem::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 8px;
+  height: 1px;
+  border-bottom: 1.5px dashed rgba(201, 162, 39, 0.2);
+}
+
+.subItemRow {
+  display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 12px;
 }
 
-.subTagDel {
+.subLabel {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.subItemDel {
   background: none;
   border: none;
   color: #e05594;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1;
-  padding: 0;
+  padding: 0 4px;
   display: flex;
   align-items: center;
+  transition: color 0.2s;
 }
 
-.subTagDel:hover {
-  color: var(--nebula-red);
+.subItemDel:hover {
+  color: #ff3366;
+}
+
+.subListLevel2 {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-left: 1.5px dashed rgba(255, 255, 255, 0.1);
+}
+
+.subItemLevel2 {
+  padding-left: 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.subItemLevel2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 8px;
+  height: 1px;
+  border-bottom: 1.5px dashed rgba(255, 255, 255, 0.1);
 }
 
 .subCatInlineForm {
@@ -569,16 +631,16 @@
   border: 1px solid var(--border-mid);
   border-radius: var(--radius-md);
   padding: 2px 6px;
-  height: 34px;
+  height: 28px;
 }
 
 .subCatInput {
   background: none !important;
   border: none !important;
   color: var(--text-light) !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   padding: 0 4px !important;
-  width: 120px !important;
+  width: 100px !important;
 }
 
 .subCatInput:focus {
@@ -589,9 +651,9 @@
   background: none;
   border: none;
   color: var(--gold-light);
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 0 4px;
+  padding: 0 2px;
   display: flex;
   align-items: center;
 }

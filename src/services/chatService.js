@@ -1,4 +1,6 @@
 import * as signalR from "@microsoft/signalr";
+import { request } from "./apiClient";
+import { getGuestSessionId } from "../utils/guestSession";
 
 const signalrUrl = import.meta.env.VITE_SIGNALR_BASE_URL ?? "https://localhost:7148/hubs";
 let connection = null;
@@ -8,10 +10,8 @@ export const startChatConnection = async () => {
     return connection;
   }
 
-  const token = localStorage.getItem("accessToken");
-  const guestSessionId = localStorage.getItem("mv_guest_session_id") || "";
+  const guestSessionId = getGuestSessionId();
   
-  // URL'e guestSessionId ekleyelim (misafir sohbet desteği için)
   let url = `${signalrUrl}/chat`;
   const queryParams = [];
   
@@ -27,7 +27,7 @@ export const startChatConnection = async () => {
     .withUrl(url, {
       accessTokenFactory: () => {
         const t = localStorage.getItem("accessToken");
-        return t ? t : undefined; // Token yoksa undefined dön, misafir olarak bağlansın
+        return t ? t : undefined;
       }
     })
     .withAutomaticReconnect()
@@ -35,7 +35,7 @@ export const startChatConnection = async () => {
 
   try {
     await connection.start();
-    console.log("Real-time Chat SignalR Hub bağlantısı kuruldu. Misafir/Üye aktif.");
+    console.log("Real-time Chat SignalR Hub bağlantısı kuruldu.");
   } catch (err) {
     console.error("SignalR Hub bağlantı hatası:", err);
     connection = null;
@@ -54,20 +54,45 @@ export const stopChatConnection = async () => {
 
 export const getChatConnection = () => connection;
 
-// SignalR üzerinden canlı mesaj gönderme
-export const sendMessageLive = async (conversationId, message) => {
-  if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-    await startChatConnection();
-  }
-  
-  if (connection && connection.state === signalR.HubConnectionState.Connected) {
-    await connection.invoke("SendMessage", conversationId, message);
-    return true;
-  }
-  return false;
-};
+// REST based chat APIs
+export function getMyConversations() {
+  return request("/chat/conversations/my");
+}
 
-// SignalR üzerinden konuşmaya katılma
+export function getConversationMessages(conversationId) {
+  return request(`/chat/conversations/${conversationId}/messages`);
+}
+
+export function createConversation(payload) {
+  const guestSessionId = getGuestSessionId();
+  const clientMessageId = crypto.randomUUID ? crypto.randomUUID() : 'conv-' + Date.now();
+  return request("/chat/conversations", {
+    method: "POST",
+    body: JSON.stringify({
+      guestSessionId: guestSessionId || null,
+      guestName: payload.guestName || null,
+      guestEmail: payload.guestEmail || null,
+      subject: payload.subject || "Destek Talebi",
+      message: payload.message,
+      clientMessageId
+    })
+  });
+}
+
+export function sendMessage(conversationId, content) {
+  const guestSessionId = getGuestSessionId();
+  const clientMessageId = crypto.randomUUID ? crypto.randomUUID() : 'msg-' + Date.now();
+  return request(`/chat/conversations/${conversationId}/messages`, {
+    method: "POST",
+    body: JSON.stringify({
+      content,
+      guestSessionId: guestSessionId || null,
+      clientMessageId
+    })
+  });
+}
+
+// Live triggers via SignalR (e.g. typing, joining, admin support)
 export const joinConversationLive = async (conversationId) => {
   if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
     await startChatConnection();
@@ -78,21 +103,18 @@ export const joinConversationLive = async (conversationId) => {
   }
 };
 
-// SignalR üzerinden konuşmadan ayrılma
 export const leaveConversationLive = async (conversationId) => {
   if (connection && connection.state === signalR.HubConnectionState.Connected) {
     await connection.invoke("LeaveConversation", conversationId);
   }
 };
 
-// SignalR üzerinden yazıyor bilgisi gönderme
 export const sendTypingLive = async (conversationId) => {
   if (connection && connection.state === signalR.HubConnectionState.Connected) {
     await connection.invoke("Typing", conversationId);
   }
 };
 
-// SignalR üzerinden admin destek paneline katılma
 export const adminJoinSupportPanelLive = async () => {
   if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
     await startChatConnection();

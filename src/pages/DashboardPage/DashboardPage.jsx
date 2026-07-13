@@ -1,72 +1,88 @@
 import styles from './DashboardPage.module.css';
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiGrid, FiPackage, FiHeart, FiUser, FiSettings,
   FiLogOut, FiMenu, FiX, FiShoppingCart, FiChevronRight,
-  FiMapPin, FiBell, FiEdit3, FiTrash2, FiEye, FiMessageSquare
+  FiMapPin, FiBell, FiTrash2, FiMessageSquare, FiLoader
 } from 'react-icons/fi';
 import logoImage from '../../assets/images/logo.png';
-import { me, logout } from '../../services/authApi';
 import { getMyOrders } from '../../services/orderApi';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 import ChatUI from '../../components/ChatUI/ChatUI';
 import NotificationDropdown from '../../components/NotificationDropdown/NotificationDropdown';
+import AddressesSection from './AddressesSection';
+import * as accountApi from '../../services/accountApi';
 
 const NAV_ITEMS = [
   { id: 'overview',  label: 'Genel Bakış',   icon: FiGrid },
   { id: 'messages',  label: 'Mesajlarım',    icon: FiMessageSquare },
   { id: 'orders',    label: 'Siparişlerim',  icon: FiPackage },
   { id: 'wishlist',  label: 'Favorilerim',   icon: FiHeart },
+  { id: 'addresses', label: 'Adreslerim',    icon: FiMapPin },
   { id: 'profile',   label: 'Profilim',      icon: FiUser },
   { id: 'settings',  label: 'Ayarlar',       icon: FiSettings },
 ];
 
-const STATUS_CONFIG = {
-  pending:    { label: 'Bekliyor',     color: '#f1c40f' },
-  delivered:  { label: 'Teslim Edildi', color: '#2ecc71' },
-  shipping:   { label: 'Kargoda',       color: '#C9A227' },
-  shipped:    { label: 'Kargoda',       color: '#C9A227' },
-  preparing:  { label: 'Hazırlanıyor',  color: '#7B4EA6' },
-  cancelled:  { label: 'İptal',         color: '#e05594' },
-  refunded:   { label: 'İade Edildi',   color: '#e05594' },
-};
-
-export default function DashboardPage({ onLogout }) {
-  const [active, setActive] = useState('overview');
+export default function DashboardPage({ activeTab = 'overview' }) {
+  const [active, setActive] = useState(activeTab);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  
   const { items: wishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
   const { unreadCount } = useNotifications();
+  const { user, logout, reloadUser } = useAuth();
+  
+  const navigate = useNavigate();
+  const { id: routeOrderId } = useParams();
 
   // API State'leri
-  const [user, setUser] = useState(null);
   const [ordersList, setOrdersList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
-  const fetchUserDataAndOrders = useCallback(async () => {
+  // Settings form states
+  const [profileName, setProfileName] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState(false);
+  const [profileError, setProfileError] = useState('');
+
+  const [curPass, setCurPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confPass, setConfPass] = useState('');
+  const [passLoading, setPassLoading] = useState(false);
+  const [passSuccess, setPassSuccess] = useState(false);
+  const [passError, setPassError] = useState('');
+
+  useEffect(() => {
+    setActive(activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (user) {
+      setProfileName(user.fullName || '');
+      setProfilePhone(user.phoneNumber || '');
+    }
+  }, [user]);
+
+  const fetchOrders = useCallback(async () => {
     try {
-      setLoading(true);
-      const [userData, ordersData] = await Promise.all([
-        me().catch(() => null),
-        getMyOrders().catch(() => [])
-      ]);
-
-      if (userData) {
-        setUser(userData);
-      }
-      
+      setLoadingOrders(true);
+      const ordersData = await getMyOrders();
       if (ordersData) {
         // Siparişleri haritala
         const mapped = ordersData.map(o => ({
           id: o.id,
+          orderNumber: o.orderNumber || o.id.substring(0, 8).toUpperCase(),
           date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR'),
-          total: (o.totalAmount || 0) + ' ₺',
-          status: mapStatusToTurkish(o.status),
-          statusCode: String(o.status).toLowerCase(),
+          total: (o.totalAmount || o.grandTotal || 0) + ' ₺',
+          status: o.statusText || 'Sipariş Verildi',
+          statusCode: String(o.status || 'placed').toLowerCase(),
           items: (o.items || []).map(it => ({
             name: it.productName || "Mistik Ürün",
             qty: it.quantity,
@@ -76,34 +92,68 @@ export default function DashboardPage({ onLogout }) {
         setOrdersList(mapped);
       }
     } catch (err) {
-      console.error("Dashboard veri yükleme hatası:", err);
+      console.error("Dashboard sipariş yükleme hatası:", err);
     } finally {
-      setLoading(false);
+      setLoadingOrders(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchUserDataAndOrders();
-  }, [fetchUserDataAndOrders, active]);
-
-  const mapStatusToTurkish = (status) => {
-    const s = String(status).toLowerCase();
-    if (s === 'pending') return 'Bekliyor';
-    if (s === 'preparing') return 'Hazırlanıyor';
-    if (s === 'shipping' || s === 'shipped') return 'Kargoda';
-    if (s === 'delivered') return 'Teslim Edildi';
-    if (s === 'cancelled') return 'İptal';
-    if (s === 'refunded') return 'İade Edildi';
-    return status;
-  };
+    fetchOrders();
+  }, [fetchOrders, active]);
 
   const handleLogoutClick = async () => {
+    await logout();
+    navigate('/giris');
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setProfileError('');
+    setProfileSuccess(false);
+    setProfileLoading(true);
+
     try {
-      await logout();
-    } catch {
-      // Ignored
+      await accountApi.updateProfile({
+        fullName: profileName,
+        phoneNumber: profilePhone
+      });
+      await reloadUser();
+      setProfileSuccess(true);
+    } catch (err) {
+      setProfileError(err.message || 'Profil güncellenemedi.');
+    } finally {
+      setProfileLoading(false);
     }
-    onLogout();
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPassError('');
+    setPassSuccess(false);
+
+    if (newPass !== confPass) {
+      setPassError("Yeni şifreler uyuşmuyor.");
+      return;
+    }
+
+    setPassLoading(true);
+
+    try {
+      await accountApi.changePassword({
+        currentPassword: curPass,
+        newPassword: newPass,
+        confirmPassword: confPass
+      });
+      setPassSuccess(true);
+      setCurPass('');
+      setNewPass('');
+      setConfPass('');
+    } catch (err) {
+      setPassError(err.message || 'Şifre değiştirilemedi.');
+    } finally {
+      setPassLoading(false);
+    }
   };
 
   const initials = user?.fullName
@@ -115,14 +165,6 @@ export default function DashboardPage({ onLogout }) {
     visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
   };
-
-  if (loading && !user) {
-    return (
-      <div className={styles.page} style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
-        <p style={{ color: '#fff' }}>Yükleniyor...</p>
-      </div>
-    );
-  }
 
   const displayName = user?.fullName || "Müşteri";
   const displayEmail = user?.email || "";
@@ -158,20 +200,8 @@ export default function DashboardPage({ onLogout }) {
           <div className={styles.profileInfo}>
             <p className={styles.profileName}>{displayName}</p>
             <p className={styles.profileEmail}>{displayEmail}</p>
-            <span className={styles.memberBadge}>Gümüş Üye</span>
+            <span className={styles.memberBadge}>Kayıtlı Üye</span>
           </div>
-        </div>
-
-        {/* Puan */}
-        <div className={styles.pointsBar}>
-          <span className={styles.pointsLabel}>✦ 1240 puan</span>
-          <div className={styles.pointsTrack}>
-            <div
-              className={styles.pointsFill}
-              style={{ width: `62%` }}
-            />
-          </div>
-          <span className={styles.pointsNext}>Altın Üye'ye 760 puan kaldı</span>
         </div>
 
         {/* Navigasyon */}
@@ -180,7 +210,7 @@ export default function DashboardPage({ onLogout }) {
             <button
               key={id}
               className={`${styles.navItem} ${active === id ? styles.navActive : ''}`}
-              onClick={() => { setActive(id); setSidebarOpen(false); }}
+              onClick={() => { setActive(id); navigate(`/${id === 'overview' ? 'panel' : id === 'wishlist' ? 'favorilerim' : id === 'profile' ? 'profilim' : id === 'orders' ? 'siparislerim' : id === 'addresses' ? 'adreslerim' : id === 'messages' ? 'panel' : 'ayarlar'}`); setSidebarOpen(false); }}
             >
               <Icon className={styles.navIcon} />
               <span>{label}</span>
@@ -215,7 +245,7 @@ export default function DashboardPage({ onLogout }) {
             {sidebarOpen ? <FiX /> : <FiMenu />}
           </button>
           <h1 className={styles.pageTitle}>
-            {NAV_ITEMS.find(n => n.id === active)?.label}
+            {NAV_ITEMS.find(n => n.id === active)?.label || 'Panel'}
           </h1>
           <div className={styles.topBarActions}>
             <div style={{ position: 'relative' }}>
@@ -260,8 +290,7 @@ export default function DashboardPage({ onLogout }) {
                 <div className={styles.statsGrid}>
                   {[
                     { id: 'orders', label: 'Toplam Sipariş', value: ordersList.length, icon: '📦', color: 'var(--gold)' },
-                    { id: 'wishlist', label: 'Favori Ürünler', value: wishlist.length, icon: '♥', color: '#e05594' },
-                    { id: 'points', label: 'Mistik Puan', value: '1240', icon: '✦', color: '#7B4EA6' }
+                    { id: 'wishlist', label: 'Favori Ürünler', value: wishlist.length, icon: '♥', color: '#e05594' }
                   ].map((stat, i) => (
                     <motion.div
                       key={stat.id}
@@ -270,6 +299,7 @@ export default function DashboardPage({ onLogout }) {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.08, duration: 0.4 }}
                       style={{ '--stat-color': stat.color }}
+                      onClick={() => setActive(stat.id)}
                     >
                       <span className={styles.statIcon}>{stat.icon}</span>
                       <div className={styles.statContent}>
@@ -285,38 +315,22 @@ export default function DashboardPage({ onLogout }) {
                 <div className={styles.sectionCard}>
                   <div className={styles.sectionHeader}>
                     <h3 className={styles.sectionTitle}>Son Siparişler</h3>
-                    <button className={styles.seeAllBtn} onClick={() => setActive('orders')}>
+                    <button className={styles.seeAllBtn} onClick={() => { setActive('orders'); navigate('/siparislerim'); }}>
                       Tümünü Gör <FiChevronRight />
                     </button>
                   </div>
-                  {ordersList.slice(0, 2).map(order => (
-                    <OrderRow key={order.id} order={order} compact />
-                  ))}
-                  {ordersList.length === 0 && (
-                    <p className={styles.emptyText} style={{ textAlign: 'center', padding: '16px' }}>Henüz siparişiniz bulunmamaktadır.</p>
+                  {loadingOrders ? (
+                    <p className={styles.emptyText}>Yükleniyor...</p>
+                  ) : (
+                    <>
+                      {ordersList.slice(0, 2).map(order => (
+                        <OrderRow key={order.id} order={order} compact />
+                      ))}
+                      {ordersList.length === 0 && (
+                        <p className={styles.emptyText} style={{ textAlign: 'center', padding: '16px' }}>Henüz siparişiniz bulunmamaktadır.</p>
+                      )}
+                    </>
                   )}
-                </div>
-
-                {/* Favori Ürünler */}
-                <div className={styles.sectionCard}>
-                  <div className={styles.sectionHeader}>
-                    <h3 className={styles.sectionTitle}>Favorilerim</h3>
-                    <button className={styles.seeAllBtn} onClick={() => setActive('wishlist')}>
-                      Tümünü Gör <FiChevronRight />
-                    </button>
-                  </div>
-                  <div className={styles.miniWishlist}>
-                    {wishlist.slice(0, 3).map(item => (
-                      <div key={item.id} className={styles.miniWishItem}>
-                        <img src={item.image} alt={item.name} className={styles.miniWishImg} />
-                        <span className={styles.miniWishName}>{item.name}</span>
-                        <span className={styles.miniWishPrice}>{item.price}</span>
-                      </div>
-                    ))}
-                    {wishlist.length === 0 && (
-                      <p className={styles.emptyText} style={{ textAlign: 'center', padding: '16px' }}>Favori ürününüz bulunmamaktadır.</p>
-                    )}
-                  </div>
                 </div>
               </motion.div>
             )}
@@ -329,15 +343,21 @@ export default function DashboardPage({ onLogout }) {
                     <h3 className={styles.sectionTitle}>Tüm Siparişlerim</h3>
                     <span className={styles.sectionCount}>{ordersList.length} sipariş</span>
                   </div>
-                  {ordersList.map(order => (
-                    <OrderRow key={order.id} order={order} />
-                  ))}
-                  {ordersList.length === 0 && (
-                    <div className={styles.emptyState}>
-                      <span className={styles.emptyIcon}>📦</span>
-                      <p>Henüz sipariş vermediniz.</p>
-                      <a href="/urunler" className={styles.shopBtn}>Ürünleri Keşfet</a>
-                    </div>
+                  {loadingOrders ? (
+                    <p className={styles.emptyText}>Yükleniyor...</p>
+                  ) : (
+                    <>
+                      {ordersList.map(order => (
+                        <OrderRow key={order.id} order={order} initialOpen={routeOrderId === order.id} />
+                      ))}
+                      {ordersList.length === 0 && (
+                        <div className={styles.emptyState}>
+                          <span className={styles.emptyIcon}>📦</span>
+                          <p>Henüz sipariş vermediniz.</p>
+                          <a href="/urunler" className={styles.shopBtn}>Ürünleri Keşfet</a>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </motion.div>
@@ -404,6 +424,13 @@ export default function DashboardPage({ onLogout }) {
               </motion.div>
             )}
 
+            {/* ── ADRESLERİM ─────────────────────────────────── */}
+            {active === 'addresses' && (
+              <motion.div key="addresses" variants={contentVariants} initial="hidden" animate="visible" exit="exit">
+                <AddressesSection />
+              </motion.div>
+            )}
+
             {/* ── PROFİL ─────────────────────────────────────── */}
             {active === 'profile' && (
               <motion.div key="profile" variants={contentVariants} initial="hidden" animate="visible" exit="exit">
@@ -421,8 +448,8 @@ export default function DashboardPage({ onLogout }) {
                       {[
                         { label: 'Ad Soyad', value: displayName, type: 'text', readOnly: true },
                         { label: 'E-posta', value: displayEmail, type: 'email', readOnly: true },
-                        { label: 'Telefon', value: '+90 555 000 00 00', type: 'tel', readOnly: true },
-                        { label: 'Kullanıcı Rolleri', value: user?.roles?.join(', ') || "Müşteri", type: 'text', readOnly: true },
+                        { label: 'Telefon', value: user?.phoneNumber || 'Telefon eklenmemiş', type: 'tel', readOnly: true },
+                        { label: 'Kullanıcı Rolleri', value: roles.join(', ') || "Müşteri", type: 'text', readOnly: true },
                       ].map(field => (
                         <div key={field.label} className={styles.formField}>
                           <label className={styles.fieldLabel}>{field.label}</label>
@@ -436,15 +463,6 @@ export default function DashboardPage({ onLogout }) {
                         </div>
                       ))}
                     </div>
-                    <div className={styles.profileAddressSection}>
-                      <h4 className={styles.subSectionTitle}>
-                        <FiMapPin /> Kayıtlı Adresler
-                      </h4>
-                      <div className={styles.addressCard}>
-                        <p className={styles.addressTitle}>Varsayılan Teslimat Adresi</p>
-                        <p className={styles.addressText}>Kadıköy / İstanbul</p>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -453,27 +471,58 @@ export default function DashboardPage({ onLogout }) {
             {/* ── AYARLAR ────────────────────────────────────── */}
             {active === 'settings' && (
               <motion.div key="settings" variants={contentVariants} initial="hidden" animate="visible" exit="exit">
+                <div className={styles.sectionCard} style={{ marginBottom: 20 }}>
+                  <div className={styles.sectionHeader}>
+                    <h3 className={styles.sectionTitle}>Profilimi Güncelle</h3>
+                  </div>
+                  <form onSubmit={handleProfileUpdate} className={styles.profileForm}>
+                    {profileSuccess && <div style={{ color: '#2ecc71', fontSize: 13, marginBottom: 16 }}>✔ Profil bilgileriniz başarıyla güncellendi.</div>}
+                    {profileError && <div style={{ color: '#e05594', fontSize: 13, marginBottom: 16 }}>{profileError}</div>}
+                    
+                    <div className={styles.formGrid}>
+                      <div className={styles.formField}>
+                        <label className={styles.fieldLabel}>Ad Soyad</label>
+                        <input type="text" required value={profileName} onChange={e => setProfileName(e.target.value)} className={styles.fieldInput} />
+                      </div>
+                      <div className={styles.formField}>
+                        <label className={styles.fieldLabel}>Telefon</label>
+                        <input type="tel" value={profilePhone} onChange={e => setProfilePhone(e.target.value)} className={styles.fieldInput} placeholder="Örn: 905550000000" />
+                      </div>
+                    </div>
+                    <button type="submit" disabled={profileLoading} className={styles.shopBtn} style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {profileLoading && <FiLoader className={styles.spinner} style={{ animation: 'spin 1.5s linear infinite', fontSize: 14, margin: 0 }} />}
+                      Değişiklikleri Kaydet
+                    </button>
+                  </form>
+                </div>
+
                 <div className={styles.sectionCard}>
                   <div className={styles.sectionHeader}>
-                    <h3 className={styles.sectionTitle}>Ayarlar</h3>
+                    <h3 className={styles.sectionTitle}>Şifre Değiştir</h3>
                   </div>
-                  <div className={styles.settingsGrid}>
-                    {[
-                      { label: 'E-posta Bildirimleri', desc: 'Sipariş ve kampanya bildirimleri', checked: true },
-                      { label: 'Bülten Aboneliği', desc: 'Haftalık mistik içerikler', checked: true },
-                    ].map(setting => (
-                      <div key={setting.label} className={styles.settingRow}>
-                        <div>
-                          <p className={styles.settingLabel}>{setting.label}</p>
-                          <p className={styles.settingDesc}>{setting.desc}</p>
-                        </div>
-                        <label className={styles.toggle}>
-                          <input type="checkbox" defaultChecked={setting.checked} />
-                          <span className={styles.toggleSlider} />
-                        </label>
+                  <form onSubmit={handlePasswordChange} className={styles.profileForm}>
+                    {passSuccess && <div style={{ color: '#2ecc71', fontSize: 13, marginBottom: 16 }}>✔ Şifreniz başarıyla değiştirildi.</div>}
+                    {passError && <div style={{ color: '#e05594', fontSize: 13, marginBottom: 16 }}>{passError}</div>}
+                    
+                    <div className={styles.formGrid}>
+                      <div className={styles.formField}>
+                        <label className={styles.fieldLabel}>Mevcut Şifre</label>
+                        <input type="password" required value={curPass} onChange={e => setCurPass(e.target.value)} className={styles.fieldInput} />
                       </div>
-                    ))}
-                  </div>
+                      <div className={styles.formField}>
+                        <label className={styles.fieldLabel}>Yeni Şifre</label>
+                        <input type="password" required value={newPass} onChange={e => setNewPass(e.target.value)} className={styles.fieldInput} />
+                      </div>
+                      <div className={styles.formField}>
+                        <label className={styles.fieldLabel}>Yeni Şifre Tekrar</label>
+                        <input type="password" required value={confPass} onChange={e => setConfPass(e.target.value)} className={styles.fieldInput} />
+                      </div>
+                    </div>
+                    <button type="submit" disabled={passLoading} className={styles.shopBtn} style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {passLoading && <FiLoader className={styles.spinner} style={{ animation: 'spin 1.5s linear infinite', fontSize: 14, margin: 0 }} />}
+                      Şifreyi Güncelle
+                    </button>
+                  </form>
                 </div>
               </motion.div>
             )}
@@ -486,15 +535,17 @@ export default function DashboardPage({ onLogout }) {
 }
 
 // ── Sipariş Satırı Alt Bileşeni ──────────────────────────────
-function OrderRow({ order, compact }) {
-  const [open, setOpen] = useState(false);
-  const cfg = STATUS_CONFIG[order.statusCode] || { label: order.status, color: 'var(--gold)' };
+function OrderRow({ order, compact, initialOpen = false }) {
+  const [open, setOpen] = useState(initialOpen);
+  
+  // Placed is always Placed
+  const cfg = { label: order.status || 'Sipariş Verildi', color: 'var(--gold)' };
 
   return (
     <div className={styles.orderRow}>
       <div className={styles.orderHeader} onClick={() => !compact && setOpen(v => !v)} style={{ cursor: compact ? 'default' : 'pointer' }}>
         <div className={styles.orderMeta}>
-          <span className={styles.orderId} style={{ fontSize: 11 }}>{order.id}</span>
+          <span className={styles.orderNumber} style={{ color: 'var(--gold-light)', fontWeight: 600 }}>#{order.orderNumber}</span>
           <span className={styles.orderDate}>{order.date}</span>
         </div>
         <div className={styles.orderRight}>
@@ -515,7 +566,7 @@ function OrderRow({ order, compact }) {
       </div>
 
       <AnimatePresence>
-        {(!compact || false) && open && (
+        {(!compact && open) && (
           <motion.div
             className={styles.orderItems}
             initial={{ height: 0, opacity: 0 }}
@@ -524,12 +575,17 @@ function OrderRow({ order, compact }) {
             transition={{ duration: 0.25 }}
           >
             {order.items.map((item, i) => (
-              <div key={i} className={styles.orderItem}>
-                <span className={styles.orderItemName}>{item.name}</span>
-                <span className={styles.orderItemQty}>×{item.qty}</span>
-                <span className={styles.orderItemPrice}>{item.price}</span>
+              <div key={i} className={styles.orderItem} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span className={styles.orderItemName} style={{ color: 'var(--text-light)' }}>{item.name}</span>
+                <div style={{ display: 'flex', gap: 20 }}>
+                  <span className={styles.orderItemQty} style={{ color: 'var(--text-muted)' }}>{item.qty} adet</span>
+                  <span className={styles.orderItemPrice} style={{ color: 'var(--gold-light)', fontWeight: 500 }}>{item.price}</span>
+                </div>
               </div>
             ))}
+            <div style={{ padding: '8px 0', fontSize: 11, color: 'var(--text-muted)' }}>
+              Sipariş ID: {order.id}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

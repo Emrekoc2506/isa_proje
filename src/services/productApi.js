@@ -39,7 +39,9 @@ export function createProductReview(productId, payload) {
 
 // Admin Ürün İstekleri
 export function getAdminProducts(params = {}) {
-  const query = new URLSearchParams(params);
+  const query = new URLSearchParams();
+  if (params.page) query.append("page", params.page);
+  if (params.pageSize) query.append("pageSize", params.pageSize);
   return request(`/admin/products?${query.toString()}`);
 }
 
@@ -68,7 +70,6 @@ export function deleteAdminProduct(id) {
 }
 
 export function updateAdminProductStatus(id, isActive) {
-  // Kural: nesne gövdesi ister: { "isActive": true }
   return request(`/admin/products/${id}/status`, {
     method: "PATCH",
     body: JSON.stringify({ isActive })
@@ -76,9 +77,64 @@ export function updateAdminProductStatus(id, isActive) {
 }
 
 export function updateAdminProductPrice(id, price) {
-  // Kural: nesne gövdesi ister: { "price": 250 }
   return request(`/admin/products/${id}/price`, {
     method: "PATCH",
     body: JSON.stringify({ price })
   });
+}
+
+export function updateAdminProductStock(id, payload) {
+  return request(`/admin/products/${id}/stock`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      stockQuantity: payload.stockQuantity,
+      note: payload.note || "Admin stok guncellemesi"
+    })
+  });
+}
+
+// Admin Varyant Yönetimi
+export function createAdminProductVariant(productId, payload) {
+  return request(`/admin/products/${productId}/variants`, {
+    method: "POST",
+    body: JSON.stringify({
+      name: payload.name,
+      sku: payload.sku,
+      additionalPrice: payload.additionalPrice || 0,
+      stockQuantity: payload.stockQuantity || 0
+    })
+  });
+}
+
+export function updateAdminProductVariant(productId, variantId, payload) {
+  return request(`/admin/products/${productId}/variants/${variantId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      name: payload.name,
+      sku: payload.sku,
+      additionalPrice: payload.additionalPrice || 0,
+      stockQuantity: payload.stockQuantity || 0
+    })
+  });
+}
+
+export function deleteAdminProductVariant(productId, variantId) {
+  return request(`/admin/products/${productId}/variants/${variantId}`, {
+    method: "DELETE"
+  });
+}
+
+export function updateAdminProductVariantStock(productId, variantId, payload) {
+  return request(`/admin/products/${productId}/variants/${variantId}/stock`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      stockQuantity: payload.stockQuantity,
+      note: payload.note || "Admin varyant stok guncellemesi"
+    })
+  });
+}
+
+// Admin Stok / Envanter Yönetimi
+export function getAdminLowStockProducts() {
+  return request("/admin/inventory/low-stock");
 }
