@@ -15,12 +15,19 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) return;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setErrorMsg("Geçersiz e-posta formatı.");
+      return;
+    }
 
     try {
       setLoading(true);
       setErrorMsg('');
-      await forgotPassword(email.trim());
+      await forgotPassword(trimmedEmail);
       setSubmitted(true);
     } catch (err) {
       // Backend generic success or error. Task 4 says to always display the same success screen even if there is an error to hide email existence.
@@ -28,7 +35,15 @@ export default function ForgotPasswordPage() {
       if (err.code === "validation_error") {
         setErrorMsg("Lütfen geçerli bir e-posta adresi girin.");
       } else {
-        setSubmitted(true); // Treat as success to keep secure
+        let errorMessage = err.message || "";
+        if (err.errors) {
+          errorMessage = Object.entries(err.errors)
+            .map(([key, value]) => `${key}: ${value.join(', ')}`)
+            .join(' | ');
+          setErrorMsg(errorMessage);
+        } else {
+          setSubmitted(true); // Treat as success to keep secure
+        }
       }
     } finally {
       setLoading(false);

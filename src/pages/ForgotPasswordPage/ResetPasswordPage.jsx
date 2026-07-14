@@ -23,6 +23,11 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     if (!newPassword || !confirmPassword) return;
 
+    if (newPassword.length < 6) {
+      setErrorMsg("Yeni şifre en az 6 karakter olmalıdır.");
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setErrorMsg("Şifreler eşleşmiyor.");
       return;
@@ -44,7 +49,13 @@ export default function ResetPasswordPage() {
       });
       setSuccess(true);
     } catch (err) {
-      setErrorMsg(err.message || "Şifreniz sıfırlanamadı. Bağlantının süresi dolmuş olabilir.");
+      let errorMessage = err.message || "Şifreniz sıfırlanamadı. Bağlantının süresi dolmuş olabilir.";
+      if (err.errors) {
+        errorMessage = Object.entries(err.errors)
+          .map(([key, value]) => `${key}: ${value.join(', ')}`)
+          .join(' | ');
+      }
+      setErrorMsg(errorMessage);
     } finally {
       setLoading(false);
     }

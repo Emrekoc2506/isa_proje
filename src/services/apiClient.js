@@ -34,11 +34,19 @@ async function request(path, options = {}) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
+  // Timeout logic (default 3 seconds, except for file upload)
+  const isUpload = options.body instanceof FormData;
+  const timeoutMs = options.timeout ?? (isUpload ? 60000 : 3000);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
     const response = await fetch(`${apiBaseUrl}${path}`, {
       ...options,
-      headers
+      headers,
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
 
     if (response.ok) {
       if (response.status === 204) {
@@ -86,8 +94,13 @@ async function request(path, options = {}) {
           newHeaders.set("Authorization", `Bearer ${newAccessToken}`);
           newOptions.headers = newHeaders;
 
+          const retryController = new AbortController();
+          const retryTimeoutId = setTimeout(() => retryController.abort(), timeoutMs);
+          newOptions.signal = retryController.signal;
+
           fetch(`${apiBaseUrl}${path}`, newOptions)
             .then((res) => {
+              clearTimeout(retryTimeoutId);
               if (res.ok) {
                 if (res.status === 204) resolve(null);
                 else resolve(res.json());
@@ -95,7 +108,10 @@ async function request(path, options = {}) {
                 parseResponseError(res).then(reject);
               }
             })
-            .catch(reject);
+            .catch((e) => {
+              clearTimeout(retryTimeoutId);
+              reject(e);
+            });
         });
       });
 
@@ -106,12 +122,17 @@ async function request(path, options = {}) {
     const apiErr = await parseResponseError(response);
     throw apiErr;
   } catch (err) {
+    clearTimeout(timeoutId);
     if (err instanceof ApiError) {
       throw err;
     }
+    let errorMsg = err.message;
+    if (err.name === "AbortError") {
+      errorMsg = "Sunucu yanıt vermedi (Zaman aşımı). Lütfen sunucunun açık olduğundan emin olun.";
+    }
     // Network errors or others
     throw new ApiError({
-      message: translateErrorMessage(err.message) || "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.",
+      message: translateErrorMessage(errorMsg) || "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.",
       status: 500,
       code: "network_error"
     });

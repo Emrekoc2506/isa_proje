@@ -1,5 +1,5 @@
 import styles from './EmailVerifyPage.module.css'; // Reuse verify styles
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiMail, FiLoader, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
@@ -14,8 +14,23 @@ export default function EmailWaitingPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+
+  // Cooldown timer efekti
+  useState(() => {
+    // initialize cooldown if needed
+  });
+
+  // Cooldown geri sayım logic
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
 
   const handleResend = async () => {
+    if (cooldown > 0) return;
     if (!email) {
       setErrorMsg("E-posta adresi bulunamadı. Lütfen giriş yapmayı deneyin.");
       return;
@@ -27,8 +42,15 @@ export default function EmailWaitingPage() {
       setSuccess(false);
       await resendVerification(email);
       setSuccess(true);
+      setCooldown(60); // 60 saniye bekleme süresi
     } catch (err) {
-      setErrorMsg(err.message || "Doğrulama e-postası tekrar gönderilemedi.");
+      let errorMessage = err.message || "Doğrulama e-postası tekrar gönderilemedi.";
+      if (err.errors) {
+        errorMessage = Object.entries(err.errors)
+          .map(([key, value]) => `${key}: ${value.join(', ')}`)
+          .join(' | ');
+      }
+      setErrorMsg(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -76,12 +98,12 @@ export default function EmailWaitingPage() {
 
             <button 
               onClick={handleResend} 
-              disabled={loading}
+              disabled={loading || cooldown > 0}
               className={styles.btn}
-              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 12 }}
+              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 12, opacity: (loading || cooldown > 0) ? 0.5 : 1 }}
             >
               {loading && <FiLoader className={styles.spinner} style={{ margin: 0, fontSize: 16 }} />}
-              Tekrar E-posta Gönder
+              {cooldown > 0 ? `Tekrar Gönder (${cooldown}s)` : 'Tekrar E-posta Gönder'}
             </button>
 
             <button onClick={() => navigate('/giris')} className={styles.btnOutline}>

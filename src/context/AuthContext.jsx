@@ -9,6 +9,19 @@ import * as authApi from "../services/authApi";
 
 const AuthContext = createContext(null);
 
+export function isJwtExpired(token) {
+  if (!token) return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return true;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (!payload.exp) return false;
+    return payload.exp * 1000 < Date.now();
+  } catch (e) {
+    return true;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [roles, setRoles] = useState([]);
@@ -16,7 +29,9 @@ export function AuthProvider({ children }) {
 
   const reloadUser = useCallback(async () => {
     const token = localStorage.getItem("accessToken");
-    if (!token) {
+    if (!token || isJwtExpired(token)) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       setUser(null);
       setRoles([]);
       setIsLoading(false);

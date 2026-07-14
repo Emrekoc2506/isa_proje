@@ -28,11 +28,11 @@ export default function CheckoutPage() {
 
   // Guest Address states
   const [guestShipping, setGuestShipping] = useState({
-    fullName: '', phoneNumber: '', city: '', district: '',
+    fullName: '', email: '', phoneNumber: '', city: '', district: '',
     neighborhood: '', addressLine: '', postalCode: '', country: 'TR'
   });
   const [guestBilling, setGuestBilling] = useState({
-    fullName: '', phoneNumber: '', city: '', district: '',
+    fullName: '', email: '', phoneNumber: '', city: '', district: '',
     neighborhood: '', addressLine: '', postalCode: '', country: 'TR'
   });
 
@@ -145,15 +145,24 @@ export default function CheckoutPage() {
       payload.billingAddressId = sameAddress ? shippingAddressId : billingAddressId;
     } else {
       const s = guestShipping;
-      if (!s.fullName || !s.phoneNumber || !s.city || !s.district || !s.neighborhood || !s.addressLine || !s.postalCode) {
-        alert("Lütfen tüm adres alanlarını doldurun.");
+      if (!s.fullName || !s.email || !s.phoneNumber || !s.city || !s.district || !s.neighborhood || !s.addressLine || !s.postalCode) {
+        alert("Lütfen tüm adres ve iletişim alanlarını doldurun.");
         setOrderLoading(false);
         return;
       }
+
+      // E-posta format validasyonu
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(s.email)) {
+        alert("Lütfen geçerli bir e-posta adresi girin.");
+        setOrderLoading(false);
+        return;
+      }
+
       payload.guestShippingAddress = guestShipping;
       payload.guestBillingAddress = sameAddress ? guestShipping : guestBilling;
       payload.customerName = guestShipping.fullName;
-      payload.customerEmail = guestShipping.fullName.toLowerCase().replace(/[^a-z]+/g, '') + '@guest.com'; // Fallback guest details or inputs
+      payload.customerEmail = guestShipping.email;
       payload.customerPhone = guestShipping.phoneNumber;
     }
 
@@ -189,18 +198,44 @@ export default function CheckoutPage() {
         navigate('/odeme/sonuc');
       }
     } catch (err) {
-      alert(err.message || "Sipariş oluşturulurken bir hata oluştu.");
+      let errorMessage = err.message || "Sipariş oluşturulurken bir hata oluştu.";
+      if (err.errors) {
+        errorMessage = Object.entries(err.errors)
+          .map(([key, value]) => `${key}: ${value.join(', ')}`)
+          .join(' | ');
+      }
+      alert(errorMessage);
     } finally {
       setOrderLoading(false);
     }
   };
 
+  const formatPhone = (val) => {
+    let digits = val.replace(/\D/g, '');
+    if (digits.startsWith('0')) digits = digits.substring(1);
+    digits = digits.substring(0, 10);
+    let res = '';
+    if (digits.length > 0) res += digits.substring(0, 3);
+    if (digits.length > 3) res += ' ' + digits.substring(3, 6);
+    if (digits.length > 6) res += ' ' + digits.substring(6, 8);
+    if (digits.length > 8) res += ' ' + digits.substring(8, 10);
+    return res;
+  };
+
   const handleGuestShippingChange = (field, val) => {
-    setGuestShipping(prev => ({ ...prev, [field]: val }));
+    let value = val;
+    if (field === 'phoneNumber') {
+      value = formatPhone(val);
+    }
+    setGuestShipping(prev => ({ ...prev, [field]: value }));
   };
 
   const handleGuestBillingChange = (field, val) => {
-    setGuestBilling(prev => ({ ...prev, [field]: val }));
+    let value = val;
+    if (field === 'phoneNumber') {
+      value = formatPhone(val);
+    }
+    setGuestBilling(prev => ({ ...prev, [field]: value }));
   };
 
   if (cartItems.length === 0) {
@@ -256,6 +291,7 @@ export default function CheckoutPage() {
                 <h4>Teslimat Adresi</h4>
                 <div className={styles.formGrid}>
                   <input type="text" placeholder="Ad Soyad *" required value={guestShipping.fullName} onChange={e => handleGuestShippingChange('fullName', e.target.value)} className={styles.input} />
+                  <input type="email" placeholder="E-posta *" required value={guestShipping.email} onChange={e => handleGuestShippingChange('email', e.target.value)} className={styles.input} />
                   <input type="tel" placeholder="Telefon *" required value={guestShipping.phoneNumber} onChange={e => handleGuestShippingChange('phoneNumber', e.target.value)} className={styles.input} />
                   <input type="text" placeholder="Şehir *" required value={guestShipping.city} onChange={e => handleGuestShippingChange('city', e.target.value)} className={styles.input} />
                   <input type="text" placeholder="İlçe *" required value={guestShipping.district} onChange={e => handleGuestShippingChange('district', e.target.value)} className={styles.input} />
@@ -359,7 +395,11 @@ export default function CheckoutPage() {
                 <input 
                   type="text" 
                   value={couponCode} 
-                  onChange={e => setCouponCode(e.target.value)} 
+                  onChange={e => {
+                    setCouponCode(e.target.value);
+                    if (couponError) setCouponError('');
+                    if (couponSuccess) setCouponSuccess('');
+                  }} 
                   placeholder="İndirim kuponu" 
                   className={styles.couponInput}
                   disabled={!!couponApplied} 

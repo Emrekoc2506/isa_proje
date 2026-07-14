@@ -103,7 +103,7 @@ export default function ProductDetailPage() {
   /* ─── Benzer Ürünler (Random) ───────────────────────── */
   const relatedProducts = useMemo(() => {
     if (!products.length || !productDetail) return [];
-    const others = products.filter(p => String(p.id) !== String(productDetail.id));
+    const others = products.filter(p => String(p.id) !== String(productDetail.id) && p.isActive !== false);
     const shuffled = [...others].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 8);
   }, [products, productDetail]);
@@ -193,7 +193,15 @@ export default function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
-    handleAddToCart();
+    const finalPrice = productDetail.price + (selectedVariant?.additionalPrice || 0);
+    addToCart({ 
+      id: productDetail.id, 
+      name: productDetail.name + (selectedVariant ? ` (${selectedVariant.name})` : ''), 
+      price: finalPrice + ' ₺', 
+      image: productDetail.imageUrl || (productDetail.images?.[0]?.url || '') 
+    }, qty, selectedVariantId);
+    
+    navigate('/odeme');
   };
 
   const handlePrev = () => setActiveImg(p => (p === 0 ? mediaList.length - 1 : p - 1));
@@ -470,8 +478,17 @@ export default function ProductDetailPage() {
                 className={styles.buyBtn} 
                 onClick={handleBuyNow}
                 disabled={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0}
+                style={{
+                  background: 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)',
+                  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
               >
-                ✨ Hemen Satın Al
+                <FiZap style={{ color: '#fff' }} /> Hızlı Öde
               </button>
 
               <button

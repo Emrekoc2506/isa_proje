@@ -2,6 +2,7 @@ import styles from './ChatUI.module.css';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSend, FiSearch, FiCheckCircle, FiPlusCircle, FiXCircle } from 'react-icons/fi';
+import { useAuth } from '../../context/AuthContext';
 import { 
   startChatConnection, 
   stopChatConnection, 
@@ -31,8 +32,56 @@ export default function ChatUI({ isAdmin = false }) {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
+  // Arama, Odaklanma ve Link Algılama Lojikleri
+  const [searchQuery, setSearchQuery] = useState('');
+  const chatInputRef = useRef(null);
+  const { user } = useAuth();
+
   const activeConvRef = useRef(null);
   activeConvRef.current = activeConvId;
+
+  // Akıllı Link ve Görsel Algılayıcı (Dolaylı Görsel Paylaşımı İçin)
+  const renderMessageContent = (content) => {
+    if (!content) return null;
+    
+    // Basit URL bulucu regex
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    
+    if (urlRegex.test(content)) {
+      const parts = content.split(urlRegex);
+      return parts.map((part, index) => {
+        if (urlRegex.test(part)) {
+          const isImage = /\.(jpeg|jpg|gif|png|webp)/i.test(part) || 
+                          part.includes("hizliresim.com") || 
+                          part.includes("imgbb.com") || 
+                          part.includes("imgur.com");
+          
+          return (
+            <a 
+              key={index} 
+              href={part} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              style={{ 
+                color: 'var(--gold-light)', 
+                textDecoration: 'underline', 
+                wordBreak: 'break-all',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: '600'
+              }}
+            >
+              {isImage ? '🖼️ Görsel Bağlantısı' : '🔗 Bağlantı'}
+            </a>
+          );
+        }
+        return part;
+      });
+    }
+    
+    return content;
+  };
 
   // Konuşmaları API'den Çekme
   const fetchConversations = useCallback(async () => {
@@ -63,6 +112,13 @@ export default function ChatUI({ isAdmin = false }) {
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
+
+  // activeConvId değiştiğinde input'a odaklan (UX İyileştirmesi)
+  useEffect(() => {
+    if (activeConvId && chatInputRef.current) {
+      chatInputRef.current.focus();
+    }
+  }, [activeConvId]);
 
   // Seçili Konuşmanın Mesajlarını Çekme
   useEffect(() => {
@@ -237,6 +293,12 @@ export default function ChatUI({ isAdmin = false }) {
     return isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const filteredConversations = conversations.filter(conv => {
+    const query = searchQuery.toLowerCase();
+    return conv.name.toLowerCase().includes(query) || 
+           (conv.lastMessage && conv.lastMessage.toLowerCase().includes(query));
+  });
+
   const activeConv = conversations.find(c => c.id === activeConvId);
 
   return (
@@ -260,12 +322,18 @@ export default function ChatUI({ isAdmin = false }) {
           </div>
           <div className={styles.searchBox}>
             <FiSearch className={styles.searchIcon} />
-            <input type="text" placeholder="Sohbet ara..." className={styles.searchInput} />
+            <input 
+              type="text" 
+              placeholder="Sohbet ara..." 
+              className={styles.searchInput} 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
 
         <div className={styles.convList}>
-          {conversations.map(conv => (
+          {filteredConversations.map(conv => (
             <div 
               key={conv.id} 
               className={`${styles.convItem} ${activeConvId === conv.id ? styles.convItemActive : ''}`}
@@ -286,8 +354,10 @@ export default function ChatUI({ isAdmin = false }) {
               </div>
             </div>
           ))}
-          {conversations.length === 0 && (
-            <p className={styles.emptyState}>Sohbet bulunamadı.</p>
+          {filteredConversations.length === 0 && (
+            <p className={styles.emptyState}>
+              {searchQuery ? 'Eşleşen sohbet bulunamadı.' : 'Sohbet bulunamadı.'}
+            </p>
           )}
         </div>
       </div>
@@ -342,7 +412,7 @@ export default function ChatUI({ isAdmin = false }) {
 
               <AnimatePresence initial={false}>
                 {messages.map((msg) => {
-                  const isMe = msg.senderId === 'me' || (isAdmin && msg.senderId !== 'user-1' && msg.senderId !== 'customer') || msg.senderId === user?.id;
+                  const isMe = msg.senderId === 'me' || (isAdmin && msg.senderId !== 'user-1' && msg.senderId !== 'customer') || msg.senderId === user?.userId || msg.senderId === user?.id;
                   
                   return (
                     <div key={msg.id} className={styles.messageRow}>
@@ -355,7 +425,7 @@ export default function ChatUI({ isAdmin = false }) {
                         {!isMe && <div className={styles.msgAvatar}>{activeConv?.initials || 'D'}</div>}
                         
                         <div className={styles.messageBubble}>
-                          <p className={styles.messageContent}>{msg.content}</p>
+                          <p className={styles.messageContent}>{renderMessageContent(msg.content)}</p>
                           <div className={styles.messageMeta}>
                             <span>{formatTime(msg.sentAt)}</span>
                             {isMe && <FiCheckCircle className={styles.readIcon} />}
@@ -391,22 +461,39 @@ export default function ChatUI({ isAdmin = false }) {
                 Bu sohbet sonlandırılmıştır. Yeni bir destek talebi oluşturabilirsiniz.
               </div>
             ) : (
-              <form className={styles.inputArea} onSubmit={handleSend}>
-                <input 
-                  type="text" 
-                  placeholder="Mesajınızı yazın..." 
-                  className={styles.messageInput}
-                  value={newMessage}
-                  onChange={handleInputChange}
-                />
-                <button 
-                  type="submit" 
-                  className={styles.sendBtn}
-                  disabled={!newMessage.trim()}
-                >
-                  <FiSend />
-                </button>
-              </form>
+              <>
+                <div style={{ 
+                  padding: '6px 16px', 
+                  background: 'rgba(255, 255, 255, 0.02)', 
+                  borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)', 
+                  fontSize: '11px', 
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  userSelect: 'none'
+                }}>
+                  <span>💡 Görsel iletmek için <a href="https://hizliresim.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', textDecoration: 'underline' }}>Hızlı Resim</a> veya <a href="https://imgbb.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', textDecoration: 'underline' }}>ImgBB</a> servislerini kullanıp linki yapıştırabilirsiniz.</span>
+                </div>
+                <form className={styles.inputArea} onSubmit={handleSend}>
+                  <input 
+                    ref={chatInputRef}
+                    type="text" 
+                    placeholder="Mesajınızı yazın..." 
+                    className={styles.messageInput}
+                    value={newMessage}
+                    onChange={handleInputChange}
+                  />
+                  <button 
+                    type="submit" 
+                    className={styles.sendBtn}
+                    disabled={!newMessage.trim()}
+                  >
+                    <FiSend />
+                  </button>
+                </form>
+              </>
             )}
           </>
         ) : (

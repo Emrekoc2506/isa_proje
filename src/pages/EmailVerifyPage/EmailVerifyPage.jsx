@@ -32,7 +32,13 @@ export default function EmailVerifyPage() {
       })
       .catch((err) => {
         setStatus('error');
-        setErrorMsg(err.message || 'E-posta doğrulanamadı. Bağlantı süresi dolmuş olabilir.');
+        let errorMessage = err.message || 'E-posta doğrulanamadı. Bağlantı süresi dolmuş olabilir.';
+        if (err.errors) {
+          errorMessage = Object.entries(err.errors)
+            .map(([key, value]) => `${key}: ${value.join(', ')}`)
+            .join(' | ');
+        }
+        setErrorMsg(errorMessage);
       });
   }, [searchParams]);
 

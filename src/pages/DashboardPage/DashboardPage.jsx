@@ -59,6 +59,36 @@ export default function DashboardPage({ activeTab = 'overview' }) {
   const [passSuccess, setPassSuccess] = useState(false);
   const [passError, setPassError] = useState('');
 
+  // Telefon formatı maskesi (ozel_hoca projesinden esinlenilmiştir)
+  const handlePhoneChange = (value) => {
+    let digits = value.replace(/\D/g, '');
+    if (digits.startsWith('0')) digits = digits.substring(1);
+    digits = digits.substring(0, 10);
+    let res = '';
+    if (digits.length > 0) res += digits.substring(0, 3);
+    if (digits.length > 3) res += ' ' + digits.substring(3, 6);
+    if (digits.length > 6) res += ' ' + digits.substring(6, 8);
+    if (digits.length > 8) res += ' ' + digits.substring(8, 10);
+    setProfilePhone(res);
+    if (profileError) setProfileError('');
+    if (profileSuccess) setProfileSuccess(false);
+  };
+
+  // Şifre Gücü Analizi
+  const getPasswordStrength = useCallback((pass) => {
+    if (!pass) return { score: 0, text: '', color: 'transparent' };
+    let score = 0;
+    if (pass.length >= 6) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[a-z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+    if (score <= 2) return { score, text: 'Zayıf Şifre', color: '#e05594' };
+    if (score <= 4) return { score, text: 'Orta Derece Şifre', color: '#f39c12' };
+    return { score, text: 'Güçlü Şifre', color: '#2ecc71' };
+  }, []);
+
   useEffect(() => {
     setActive(activeTab);
   }, [activeTab]);
@@ -121,7 +151,13 @@ export default function DashboardPage({ activeTab = 'overview' }) {
       await reloadUser();
       setProfileSuccess(true);
     } catch (err) {
-      setProfileError(err.message || 'Profil güncellenemedi.');
+      let errorMessage = err.message || 'Profil güncellenemedi.';
+      if (err.errors) {
+        errorMessage = Object.entries(err.errors)
+          .map(([key, value]) => `${key}: ${value.join(', ')}`)
+          .join(' | ');
+      }
+      setProfileError(errorMessage);
     } finally {
       setProfileLoading(false);
     }
@@ -131,6 +167,11 @@ export default function DashboardPage({ activeTab = 'overview' }) {
     e.preventDefault();
     setPassError('');
     setPassSuccess(false);
+
+    if (newPass.length < 6) {
+      setPassError("Yeni şifre en az 6 karakter olmalıdır.");
+      return;
+    }
 
     if (newPass !== confPass) {
       setPassError("Yeni şifreler uyuşmuyor.");
@@ -150,7 +191,13 @@ export default function DashboardPage({ activeTab = 'overview' }) {
       setNewPass('');
       setConfPass('');
     } catch (err) {
-      setPassError(err.message || 'Şifre değiştirilemedi.');
+      let errorMessage = err.message || 'Şifre değiştirilemedi.';
+      if (err.errors) {
+        errorMessage = Object.entries(err.errors)
+          .map(([key, value]) => `${key}: ${value.join(', ')}`)
+          .join(' | ');
+      }
+      setPassError(errorMessage);
     } finally {
       setPassLoading(false);
     }
@@ -482,11 +529,27 @@ export default function DashboardPage({ activeTab = 'overview' }) {
                     <div className={styles.formGrid}>
                       <div className={styles.formField}>
                         <label className={styles.fieldLabel}>Ad Soyad</label>
-                        <input type="text" required value={profileName} onChange={e => setProfileName(e.target.value)} className={styles.fieldInput} />
+                        <input 
+                          type="text" 
+                          required 
+                          value={profileName} 
+                          onChange={e => {
+                            setProfileName(e.target.value);
+                            if (profileError) setProfileError('');
+                            if (profileSuccess) setProfileSuccess(false);
+                          }} 
+                          className={styles.fieldInput} 
+                        />
                       </div>
                       <div className={styles.formField}>
                         <label className={styles.fieldLabel}>Telefon</label>
-                        <input type="tel" value={profilePhone} onChange={e => setProfilePhone(e.target.value)} className={styles.fieldInput} placeholder="Örn: 905550000000" />
+                        <input 
+                          type="tel" 
+                          value={profilePhone} 
+                          onChange={e => handlePhoneChange(e.target.value)} 
+                          className={styles.fieldInput} 
+                          placeholder="Örn: 555 000 00 00" 
+                        />
                       </div>
                     </div>
                     <button type="submit" disabled={profileLoading} className={styles.shopBtn} style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -507,15 +570,67 @@ export default function DashboardPage({ activeTab = 'overview' }) {
                     <div className={styles.formGrid}>
                       <div className={styles.formField}>
                         <label className={styles.fieldLabel}>Mevcut Şifre</label>
-                        <input type="password" required value={curPass} onChange={e => setCurPass(e.target.value)} className={styles.fieldInput} />
+                        <input 
+                          type="password" 
+                          required 
+                          value={curPass} 
+                          onChange={e => {
+                            setCurPass(e.target.value);
+                            if (passError) setPassError('');
+                            if (passSuccess) setPassSuccess(false);
+                          }} 
+                          className={styles.fieldInput} 
+                        />
                       </div>
                       <div className={styles.formField}>
                         <label className={styles.fieldLabel}>Yeni Şifre</label>
-                        <input type="password" required value={newPass} onChange={e => setNewPass(e.target.value)} className={styles.fieldInput} />
+                        <input 
+                          type="password" 
+                          required 
+                          value={newPass} 
+                          onChange={e => {
+                            setNewPass(e.target.value);
+                            if (passError) setPassError('');
+                            if (passSuccess) setPassSuccess(false);
+                          }} 
+                          className={styles.fieldInput} 
+                        />
+                        
+                        {newPass && (() => {
+                          const strength = getPasswordStrength(newPass);
+                          return (
+                            <div style={{ marginTop: 6, paddingLeft: 4 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                <span style={{ fontSize: '11px', color: strength.color, fontWeight: '600', transition: 'color 0.3s' }}>
+                                  {strength.text}
+                                </span>
+                              </div>
+                              <div style={{ width: '100%', height: '4px', backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                                <div style={{ 
+                                  width: `${(strength.score / 5) * 100}%`, 
+                                  height: '100%', 
+                                  backgroundColor: strength.color, 
+                                  transition: 'width 0.3s ease, background-color 0.3s ease',
+                                  boxShadow: `0 0 8px ${strength.color}`
+                                }} />
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div className={styles.formField}>
                         <label className={styles.fieldLabel}>Yeni Şifre Tekrar</label>
-                        <input type="password" required value={confPass} onChange={e => setConfPass(e.target.value)} className={styles.fieldInput} />
+                        <input 
+                          type="password" 
+                          required 
+                          value={confPass} 
+                          onChange={e => {
+                            setConfPass(e.target.value);
+                            if (passError) setPassError('');
+                            if (passSuccess) setPassSuccess(false);
+                          }} 
+                          className={styles.fieldInput} 
+                        />
                       </div>
                     </div>
                     <button type="submit" disabled={passLoading} className={styles.shopBtn} style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
