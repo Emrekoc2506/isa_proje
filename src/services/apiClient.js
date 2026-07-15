@@ -1,7 +1,12 @@
 import { getGuestSessionId } from "../utils/guestSession";
-import { parseResponseError, ApiError, translateErrorMessage } from "../api/apiError";
+import {
+  parseResponseError,
+  ApiError,
+  translateErrorMessage,
+} from "../api/apiError";
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7148/api";
+const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7148/api";
 
 let isRefreshing = false;
 let refreshSubscribers = [];
@@ -44,7 +49,7 @@ async function request(path, options = {}) {
     const response = await fetch(`${apiBaseUrl}${path}`, {
       ...options,
       headers,
-      signal: controller.signal
+      signal: controller.signal,
     });
     clearTimeout(timeoutId);
 
@@ -56,12 +61,20 @@ async function request(path, options = {}) {
     }
 
     // Handle 401 Unauthorized
-    if (response.status === 401 && !path.includes("/auth/refresh-token") && !path.includes("/auth/login")) {
+    if (
+      response.status === 401 &&
+      !path.includes("/auth/refresh-token") &&
+      !path.includes("/auth/login")
+    ) {
       const refreshToken = localStorage.getItem("refreshToken");
 
       if (!refreshToken) {
         handleLogoutRedirect();
-        throw new ApiError({ message: "Oturum süresi doldu.", status: 401, code: "unauthorized" });
+        throw new ApiError({
+          message: "Oturum süresi doldu.",
+          status: 401,
+          code: "unauthorized",
+        });
       }
 
       if (!isRefreshing) {
@@ -95,7 +108,10 @@ async function request(path, options = {}) {
           newOptions.headers = newHeaders;
 
           const retryController = new AbortController();
-          const retryTimeoutId = setTimeout(() => retryController.abort(), timeoutMs);
+          const retryTimeoutId = setTimeout(
+            () => retryController.abort(),
+            timeoutMs,
+          );
           newOptions.signal = retryController.signal;
 
           fetch(`${apiBaseUrl}${path}`, newOptions)
@@ -128,13 +144,16 @@ async function request(path, options = {}) {
     }
     let errorMsg = err.message;
     if (err.name === "AbortError") {
-      errorMsg = "Sunucu yanıt vermedi (Zaman aşımı). Lütfen sunucunun açık olduğundan emin olun.";
+      errorMsg =
+        "Sunucu yanıt vermedi (Zaman aşımı). Lütfen sunucunun açık olduğundan emin olun.";
     }
     // Network errors or others
     throw new ApiError({
-      message: translateErrorMessage(errorMsg) || "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.",
+      message:
+        translateErrorMessage(errorMsg) ||
+        "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.",
       status: 500,
-      code: "network_error"
+      code: "network_error",
     });
   }
 }
@@ -143,9 +162,9 @@ async function refreshAccessToken(refreshToken) {
   const response = await fetch(`${apiBaseUrl}/auth/refresh-token`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ refreshToken })
+    body: JSON.stringify({ refreshToken }),
   });
 
   if (!response.ok) {
@@ -167,12 +186,18 @@ function processQueueReject(err) {
 }
 
 function handleLogoutRedirect() {
-  const hadToken = localStorage.getItem("accessToken") || localStorage.getItem("refreshToken");
+  const hadToken =
+    localStorage.getItem("accessToken") || localStorage.getItem("refreshToken");
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
-  
+
   // Only force redirect to login if the user was actually authenticated before
-  if (hadToken && typeof window !== "undefined" && window.location.pathname !== "/giris" && window.location.pathname !== "/uye-ol") {
+  if (
+    hadToken &&
+    typeof window !== "undefined" &&
+    window.location.pathname !== "/giris" &&
+    window.location.pathname !== "/uye-ol"
+  ) {
     window.location.href = "/giris";
   }
 }

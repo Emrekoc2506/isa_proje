@@ -179,6 +179,13 @@ export default function CheckoutPage() {
 
       // Store pending order details
       sessionStorage.setItem('pendingOrderId', orderId);
+      if (orderRes.orderNumber) {
+        sessionStorage.setItem('pendingOrderNumber', orderRes.orderNumber);
+      }
+      const emailVal = isAuthenticated ? '' : guestShipping.email;
+      if (emailVal) {
+        sessionStorage.setItem('pendingOrderEmail', emailVal);
+      }
 
       // 2. Initialize payment redirect
       const paymentRes = await paymentApi.initializePayment({
@@ -187,9 +194,6 @@ export default function CheckoutPage() {
         returnUrl: window.location.origin + '/odeme/sonuc',
         idempotencyKey: crypto.randomUUID ? crypto.randomUUID() : 'idemp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7)
       });
-
-      // Clear local cart
-      await clearCart();
 
       // 3. Redirect to provider
       if (paymentRes?.redirectUrl) {

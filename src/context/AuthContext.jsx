@@ -28,28 +28,80 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const reloadUser = useCallback(async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token || isJwtExpired(token)) {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      setUser(null);
-      setRoles([]);
-      setIsLoading(false);
-      return null;
+    let token = localStorage.getItem("accessToken");
+    const rToken = localStorage.getItem("refreshToken");
+
+    if (!token) {
+      if (rToken) {
+        try {
+          setIsLoading(true);
+          const refreshed = await authApi.refreshToken(rToken);
+          if (refreshed?.accessToken) {
+            localStorage.setItem("accessToken", refreshed.accessToken);
+            if (refreshed.refreshToken) {
+              localStorage.setItem("refreshToken", refreshed.refreshToken);
+            }
+            token = refreshed.accessToken;
+          } else {
+            throw new Error("Refresh failed");
+          }
+        } catch {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          setUser(null);
+          setRoles([]);
+          setIsLoading(false);
+          return null;
+        }
+      } else {
+        setUser(null);
+        setRoles([]);
+        setIsLoading(false);
+        return null;
+      }
+    }
+
+    if (isJwtExpired(token)) {
+      if (rToken) {
+        try {
+          setIsLoading(true);
+          const refreshed = await authApi.refreshToken(rToken);
+          if (refreshed?.accessToken) {
+            localStorage.setItem("accessToken", refreshed.accessToken);
+            if (refreshed.refreshToken) {
+              localStorage.setItem("refreshToken", refreshed.refreshToken);
+            }
+            token = refreshed.accessToken;
+          } else {
+            throw new Error("Refresh failed");
+          }
+        } catch {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          setUser(null);
+          setRoles([]);
+          setIsLoading(false);
+          return null;
+        }
+      } else {
+        localStorage.removeItem("accessToken");
+        setUser(null);
+        setRoles([]);
+        setIsLoading(false);
+        return null;
+      }
     }
 
     try {
       setIsLoading(true);
       const res = await authApi.me();
-      if (res && res.user) {
-        setUser(res.user);
-        setRoles(res.user.roles || []);
-        return res.user;
+      if (res) {
+        setUser(res);
+        setRoles(res.roles || []);
+        return res;
       }
     } catch (err) {
       console.error("Failed to fetch user context profile:", err);
-      // Let the apiClient's 401 handling or retry logic deal with token expirations
-      // If it throws and fails completely, clear user state
       setUser(null);
       setRoles([]);
     } finally {
@@ -66,10 +118,9 @@ export function AuthProvider({ children }) {
     setIsLoading(true);
     try {
       const res = await authApi.login(credentials);
-      if (res && res.user) {
-        setUser(res.user);
-        setRoles(res.user.roles || []);
-        return res;
+      const userProfile = await reloadUser();
+      if (userProfile) {
+        return { ...res, user: userProfile };
       }
       throw new Error("Giriş bilgileri alınamadı.");
     } catch (err) {
@@ -79,7 +130,7 @@ export function AuthProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [reloadUser]);
 
   const register = useCallback(async (payload) => {
     setIsLoading(true);

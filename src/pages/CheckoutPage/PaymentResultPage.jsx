@@ -4,19 +4,23 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiCheckCircle, FiXCircle, FiLoader, FiPackage, FiRefreshCw } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import * as orderApi from '../../services/orderApi';
+import * as paymentApi from '../../services/paymentApi';
 import logoImage from '../../assets/images/logo.png';
 
 export default function PaymentResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { clearCart } = useCart();
 
   const orderId = searchParams.get('orderId') || sessionStorage.getItem('pendingOrderId') || '';
-  const orderNumber = searchParams.get('orderNumber') || '';
-  const email = searchParams.get('email') || '';
+  const orderNumber = searchParams.get('orderNumber') || sessionStorage.getItem('pendingOrderNumber') || '';
+  const email = searchParams.get('email') || sessionStorage.getItem('pendingOrderEmail') || '';
 
   const [loading, setLoading] = useState(true);
+  const [retryLoading, setRetryLoading] = useState(false);
   const [order, setOrder] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -44,10 +48,38 @@ export default function PaymentResultPage() {
       }
 
       setOrder(data);
+      if (data && String(data.paymentStatus).toLowerCase() === 'paid') {
+        clearCart();
+      }
     } catch (err) {
       setErrorMsg(err.message || "Sipariş durumu sorgulanamadı.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRetryPayment = async () => {
+    if (!orderId) {
+      alert("Sipariş ID bulunamadı.");
+      return;
+    }
+    setRetryLoading(true);
+    try {
+      const paymentRes = await paymentApi.initializePayment({
+        orderId,
+        provider: 'iyzico',
+        returnUrl: window.location.origin + '/odeme/sonuc',
+        idempotencyKey: crypto.randomUUID ? crypto.randomUUID() : 'idemp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7)
+      });
+      if (paymentRes?.redirectUrl) {
+        window.location.assign(paymentRes.redirectUrl);
+      } else {
+        alert("Ödeme yönlendirme bağlantısı alınamadı.");
+      }
+    } catch (err) {
+      alert("Ödeme yeniden başlatılamadı: " + (err.message || err));
+    } finally {
+      setRetryLoading(false);
     }
   };
 
@@ -126,8 +158,14 @@ export default function PaymentResultPage() {
               <h2 className={styles.title}>Ödeme Başarısız</h2>
               <p className={styles.sub}>Kartınızdan tahsilat yapılamadı. Lütfen bilgilerinizi kontrol edip tekrar deneyin.</p>
               
-              <button onClick={() => navigate('/odeme')} className={styles.btn} style={{ marginBottom: 12 }}>
-                Ödeme Sayfasına Dön
+              <button 
+                onClick={handleRetryPayment} 
+                disabled={retryLoading} 
+                className={styles.btn} 
+                style={{ marginBottom: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+              >
+                {retryLoading ? <FiLoader className={styles.spinner} /> : <FiRefreshCw />}
+                Ödemeyi Tekrar Dene
               </button>
               <button onClick={() => navigate('/')} className={styles.btnOutline}>
                 Ana Sayfaya Dön

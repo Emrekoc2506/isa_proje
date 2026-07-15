@@ -31,10 +31,6 @@ export function me() {
 
 export async function logout() {
   const refreshTokenVal = localStorage.getItem("refreshToken");
-  
-  // Clear tokens immediately on UI
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
 
   try {
     return await request("/auth/logout", { 
@@ -42,22 +38,23 @@ export async function logout() {
       body: JSON.stringify({ refreshToken: refreshTokenVal })
     });
   } catch (err) {
-    // Suppress error so logout still functions on client
     return null;
+  } finally {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
   }
 }
 
 export async function logoutAll() {
-  // Clear tokens immediately on UI
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-
   try {
     return await request("/auth/logout-all", { 
       method: "POST"
     });
   } catch (err) {
     return null;
+  } finally {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
   }
 }
 

@@ -18,7 +18,8 @@ export default function OrdersSection() {
       setLoading(true);
       const res = await orderApi.getAdminOrders({ page, pageSize: 10 });
       setOrders(res.items || []);
-      setTotalPages(res.totalPages || 1);
+      const calculatedPages = Math.max(1, Math.ceil((res.totalCount || 0) / (res.pageSize || 10)));
+      setTotalPages(calculatedPages);
     } catch (err) {
       console.error(err);
     } finally {
@@ -130,11 +131,22 @@ export default function OrdersSection() {
                 <h5 style={{ margin: '0 0 8px 0', color: 'var(--gold-light)', fontSize: 14 }}>Adres Bilgileri</h5>
                 <div style={{ background: 'rgba(255,255,255,0.02)', padding: 12, borderRadius: 6, border: '1px solid rgba(255,255,255,0.05)' }}>
                   <p style={{ margin: '0 0 4px 0', color: '#fff', fontSize: 13, fontWeight: 600 }}>Teslimat Adresi:</p>
-                  <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 12 }}>
-                    {selectedOrder.shippingAddress?.fullName}<br/>
-                    {selectedOrder.shippingAddress?.neighborhood}, {selectedOrder.shippingAddress?.addressLine}<br/>
-                    {selectedOrder.shippingAddress?.district}/{selectedOrder.shippingAddress?.city}
-                  </p>
+                  {(() => {
+                    const parseAddress = (snap) => {
+                      if (!snap) return null;
+                      if (typeof snap === "object") return snap;
+                      try { return JSON.parse(snap); } catch { return null; }
+                    };
+                    const addr = parseAddress(selectedOrder.shippingAddressSnapshot) || selectedOrder.shippingAddress;
+                    if (!addr) return <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 12 }}>Adres bilgisi bulunamadı.</p>;
+                    return (
+                      <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 12 }}>
+                        {addr.fullName}<br/>
+                        {addr.neighborhood || addr.Neighborhood}, {addr.addressLine || addr.AddressLine}<br/>
+                        {addr.district || addr.District}/{addr.city || addr.City}
+                      </p>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

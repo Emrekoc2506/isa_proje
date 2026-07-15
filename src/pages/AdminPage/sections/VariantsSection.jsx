@@ -15,7 +15,9 @@ export default function VariantsSection({ product, onBack }) {
   // Form Fields
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
-  const [additionalPrice, setAdditionalPrice] = useState('');
+  const [barcode, setBarcode] = useState('');
+  const [priceOverride, setPriceOverride] = useState('');
+  const [oldPriceOverride, setOldPriceOverride] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
 
   const fetchVariants = async () => {
@@ -40,7 +42,9 @@ export default function VariantsSection({ product, onBack }) {
     setCurrentId(null);
     setName('');
     setSku('');
-    setAdditionalPrice('');
+    setBarcode('');
+    setPriceOverride('');
+    setOldPriceOverride('');
     setStockQuantity('');
     setShowModal(true);
   };
@@ -50,7 +54,9 @@ export default function VariantsSection({ product, onBack }) {
     setCurrentId(v.id);
     setName(v.name || '');
     setSku(v.sku || '');
-    setAdditionalPrice(v.additionalPrice || '');
+    setBarcode(v.barcode || '');
+    setPriceOverride(v.priceOverride || '');
+    setOldPriceOverride(v.oldPriceOverride || '');
     setStockQuantity(v.stockQuantity || '');
     setShowModal(true);
   };
@@ -60,8 +66,12 @@ export default function VariantsSection({ product, onBack }) {
     const payload = {
       name,
       sku,
-      additionalPrice: parseFloat(additionalPrice) || 0,
-      stockQuantity: parseInt(stockQuantity) || 0
+      barcode: barcode || null,
+      priceOverride: priceOverride === '' ? null : parseFloat(priceOverride),
+      oldPriceOverride: oldPriceOverride === '' ? null : parseFloat(oldPriceOverride),
+      stockQuantity: parseInt(stockQuantity) || 0,
+      isActive: true,
+      imageUrl: null
     };
 
     try {
@@ -112,7 +122,8 @@ export default function VariantsSection({ product, onBack }) {
             <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-gold)' }}>
               <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Seçenek Adı</th>
               <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>SKU</th>
-              <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Ekstra Fiyat</th>
+              <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Barkod</th>
+              <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Varyant Fiyatı</th>
               <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Stok</th>
               <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>İşlemler</th>
             </tr>
@@ -122,7 +133,8 @@ export default function VariantsSection({ product, onBack }) {
               <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <td style={{ padding: 8, color: '#fff' }}>{v.name}</td>
                 <td style={{ padding: 8, color: 'var(--text-secondary)' }}>{v.sku}</td>
-                <td style={{ padding: 8, color: 'var(--gold-light)' }}>+{v.additionalPrice} ₺</td>
+                <td style={{ padding: 8, color: 'var(--text-secondary)' }}>{v.barcode || '—'}</td>
+                <td style={{ padding: 8, color: 'var(--gold-light)' }}>{v.priceOverride ? `${v.priceOverride} ₺` : 'Ana Fiyat'}</td>
                 <td style={{ padding: 8, color: v.stockQuantity <= 3 ? '#e05594' : '#2ecc71' }}>{v.stockQuantity} Adet</td>
                 <td style={{ padding: 8 }}>
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -161,8 +173,16 @@ export default function VariantsSection({ product, onBack }) {
                   <input type="text" required value={sku} onChange={e => setSku(e.target.value)} className={styles.fieldInput} />
                 </div>
                 <div className={styles.formField}>
-                  <label className={styles.fieldLabel}>Ekstra Fiyat (₺)</label>
-                  <input type="number" step="0.01" value={additionalPrice} onChange={e => setAdditionalPrice(e.target.value)} className={styles.fieldInput} placeholder="Ekstra ucret yoksa 0" />
+                  <label className={styles.fieldLabel}>Barkod (Opsiyonel)</label>
+                  <input type="text" value={barcode} onChange={e => setBarcode(e.target.value)} className={styles.fieldInput} />
+                </div>
+                <div className={styles.formField}>
+                  <label className={styles.fieldLabel}>Varyant Fiyatı (₺ - Boş bırakılırsa ana ürün fiyatı geçerlidir)</label>
+                  <input type="number" step="0.01" value={priceOverride} onChange={e => setPriceOverride(e.target.value)} className={styles.fieldInput} />
+                </div>
+                <div className={styles.formField}>
+                  <label className={styles.fieldLabel}>Eski Varyant Fiyatı (₺ - İndirim göstermek için)</label>
+                  <input type="number" step="0.01" value={oldPriceOverride} onChange={e => setOldPriceOverride(e.target.value)} className={styles.fieldInput} />
                 </div>
                 <div className={styles.formField}>
                   <label className={styles.fieldLabel}>Stok Miktarı *</label>

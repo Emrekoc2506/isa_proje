@@ -100,8 +100,12 @@ export function createAdminProductVariant(productId, payload) {
     body: JSON.stringify({
       name: payload.name,
       sku: payload.sku,
-      additionalPrice: payload.additionalPrice || 0,
-      stockQuantity: payload.stockQuantity || 0
+      barcode: payload.barcode || null,
+      priceOverride: payload.priceOverride || null,
+      oldPriceOverride: payload.oldPriceOverride || null,
+      stockQuantity: payload.stockQuantity || 0,
+      isActive: payload.isActive ?? true,
+      imageUrl: payload.imageUrl || null
     })
   });
 }
@@ -112,8 +116,12 @@ export function updateAdminProductVariant(productId, variantId, payload) {
     body: JSON.stringify({
       name: payload.name,
       sku: payload.sku,
-      additionalPrice: payload.additionalPrice || 0,
-      stockQuantity: payload.stockQuantity || 0
+      barcode: payload.barcode || null,
+      priceOverride: payload.priceOverride || null,
+      oldPriceOverride: payload.oldPriceOverride || null,
+      stockQuantity: payload.stockQuantity || 0,
+      isActive: payload.isActive ?? true,
+      imageUrl: payload.imageUrl || null
     })
   });
 }

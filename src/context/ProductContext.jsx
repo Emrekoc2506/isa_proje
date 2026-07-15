@@ -18,9 +18,7 @@ import {
   deleteAdminBanner, 
   updateAdminBannerStatus 
 } from '../services/bannerApi';
-import { 
-  updateAdminOrderStatus 
-} from '../services/orderApi';
+
 
 import { 
   newsProducts as mockNews, 
@@ -93,7 +91,6 @@ export function ProductProvider({ children }) {
   // İlk yüklemede boş gelmemesi için mock verilerle başlatıyoruz (Stale-While-Revalidate)
   const [categories, setCategories] = useState(mockCategories || []);
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
-  const [orders, setOrders] = useState([]);
   const [slides, setSlides] = useState(INITIAL_SLIDES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -143,17 +140,7 @@ export function ProductProvider({ children }) {
     loadInitialData();
   }, [loadInitialData]);
 
-  // Türkçe Sipariş Durumu Haritalaması
-  const mapOrderStatusToTurkish = (status) => {
-    const s = String(status).toLowerCase();
-    if (s === 'pending') return 'Bekliyor';
-    if (s === 'preparing') return 'Hazırlanıyor';
-    if (s === 'shipping' || s === 'shipped') return 'Kargoda';
-    if (s === 'delivered') return 'Teslim Edildi';
-    if (s === 'cancelled') return 'İptal';
-    if (s === 'refunded') return 'İade Edildi';
-    return status;
-  };
+
 
   // Kategori Ekle
   const addCategory = async (label) => {
@@ -305,45 +292,7 @@ export function ProductProvider({ children }) {
     }
   };
 
-  // Sipariş Durumu Güncelle
-  const updateOrderStatusFn = async (orderId, nextStatus, nextStatusCode) => {
-    try {
-      // nextStatusCode: 'pending', 'preparing', 'shipping', 'delivered', 'cancelled', 'refunded'
-      // Backend status'ü C# enum değerleri olarak bekliyor: Pending, Preparing, Shipped, Delivered, Cancelled, Refunded
-      let statusEnum = "Pending";
-      if (nextStatusCode === 'preparing') statusEnum = "Preparing";
-      if (nextStatusCode === 'shipping' || nextStatusCode === 'shipped') statusEnum = "Shipped";
-      if (nextStatusCode === 'delivered') statusEnum = "Delivered";
-      if (nextStatusCode === 'cancelled') statusEnum = "Cancelled";
-      if (nextStatusCode === 'refunded') statusEnum = "Refunded";
 
-      await updateAdminOrderStatus(orderId, statusEnum);
-
-      // Sipariş listesini yenile
-      const adminOrders = await getAdminOrders().catch(() => null);
-      if (adminOrders) {
-        const mappedOrders = adminOrders.map(o => ({
-          id: o.id,
-          customerName: o.customerName || "Misafir Müşteri",
-          customerEmail: o.customerEmail || "",
-          customerPhone: o.customerPhone || "",
-          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR'),
-          total: (o.totalAmount || 0) + ' ₺',
-          status: mapOrderStatusToTurkish(o.status),
-          statusCode: String(o.status).toLowerCase(),
-          items: (o.items || []).map(it => ({
-            name: it.productName || "Ürün",
-            qty: it.quantity,
-            price: (it.unitPrice || 0) + ' ₺'
-          }))
-        }));
-        setOrders(mappedOrders);
-      }
-    } catch (err) {
-      console.error("Sipariş durumu güncellenemedi:", err);
-      throw err;
-    }
-  };
 
   // Slayt (İlan/Banner) Ekle
   const addSlide = async (slideData) => {
@@ -406,7 +355,6 @@ export function ProductProvider({ children }) {
     <ProductContext.Provider value={{
       categories,
       products,
-      orders,
       slides,
       loading,
       error,
@@ -417,7 +365,6 @@ export function ProductProvider({ children }) {
       deleteSubcategory,
       addProduct,
       deleteProduct,
-      updateOrderStatus: updateOrderStatusFn,
       updateProductPrice,
       addSlide,
       deleteSlide
