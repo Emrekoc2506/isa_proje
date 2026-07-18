@@ -526,40 +526,102 @@
   cursor: pointer;
 }
 
-/* ── Alt Kategori Styles ───────────────────────────────── */
-.subCategoryTags {
+/* ── Alt Kategori Tree Styles ──────────────────────────── */
+.categoryTree {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
 }
 
-.subTag {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-light);
-  color: var(--text-secondary);
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  display: inline-flex;
+.categoryTitle {
+  font-weight: bold;
+  color: var(--text-light);
+  font-size: 15px;
+}
+
+.subList {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 1.5px dashed rgba(201, 162, 39, 0.2);
+}
+
+.subItem {
+  padding-left: 12px;
+  position: relative;
+}
+
+.subItem::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 8px;
+  height: 1px;
+  border-bottom: 1.5px dashed rgba(201, 162, 39, 0.2);
+}
+
+.subItemRow {
+  display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 12px;
 }
 
-.subTagDel {
+.subLabel {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.subItemDel {
   background: none;
   border: none;
   color: #e05594;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1;
-  padding: 0;
+  padding: 0 4px;
   display: flex;
   align-items: center;
+  transition: color 0.2s;
 }
 
-.subTagDel:hover {
-  color: var(--nebula-red);
+.subItemDel:hover {
+  color: #ff3366;
+}
+
+.subListLevel2 {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-left: 1.5px dashed rgba(255, 255, 255, 0.1);
+}
+
+.subItemLevel2 {
+  padding-left: 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.subItemLevel2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 8px;
+  height: 1px;
+  border-bottom: 1.5px dashed rgba(255, 255, 255, 0.1);
 }
 
 .subCatInlineForm {
@@ -569,16 +631,16 @@
   border: 1px solid var(--border-mid);
   border-radius: var(--radius-md);
   padding: 2px 6px;
-  height: 34px;
+  height: 28px;
 }
 
 .subCatInput {
   background: none !important;
   border: none !important;
   color: var(--text-light) !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   padding: 0 4px !important;
-  width: 120px !important;
+  width: 100px !important;
 }
 
 .subCatInput:focus {
@@ -589,9 +651,9 @@
   background: none;
   border: none;
   color: var(--gold-light);
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 0 4px;
+  padding: 0 2px;
   display: flex;
   align-items: center;
 }
@@ -927,7 +989,710 @@
   color: var(--bg-dark);
 }
 
+/* ══════════════════════════════════════════════════════════
+   YENİ ÜRÜN EKLEME — Büyük İki Sütunlu Form Stiller
+══════════════════════════════════════════════════════════ */
+
+.productFormWrapper {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  margin-bottom: 32px;
+  align-items: start;
+}
+
+/* ── Form Paneli (Sol) ─────────────────────────────── */
+.productFormPanel {
+  background: linear-gradient(145deg, rgba(20, 10, 35, 0.95), rgba(12, 6, 22, 0.98));
+  border: 1px solid var(--border-gold);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,162,39,0.05);
+}
+
+.formPanelHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 28px;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.15);
+  background: rgba(201, 162, 39, 0.03);
+}
+
+.formPanelIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(201,162,39,0.2), rgba(201,162,39,0.05));
+  border: 1px solid var(--border-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--gold-light);
+  flex-shrink: 0;
+}
+
+.formPanelTitle {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold-light);
+}
+
+.formPanelSubtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── Sekmeler ─────────────────────────────────────── */
+.formTabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0 28px;
+}
+
+.formTab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+
+.formTab:hover {
+  color: var(--gold-light);
+}
+
+.formTabActive {
+  color: var(--gold-light) !important;
+  border-bottom-color: var(--gold) !important;
+}
+
+/* ── Form İçeriği ─────────────────────────────────── */
+.productForm {
+  padding: 0;
+}
+
+.formSectionContent {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pFormLabel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+  letter-spacing: 0.02em;
+}
+
+.pFormLabelIcon {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.pFormHint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.required {
+  color: #e05594;
+  font-size: 14px;
+}
+
+.pFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.pFormInput {
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: var(--text-light);
+  font-size: 14px;
+  font-family: var(--font-body);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.pFormInput:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.12);
+}
+
+.pFormInput::placeholder {
+  color: rgba(255,255,255,0.25);
+}
+
+.pFormSelect {
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: var(--text-light);
+  font-size: 14px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23c9a227' stroke-width='2'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  box-sizing: border-box;
+}
+
+.pFormSelect:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.12);
+}
+
+.pFormSelect option {
+  background: #16092a;
+  color: var(--text-light);
+}
+
+.pFormTextarea {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: var(--text-light);
+  font-size: 14px;
+  font-family: var(--font-body);
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.pFormTextarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.12);
+}
+
+.pFormTextarea::placeholder {
+  color: rgba(255,255,255,0.25);
+}
+
+/* ── Upload Alanı ─────────────────────────────────── */
+.pFormUploadArea {
+  border: 2px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  transition: border-color 0.2s;
+  overflow: hidden;
+}
+
+.pFormUploadArea:hover {
+  border-color: var(--gold);
+}
+
+.pFormUploadLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.pFormUploadIcon {
+  font-size: 36px;
+  color: var(--text-muted);
+}
+
+.pFormUploadLabel span {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.pFormUploadLabel small {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pFormImagePreview {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.pFormImagePreview img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.pFormImageRemove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #ff6b6b;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+}
+
+.pFormImageRemove:hover {
+  background: rgba(224,85,84,0.2);
+  border-color: #ff6b6b;
+}
+
+/* ── Etiket Grid'i ────────────────────────────────── */
+.pFormTagGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.pFormTagItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  background: rgba(255,255,255,0.02);
+}
+
+.pFormTagItem:hover {
+  border-color: rgba(201, 162, 39, 0.4);
+  background: rgba(201, 162, 39, 0.05);
+}
+
+.pFormTagActive {
+  border-color: var(--gold) !important;
+  background: rgba(201, 162, 39, 0.1) !important;
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.15);
+}
+
+.pFormTagDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pFormTagItem span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-light);
+  letter-spacing: 0.05em;
+}
+
+.pFormTagItem small {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ── Navigasyon Butonları ─────────────────────────── */
+.pFormNavRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pFormNextBtn {
+  background: linear-gradient(135deg, rgba(201,162,39,0.15), rgba(201,162,39,0.08));
+  border: 1px solid var(--border-gold);
+  color: var(--gold-light);
+  padding: 10px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.pFormNextBtn:hover {
+  background: rgba(201, 162, 39, 0.25);
+  transform: translateX(2px);
+}
+
+.pFormBackBtn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text-muted);
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.pFormBackBtn:hover {
+  border-color: rgba(255,255,255,0.25);
+  color: var(--text-light);
+}
+
+.pFormSubmitBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 26px;
+  background: linear-gradient(135deg, var(--gold-dark), #e0a33c);
+  border: none;
+  border-radius: 12px;
+  color: #0f0320;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 16px rgba(201,162,39,0.3);
+}
+
+.pFormSubmitBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(201,162,39,0.45);
+}
+
+.pFormSubmitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ══════════════════════════════════════════════════════════
+   CANLI ÖNİZLEME PANELİ (Sağ Sütun)
+══════════════════════════════════════════════════════════ */
+
+.productPreviewPanel {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gold-light);
+}
+
+.previewHeader small {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: auto;
+}
+
+.previewCard {
+  background: linear-gradient(145deg, rgba(18, 9, 31, 0.95), rgba(10, 5, 18, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.previewImgBox {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: rgba(255,255,255,0.03);
+}
+
+.previewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.previewImgPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  color: rgba(255,255,255,0.15);
+  font-size: 28px;
+}
+
+.previewImgPlaceholder span {
+  font-size: 12px;
+  color: rgba(255,255,255,0.2);
+}
+
+.previewBadgeNew {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #4caf7d;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.1em;
+}
+
+.previewBadgeSale {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #e76f51, #d45c3c);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.previewInfo {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.previewName {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-light);
+  line-height: 1.3;
+}
+
+.previewPlaceholder {
+  color: rgba(255,255,255,0.2);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.previewPriceBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.previewOldPrice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.previewStrike {
+  text-decoration: line-through;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.previewDiscountBadge {
+  background: rgba(231, 111, 81, 0.2);
+  color: #e76f51;
+  border: 1px solid rgba(231,111,81,0.3);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.previewPrice {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--gold-light);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.previewUnit {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.previewShortDesc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.previewStock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #4caf7d;
+  font-weight: 600;
+}
+
+.previewTags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.previewTagNew {
+  background: rgba(76,175,125,0.15);
+  color: #4caf7d;
+  border: 1px solid rgba(76,175,125,0.3);
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.previewTagSale {
+  background: rgba(231,111,81,0.15);
+  color: #e76f51;
+  border: 1px solid rgba(231,111,81,0.3);
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.previewTagFeat {
+  background: rgba(201,162,39,0.15);
+  color: var(--gold-light);
+  border: 1px solid var(--border-gold);
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.previewMeta {
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 8px;
+}
+
+/* ── Açıklama Önizleme ─────────────────────────────── */
+.previewDescBox {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.previewDescTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.previewDescPara {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.previewDescPara:last-child {
+  margin-bottom: 0;
+}
+
+/* ── URL Slug ──────────────────────────────────────── */
+.previewSlug {
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  font-family: monospace;
+  word-break: break-all;
+}
+
+/* ── Ürün Listesi — Ek Stiller ─────────────────────── */
+.tableSubDesc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  font-weight: 400;
+}
+
+.tableStockBadge {
+  display: inline-block;
+  padding: 3px 8px;
+  background: rgba(76,175,125,0.1);
+  color: #4caf7d;
+  border: 1px solid rgba(76,175,125,0.25);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* Responsive */
+@media (max-width: 1200px) {
+  .productFormWrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .productPreviewPanel {
+    position: static;
+  }
+}
+
 @media (max-width: 992px) {
   .sidebar {
     transform: translateX(-100%);
@@ -944,4 +1709,13 @@
   .hamburger {
     display: block;
   }
+
+  .pFormRow {
+    grid-template-columns: 1fr;
+  }
+
+  .pFormTagGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
+

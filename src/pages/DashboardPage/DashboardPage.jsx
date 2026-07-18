@@ -1,50 +1,211 @@
 import styles from './DashboardPage.module.css';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiGrid, FiPackage, FiHeart, FiUser, FiSettings,
   FiLogOut, FiMenu, FiX, FiShoppingCart, FiChevronRight,
-  FiMapPin, FiBell, FiEdit3, FiTrash2, FiEye, FiMessageSquare
+  FiMapPin, FiBell, FiTrash2, FiMessageSquare, FiLoader
 } from 'react-icons/fi';
 import logoImage from '../../assets/images/logo.png';
-import { demoUser, dashboardStats, orderHistory } from '../../data/dashboard';
+import { getMyOrders } from '../../services/orderApi';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 import ChatUI from '../../components/ChatUI/ChatUI';
 import NotificationDropdown from '../../components/NotificationDropdown/NotificationDropdown';
+import AddressesSection from './AddressesSection';
+import * as accountApi from '../../services/accountApi';
 
 const NAV_ITEMS = [
   { id: 'overview',  label: 'Genel Bakış',   icon: FiGrid },
   { id: 'messages',  label: 'Mesajlarım',    icon: FiMessageSquare },
   { id: 'orders',    label: 'Siparişlerim',  icon: FiPackage },
   { id: 'wishlist',  label: 'Favorilerim',   icon: FiHeart },
+  { id: 'addresses', label: 'Adreslerim',    icon: FiMapPin },
   { id: 'profile',   label: 'Profilim',      icon: FiUser },
   { id: 'settings',  label: 'Ayarlar',       icon: FiSettings },
 ];
 
-const STATUS_CONFIG = {
-  delivered:  { label: 'Teslim Edildi', color: '#2ecc71' },
-  shipping:   { label: 'Kargoda',       color: '#C9A227' },
-  preparing:  { label: 'Hazırlanıyor',  color: '#7B4EA6' },
-  cancelled:  { label: 'İptal',         color: '#e05594' },
-};
-
-export default function DashboardPage({ onLogout }) {
-  const [active, setActive] = useState('overview');
+export default function DashboardPage({ activeTab = 'overview' }) {
+  const [active, setActive] = useState(activeTab);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  
   const { items: wishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
   const { unreadCount } = useNotifications();
+  const { user, logout, reloadUser } = useAuth();
+  
+  const navigate = useNavigate();
+  const { id: routeOrderId } = useParams();
 
-  const initials = demoUser.name.split(' ').map(n => n[0]).join('');
+  // API State'leri
+  const [ordersList, setOrdersList] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
-  const sidebarVariants = {
-    hidden: { x: '-100%', opacity: 0 },
-    visible: { x: 0, opacity: 1, transition: { type: 'tween', duration: 0.3 } },
-    exit: { x: '-100%', opacity: 0, transition: { duration: 0.25 } },
+  // Settings form states
+  const [profileName, setProfileName] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState(false);
+  const [profileError, setProfileError] = useState('');
+
+  const [curPass, setCurPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confPass, setConfPass] = useState('');
+  const [passLoading, setPassLoading] = useState(false);
+  const [passSuccess, setPassSuccess] = useState(false);
+  const [passError, setPassError] = useState('');
+
+  // Telefon formatı maskesi (ozel_hoca projesinden esinlenilmiştir)
+  const handlePhoneChange = (value) => {
+    let digits = value.replace(/\D/g, '');
+    if (digits.startsWith('0')) digits = digits.substring(1);
+    digits = digits.substring(0, 10);
+    let res = '';
+    if (digits.length > 0) res += digits.substring(0, 3);
+    if (digits.length > 3) res += ' ' + digits.substring(3, 6);
+    if (digits.length > 6) res += ' ' + digits.substring(6, 8);
+    if (digits.length > 8) res += ' ' + digits.substring(8, 10);
+    setProfilePhone(res);
+    if (profileError) setProfileError('');
+    if (profileSuccess) setProfileSuccess(false);
   };
+
+  // Şifre Gücü Analizi
+  const getPasswordStrength = useCallback((pass) => {
+    if (!pass) return { score: 0, text: '', color: 'transparent' };
+    let score = 0;
+    if (pass.length >= 6) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[a-z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+    if (score <= 2) return { score, text: 'Zayıf Şifre', color: '#e05594' };
+    if (score <= 4) return { score, text: 'Orta Derece Şifre', color: '#f39c12' };
+    return { score, text: 'Güçlü Şifre', color: '#2ecc71' };
+  }, []);
+
+  useEffect(() => {
+    setActive(activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (user) {
+      setProfileName(user.fullName || '');
+      setProfilePhone(user.phoneNumber || '');
+    }
+  }, [user]);
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoadingOrders(true);
+      const ordersData = await getMyOrders();
+      if (ordersData) {
+        // Siparişleri haritala
+        const mapped = ordersData.map(o => ({
+          id: o.id,
+          orderNumber: o.orderNumber || o.id.substring(0, 8).toUpperCase(),
+          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR'),
+          total: (o.totalAmount || o.grandTotal || 0) + ' ₺',
+          status: o.statusText || 'Sipariş Verildi',
+          statusCode: String(o.status || 'placed').toLowerCase(),
+          items: (o.items || []).map(it => ({
+            name: it.productName || "Mistik Ürün",
+            qty: it.quantity,
+            price: (it.unitPrice || 0) + ' ₺'
+          }))
+        }));
+        setOrdersList(mapped);
+      }
+    } catch (err) {
+      console.error("Dashboard sipariş yükleme hatası:", err);
+    } finally {
+      setLoadingOrders(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders, active]);
+
+  const handleLogoutClick = async () => {
+    await logout();
+    navigate('/giris');
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setProfileError('');
+    setProfileSuccess(false);
+    setProfileLoading(true);
+
+    try {
+      await accountApi.updateProfile({
+        fullName: profileName,
+        phoneNumber: profilePhone
+      });
+      await reloadUser();
+      setProfileSuccess(true);
+    } catch (err) {
+      let errorMessage = err.message || 'Profil güncellenemedi.';
+      if (err.errors) {
+        errorMessage = Object.entries(err.errors)
+          .map(([key, value]) => `${key}: ${value.join(', ')}`)
+          .join(' | ');
+      }
+      setProfileError(errorMessage);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPassError('');
+    setPassSuccess(false);
+
+    if (newPass.length < 6) {
+      setPassError("Yeni şifre en az 6 karakter olmalıdır.");
+      return;
+    }
+
+    if (newPass !== confPass) {
+      setPassError("Yeni şifreler uyuşmuyor.");
+      return;
+    }
+
+    setPassLoading(true);
+
+    try {
+      await accountApi.changePassword({
+        currentPassword: curPass,
+        newPassword: newPass,
+        confirmPassword: confPass
+      });
+      setPassSuccess(true);
+      setCurPass('');
+      setNewPass('');
+      setConfPass('');
+    } catch (err) {
+      let errorMessage = err.message || 'Şifre değiştirilemedi.';
+      if (err.errors) {
+        errorMessage = Object.entries(err.errors)
+          .map(([key, value]) => `${key}: ${value.join(', ')}`)
+          .join(' | ');
+      }
+      setPassError(errorMessage);
+    } finally {
+      setPassLoading(false);
+    }
+  };
+
+  const initials = user?.fullName
+    ? user.fullName.split(' ').map(n => n[0]).join('')
+    : "M";
 
   const contentVariants = {
     hidden: { opacity: 0, y: 16 },
@@ -52,11 +213,13 @@ export default function DashboardPage({ onLogout }) {
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
   };
 
+  const displayName = user?.fullName || "Müşteri";
+  const displayEmail = user?.email || "";
+
   return (
     <div className={styles.page}>
 
-      {/* ════ SIDEBAR ════════════════════════════════════════════ */}
-      {/* Mobil overlay */}
+      {/* MOBİL SIDEBAR OVERLAY */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -67,7 +230,7 @@ export default function DashboardPage({ onLogout }) {
         )}
       </AnimatePresence>
 
-      {/* Sidebar — desktop her zaman görünür, mobilde slide */}
+      {/* SIDEBAR */}
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarMobileOpen : ''}`}>
         {/* Logo */}
         <a href="/" className={styles.sidebarLogo}>
@@ -82,22 +245,10 @@ export default function DashboardPage({ onLogout }) {
             <div className={styles.avatarGlow} aria-hidden="true" />
           </div>
           <div className={styles.profileInfo}>
-            <p className={styles.profileName}>{demoUser.name}</p>
-            <p className={styles.profileEmail}>{demoUser.email}</p>
-            <span className={styles.memberBadge}>{demoUser.level}</span>
+            <p className={styles.profileName}>{displayName}</p>
+            <p className={styles.profileEmail}>{displayEmail}</p>
+            <span className={styles.memberBadge}>Kayıtlı Üye</span>
           </div>
-        </div>
-
-        {/* Puan */}
-        <div className={styles.pointsBar}>
-          <span className={styles.pointsLabel}>✦ {demoUser.points} puan</span>
-          <div className={styles.pointsTrack}>
-            <div
-              className={styles.pointsFill}
-              style={{ width: `${Math.min((demoUser.points / 2000) * 100, 100)}%` }}
-            />
-          </div>
-          <span className={styles.pointsNext}>Altın Üye'ye 760 puan kaldı</span>
         </div>
 
         {/* Navigasyon */}
@@ -106,7 +257,7 @@ export default function DashboardPage({ onLogout }) {
             <button
               key={id}
               className={`${styles.navItem} ${active === id ? styles.navActive : ''}`}
-              onClick={() => { setActive(id); setSidebarOpen(false); }}
+              onClick={() => { setActive(id); navigate(`/${id === 'overview' ? 'panel' : id === 'wishlist' ? 'favorilerim' : id === 'profile' ? 'profilim' : id === 'orders' ? 'siparislerim' : id === 'addresses' ? 'adreslerim' : id === 'messages' ? 'panel' : 'ayarlar'}`); setSidebarOpen(false); }}
             >
               <Icon className={styles.navIcon} />
               <span>{label}</span>
@@ -120,7 +271,7 @@ export default function DashboardPage({ onLogout }) {
         {/* Çıkış */}
         <button
           className={styles.logoutBtn}
-          onClick={onLogout}
+          onClick={handleLogoutClick}
           aria-label="Çıkış yap"
         >
           <FiLogOut />
@@ -128,7 +279,7 @@ export default function DashboardPage({ onLogout }) {
         </button>
       </aside>
 
-      {/* ════ ANA İÇERİK ═══════════════════════════════════════ */}
+      {/* ANA İÇERIK */}
       <main className={styles.main}>
 
         {/* Üst Bar */}
@@ -141,7 +292,7 @@ export default function DashboardPage({ onLogout }) {
             {sidebarOpen ? <FiX /> : <FiMenu />}
           </button>
           <h1 className={styles.pageTitle}>
-            {NAV_ITEMS.find(n => n.id === active)?.label}
+            {NAV_ITEMS.find(n => n.id === active)?.label || 'Panel'}
           </h1>
           <div className={styles.topBarActions}>
             <div style={{ position: 'relative' }}>
@@ -172,10 +323,9 @@ export default function DashboardPage({ onLogout }) {
             {/* ── GENEL BAKIŞ ────────────────────────────────── */}
             {active === 'overview' && (
               <motion.div key="overview" variants={contentVariants} initial="hidden" animate="visible" exit="exit">
-                {/* Hoş geldin */}
                 <div className={styles.welcomeBanner}>
                   <div>
-                    <h2 className={styles.welcomeTitle}>Hoş geldin, {demoUser.name.split(' ')[0]}! ✨</h2>
+                    <h2 className={styles.welcomeTitle}>Hoş geldin, {displayName.split(' ')[0]}! ✨</h2>
                     <p className={styles.welcomeSub}>Mistik alışveriş deneyimine hazır mısın?</p>
                   </div>
                   <a href="/urunler" className={styles.shopBtn}>
@@ -185,60 +335,49 @@ export default function DashboardPage({ onLogout }) {
 
                 {/* İstatistik Kartları */}
                 <div className={styles.statsGrid}>
-                  {dashboardStats.map((stat, i) => {
-                    let displayValue = stat.value;
-                    if (stat.id === 'wishlist') displayValue = wishlist.length;
-
-                    return (
-                      <motion.div
-                        key={stat.id}
-                        className={styles.statCard}
-                        initial={{ opacity: 0, x: -16 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.08, duration: 0.4 }}
-                        style={{ '--stat-color': stat.color }}
-                      >
-                        <span className={styles.statIcon}>{stat.icon}</span>
-                        <div className={styles.statContent}>
-                          <p className={styles.statValue}>{displayValue}</p>
-                          <p className={styles.statLabel}>{stat.label}</p>
-                        </div>
-                        <div className={styles.statGlow} aria-hidden="true" />
-                      </motion.div>
-                    );
-                  })}
+                  {[
+                    { id: 'orders', label: 'Toplam Sipariş', value: ordersList.length, icon: '📦', color: 'var(--gold)' },
+                    { id: 'wishlist', label: 'Favori Ürünler', value: wishlist.length, icon: '♥', color: '#e05594' }
+                  ].map((stat, i) => (
+                    <motion.div
+                      key={stat.id}
+                      className={styles.statCard}
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.08, duration: 0.4 }}
+                      style={{ '--stat-color': stat.color }}
+                      onClick={() => setActive(stat.id)}
+                    >
+                      <span className={styles.statIcon}>{stat.icon}</span>
+                      <div className={styles.statContent}>
+                        <p className={styles.statValue}>{stat.value}</p>
+                        <p className={styles.statLabel}>{stat.label}</p>
+                      </div>
+                      <div className={styles.statGlow} aria-hidden="true" />
+                    </motion.div>
+                  ))}
                 </div>
 
                 {/* Son Siparişler */}
                 <div className={styles.sectionCard}>
                   <div className={styles.sectionHeader}>
                     <h3 className={styles.sectionTitle}>Son Siparişler</h3>
-                    <button className={styles.seeAllBtn} onClick={() => setActive('orders')}>
+                    <button className={styles.seeAllBtn} onClick={() => { setActive('orders'); navigate('/siparislerim'); }}>
                       Tümünü Gör <FiChevronRight />
                     </button>
                   </div>
-                  {orderHistory.slice(0, 2).map(order => (
-                    <OrderRow key={order.id} order={order} compact />
-                  ))}
-                </div>
-
-                {/* Favori Ürünler */}
-                <div className={styles.sectionCard}>
-                  <div className={styles.sectionHeader}>
-                    <h3 className={styles.sectionTitle}>Favorilerim</h3>
-                    <button className={styles.seeAllBtn} onClick={() => setActive('wishlist')}>
-                      Tümünü Gör <FiChevronRight />
-                    </button>
-                  </div>
-                  <div className={styles.miniWishlist}>
-                    {wishlist.slice(0, 3).map(item => (
-                      <div key={item.id} className={styles.miniWishItem}>
-                        <img src={item.image} alt={item.name} className={styles.miniWishImg} />
-                        <span className={styles.miniWishName}>{item.name}</span>
-                        <span className={styles.miniWishPrice}>{item.price}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {loadingOrders ? (
+                    <p className={styles.emptyText}>Yükleniyor...</p>
+                  ) : (
+                    <>
+                      {ordersList.slice(0, 2).map(order => (
+                        <OrderRow key={order.id} order={order} compact />
+                      ))}
+                      {ordersList.length === 0 && (
+                        <p className={styles.emptyText} style={{ textAlign: 'center', padding: '16px' }}>Henüz siparişiniz bulunmamaktadır.</p>
+                      )}
+                    </>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -249,11 +388,24 @@ export default function DashboardPage({ onLogout }) {
                 <div className={styles.sectionCard}>
                   <div className={styles.sectionHeader}>
                     <h3 className={styles.sectionTitle}>Tüm Siparişlerim</h3>
-                    <span className={styles.sectionCount}>{orderHistory.length} sipariş</span>
+                    <span className={styles.sectionCount}>{ordersList.length} sipariş</span>
                   </div>
-                  {orderHistory.map(order => (
-                    <OrderRow key={order.id} order={order} />
-                  ))}
+                  {loadingOrders ? (
+                    <p className={styles.emptyText}>Yükleniyor...</p>
+                  ) : (
+                    <>
+                      {ordersList.map(order => (
+                        <OrderRow key={order.id} order={order} initialOpen={routeOrderId === order.id} />
+                      ))}
+                      {ordersList.length === 0 && (
+                        <div className={styles.emptyState}>
+                          <span className={styles.emptyIcon}>📦</span>
+                          <p>Henüz sipariş vermediniz.</p>
+                          <a href="/urunler" className={styles.shopBtn}>Ürünleri Keşfet</a>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -270,7 +422,7 @@ export default function DashboardPage({ onLogout }) {
                     <div className={styles.emptyState}>
                       <span className={styles.emptyIcon}>♥</span>
                       <p>Henüz favori ürün eklemediniz.</p>
-                      <a href="/" className={styles.shopBtn}>Alışverişe Başla</a>
+                      <a href="/urunler" className={styles.shopBtn}>Alışverişe Başla</a>
                     </div>
                   ) : (
                     <div className={styles.wishlistGrid}>
@@ -292,13 +444,13 @@ export default function DashboardPage({ onLogout }) {
                             <button 
                               className={styles.wishCartBtn} 
                               aria-label="Sepete ekle"
-                              onClick={() => addToCart({ id: item.id || item.name, name: item.name, price: item.price, image: item.image })}
+                              onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, image: item.image })}
                             >
                               <FiShoppingCart /> Sepete Ekle
                             </button>
                             <button
                               className={styles.wishRemoveBtn}
-                              onClick={() => removeFromWishlist(item.id || item.name)}
+                              onClick={() => removeFromWishlist(item.id)}
                               aria-label="Favorilerden çıkar"
                             >
                               <FiTrash2 />
@@ -312,10 +464,17 @@ export default function DashboardPage({ onLogout }) {
               </motion.div>
             )}
 
-            {/* ── MESAJLARIM (SIGNALR MOCK) ──────────────────── */}
+            {/* ── MESAJLARIM ─────────────────────────────────── */}
             {active === 'messages' && (
               <motion.div key="messages" variants={contentVariants} initial="hidden" animate="visible" exit="exit" style={{ height: '100%' }}>
                 <ChatUI />
+              </motion.div>
+            )}
+
+            {/* ── ADRESLERİM ─────────────────────────────────── */}
+            {active === 'addresses' && (
+              <motion.div key="addresses" variants={contentVariants} initial="hidden" animate="visible" exit="exit">
+                <AddressesSection />
               </motion.div>
             )}
 
@@ -331,38 +490,26 @@ export default function DashboardPage({ onLogout }) {
                       <div className={styles.avatarBig}>
                         <span>{initials}</span>
                       </div>
-                      <button className={styles.avatarEditBtn}>
-                        <FiEdit3 /> Fotoğraf Değiştir
-                      </button>
                     </div>
                     <div className={styles.formGrid}>
                       {[
-                        { label: 'Ad Soyad', value: demoUser.name, type: 'text' },
-                        { label: 'E-posta', value: demoUser.email, type: 'email' },
-                        { label: 'Telefon', value: '+90 555 000 00 00', type: 'tel' },
-                        { label: 'Doğum Tarihi', value: '1998-04-15', type: 'date' },
+                        { label: 'Ad Soyad', value: displayName, type: 'text', readOnly: true },
+                        { label: 'E-posta', value: displayEmail, type: 'email', readOnly: true },
+                        { label: 'Telefon', value: user?.phoneNumber || 'Telefon eklenmemiş', type: 'tel', readOnly: true },
+                        { label: 'Kullanıcı Rolleri', value: roles.join(', ') || "Müşteri", type: 'text', readOnly: true },
                       ].map(field => (
                         <div key={field.label} className={styles.formField}>
                           <label className={styles.fieldLabel}>{field.label}</label>
                           <input
                             type={field.type}
                             defaultValue={field.value}
+                            readOnly={field.readOnly}
                             className={styles.fieldInput}
+                            style={{ opacity: field.readOnly ? 0.7 : 1 }}
                           />
                         </div>
                       ))}
                     </div>
-                    <div className={styles.profileAddressSection}>
-                      <h4 className={styles.subSectionTitle}>
-                        <FiMapPin /> Kayıtlı Adresler
-                      </h4>
-                      <div className={styles.addressCard}>
-                        <p className={styles.addressTitle}>Ev Adresi</p>
-                        <p className={styles.addressText}>Bağcılar Mah. Çiçek Sok. No:14 D:3, Kadıköy / İstanbul</p>
-                        <button className={styles.addressEditBtn}><FiEdit3 /> Düzenle</button>
-                      </div>
-                    </div>
-                    <button className={styles.saveBtn}>Değişiklikleri Kaydet</button>
                   </div>
                 </div>
               </motion.div>
@@ -371,54 +518,126 @@ export default function DashboardPage({ onLogout }) {
             {/* ── AYARLAR ────────────────────────────────────── */}
             {active === 'settings' && (
               <motion.div key="settings" variants={contentVariants} initial="hidden" animate="visible" exit="exit">
+                <div className={styles.sectionCard} style={{ marginBottom: 20 }}>
+                  <div className={styles.sectionHeader}>
+                    <h3 className={styles.sectionTitle}>Profilimi Güncelle</h3>
+                  </div>
+                  <form onSubmit={handleProfileUpdate} className={styles.profileForm}>
+                    {profileSuccess && <div style={{ color: '#2ecc71', fontSize: 13, marginBottom: 16 }}>✔ Profil bilgileriniz başarıyla güncellendi.</div>}
+                    {profileError && <div style={{ color: '#e05594', fontSize: 13, marginBottom: 16 }}>{profileError}</div>}
+                    
+                    <div className={styles.formGrid}>
+                      <div className={styles.formField}>
+                        <label className={styles.fieldLabel}>Ad Soyad</label>
+                        <input 
+                          type="text" 
+                          required 
+                          value={profileName} 
+                          onChange={e => {
+                            setProfileName(e.target.value);
+                            if (profileError) setProfileError('');
+                            if (profileSuccess) setProfileSuccess(false);
+                          }} 
+                          className={styles.fieldInput} 
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label className={styles.fieldLabel}>Telefon</label>
+                        <input 
+                          type="tel" 
+                          value={profilePhone} 
+                          onChange={e => handlePhoneChange(e.target.value)} 
+                          className={styles.fieldInput} 
+                          placeholder="Örn: 555 000 00 00" 
+                        />
+                      </div>
+                    </div>
+                    <button type="submit" disabled={profileLoading} className={styles.shopBtn} style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {profileLoading && <FiLoader className={styles.spinner} style={{ animation: 'spin 1.5s linear infinite', fontSize: 14, margin: 0 }} />}
+                      Değişiklikleri Kaydet
+                    </button>
+                  </form>
+                </div>
+
                 <div className={styles.sectionCard}>
                   <div className={styles.sectionHeader}>
-                    <h3 className={styles.sectionTitle}>Ayarlar</h3>
+                    <h3 className={styles.sectionTitle}>Şifre Değiştir</h3>
                   </div>
-                  <div className={styles.settingsGrid}>
-                    {[
-                      { label: 'E-posta Bildirimleri', desc: 'Sipariş ve kampanya bildirimleri', checked: true },
-                      { label: 'SMS Bildirimleri', desc: 'Kargo ve teslimat bildirimleri', checked: false },
-                      { label: 'Bülten Aboneliği', desc: 'Haftalık mistik içerikler', checked: true },
-                      { label: 'Çerez Tercihleri', desc: 'Analitik ve kişiselleştirme', checked: false },
-                    ].map(setting => (
-                      <div key={setting.label} className={styles.settingRow}>
-                        <div>
-                          <p className={styles.settingLabel}>{setting.label}</p>
-                          <p className={styles.settingDesc}>{setting.desc}</p>
-                        </div>
-                        <label className={styles.toggle}>
-                          <input type="checkbox" defaultChecked={setting.checked} />
-                          <span className={styles.toggleSlider} />
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Şifre Değiştir */}
-                  <div className={styles.passwordSection}>
-                    <h4 className={styles.subSectionTitle}>Şifre Değiştir</h4>
+                  <form onSubmit={handlePasswordChange} className={styles.profileForm}>
+                    {passSuccess && <div style={{ color: '#2ecc71', fontSize: 13, marginBottom: 16 }}>✔ Şifreniz başarıyla değiştirildi.</div>}
+                    {passError && <div style={{ color: '#e05594', fontSize: 13, marginBottom: 16 }}>{passError}</div>}
+                    
                     <div className={styles.formGrid}>
                       <div className={styles.formField}>
                         <label className={styles.fieldLabel}>Mevcut Şifre</label>
-                        <input type="password" className={styles.fieldInput} placeholder="••••••" />
+                        <input 
+                          type="password" 
+                          required 
+                          value={curPass} 
+                          onChange={e => {
+                            setCurPass(e.target.value);
+                            if (passError) setPassError('');
+                            if (passSuccess) setPassSuccess(false);
+                          }} 
+                          className={styles.fieldInput} 
+                        />
                       </div>
                       <div className={styles.formField}>
                         <label className={styles.fieldLabel}>Yeni Şifre</label>
-                        <input type="password" className={styles.fieldInput} placeholder="••••••" />
+                        <input 
+                          type="password" 
+                          required 
+                          value={newPass} 
+                          onChange={e => {
+                            setNewPass(e.target.value);
+                            if (passError) setPassError('');
+                            if (passSuccess) setPassSuccess(false);
+                          }} 
+                          className={styles.fieldInput} 
+                        />
+                        
+                        {newPass && (() => {
+                          const strength = getPasswordStrength(newPass);
+                          return (
+                            <div style={{ marginTop: 6, paddingLeft: 4 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                <span style={{ fontSize: '11px', color: strength.color, fontWeight: '600', transition: 'color 0.3s' }}>
+                                  {strength.text}
+                                </span>
+                              </div>
+                              <div style={{ width: '100%', height: '4px', backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                                <div style={{ 
+                                  width: `${(strength.score / 5) * 100}%`, 
+                                  height: '100%', 
+                                  backgroundColor: strength.color, 
+                                  transition: 'width 0.3s ease, background-color 0.3s ease',
+                                  boxShadow: `0 0 8px ${strength.color}`
+                                }} />
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                      <div className={styles.formField}>
+                        <label className={styles.fieldLabel}>Yeni Şifre Tekrar</label>
+                        <input 
+                          type="password" 
+                          required 
+                          value={confPass} 
+                          onChange={e => {
+                            setConfPass(e.target.value);
+                            if (passError) setPassError('');
+                            if (passSuccess) setPassSuccess(false);
+                          }} 
+                          className={styles.fieldInput} 
+                        />
                       </div>
                     </div>
-                    <button className={styles.saveBtn} style={{ marginTop: '16px' }}>
+                    <button type="submit" disabled={passLoading} className={styles.shopBtn} style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {passLoading && <FiLoader className={styles.spinner} style={{ animation: 'spin 1.5s linear infinite', fontSize: 14, margin: 0 }} />}
                       Şifreyi Güncelle
                     </button>
-                  </div>
-
-                  {/* Tehlikeli Bölge */}
-                  <div className={styles.dangerZone}>
-                    <h4 className={styles.dangerTitle}>⚠ Tehlikeli Bölge</h4>
-                    <p className={styles.dangerDesc}>Bu işlem geri alınamaz. Hesabınız kalıcı olarak silinecektir.</p>
-                    <button className={styles.dangerBtn}>Hesabımı Sil</button>
-                  </div>
+                  </form>
                 </div>
               </motion.div>
             )}
@@ -431,20 +650,22 @@ export default function DashboardPage({ onLogout }) {
 }
 
 // ── Sipariş Satırı Alt Bileşeni ──────────────────────────────
-function OrderRow({ order, compact }) {
-  const [open, setOpen] = useState(false);
-  const cfg = STATUS_CONFIG[order.statusCode] || {};
+function OrderRow({ order, compact, initialOpen = false }) {
+  const [open, setOpen] = useState(initialOpen);
+  
+  // Placed is always Placed
+  const cfg = { label: order.status || 'Sipariş Verildi', color: 'var(--gold)' };
 
   return (
     <div className={styles.orderRow}>
       <div className={styles.orderHeader} onClick={() => !compact && setOpen(v => !v)} style={{ cursor: compact ? 'default' : 'pointer' }}>
         <div className={styles.orderMeta}>
-          <span className={styles.orderId}>{order.id}</span>
+          <span className={styles.orderNumber} style={{ color: 'var(--gold-light)', fontWeight: 600 }}>#{order.orderNumber}</span>
           <span className={styles.orderDate}>{order.date}</span>
         </div>
         <div className={styles.orderRight}>
           <span className={styles.statusBadge} style={{ '--status-color': cfg.color }}>
-            {order.status}
+            {cfg.label}
           </span>
           <span className={styles.orderTotal}>{order.total}</span>
           {!compact && (
@@ -460,7 +681,7 @@ function OrderRow({ order, compact }) {
       </div>
 
       <AnimatePresence>
-        {(!compact || true) && open && (
+        {(!compact && open) && (
           <motion.div
             className={styles.orderItems}
             initial={{ height: 0, opacity: 0 }}
@@ -469,17 +690,16 @@ function OrderRow({ order, compact }) {
             transition={{ duration: 0.25 }}
           >
             {order.items.map((item, i) => (
-              <div key={i} className={styles.orderItem}>
-                <span className={styles.orderItemName}>{item.name}</span>
-                <span className={styles.orderItemQty}>×{item.qty}</span>
-                <span className={styles.orderItemPrice}>{item.price}</span>
+              <div key={i} className={styles.orderItem} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span className={styles.orderItemName} style={{ color: 'var(--text-light)' }}>{item.name}</span>
+                <div style={{ display: 'flex', gap: 20 }}>
+                  <span className={styles.orderItemQty} style={{ color: 'var(--text-muted)' }}>{item.qty} adet</span>
+                  <span className={styles.orderItemPrice} style={{ color: 'var(--gold-light)', fontWeight: 500 }}>{item.price}</span>
+                </div>
               </div>
             ))}
-            <div className={styles.orderActions}>
-              <button className={styles.orderBtn}><FiEye /> Detay</button>
-              {order.statusCode === 'delivered' && (
-                <button className={styles.orderBtn}><FiShoppingCart /> Tekrar Sipariş</button>
-              )}
+            <div style={{ padding: '8px 0', fontSize: 11, color: 'var(--text-muted)' }}>
+              Sipariş ID: {order.id}
             </div>
           </motion.div>
         )}

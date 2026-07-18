@@ -1,101 +1,240 @@
 import styles from './AuthPage.module.css';
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiUser, FiLock, FiMail, FiEye, FiEyeOff, FiCheckCircle, FiArrowLeft, FiAlertCircle } from 'react-icons/fi';
+import { FiUser, FiLock, FiMail, FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi';
 import logoImage from '../../assets/images/logo.png';
-import { demoUser } from '../../data/dashboard';
-
-const DEMO_CODE = '000000'; // Demo doğrulama kodu
+import { useAuth } from '../../context/AuthContext';
+import { useWishlist } from '../../context/WishlistContext';
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login');
   const [showPass, setShowPass]     = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [verified, setVerified]     = useState(false);
-  const [verifyError, setVerifyError] = useState(false);
-  const [loginError, setLoginError] = useState(false);
-  const navigate = useNavigate();
+  const [loginError, setLoginError] = useState(null);
+  const [regError, setRegError] = useState(null);
+  
+  // Controlled inputs state
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
-  // OTP giriş kutucukları için state
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const otpRefs = [
-    useRef(null), useRef(null), useRef(null),
-    useRef(null), useRef(null), useRef(null),
-  ];
+  const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regConfirm, setRegConfirm] = useState('');
+
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [regLoading, setRegLoading] = useState(false);
+
+  const { login, register } = useAuth();
+  const { mergeGuestWishlist } = useWishlist();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const isLogin = mode === 'login';
 
-  // Giriş formını gönder → kimlik doğrula
-  const handleLogin = (e) => {
+  // Beni Hatırla: Kaydedilen emaili yükle
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    if (savedEmail) {
+      setLoginEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
+  // Email Önerileri
+  const emailDomains = ["gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "icloud.com"];
+  const [emailSuggestions, setEmailSuggestions] = useState([]);
+
+  const handleEmailChange = (val) => {
+    setLoginEmail(val);
+    const [localPart, domainPart] = val.split("@");
+    if (val.includes("@")) {
+      if (!domainPart) {
+        setEmailSuggestions(emailDomains.map((domain) => `${localPart}@${domain}`));
+      } else {
+        const filtered = emailDomains
+          .filter((domain) => domain.startsWith(domainPart))
+          .map((domain) => `${localPart}@${domain}`);
+        setEmailSuggestions(filtered);
+      }
+    } else {
+      setEmailSuggestions([]);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setLoginEmail(suggestion);
+    setEmailSuggestions([]);
+  };
+
+  // Şifre Gücü Hesaplama
+  const getPasswordStrength = useCallback((pass) => {
+    if (!pass) return { score: 0, text: '', color: 'transparent' };
+    let score = 0;
+    if (pass.length >= 6) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[a-z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+    if (score <= 2) return { score, text: 'Zayıf Şifre', color: '#e05594' };
+    if (score <= 4) return { score, text: 'Orta Derece Şifre', color: '#f39c12' };
+    return { score, text: 'Güçlü Şifre', color: '#2ecc71' };
+  }, []);
+
+  // Giriş formunu gönder → kimlik doğrula
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const email = e.target.querySelector('#login-email').value;
-    const password = e.target.querySelector('#login-password').value;
+    setLoginError(null);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(loginEmail)) {
+      setLoginError("Geçersiz e-posta formatı.");
+      return;
+    }
+
+    if (loginPassword.length < 6) {
+      setLoginError("Şifre en az 6 karakter olmalıdır.");
+      return;
+    }
     
-    if (email === 'admin@gmail.com' && password === '123456') {
-      setLoginError(false);
-      navigate('/admin');
-    } else if (email === demoUser.email && password === demoUser.password) {
-      setLoginError(false);
-      navigate('/panel');
-    } else {
-      setLoginError(true);
+    try {
+      setLoginLoading(true);
+      const res = await login({ email: loginEmail, password: loginPassword });
+
+      // Beni hatırla kaydı
+      if (rememberMe) {
+        localStorage.setItem("rememberedEmail", loginEmail);
+      } else {
+        localStorage.removeItem("rememberedEmail");
+      }
+
+      // Merge guest wishlist after login
+      try {
+        const raw = localStorage.getItem("isa_guest_wishlist");
+        let guestItems = [];
+        try {
+          guestItems = raw ? JSON.parse(raw) : [];
+        } catch {
+          guestItems = [];
+        }
+        if (guestItems.length > 0) {
+          await mergeGuestWishlist(guestItems);
+        }
+      } catch (mergeErr) {
+        console.warn("Wishlist merge failed:", mergeErr);
+        let errMsg = "Favoriler hesabınıza aktarılamadı. Favorileriniz bu cihazda korunuyor.";
+        if (mergeErr.code === "unauthorized") {
+          errMsg = "Oturum süreniz doldu. Lütfen yeniden giriş yapın.";
+        } else if (mergeErr.code === "validation_error") {
+          errMsg = "Favoriler aktarılırken geçersiz veri tespit edildi.";
+        } else if (mergeErr.code === "too_many_products") {
+          errMsg = "Aynı anda en fazla 100 favori aktarılabilir.";
+        } else if (mergeErr.code === "network_error") {
+          errMsg = "Favoriler hesabınıza aktarılamadı. Favorileriniz bu cihazda korunuyor.";
+        }
+        alert(errMsg);
+      }
+      
+      const roles = res.user?.roles || [];
+      const from = location.state?.from?.pathname || (roles.includes("SuperAdmin") || roles.includes("Admin") ? '/admin' : '/panel');
+      navigate(from, { replace: true });
+    } catch (err) {
+      if (err.requiresVerification === true && err.userId) {
+        setLoginError("E-posta adresiniz henüz doğrulanmamış. Yönlendiriliyorsunuz...");
+        setTimeout(() => {
+          navigate('/email-dogrulama-bekleniyor', { state: { email: loginEmail, userId: err.userId } });
+        }, 1500);
+        return;
+      }
+
+      if (err.code === "email_not_confirmed") {
+        setLoginError("E-posta adresiniz henüz doğrulanmamış. Yönlendiriliyorsunuz...");
+        setTimeout(() => {
+          navigate('/email-dogrulama-bekleniyor', { state: { email: loginEmail } });
+        }, 1500);
+      } else {
+        setLoginError(err.message || "E-posta veya şifre hatalı.");
+      }
+    } finally {
+      setLoginLoading(false);
     }
   };
 
-  // Kayıt formunu gönder → doğrulama ekranına geç
-  const handleRegister = (e) => {
+  // Kayıt formunu gönder → e-posta doğrulama sayfasına geç
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setOtp(['', '', '', '', '', '']);
-    setVerifyError(false);
-    setVerified(false);
-    setMode('verify');
-    // İlk kutuya odaklan
-    setTimeout(() => otpRefs[0].current?.focus(), 100);
-  };
+    setRegError(null);
 
-  // OTP kutucuk değişimi
-  const handleOtpChange = (idx, val) => {
-    const digit = val.replace(/\D/g, '').slice(-1);
-    const next = [...otp];
-    next[idx] = digit;
-    setOtp(next);
-    setVerifyError(false);
-    if (digit && idx < 5) otpRefs[idx + 1].current?.focus();
-  };
-
-  const handleOtpKeyDown = (idx, e) => {
-    if (e.key === 'Backspace' && !otp[idx] && idx > 0) {
-      otpRefs[idx - 1].current?.focus();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(regEmail)) {
+      setRegError("Geçersiz e-posta formatı.");
+      return;
     }
-    if (e.key === 'ArrowLeft' && idx > 0) otpRefs[idx - 1].current?.focus();
-    if (e.key === 'ArrowRight' && idx < 5) otpRefs[idx + 1].current?.focus();
-  };
 
-  // OTP yapıştırma desteği
-  const handleOtpPaste = (e) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    const next = ['', '', '', '', '', ''];
-    pasted.split('').forEach((d, i) => { next[i] = d; });
-    setOtp(next);
-    const focusIdx = Math.min(pasted.length, 5);
-    otpRefs[focusIdx].current?.focus();
-  };
-
-  // Doğrulama kontrolü
-  const handleVerify = (e) => {
-    e.preventDefault();
-    const entered = otp.join('');
-    if (entered === DEMO_CODE) {
-      setVerified(true);
-      setVerifyError(false);
-    } else {
-      setVerifyError(true);
-      // Titreme animasyonu için state sıfırla
-      setOtp(['', '', '', '', '', '']);
-      setTimeout(() => otpRefs[0].current?.focus(), 50);
+    if (regPassword.length < 6) {
+      setRegError("Şifre en az 6 karakter olmalıdır.");
+      return;
     }
+
+    if (regPassword !== regConfirm) {
+      setRegError("Şifreler uyuşmuyor!");
+      return;
+    }
+
+    try {
+      setRegLoading(true);
+      // Kayıt isteği gönder
+      const res = await register({
+        fullName: regName,
+        email: regEmail,
+        password: regPassword
+      });
+
+      // Kayıt başarılı olduğunda OTP sayfası yerine "bekleniyor" sayfasına e-posta ile yönlendir
+      navigate('/email-dogrulama-bekleniyor', { state: { email: regEmail, userId: res?.userId } });
+    } catch (err) {
+      let errorMessage = err.message || "Kayıt işlemi başarısız.";
+      if (err.errors) {
+        errorMessage = Object.entries(err.errors)
+          .map(([key, value]) => `${key}: ${value.join(', ')}`)
+          .join(' | ');
+      }
+      setRegError(errorMessage);
+    } finally {
+      setRegLoading(false);
+    }
+  };
+
+  // Öneri listesi ve eleman stilleri
+  const suggestionsListStyle = {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    zIndex: 50,
+    backgroundColor: 'rgba(30, 18, 50, 0.98)',
+    border: '1px solid var(--border-gold)',
+    borderRadius: '8px',
+    marginTop: '4px',
+    maxHeight: '150px',
+    overflowY: 'auto',
+    listStyle: 'none',
+    padding: 0,
+    margin: 0,
+    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
+  };
+
+  const suggestionItemStyle = {
+    padding: '10px 14px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    color: 'var(--text-light)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+    textAlign: 'left',
+    transition: 'background-color 0.2s'
   };
 
   return (
@@ -106,10 +245,10 @@ export default function AuthPage() {
 
       <div className={styles.wrapper}>
         {/* ── Logo ─────────────────────────────────────────────── */}
-        <a href="/" className={styles.logoLink} aria-label="mysticvelora – Ana Sayfa">
+        <Link to="/" className={styles.logoLink} aria-label="mysticvelora – Ana Sayfa">
           <img src={logoImage} alt="mysticvelora" className={styles.logoImg} />
           <span className={styles.brandName}>mysticvelora</span>
-        </a>
+        </Link>
 
         {/* ── Kart ─────────────────────────────────────────────── */}
         <motion.div
@@ -118,40 +257,37 @@ export default function AuthPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          {/* Doğrulama ekranında sekmeler gizlenir */}
-          {mode !== 'verify' && (
-            <div className={styles.tabs}>
-              <button
-                id="tab-login"
-                className={`${styles.tab} ${isLogin ? styles.tabActive : ''}`}
-                onClick={() => setMode('login')}
-                role="tab"
-                aria-selected={isLogin}
-              >
-                Giriş Yap
-              </button>
-              <button
-                id="tab-register"
-                className={`${styles.tab} ${!isLogin ? styles.tabActive : ''}`}
-                onClick={() => setMode('register')}
-                role="tab"
-                aria-selected={!isLogin}
-              >
-                Üye Ol
-              </button>
-              <motion.div
-                className={styles.tabIndicator}
-                animate={{ x: isLogin ? 0 : '100%' }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              />
-            </div>
-          )}
+          <div className={styles.tabs}>
+            <button
+              id="tab-login"
+              className={`${styles.tab} ${isLogin ? styles.tabActive : ''}`}
+              onClick={() => { setMode('login'); setLoginError(null); setRegError(null); }}
+              role="tab"
+              aria-selected={isLogin}
+            >
+              Giriş Yap
+            </button>
+            <button
+              id="tab-register"
+              className={`${styles.tab} ${!isLogin ? styles.tabActive : ''}`}
+              onClick={() => { setMode('register'); setLoginError(null); setRegError(null); }}
+              role="tab"
+              aria-selected={!isLogin}
+            >
+              Üye Ol
+            </button>
+            <motion.div
+              className={styles.tabIndicator}
+              animate={{ x: isLogin ? 0 : '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            />
+          </div>
 
           {/* ── Form İçeriği ───────────────────────────────────── */}
           <AnimatePresence mode="wait">
 
             {/* ════ GİRİŞ FORMU ════ */}
-            {mode === 'login' && (
+            {isLogin ? (
               <motion.form
                 key="login"
                 className={styles.form}
@@ -166,20 +302,72 @@ export default function AuthPage() {
 
                 <div className={styles.inputBox}>
                   <FiMail className={styles.inputIcon} />
-                  <input id="login-email" type="email" className={styles.input} required autoComplete="email" />
+                  <input 
+                    id="login-email" 
+                    type="email" 
+                    className={styles.input} 
+                    required 
+                    autoComplete="email" 
+                    value={loginEmail}
+                    onChange={e => {
+                      handleEmailChange(e.target.value);
+                      if (loginError) setLoginError(null);
+                    }}
+                  />
                   <span className={styles.label}>E-posta</span>
+
+                  {emailSuggestions.length > 0 && (
+                    <ul style={suggestionsListStyle}>
+                      {emailSuggestions.map((suggestion, index) => (
+                        <li
+                          key={index}
+                          onClick={() => {
+                            handleSuggestionClick(suggestion);
+                            if (loginError) setLoginError(null);
+                          }}
+                          style={suggestionItemStyle}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(201, 162, 39, 0.15)'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                        >
+                          {suggestion}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
                 <div className={styles.inputBox}>
                   <FiLock className={styles.inputIcon} />
-                  <input id="login-password" type={showPass ? 'text' : 'password'} className={styles.input} required autoComplete="current-password" />
+                  <input 
+                    id="login-password" 
+                    type={showPass ? 'text' : 'password'} 
+                    className={styles.input} 
+                    required 
+                    autoComplete="current-password" 
+                    value={loginPassword}
+                    onChange={e => {
+                      setLoginPassword(e.target.value);
+                      if (loginError) setLoginError(null);
+                    }}
+                  />
                   <span className={styles.label}>Şifre</span>
                   <button type="button" className={styles.eyeBtn} onClick={() => setShowPass(v => !v)} aria-label="Şifreyi göster/gizle">
                     {showPass ? <FiEyeOff /> : <FiEye />}
                   </button>
                 </div>
 
-                <a href="#" className={styles.forgotLink}>Şifremi Unuttum</a>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 12 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)', cursor: 'pointer', userSelect: 'none' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={rememberMe} 
+                      onChange={e => setRememberMe(e.target.checked)} 
+                      style={{ accentColor: 'var(--gold)', cursor: 'pointer' }}
+                    />
+                    Beni Hatırla
+                  </label>
+                  <Link to="/sifremi-unuttum" className={styles.forgotLink} style={{ margin: 0 }}>Şifremi Unuttum</Link>
+                </div>
 
                 <AnimatePresence>
                   {loginError && (
@@ -190,25 +378,30 @@ export default function AuthPage() {
                       exit={{ opacity: 0 }}
                     >
                       <FiAlertCircle />
-                      <span>E-posta veya şifre hatalı. Demo: <strong>ogrenci@gmail.com</strong> / <strong>123456</strong></span>
+                      <span>{loginError}</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                <motion.button type="submit" id="btn-login-submit" className={styles.submitBtn} whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
-                  <span>Giriş Yap</span>
-                  <span className={styles.btnArrow}>→</span>
+                <motion.button 
+                  type="submit" 
+                  id="btn-login-submit" 
+                  className={styles.submitBtn} 
+                  disabled={loginLoading}
+                  whileHover={loginLoading ? {} : { scale: 1.03, y: -2 }} 
+                  whileTap={loginLoading ? {} : { scale: 0.97 }}
+                >
+                  <span>{loginLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}</span>
+                  {!loginLoading && <span className={styles.btnArrow}>→</span>}
                 </motion.button>
 
                 <p className={styles.switchText}>
                   Hesabınız yok mu?{' '}
-                  <button type="button" className={styles.switchBtn} onClick={() => setMode('register')}>Üye Olun</button>
+                  <button type="button" className={styles.switchBtn} onClick={() => { setMode('register'); setLoginError(null); setRegError(null); }}>Üye Olun</button>
                 </p>
               </motion.form>
-            )}
-
-            {/* ════ KAYIT FORMU ════ */}
-            {mode === 'register' && (
+            ) : (
+              /* ════ KAYIT FORMU ════ */
               <motion.form
                 key="register"
                 className={styles.form}
@@ -223,172 +416,131 @@ export default function AuthPage() {
 
                 <div className={styles.inputBox}>
                   <FiUser className={styles.inputIcon} />
-                  <input id="reg-name" type="text" className={styles.input} required autoComplete="name" />
+                  <input 
+                    id="reg-name" 
+                    type="text" 
+                    className={styles.input} 
+                    required 
+                    autoComplete="name" 
+                    value={regName}
+                    onChange={e => {
+                      setRegName(e.target.value);
+                      if (regError) setRegError(null);
+                    }}
+                  />
                   <span className={styles.label}>Ad Soyad</span>
                 </div>
 
                 <div className={styles.inputBox}>
                   <FiMail className={styles.inputIcon} />
-                  <input id="reg-email" type="email" className={styles.input} required autoComplete="email" />
+                  <input 
+                    id="reg-email" 
+                    type="email" 
+                    className={styles.input} 
+                    required 
+                    autoComplete="email" 
+                    value={regEmail}
+                    onChange={e => {
+                      setRegEmail(e.target.value);
+                      if (regError) setRegError(null);
+                    }}
+                  />
                   <span className={styles.label}>E-posta</span>
                 </div>
 
                 <div className={styles.inputBox}>
                   <FiLock className={styles.inputIcon} />
-                  <input id="reg-password" type={showPass ? 'text' : 'password'} className={styles.input} required autoComplete="new-password" />
+                  <input 
+                    id="reg-password" 
+                    type={showPass ? 'text' : 'password'} 
+                    className={styles.input} 
+                    required 
+                    autoComplete="new-password" 
+                    value={regPassword}
+                    onChange={e => {
+                      setRegPassword(e.target.value);
+                      if (regError) setRegError(null);
+                    }}
+                  />
                   <span className={styles.label}>Şifre</span>
                   <button type="button" className={styles.eyeBtn} onClick={() => setShowPass(v => !v)} aria-label="Şifreyi göster/gizle">
                     {showPass ? <FiEyeOff /> : <FiEye />}
                   </button>
+                  
+                  {regPassword && (() => {
+                    const strength = getPasswordStrength(regPassword);
+                    return (
+                      <div style={{ marginTop: 6, paddingLeft: 4 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ fontSize: '11px', color: strength.color, fontWeight: '600', transition: 'color 0.3s' }}>
+                            {strength.text}
+                          </span>
+                        </div>
+                        <div style={{ width: '100%', height: '4px', backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                          <div style={{ 
+                            width: `${(strength.score / 5) * 100}%`, 
+                            height: '100%', 
+                            backgroundColor: strength.color, 
+                            transition: 'width 0.3s ease, background-color 0.3s ease',
+                            boxShadow: `0 0 8px ${strength.color}`
+                          }} />
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className={styles.inputBox}>
                   <FiLock className={styles.inputIcon} />
-                  <input id="reg-confirm" type={showConfirm ? 'text' : 'password'} className={styles.input} required autoComplete="new-password" />
+                  <input 
+                    id="reg-confirm" 
+                    type={showConfirm ? 'text' : 'password'} 
+                    className={styles.input} 
+                    required 
+                    autoComplete="new-password" 
+                    value={regConfirm}
+                    onChange={e => {
+                      setRegConfirm(e.target.value);
+                      if (regError) setRegError(null);
+                    }}
+                  />
                   <span className={styles.label}>Şifre Tekrar</span>
                   <button type="button" className={styles.eyeBtn} onClick={() => setShowConfirm(v => !v)} aria-label="Şifreyi göster/gizle">
                     {showConfirm ? <FiEyeOff /> : <FiEye />}
                   </button>
                 </div>
 
-                <motion.button type="submit" id="btn-register-submit" className={styles.submitBtn} whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
-                  <span>Üye Ol</span>
-                  <span className={styles.btnArrow}>✦</span>
+                <AnimatePresence>
+                  {regError && (
+                    <motion.div
+                      className={styles.loginErrorMsg}
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <FiAlertCircle />
+                      <span>{regError}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <motion.button 
+                  type="submit" 
+                  id="btn-register-submit" 
+                  className={styles.submitBtn} 
+                  disabled={regLoading}
+                  whileHover={regLoading ? {} : { scale: 1.03, y: -2 }} 
+                  whileTap={regLoading ? {} : { scale: 0.97 }}
+                >
+                  <span>{regLoading ? 'Üye Yapılıyor...' : 'Üye Ol'}</span>
+                  {!regLoading && <span className={styles.btnArrow}>✦</span>}
                 </motion.button>
 
                 <p className={styles.switchText}>
                   Zaten üye misiniz?{' '}
-                  <button type="button" className={styles.switchBtn} onClick={() => setMode('login')}>Giriş Yapın</button>
+                  <button type="button" className={styles.switchBtn} onClick={() => { setMode('login'); setLoginError(null); setRegError(null); }}>Giriş Yapın</button>
                 </p>
               </motion.form>
-            )}
-
-            {/* ════ E-POSTA DOĞRULAMA ════ */}
-            {mode === 'verify' && (
-              <motion.div
-                key="verify"
-                className={styles.form}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4 }}
-              >
-                {/* Geri butonu */}
-                <button
-                  type="button"
-                  className={styles.backBtn}
-                  onClick={() => setMode('register')}
-                  aria-label="Kayıt formuna geri dön"
-                >
-                  <FiArrowLeft /> Geri
-                </button>
-
-                {/* Başarı ekranı */}
-                {verified ? (
-                  <motion.div
-                    className={styles.successBox}
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                  >
-                    <div className={styles.successIcon}>
-                      <FiCheckCircle />
-                    </div>
-                    <h2 className={styles.formTitle}>E-posta Doğrulandı!</h2>
-                    <p className={styles.formSub}>Hesabınız başarıyla oluşturuldu. Artık giriş yapabilirsiniz.</p>
-                    <motion.a
-                      href="/giris"
-                      className={styles.submitBtn}
-                      style={{ display: 'flex', marginTop: '8px', textDecoration: 'none', justifyContent: 'center' }}
-                      whileHover={{ scale: 1.03, y: -2 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => setMode('login')}
-                    >
-                      <span>Giriş Yap</span>
-                      <span className={styles.btnArrow}>→</span>
-                    </motion.a>
-                  </motion.div>
-                ) : (
-                  /* Doğrulama formu */
-                  <form onSubmit={handleVerify}>
-                    {/* E-posta ikonu */}
-                    <div className={styles.verifyIconWrap}>
-                      <div className={styles.verifyIconBg}>
-                        <FiMail className={styles.verifyIcon} />
-                      </div>
-                    </div>
-
-                    <h2 className={styles.formTitle}>E-posta Doğrulama</h2>
-                    <p className={styles.formSub}>
-                      E-posta adresinize 6 haneli doğrulama kodu gönderdik.
-                    </p>
-
-                    {/* Demo uyarısı */}
-                    <div className={styles.demoBadge}>
-                      <span className={styles.demoBadgeIcon}>✦</span>
-                      <span>Demo mod — kodu girin: <strong>000 000</strong></span>
-                    </div>
-
-                    {/* OTP kutucukları */}
-                    <div
-                      className={`${styles.otpRow} ${verifyError ? styles.otpShake : ''}`}
-                      role="group"
-                      aria-label="Doğrulama kodu girişi"
-                    >
-                      {otp.map((digit, idx) => (
-                        <input
-                          key={idx}
-                          ref={otpRefs[idx]}
-                          id={`otp-${idx}`}
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={1}
-                          value={digit}
-                          className={`${styles.otpInput} ${digit ? styles.otpFilled : ''} ${verifyError ? styles.otpError : ''}`}
-                          onChange={e => handleOtpChange(idx, e.target.value)}
-                          onKeyDown={e => handleOtpKeyDown(idx, e)}
-                          onPaste={idx === 0 ? handleOtpPaste : undefined}
-                          autoComplete="one-time-code"
-                          aria-label={`Hane ${idx + 1}`}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Hata mesajı */}
-                    <AnimatePresence>
-                      {verifyError && (
-                        <motion.p
-                          className={styles.errorMsg}
-                          initial={{ opacity: 0, y: -8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                        >
-                          Geçersiz kod. Demo için <strong>000000</strong> kullanın.
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
-
-                    <motion.button
-                      type="submit"
-                      id="btn-verify-submit"
-                      className={styles.submitBtn}
-                      disabled={otp.join('').length < 6}
-                      whileHover={otp.join('').length === 6 ? { scale: 1.03, y: -2 } : {}}
-                      whileTap={otp.join('').length === 6 ? { scale: 0.97 } : {}}
-                    >
-                      <span>Doğrula</span>
-                      <span className={styles.btnArrow}>✓</span>
-                    </motion.button>
-
-                    <p className={styles.switchText}>
-                      Kod gelmedi mi?{' '}
-                      <button type="button" className={styles.switchBtn} onClick={() => { setOtp(['','','','','','']); setVerifyError(false); }}>
-                        Tekrar Gönder
-                      </button>
-                    </p>
-                  </form>
-                )}
-              </motion.div>
             )}
 
           </AnimatePresence>

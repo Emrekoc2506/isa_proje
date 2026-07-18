@@ -49,10 +49,24 @@ export default function ProductsPage() {
     setTempSearchQuery(searchParam);
   }, [searchParam]);
 
+  // Gizli Kategori Tespiti
+  const isCategorySecret = (catId) => {
+    const cat = categories.find(c => c.id === catId);
+    return cat ? (cat.label?.endsWith(' [GİZLİ]') || cat.name?.endsWith(' [GİZLİ]')) : false;
+  };
+
+  // Sitede normal kullanıcılara gösterilecek halka açık kategoriler
+  const publicCategories = categories.filter(c => !c.label?.endsWith(' [GİZLİ]') && !c.name?.endsWith(' [GİZLİ]'));
+
   // Filtrelenmiş Ürünler (Aktif/Uygulanmış filtrelere göre listelenenler)
   const filteredProducts = products.filter(p => {
-    // Kategoriye göre filtrele
-    const matchCategory = selectedCategory === 'hepsi' || p.categoryId === selectedCategory;
+    // Sadece aktif olan ürünler listelenebilir
+    if (p.isActive === false) return false;
+
+    // Kategoriye göre filtrele (Gizli kategoriye ait ürünler hepsi listesinde görünmez)
+    const matchCategory = selectedCategory === 'hepsi' 
+      ? !isCategorySecret(p.categoryId) 
+      : p.categoryId === selectedCategory;
     
     // Alt Kategoriye göre filtrele
     const matchSubcategory = !selectedSubcategory || p.subcategory === selectedSubcategory;
@@ -69,7 +83,11 @@ export default function ProductsPage() {
 
   // Geçici Filtrelenmiş Ürün Sayısı (Butonun üstünde anlık gösterilecek)
   const tempFilteredCount = products.filter(p => {
-    const matchCategory = tempCategory === 'hepsi' || p.categoryId === tempCategory;
+    if (p.isActive === false) return false;
+
+    const matchCategory = tempCategory === 'hepsi' 
+      ? !isCategorySecret(p.categoryId) 
+      : p.categoryId === tempCategory;
     const matchSubcategory = !tempSubcategory || p.subcategory === tempSubcategory;
     const matchSearch = p.name.toLowerCase().includes(tempSearchQuery.toLowerCase());
     const priceNum = parseFloat(p.price.replace(/[^0-9.,]/g, '').replace(',', '.'));
@@ -147,7 +165,7 @@ export default function ProductsPage() {
               <>
                 <FiChevronRight className={styles.breadIcon} />
                 <a href={`/urunler?kategori=${selectedCategory}`} onClick={(e) => { e.preventDefault(); setSelectedSubcategory(''); setSearchParams({ kategori: selectedCategory }); }}>
-                  {categories.find(c => c.id === selectedCategory)?.label}
+                  {(categories.find(c => c.id === selectedCategory)?.label || '').replace(' [GİZLİ]', '')}
                 </a>
               </>
             )}
@@ -173,20 +191,41 @@ export default function ProductsPage() {
               {/* Arama Kutusu */}
               <div className={styles.filterGroup}>
                 <label className={styles.filterLabel}>Ürün Ara</label>
-              {/* Arama Kutusu */}
-              <div className={styles.filterGroup}>
-                <label className={styles.filterLabel}>Ürün Ara</label>
-                <div className={styles.searchForm}>
+                <div className={styles.searchForm} style={{ position: 'relative' }}>
                   <input 
                     type="text" 
                     placeholder="İsme göre ara..." 
                     value={tempSearchQuery}
                     onChange={e => setTempSearchQuery(e.target.value)}
                     className={styles.searchInput}
+                    style={{ paddingRight: '32px' }}
                   />
+                  {tempSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setTempSearchQuery('')}
+                      style={{
+                        position: 'absolute',
+                        right: '32px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      title="Aramayı Temizle"
+                    >
+                      ✕
+                    </button>
+                  )}
                   <span className={styles.searchIconInline}><FiSearch /></span>
                 </div>
-              </div>
               </div>
 
               {/* KATEGORİ SEÇİMİ (CUSTOM DROPDOWN) */}
@@ -202,8 +241,8 @@ export default function ProductsPage() {
                   >
                     <span>
                       {tempCategory === 'hepsi' 
-                        ? 'Tüm Kategoriler' 
-                        : categories.find(c => c.id === tempCategory)?.label}
+                        ? `Tüm Kategoriler (${products.filter(p => p.isActive !== false && !isCategorySecret(p.categoryId)).length})` 
+                        : `${(categories.find(c => c.id === tempCategory)?.label || '').replace(' [GİZLİ]', '')} (${products.filter(p => p.categoryId === tempCategory && p.isActive !== false).length})`}
                     </span>
                     <FiChevronDown className={`${styles.triggerChevron} ${catDropdownOpen ? styles.chevronRotated : ''}`} />
                   </button>
@@ -222,16 +261,16 @@ export default function ProductsPage() {
                           className={`${styles.dropdownOption} ${tempCategory === 'hepsi' ? styles.optionActive : ''}`}
                           onClick={() => handleCategoryChange('hepsi')}
                         >
-                          Tüm Kategoriler
+                          Tüm Kategoriler ({products.filter(p => p.isActive !== false && !isCategorySecret(p.categoryId)).length})
                         </button>
-                        {categories.map(cat => (
+                        {publicCategories.map(cat => (
                           <button
                             key={cat.id}
                             type="button"
                             className={`${styles.dropdownOption} ${tempCategory === cat.id ? styles.optionActive : ''}`}
                             onClick={() => handleCategoryChange(cat.id)}
                           >
-                            {cat.label}
+                            {(cat.label || '').replace(' [GİZLİ]', '')} ({products.filter(p => p.categoryId === cat.id && p.isActive !== false).length})
                           </button>
                         ))}
                       </motion.div>
@@ -304,7 +343,7 @@ export default function ProductsPage() {
                                   onClick={() => handleSubcategoryChange(tempCategory, '')}
                                 >
                                   {!tempSubcategory ? <FiCheckSquare /> : <FiSquare />}
-                                  <span>Tüm Alt Kategoriler</span>
+                                  <span>Tüm Alt Kategoriler ({products.filter(p => p.categoryId === tempCategory).length})</span>
                                 </button>
                                 
                                 {subList
@@ -319,7 +358,7 @@ export default function ProductsPage() {
                                         onClick={() => handleSubcategoryChange(tempCategory, sub.label)}
                                       >
                                         {isSel ? <FiCheckSquare /> : <FiSquare />}
-                                        <span>{sub.label}</span>
+                                        <span>{sub.label} ({products.filter(p => p.categoryId === tempCategory && p.subcategory === sub.label).length})</span>
                                       </button>
                                     );
                                   })}

@@ -1,31 +1,220 @@
 import styles from './ChatUI.module.css';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSend, FiSearch, FiMoreVertical, FiCheckCircle, FiTrash2, FiCheck, FiX } from 'react-icons/fi';
-import { startChatConnection, sendMessageLive, getChatConnection, getStoredMessages } from '../../services/chatService';
-import { demoUser } from '../../data/dashboard';
-
-// Sahte başlangıç mesajları
-const MOCK_MESSAGES = [
-  { id: '1', senderId: 'support-1', receiverId: 'user-1', content: 'Merhaba! Size nasıl yardımcı olabiliriz?', sentAt: new Date(Date.now() - 3600000).toISOString() },
-  { id: '2', senderId: 'user-1', receiverId: 'support-1', content: 'Siparişimin durumu hakkında bilgi almak istiyorum.', sentAt: new Date(Date.now() - 3500000).toISOString() }
-];
+import { FiSend, FiSearch, FiCheckCircle, FiPlusCircle, FiXCircle } from 'react-icons/fi';
+import { useAuth } from '../../context/AuthContext';
+import { 
+  startChatConnection, 
+  stopChatConnection, 
+  getChatConnection,
+  joinConversationLive,
+  leaveConversationLive,
+  sendTypingLive,
+  adminJoinSupportPanelLive
+} from '../../services/chatService';
+import { 
+  getMyConversations, 
+  createConversation, 
+  getConversationMessages, 
+  sendMessage,
+  getAdminConversations,
+  getAdminConversationMessages,
+  sendAdminMessage,
+  closeAdminConversation
+} from '../../services/chatApi';
 
 export default function ChatUI({ isAdmin = false }) {
-  const [conversations, setConversations] = useState(() => {
-    return isAdmin 
-      ? [{ id: 'user-1', name: 'ogrenci@gmail.com (Öğrenci)', initials: 'Ö', time: '12:30', isOnline: true }]
-      : [{ id: 'support-1', name: 'Müşteri Hizmetleri', initials: 'MH', time: '12:30', isOnline: true }];
-  });
-  const [activeConvId, setActiveConvId] = useState(isAdmin ? 'user-1' : 'support-1');
-  const [messages, setMessages] = useState(() => getStoredMessages());
+  const [conversations, setConversations] = useState([]);
+  const [activeConvId, setActiveConvId] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedMsgs, setSelectedMsgs] = useState([]);
-  const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Arama, Odaklanma ve Link Algılama Lojikleri
+  const [searchQuery, setSearchQuery] = useState('');
+  const chatInputRef = useRef(null);
+  const { user } = useAuth();
+
+  const activeConvRef = useRef(null);
+  activeConvRef.current = activeConvId;
+
+  // Akıllı Link ve Görsel Algılayıcı (Dolaylı Görsel Paylaşımı İçin)
+  const renderMessageContent = (content) => {
+    if (!content) return null;
+    
+    // Basit URL bulucu regex
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    
+    if (urlRegex.test(content)) {
+      const parts = content.split(urlRegex);
+      return parts.map((part, index) => {
+        if (urlRegex.test(part)) {
+          const isImage = /\.(jpeg|jpg|gif|png|webp)/i.test(part) || 
+                          part.includes("hizliresim.com") || 
+                          part.includes("imgbb.com") || 
+                          part.includes("imgur.com");
+          
+          return (
+            <a 
+              key={index} 
+              href={part} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              style={{ 
+                color: 'var(--gold-light)', 
+                textDecoration: 'underline', 
+                wordBreak: 'break-all',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: '600'
+              }}
+            >
+              {isImage ? '🖼️ Görsel Bağlantısı' : '🔗 Bağlantı'}
+            </a>
+          );
+        }
+        return part;
+      });
+    }
+    
+    return content;
+  };
+
+  // Konuşmaları API'den Çekme
+  const fetchConversations = useCallback(async () => {
+    try {
+      const data = isAdmin ? await getAdminConversations() : await getMyConversations();
+      if (data) {
+        const mapped = data.map(c => ({
+          id: c.id,
+          name: c.customerName || c.subject || 'Destek Sohbeti',
+          initials: (c.customerName || c.subject || 'D')[0].toUpperCase(),
+          time: c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          isOnline: true,
+          isClosed: c.isClosed,
+          lastMessage: c.lastMessage
+        }));
+        setConversations(mapped);
+        
+        // Eğer seçili konuşma yoksa ve konuşma varsa ilkini seçelim
+        if (mapped.length > 0 && !activeConvId) {
+          setActiveConvId(mapped[0].id);
+        }
+      }
+    } catch (err) {
+      console.error("Konuşmalar yüklenemedi:", err);
+    }
+  }, [isAdmin, activeConvId]);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  // activeConvId değiştiğinde input'a odaklan (UX İyileştirmesi)
+  useEffect(() => {
+    if (activeConvId && chatInputRef.current) {
+      chatInputRef.current.focus();
+    }
+  }, [activeConvId]);
+
+  // Seçili Konuşmanın Mesajlarını Çekme
+  useEffect(() => {
+    if (!activeConvId) return;
+
+    const fetchMessages = async () => {
+      try {
+        const data = isAdmin 
+          ? await getAdminConversationMessages(activeConvId)
+          : await getConversationMessages(activeConvId);
+        
+        if (data) {
+          const mappedMsgs = data.map(m => ({
+            id: m.id,
+            senderId: m.senderId,
+            content: m.content,
+            sentAt: m.sentAt || m.createdAt || new Date().toISOString()
+          }));
+          setMessages(mappedMsgs);
+        }
+        
+        // SignalR ile bu odaya katıl
+        await joinConversationLive(activeConvId);
+      } catch (err) {
+        console.error("Mesajlar yüklenemedi:", err);
+      }
+    };
+
+    fetchMessages();
+
+    return () => {
+      // Odadan ayrıl
+      leaveConversationLive(activeConvId).catch(() => null);
+    };
+  }, [activeConvId, isAdmin]);
+
+  // SignalR Bağlantı Yönetimi ve Event Listener
+  useEffect(() => {
+    let activeConnection = null;
+
+    const initSignalR = async () => {
+      const conn = await startChatConnection();
+      if (conn) {
+        setIsConnected(true);
+        activeConnection = conn;
+
+        if (isAdmin) {
+          // Admin ise support grubuna katıl
+          await adminJoinSupportPanelLive().catch(console.error);
+        }
+
+        // Yeni mesaj gelince
+        const handleNewMessage = (conversationId, messageObj) => {
+          setIsTyping(false);
+          
+          // Eğer gelen mesaj şu an açık olan konuşmaya ait ise ekrana ekle
+          if (String(activeConvRef.current) === String(conversationId)) {
+            const mappedMsg = {
+              id: messageObj.id || Date.now().toString(),
+              senderId: messageObj.senderId,
+              content: messageObj.content || messageObj.Message || messageObj,
+              sentAt: messageObj.sentAt || messageObj.createdAt || new Date().toISOString()
+            };
+
+            setMessages(prev => {
+              if (prev.some(m => m.id === mappedMsg.id)) return prev;
+              return [...prev, mappedMsg];
+            });
+          } else {
+            // Başka bir konuşmaya geldiyse listeyi yenileyelim
+            fetchConversations();
+          }
+        };
+
+        conn.on("NewMessage", handleNewMessage);
+        conn.on("NotifyNewMessage", handleNewMessage);
+
+        conn.on("Typing", (conversationId) => {
+          if (String(activeConvRef.current) === String(conversationId)) {
+            setIsTyping(true);
+            setTimeout(() => setIsTyping(false), 3000); // 3 sn sonra otomatik gizle
+          }
+        });
+      }
+    };
+
+    initSignalR();
+
+    return () => {
+      if (activeConnection) {
+        activeConnection.off("NewMessage");
+        activeConnection.off("NotifyNewMessage");
+        activeConnection.off("Typing");
+      }
+    };
+  }, [isAdmin, fetchConversations]);
 
   // Otomatik scroll
   useEffect(() => {
@@ -34,94 +223,117 @@ export default function ChatUI({ isAdmin = false }) {
     }
   }, [messages, isTyping]);
 
-  // SignalR (Mock) Bağlantısı
-  useEffect(() => {
-    const initChat = async () => {
-      const conn = await startChatConnection();
-      if (conn) {
-        setIsConnected(true);
-        // Yeni mesaj gelince
-        conn.on("ReceiveMessage", (msg) => {
-          setIsTyping(false);
-          // Gelen mesaj zaten state'e eklenmediyse ekle
-          setMessages(prev => {
-            if (prev.some(m => m.id === msg.id)) return prev;
-            return [...prev, msg];
-          });
-        });
-      }
-    };
-    initChat();
-
-    return () => {
-      const conn = getChatConnection();
-      if (conn) {
-        // cleanup for real signalr if needed
-      }
-    };
-  }, []);
-
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !activeConvId) return;
 
     const msgContent = newMessage.trim();
     setNewMessage('');
 
-    const senderId = isAdmin ? 'support-1' : 'user-1';
-    const receiverId = isAdmin ? 'user-1' : 'support-1';
+    try {
+      // Sadece REST API ile kaydedilir (SignalR'da SendMessage invoke edilmez)
+      let response = null;
+      if (isAdmin) {
+        response = await sendAdminMessage(activeConvId, { content: msgContent });
+      } else {
+        response = await sendMessage(activeConvId, { content: msgContent });
+      }
 
-    // Sunucuya (Mock Hub) gönder -> Hub bunu saveMessage ile localStorage'a kaydedecek ve tetikleyecek
-    await sendMessageLive(senderId, receiverId, msgContent);
+      // Kendi mesajımızı ekrana ekleyelim (eğer anında SignalR'dan dönmezse)
+      const myMessage = {
+        id: response?.id || Date.now().toString(),
+        senderId: response?.senderId || 'me',
+        content: msgContent,
+        sentAt: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, myMessage]);
+    } catch (err) {
+      console.error("Mesaj gönderilemedi:", err);
+      alert("Mesaj gönderilemedi.");
+    }
+  };
+
+  const handleCreateNewConversation = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      let payload = { subject: "Destek Talebi" };
+
+      if (!token) {
+        const guestName = prompt("Lütfen adınızı girin:") || "Misafir Müşteri";
+        const guestEmail = prompt("Lütfen e-postanızı girin:") || "guest@example.com";
+
+        payload = {
+          subject: `${guestName} - Destek Talebi`,
+          guestName,
+          guestEmail
+        };
+      }
+
+      const res = await createConversation(payload);
+      if (res && res.id) {
+        alert("Destek konuşması başlatıldı.");
+        setActiveConvId(res.id);
+        fetchConversations();
+      }
+    } catch (err) {
+      alert("Yeni sohbet başlatılamadı: " + err.message);
+    }
+  };
+
+  // Yazarken sunucuya bildir
+  const handleInputChange = (e) => {
+    setNewMessage(e.target.value);
+    if (activeConvId) {
+      sendTypingLive(activeConvId).catch(() => null);
+    }
   };
 
   const formatTime = (isoString) => {
     const d = new Date(isoString);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const toggleSelection = (id) => {
-    setSelectedMsgs(prev => 
-      prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
-    );
-  };
+  const filteredConversations = conversations.filter(conv => {
+    const query = searchQuery.toLowerCase();
+    return conv.name.toLowerCase().includes(query) || 
+           (conv.lastMessage && conv.lastMessage.toLowerCase().includes(query));
+  });
 
-  const handleDelete = () => {
-    if (selectedMsgs.length === 0) return;
-    if (window.confirm(`${selectedMsgs.length} mesajı silmek istediğinize emin misiniz?`)) {
-      setMessages(prev => prev.filter(m => !selectedMsgs.includes(m.id)));
-      setSelectionMode(false);
-      setSelectedMsgs([]);
-      setShowMenu(false);
-    }
-  };
-
-  const handleDeleteConversation = (e, id) => {
-    e.stopPropagation();
-    if (window.confirm('Bu sohbeti tamamen silmek istediğinize emin misiniz?')) {
-      setConversations(prev => prev.filter(c => c.id !== id));
-      if (activeConvId === id) {
-        setActiveConvId(null);
-        setMessages([]);
-      }
-    }
-  };
+  const activeConv = conversations.find(c => c.id === activeConvId);
 
   return (
     <div className={styles.chatContainer}>
       
-      {/* ── SOL TARAF: SOHBET LİSTESİ ──────────────────────────── */}
+      {/* SOL BAR */}
       <div className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
-          <h3>Mesajlarım</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3>Mesajlarım</h3>
+            {!isAdmin && (
+              <button 
+                onClick={handleCreateNewConversation} 
+                className={styles.iconBtn}
+                title="Yeni Destek Talebi Başlat"
+                style={{ color: 'var(--gold-light)' }}
+              >
+                <FiPlusCircle size={20} />
+              </button>
+            )}
+          </div>
           <div className={styles.searchBox}>
             <FiSearch className={styles.searchIcon} />
-            <input type="text" placeholder="Sohbet ara..." className={styles.searchInput} />
+            <input 
+              type="text" 
+              placeholder="Sohbet ara..." 
+              className={styles.searchInput} 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
 
         <div className={styles.convList}>
-          {conversations.map(conv => (
+          {filteredConversations.map(conv => (
             <div 
               key={conv.id} 
               className={`${styles.convItem} ${activeConvId === conv.id ? styles.convItemActive : ''}`}
@@ -129,7 +341,7 @@ export default function ChatUI({ isAdmin = false }) {
             >
               <div className={styles.convAvatar}>
                 <span>{conv.initials}</span>
-                {conv.isOnline && <div className={styles.onlineDot} />}
+                {conv.isClosed && <div className={styles.onlineDot} style={{ background: '#e05594' }} title="Kapalı" />}
               </div>
               <div className={styles.convInfo}>
                 <div className={styles.convTop}>
@@ -137,123 +349,83 @@ export default function ChatUI({ isAdmin = false }) {
                   <span className={styles.convTime}>{conv.time}</span>
                 </div>
                 <p className={styles.convLastMsg}>
-                  {activeConvId === conv.id && messages.length > 0 
-                    ? messages[messages.length - 1].content 
-                    : 'Sohbet geçmişi...'}
+                  {conv.lastMessage || 'Sohbet geçmişi...'}
                 </p>
               </div>
-              <button 
-                className={styles.convDeleteBtn} 
-                onClick={(e) => handleDeleteConversation(e, conv.id)}
-                aria-label="Sohbeti Sil"
-              >
-                <FiTrash2 />
-              </button>
             </div>
           ))}
-          {conversations.length === 0 && (
-            <p className={styles.emptyState}>Sohbet bulunamadı.</p>
+          {filteredConversations.length === 0 && (
+            <p className={styles.emptyState}>
+              {searchQuery ? 'Eşleşen sohbet bulunamadı.' : 'Sohbet bulunamadı.'}
+            </p>
           )}
         </div>
       </div>
 
-      {/* ── SAĞ TARAF: MESAJLAŞMA ALANI ────────────────────────── */}
+      {/* MESAJ ALANI */}
       <div className={styles.chatArea}>
         {activeConvId ? (
           <>
-            {/* Chat Header */}
             <div className={styles.chatHeader}>
               <div className={styles.chatHeaderLeft}>
-                <div className={styles.headerAvatar}>{isAdmin ? 'Ö' : 'MH'}</div>
+                <div className={styles.headerAvatar}>{activeConv?.initials || 'D'}</div>
                 <div className={styles.headerInfo}>
-                  <h4>{isAdmin ? 'ogrenci@gmail.com' : 'Müşteri Hizmetleri'}</h4>
+                  <h4>{activeConv?.name || 'Destek Talebi'}</h4>
                   <span className={styles.statusText}>
-                    {isConnected ? (isAdmin ? 'Çevrimiçi (Öğrenci)' : 'Çevrimiçi (Destek Ekibi)') : 'Bağlanıyor...'}
+                    {activeConv?.isClosed ? (
+                      <span style={{ color: '#e05594', fontWeight: 600 }}>SOHBET KAPATILDI</span>
+                    ) : isConnected ? (
+                      'Canlı Bağlantı Aktif'
+                    ) : (
+                      'Sunucuya bağlanıyor...'
+                    )}
                   </span>
                 </div>
               </div>
-              
-              <div className={styles.headerActions}>
-                {selectionMode ? (
-                  <>
-                    <button 
-                      className={styles.cancelBtn} 
-                      onClick={() => { setSelectionMode(false); setSelectedMsgs([]); }}
-                    >
-                      <FiX /> İptal
-                    </button>
-                    {selectedMsgs.length > 0 && (
-                      <button className={styles.deleteBtn} onClick={handleDelete}>
-                        <FiTrash2 /> Sil ({selectedMsgs.length})
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <div className={styles.menuWrapper}>
-                    <button 
-                      className={styles.iconBtn} 
-                      onClick={() => setShowMenu(!showMenu)}
-                      onBlur={() => setTimeout(() => setShowMenu(false), 200)}
-                    >
-                      <FiMoreVertical />
-                    </button>
-                    <AnimatePresence>
-                      {showMenu && (
-                        <motion.div 
-                          className={styles.dropdownMenu}
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          <button 
-                            className={styles.dropdownItem} 
-                            onClick={() => { setSelectionMode(true); setShowMenu(false); }}
-                          >
-                            <FiCheckCircle /> Mesaj Seç
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
-              </div>
+              {isAdmin && !activeConv?.isClosed && (
+                <button
+                  onClick={async () => {
+                    if (confirm("Bu sohbeti kapatmak istediğinize emin misiniz?")) {
+                      await closeAdminConversation(activeConvId);
+                      fetchConversations();
+                    }
+                  }}
+                  style={{
+                    background: 'rgba(224, 85, 148, 0.1)',
+                    border: '1px solid rgba(224, 85, 148, 0.3)',
+                    color: '#e05594',
+                    padding: '6px 12px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Sohbeti Kapat
+                </button>
+              )}
             </div>
 
-            {/* Mesaj Listesi */}
             <div className={styles.messagesList}>
               <div className={styles.dateDivider}>
-                <span>Bugün</span>
+                <span>Mesajlar</span>
               </div>
 
               <AnimatePresence initial={false}>
                 {messages.map((msg) => {
-                  const mySenderId = isAdmin ? 'support-1' : 'user-1';
-                  const isMe = msg.senderId === mySenderId;
-                  const isSelected = selectedMsgs.includes(msg.id);
-
+                  const isMe = msg.senderId === 'me' || (isAdmin && msg.senderId !== 'user-1' && msg.senderId !== 'customer') || msg.senderId === user?.userId || msg.senderId === user?.id;
+                  
                   return (
                     <div key={msg.id} className={styles.messageRow}>
-                      {selectionMode && (
-                        <button 
-                          className={`${styles.checkbox} ${isSelected ? styles.checkboxChecked : ''}`}
-                          onClick={() => toggleSelection(msg.id)}
-                        >
-                          {isSelected && <FiCheck />}
-                        </button>
-                      )}
-                      
                       <motion.div 
-                        className={`${styles.messageWrapper} ${isMe ? styles.messageMine : styles.messageOther} ${selectionMode ? styles.messageSelectable : ''}`}
+                        className={`${styles.messageWrapper} ${isMe ? styles.messageMine : styles.messageOther}`}
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         transition={{ duration: 0.2 }}
-                        onClick={() => selectionMode && toggleSelection(msg.id)}
                       >
-                        {!isMe && <div className={styles.msgAvatar}>{isAdmin ? 'Ö' : 'MH'}</div>}
+                        {!isMe && <div className={styles.msgAvatar}>{activeConv?.initials || 'D'}</div>}
                         
-                        <div className={`${styles.messageBubble} ${isSelected ? styles.messageBubbleSelected : ''}`}>
-                          <p className={styles.messageContent}>{msg.content}</p>
+                        <div className={styles.messageBubble}>
+                          <p className={styles.messageContent}>{renderMessageContent(msg.content)}</p>
                           <div className={styles.messageMeta}>
                             <span>{formatTime(msg.sentAt)}</span>
                             {isMe && <FiCheckCircle className={styles.readIcon} />}
@@ -271,7 +443,7 @@ export default function ChatUI({ isAdmin = false }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                   >
-                    <div className={styles.msgAvatar}>{isAdmin ? 'Ö' : 'MH'}</div>
+                    <div className={styles.msgAvatar}>{activeConv?.initials || 'D'}</div>
                     <div className={`${styles.messageBubble} ${styles.typingBubble}`}>
                       <span className={styles.dot}></span>
                       <span className={styles.dot}></span>
@@ -284,26 +456,58 @@ export default function ChatUI({ isAdmin = false }) {
             </div>
 
             {/* Girdi Alanı */}
-            <form className={styles.inputArea} onSubmit={handleSend}>
-              <input 
-                type="text" 
-                placeholder="Mesajınızı yazın..." 
-                className={styles.messageInput}
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-              />
-              <button 
-                type="submit" 
-                className={styles.sendBtn}
-                disabled={!newMessage.trim()}
-              >
-                <FiSend />
-              </button>
-            </form>
+            {activeConv?.isClosed ? (
+              <div style={{ padding: '16px', background: 'rgba(224, 85, 148, 0.05)', border: '1px solid rgba(224, 85, 148, 0.2)', borderRadius: '8px', color: '#e05594', fontSize: '13px', textAlign: 'center', margin: 16 }}>
+                Bu sohbet sonlandırılmıştır. Yeni bir destek talebi oluşturabilirsiniz.
+              </div>
+            ) : (
+              <>
+                <div style={{ 
+                  padding: '6px 16px', 
+                  background: 'rgba(255, 255, 255, 0.02)', 
+                  borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)', 
+                  fontSize: '11px', 
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  userSelect: 'none'
+                }}>
+                  <span>💡 Görsel iletmek için <a href="https://hizliresim.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', textDecoration: 'underline' }}>Hızlı Resim</a> veya <a href="https://imgbb.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', textDecoration: 'underline' }}>ImgBB</a> servislerini kullanıp linki yapıştırabilirsiniz.</span>
+                </div>
+                <form className={styles.inputArea} onSubmit={handleSend}>
+                  <input 
+                    ref={chatInputRef}
+                    type="text" 
+                    placeholder="Mesajınızı yazın..." 
+                    className={styles.messageInput}
+                    value={newMessage}
+                    onChange={handleInputChange}
+                  />
+                  <button 
+                    type="submit" 
+                    className={styles.sendBtn}
+                    disabled={!newMessage.trim()}
+                  >
+                    <FiSend />
+                  </button>
+                </form>
+              </>
+            )}
           </>
         ) : (
           <div className={styles.noChatSelected}>
-            <p>Başlamak için sol menüden bir sohbet seçin.</p>
+            <p>Başlamak için sol menüden bir sohbet seçin veya yeni bir sohbet başlatın.</p>
+            {!isAdmin && (
+              <button 
+                onClick={handleCreateNewConversation} 
+                className={styles.buyBtn}
+                style={{ marginTop: '16px' }}
+              >
+                Yeni Sohbet Başlat
+              </button>
+            )}
           </div>
         )}
       </div>

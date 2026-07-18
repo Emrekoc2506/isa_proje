@@ -36,53 +36,74 @@ export default function CategoryNav({ mobileOpen, onMobileClose }) {
       <nav className={styles.nav} ref={navRef} aria-label="Main categories">
         <div className={styles.inner}>
           <ul className={styles.list}>
-            {categories.map((cat) => (
-              <li
-                key={cat.id}
-                className={styles.item}
-                onMouseEnter={() => cat.children && setActiveDropdown(cat.id)}
-                onMouseLeave={() => setActiveDropdown(null)}
-              >
-                <a
-                  href={`/urunler?kategori=${cat.id}`}
-                  className={`${styles.link} ${activeDropdown === cat.id ? styles.active : ''}`}
-                  onClick={(e) => {
-                    if (cat.children) {
-                      // e.preventDefault(); // Remove preventDefault to allow navigation, dropdown is on hover anyway on desktop
-                    }
-                  }}
+            {categories.map((cat) => {
+              const hasChildren = cat.children && cat.children.length > 0;
+              const catName = cat.name || cat.label || '';
+              return (
+                <li
+                  key={cat.id}
+                  className={styles.item}
+                  onMouseEnter={() => hasChildren && setActiveDropdown(cat.id)}
+                  onMouseLeave={() => setActiveDropdown(null)}
                 >
-                  {cat.label}
-                  {cat.children && (
-                    <FiChevronDown
-                      className={`${styles.chevron} ${activeDropdown === cat.id ? styles.chevronOpen : ''}`}
-                    />
-                  )}
-                </a>
+                  <a
+                    href={`/urunler?kategori=${cat.id}`}
+                    className={`${styles.link} ${activeDropdown === cat.id ? styles.active : ''}`}
+                  >
+                    {catName}
+                    {hasChildren && (
+                      <FiChevronDown
+                        className={`${styles.chevron} ${activeDropdown === cat.id ? styles.chevronOpen : ''}`}
+                      />
+                    )}
+                  </a>
 
-                {/* Dropdown */}
-                <AnimatePresence>
-                  {cat.children && activeDropdown === cat.id && (
-                    <motion.ul
-                      className={styles.dropdown}
-                      variants={dropdownVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      role="menu"
-                    >
-                      {cat.children.map((child) => (
-                        <li key={child.label} role="menuitem">
-                          <a href={child.href} className={styles.dropdownLink}>
-                            {child.label}
-                          </a>
-                        </li>
-                      ))}
-                    </motion.ul>
-                  )}
-                </AnimatePresence>
-              </li>
-            ))}
+                  {/* Dropdown */}
+                  <AnimatePresence>
+                    {hasChildren && activeDropdown === cat.id && (
+                      <motion.ul
+                        className={styles.dropdown}
+                        variants={dropdownVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        role="menu"
+                      >
+                        {cat.children.map((child) => {
+                          const childName = child.name || child.label || '';
+                          const childHref = child.href || `/urunler?kategori=${child.id}`;
+                          const hasSubChildren = child.children && child.children.length > 0;
+
+                          return (
+                            <li key={child.id || childName} role="menuitem" style={{ position: 'relative' }}>
+                              <a href={childHref} className={styles.dropdownLink} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                <span style={{ fontWeight: 600 }}>{childName}</span>
+                                
+                                {/* Render 2nd-level subcategories directly below for a compact tree structure */}
+                                {hasSubChildren && (
+                                  <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: 10, marginTop: 4, borderLeft: '1px dashed rgba(201,162,39,0.3)', gap: 2 }}>
+                                    {child.children.map(subChild => (
+                                      <a
+                                        key={subChild.id}
+                                        href={`/urunler?kategori=${subChild.id}`}
+                                        style={{ fontSize: '11px', color: 'var(--text-secondary)', textDecoration: 'none', padding: '2px 0' }}
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        • {subChild.name}
+                                      </a>
+                                    ))}
+                                  </div>
+                                )}
+                              </a>
+                            </li>
+                          );
+                        })}
+                      </motion.ul>
+                    )}
+                  </AnimatePresence>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </nav>
@@ -120,27 +141,48 @@ export default function CategoryNav({ mobileOpen, onMobileClose }) {
               </div>
 
               <ul className={styles.mobileList}>
-                {categories.map((cat) => (
-                  <li key={cat.id} className={styles.mobileItem}>
-                    <details className={styles.mobileDetails}>
-                      <summary className={styles.mobileSummary}>
-                        <a href={`/urunler?kategori=${cat.id}`}>{cat.label}</a>
-                        {cat.children && <FiChevronDown className={styles.mobileChevron} />}
-                      </summary>
-                      {cat.children && (
-                        <ul className={styles.mobileSub}>
-                          {cat.children.map((child) => (
-                            <li key={child.label}>
-                              <a href={child.href} className={styles.mobileSubLink}>
-                                {child.label}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </details>
-                  </li>
-                ))}
+                {categories.map((cat) => {
+                  const hasChildren = cat.children && cat.children.length > 0;
+                  const catName = cat.name || cat.label || '';
+                  return (
+                    <li key={cat.id} className={styles.mobileItem}>
+                      <details className={styles.mobileDetails}>
+                        <summary className={styles.mobileSummary}>
+                          <a href={`/urunler?kategori=${cat.id}`}>{catName}</a>
+                          {hasChildren && <FiChevronDown className={styles.mobileChevron} />}
+                        </summary>
+                        {hasChildren && (
+                          <ul className={styles.mobileSub}>
+                            {cat.children.map((child) => {
+                              const childName = child.name || child.label || '';
+                              const childHref = child.href || `/urunler?kategori=${child.id}`;
+                              const hasSubChildren = child.children && child.children.length > 0;
+
+                              return (
+                                <li key={child.id || childName}>
+                                  <a href={childHref} className={styles.mobileSubLink}>
+                                    {childName}
+                                  </a>
+                                  {hasSubChildren && (
+                                    <ul style={{ paddingLeft: 16, listStyle: 'none', margin: '4px 0 8px 0' }}>
+                                      {child.children.map(subChild => (
+                                        <li key={subChild.id}>
+                                          <a href={`/urunler?kategori=${subChild.id}`} className={styles.mobileSubLink} style={{ fontSize: '12px', opacity: 0.8 }}>
+                                            — {subChild.name}
+                                          </a>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </details>
+                    </li>
+                  );
+                })}
               </ul>
             </motion.div>
           </>

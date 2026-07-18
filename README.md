@@ -1,16 +1,42 @@
-# React + Vite
+# Mysticvelora — Şifa & Ritüel Ürünleri E-Ticaret Arayüzü
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Bu proje, Mysticvelora e-ticaret platformunun React + Vite tabanlı ön uç (frontend) uygulamasıdır. Canlı .NET Web API ve SignalR Hub servisleri ile tam entegre çalışmaktadır.
 
-Currently, two official plugins are available:
+## 🚀 Yerel Kurulum & Çalıştırma
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 1. Bağımlılıkların Yüklenmesi
+Proje dizininde terminali açarak gerekli paketleri yükleyin:
+```bash
+npm install
+```
 
-## React Compiler
+### 2. Çevre Değişkenlerinin (.env) Ayarlanması
+Proje kök dizininde `.env` adında bir dosya oluşturun ve aşağıdaki değişkenleri ekleyin (örnek şablon için `.env.example` dosyasına bakabilirsiniz):
+```env
+VITE_API_BASE_URL=https://localhost:7148/api
+VITE_SIGNALR_BASE_URL=https://localhost:7148/hubs
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+> ⚠️ **Önemli Not:** Backend geliştirme ortamında self-signed SSL sertifikaları kullanılmaktadır. Tarayıcınızda veya isteklerde SSL uyarısı alırsanız, `dotnet dev-certs https --trust` komutuyla sertifikayı güvenilir hale getirin veya HTTP profili (`http://localhost:5297`) üzerinden çalışmayı deneyin.
 
-## Expanding the Oxlint configuration
+### 3. Uygulamayı Geliştirme Modunda Başlatma
+Aşağıdaki komutla yerel sunucuyu başlatabilirsiniz:
+```bash
+npm run dev
+```
+Uygulama varsayılan olarak `http://localhost:5173` adresinde çalışacaktır. CORS izinleri bu port için backend tarafında tanımlanmıştır.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+---
+
+## 🛠️ Entegrasyon Detayları
+
+Ön uç uygulamasında gerçekleştirilen canlı API bağlantıları:
+
+- **Auth (Kimlik Doğrulama)**: Gerçek login/register akışı kurulmuştur. Giriş yaptıktan sonra JWT token'lar `localStorage` üzerinde saklanır ve sonraki tüm isteklere `Authorization: Bearer <token>` olarak eklenir. Rol yönetimi aktif edilmiştir:
+  - `SuperAdmin` veya `Admin` -> `/admin` (Yönetici Paneli)
+  - `Customer` -> `/panel` (Müşteri Paneli)
+- **Products & Categories (Ürün & Kategori)**: Tüm ürün listesi, detay bilgileri, kategori ağacı ve filtrelemeler dinamik API üzerinden beslenmektedir.
+- **File Upload (Dosya Yükleme)**: Ürün ve banner eklerken görseller `multipart/form-data` formatında API sunucusuna yüklenir ve dönen public URL'ler kullanılır.
+- **Orders (Sipariş Yönetimi)**: Sepetten sipariş oluştururken fiyat bilgisi gönderilmez, hesaplama sunucu tarafında yapılır. Misafir siparişleri `/orders/guest` ve üye siparişleri `/orders` uçlarına iletilir.
+- **Chat & Real-time Messages (SignalR)**: Müşteri ve Admin arasındaki canlı destek sistemi SignalR Hub (`/hubs/chat`) ile bağlanmıştır.
+- **Real-time Notifications (SignalR)**: Bildirimler `/hubs/notifications` üzerinden anlık olarak dinlenmekte ve kullanıcıya yansıtılmaktadır.
