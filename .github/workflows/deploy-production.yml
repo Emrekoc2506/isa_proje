@@ -1,6 +1,10 @@
 name: Deploy Production Frontend
 
 on:
+  push:
+    branches:
+      - main
+
   workflow_dispatch:
     inputs:
       confirm_deployment:
@@ -13,7 +17,7 @@ permissions:
 
 jobs:
   build-and-deploy:
-    if: ${{ github.event.inputs.confirm_deployment == 'DEPLOY' }}
+    if: ${{ github.event_name == 'push' || github.event.inputs.confirm_deployment == 'DEPLOY' }}
     runs-on: ubuntu-latest
 
     steps:
