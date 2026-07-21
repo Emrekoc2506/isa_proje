@@ -5,8 +5,10 @@ import { AuthProvider } from '../context/AuthContext';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 
+const MOCK_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjI1MjQ2MDgwMDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+
 const server = setupServer(
-  http.get('https://localhost:7148/api/cart', () => {
+  http.get('*/api/cart', () => {
     return HttpResponse.json({
       items: [
         { id: 'cart-item-1', productId: 'p1', variantId: 'v1', quantity: 2, productName: 'Gumus Kolye', unitPrice: 250 }
@@ -14,7 +16,7 @@ const server = setupServer(
       totalAmount: 500
     });
   }),
-  http.post('https://localhost:7148/api/cart/items', () => {
+  http.post('*/api/cart/items', () => {
     return HttpResponse.json({
       items: [
         { id: 'cart-item-1', productId: 'p1', variantId: 'v1', quantity: 2, productName: 'Gumus Kolye', unitPrice: 250 },
@@ -22,10 +24,10 @@ const server = setupServer(
       ]
     });
   }),
-  http.post('https://localhost:7148/api/cart/merge', () => {
+  http.post('*/api/cart/merge', () => {
     return HttpResponse.json({ items: [] });
   }),
-  http.delete('https://localhost:7148/api/cart/items/cart-item-1', () => {
+  http.delete('*/api/cart/items/cart-item-1', () => {
     return new HttpResponse(null, { status: 204 });
   })
 );
@@ -48,7 +50,7 @@ function CartTestComponent() {
 
 describe('CartContext Tests', () => {
   test('should load items from server', async () => {
-    localStorage.setItem('accessToken', 'mock-token');
+    localStorage.setItem('accessToken', MOCK_JWT);
 
     render(
       <AuthProvider>
@@ -67,7 +69,7 @@ describe('CartContext Tests', () => {
   });
 
   test('should handle item additions', async () => {
-    localStorage.setItem('accessToken', 'mock-token');
+    localStorage.setItem('accessToken', MOCK_JWT);
 
     render(
       <AuthProvider>
