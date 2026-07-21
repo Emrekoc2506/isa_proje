@@ -64,3 +64,14 @@ export function closeAdminConversation(id) {
     method: "POST"
   });
 }
+
+// Admin belirli bir kullanıcıyla yeni konuşma başlatır
+export function initiateAdminConversation(userId, payload = {}) {
+  return request(`/admin/chat/conversations/by-user/${userId}`, {
+    method: "POST",
+    body: JSON.stringify({
+      subject: payload.subject || null,
+      initialMessage: payload.initialMessage || null
+    })
+  });
+}

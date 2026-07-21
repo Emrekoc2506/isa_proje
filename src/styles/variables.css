@@ -23,6 +23,7 @@
   --text-primary:   #EDE0C8;   /* Warm cream                  */
   --text-secondary: #A89BC2;   /* Açık mor                    */
   --text-muted:     #6B5A85;   /* Soluk                       */
+  --text-light:     #EDE0C8;   /* Warm cream (text-primary ile aynı) */
   --text-gold:      #C9A227;   /* Altın metin                 */
   --text-white:     #FFFFFF;
 

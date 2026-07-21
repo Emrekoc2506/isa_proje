@@ -21,76 +21,17 @@ import {
 
 
 import { 
-  newsProducts as mockNews, 
-  saleProducts as mockSale, 
-  featuredProducts as mockFeatured,
   navCategories as mockCategories
 } from '../data/index';
 
-const INITIAL_PRODUCTS = [
-  ...mockNews.map(p => ({
-    id: p.id,
-    name: p.name,
-    price: String(p.price).includes('₺') ? p.price : `${p.price} ₺`,
-    oldPrice: p.oldPrice ? (String(p.oldPrice).includes('₺') ? p.oldPrice : `${p.oldPrice} ₺`) : null,
-    discount: p.discount || null,
-    unit: p.unit || 'adet',
-    image: p.image,
-    imageUrl: p.image,
-    isNew: true,
-    isSale: false,
-    isFeatured: false,
-    slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  })),
-  ...mockSale.map(p => ({
-    id: p.id,
-    name: p.name,
-    price: String(p.price).includes('₺') ? p.price : `${p.price} ₺`,
-    oldPrice: p.oldPrice ? (String(p.oldPrice).includes('₺') ? p.oldPrice : `${p.oldPrice} ₺`) : null,
-    discount: p.discount || null,
-    unit: p.unit || 'adet',
-    image: p.image,
-    imageUrl: p.image,
-    isNew: false,
-    isSale: true,
-    isFeatured: false,
-    slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  })),
-  ...mockFeatured.map(p => ({
-    id: p.id,
-    name: p.name,
-    price: String(p.price).includes('₺') ? p.price : `${p.price} ₺`,
-    oldPrice: p.oldPrice ? (String(p.oldPrice).includes('₺') ? p.oldPrice : `${p.oldPrice} ₺`) : null,
-    discount: p.discount || null,
-    unit: p.unit || 'adet',
-    image: p.image,
-    imageUrl: p.image,
-    isNew: false,
-    isSale: false,
-    isFeatured: true,
-    slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  }))
-];
-
-const INITIAL_SLIDES = [
-  {
-    id: 'default-1',
-    title: "Şifalı Taşlar & Ritüel Ürünleri",
-    subtitle: "Yeni Sezon Koleksiyonu Keşfedin",
-    image: "https://www.aromantra.com/data/include/img/links/1774962684_rwd_desktop.jpg",
-    imageMobile: "https://www.aromantra.com/data/include/img/links/1774962684_rwd_desktop.jpg",
-    href: "/urunler",
-    cta: "Keşfet",
-    isActive: true
-  }
-];
+const INITIAL_SLIDES = [];
 
 const ProductContext = createContext(null);
 
 export function ProductProvider({ children }) {
   // İlk yüklemede boş gelmemesi için mock verilerle başlatıyoruz (Stale-While-Revalidate)
   const [categories, setCategories] = useState(mockCategories || []);
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState([]);
   const [slides, setSlides] = useState(INITIAL_SLIDES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

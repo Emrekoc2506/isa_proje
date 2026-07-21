@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import ProductCard from '../../components/ProductCard/ProductCard';
-import MainLayout from '../../layouts/MainLayout/MainLayout';
 import { FiSearch, FiSliders, FiGrid, FiList, FiChevronRight, FiChevronDown, FiBook, FiFolder, FiCheckSquare, FiSquare } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -152,8 +151,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <MainLayout>
-      <div className={styles.shopContainer}>
+    <div className={styles.shopContainer}>
         
         {/* Üst Kısım: Breadcrumb & Başlık */}
         <div className={styles.shopHeader}>
@@ -433,6 +431,5 @@ export default function ProductsPage() {
         </div>
 
       </div>
-    </MainLayout>
   );
 }

@@ -1,9 +1,20 @@
 import { useState, useEffect } from 'react';
-import { FiTrash2, FiEdit3, FiPlus, FiGrid, FiList, FiAlertCircle, FiLock, FiUnlock } from 'react-icons/fi';
+import { 
+  FiTrash2, FiEdit3, FiPlus, FiGrid, FiList, FiAlertCircle, FiLock, FiUnlock,
+  FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText
+} from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
 import * as productApi from '../../../services/productApi';
 import * as categoryApi from '../../../services/categoryApi';
 import { uploadFile } from '../../../services/fileApi';
 import styles from '../AdminPage.module.css';
+
+const STEPS = [
+  { id: 1, label: "Genel", icon: FiTag, color: "#6366f1" },
+  { id: 2, label: "Fiyat & Stok", icon: FiDollarSign, color: "#16a34a" },
+  { id: 3, label: "Görsel", icon: FiImage, color: "#10b981" },
+  { id: 4, label: "Detaylar", icon: FiSliders, color: "#f59e0b" }
+];
 
 export default function ProductsSection({ onSelectProductForVariants }) {
   const [products, setProducts] = useState([]);
@@ -273,298 +284,517 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       )}
 
       {/* CREATE / EDIT MODAL (Sihirbaz Form Tasarımı) */}
-      {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, overflowY: 'auto' }}>
-          <div className={styles.sectionCard} style={{ width: '90%', maxWidth: 600, margin: '40px auto', background: 'var(--bg-dark)', border: '1px solid rgba(201, 162, 39, 0.15)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h4 style={{ color: 'var(--gold-light)', margin: 0, fontSize: 18 }}>
-                {modalMode === 'create' ? 'Yeni Ürün Ekle' : 'Ürünü Düzenle'}
-              </h4>
-              <button 
-                type="button" 
-                onClick={() => setShowModal(false)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20 }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Adım Göstergesi (Progress Bar - ozel_hoca CreateListing esintili) */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, position: 'relative', padding: '0 8px' }}>
-              <div style={{ position: 'absolute', top: '35%', left: 0, right: 0, height: 2, background: 'rgba(255, 255, 255, 0.05)', zIndex: 1 }} />
-              <div style={{ 
-                position: 'absolute', 
-                top: '35%', 
-                left: 0, 
-                width: `${((modalStep - 1) / (STEPS.length - 1)) * 100}%`, 
-                height: 2, 
-                background: 'var(--gold)', 
-                zIndex: 2, 
-                transition: 'width 0.3s ease' 
-              }} />
-              
-              {[
-                { id: 1, label: "Genel" },
-                { id: 2, label: "Fiyat & Stok" },
-                { id: 3, label: "Görsel" },
-                { id: 4, label: "Detaylar" }
-              ].map((s) => {
-                const isCompleted = modalStep > s.id;
-                const isActive = modalStep === s.id;
-                return (
-                  <div key={s.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3, position: 'relative' }}>
-                    <div style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: '50%',
-                      background: isCompleted ? 'var(--gold)' : isActive ? 'var(--bg-dark)' : 'rgba(255, 255, 255, 0.08)',
-                      border: isActive ? '2px solid var(--gold)' : '2px solid transparent',
-                      color: isCompleted ? '#000' : isActive ? 'var(--gold-light)' : 'var(--text-secondary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 'bold',
-                      fontSize: 12,
-                      transition: 'all 0.3s ease'
-                    }}>
-                      {isCompleted ? '✓' : s.id}
-                    </div>
-                    <span style={{ fontSize: 9, color: isActive ? 'var(--gold-light)' : 'var(--text-muted)', marginTop: 6, fontWeight: isActive ? 'bold' : 'normal' }}>
-                      {s.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            <form onSubmit={handleSave} className={styles.profileForm}>
-              
-              {/* ADIM 1: GENEL BİLGİLER */}
-              {modalStep === 1 && (
-                <div className={styles.formGrid}>
-                  <div className={styles.formField} style={{ gridColumn: 'span 2' }}>
-                    <label className={styles.fieldLabel}>Ürün Adı *</label>
-                    <input type="text" required value={name} onChange={e => setName(e.target.value)} className={styles.fieldInput} />
-                  </div>
-                  <div className={styles.formField} style={{ gridColumn: 'span 2' }}>
-                    <label className={styles.fieldLabel}>Kategori *</label>
-                    <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={styles.fieldInput} style={{ background: 'rgba(0,0,0,0.3)', color: '#fff' }}>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  </div>
-                  <div className={styles.formField}>
-                    <label className={styles.fieldLabel}>Birim (Örn: Adet, Gram)</label>
-                    <input type="text" value={unit} onChange={e => setUnit(e.target.value)} className={styles.fieldInput} />
-                  </div>
-                  <div className={styles.formField}>
-                    <label className={styles.fieldLabel}>Takma Ad (Slug)</label>
-                    <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className={styles.fieldInput} placeholder="Boş bırakılırsa otomatik üretilir" />
-                  </div>
+      <AnimatePresence>
+        {showModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, overflowY: 'auto', backdropFilter: 'blur(8px)' }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className={styles.sectionCard} 
+              style={{ width: '90%', maxWidth: 650, margin: '40px auto', background: 'var(--bg-dark)', border: '1px solid rgba(201, 162, 39, 0.15)', boxShadow: '0 15px 40px rgba(0,0,0,0.6)', padding: 0, borderRadius: 16, overflow: 'hidden' }}
+            >
+              {/* Mesh Gradient Header */}
+              <div style={{
+                background: 'linear-gradient(135deg, #059669 0%, #1d4ed8 50%, #4f46e5 100%)',
+                padding: '24px 24px',
+                color: '#fff',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{ position: 'absolute', top: -50, right: -50, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', filter: 'blur(25px)' }} />
+                <div style={{ position: 'absolute', bottom: -30, left: '15%', width: 110, height: 110, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', filter: 'blur(18px)' }} />
+                
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: 20, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                  {modalMode === 'create' ? <FiPlus size={11} /> : <FiEdit3 size={11} />} {modalMode === 'create' ? 'Yeni Ürün Ekle' : 'Ürünü Düzenle'}
                 </div>
-              )}
+                
+                <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-heading)' }}>
+                  Ürününüzü Oluşturalım
+                </h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: 12, opacity: 0.85, lineHeight: 1.4 }}>
+                  Sadece birkaç adımda profesyonel bir ürün oluşturun ve mağazada listeleyin.
+                </p>
 
-              {/* ADIM 2: FİYAT & STOK */}
-              {modalStep === 2 && (
-                <div className={styles.formGrid}>
-                  <div className={styles.formField}>
-                    <label className={styles.fieldLabel}>Fiyat (₺) *</label>
-                    <input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} className={styles.fieldInput} />
-                  </div>
-                  <div className={styles.formField}>
-                    <label className={styles.fieldLabel}>Eski Fiyat (₺)</label>
-                    <input type="number" step="0.01" value={oldPrice} onChange={e => setOldPrice(e.target.value)} className={styles.fieldInput} />
-                  </div>
-                  <div className={styles.formField}>
-                    <label className={styles.fieldLabel}>Stok Adedi *</label>
-                    <input type="number" required value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} className={styles.fieldInput} />
-                  </div>
-                  <div className={styles.formField}>
-                    <label className={styles.fieldLabel}>İndirim Notu (Örn: %20 İndirim)</label>
-                    <input type="text" value={discount} onChange={e => setDiscount(e.target.value)} className={styles.fieldInput} />
-                  </div>
-                </div>
-              )}
-
-              {/* ADIM 3: GÖRSEL YÜKLE */}
-              {modalStep === 3 && (
-                <div className={styles.formGrid}>
-                  <div className={styles.formField} style={{ gridColumn: 'span 2' }}>
-                    <label className={styles.fieldLabel} style={{ marginBottom: 10 }}>Ürün Görseli</label>
-                    
-                    {!imageUrl ? (
-                      <div 
-                        style={{
-                          border: '2px dashed rgba(201, 162, 39, 0.25)',
-                          borderRadius: 8,
-                          padding: '30px 20px',
-                          textAlign: 'center',
-                          background: 'rgba(0, 0, 0, 0.2)',
-                          cursor: 'pointer',
-                          position: 'relative',
-                          transition: 'border-color 0.2s'
-                        }}
-                        onClick={() => document.getElementById('imageFileInput').click()}
-                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--gold)'}
-                        onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(201, 162, 39, 0.25)'}
-                      >
-                        <input 
-                          id="imageFileInput"
-                          type="file" 
-                          accept="image/*"
-                          onChange={handleImageUpload} 
-                          style={{ display: 'none' }} 
-                        />
-                        <div style={{ fontSize: 32, color: 'var(--gold-light)', marginBottom: 8 }}>📷</div>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: 13, display: 'block', fontWeight: 500 }}>Görsel yüklemek için tıklayın</span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Tavsiye edilen: Kare (1:1) JPG, PNG, WEBP</span>
-                        
-                        {uploadingImg && (
-                          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}>
-                            <span style={{ color: 'var(--gold-light)', fontSize: 12, fontWeight: 'bold' }}>Görsel Yükleniyor...</span>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div style={{
-                        border: '1px solid rgba(201, 162, 39, 0.2)',
-                        borderRadius: 8,
-                        padding: 12,
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        position: 'relative',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center'
-                      }}>
-                        <img src={imageUrl} alt="Ürün" style={{ width: '100%', maxHeight: 180, objectFit: 'contain', borderRadius: 4, background: 'rgba(0,0,0,0.1)' }} />
-                        <button 
-                          type="button" 
-                          onClick={() => setImageUrl('')}
-                          style={{
-                            position: 'absolute',
-                            top: 8,
-                            right: 8,
-                            background: '#e05594',
-                            color: '#fff',
-                            border: 'none',
-                            width: 24,
-                            height: 24,
-                            borderRadius: '50%',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 11,
-                            fontWeight: 'bold',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                          }}
-                          title="Görseli Kaldır"
-                        >
-                          ✕
-                        </button>
-                        <span style={{ color: '#2ecc71', fontSize: 11, marginTop: 8, fontWeight: 500 }}>✓ Görsel başarıyla eşleştirildi</span>
-                      </div>
-                    )}
-
-                    <div style={{ marginTop: 12 }}>
-                      <label className={styles.fieldLabel}>Alternatif: Görsel Web Adresi (URL)</label>
-                      <input 
-                        type="text" 
-                        value={imageUrl} 
-                        onChange={e => setImageUrl(e.target.value)} 
-                        className={styles.fieldInput} 
-                        placeholder="Örn: https://example.com/resim.jpg" 
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ADIM 4: DETAYLAR VE SEÇENEKLER */}
-              {modalStep === 4 && (
-                <div className={styles.formGrid}>
-                  <div className={styles.formField} style={{ gridColumn: 'span 2' }}>
-                    <label className={styles.fieldLabel}>Kısa Açıklama</label>
-                    <input type="text" value={shortDescription} onChange={e => setShortDescription(e.target.value)} className={styles.fieldInput} placeholder="Kartlarda görünecek kısa özet" />
-                  </div>
-                  <div className={styles.formField} style={{ gridColumn: 'span 2' }}>
-                    <label className={styles.fieldLabel}>Detaylı Açıklama</label>
-                    <textarea value={description} onChange={e => setDescription(e.target.value)} className={styles.fieldInput} rows={3} style={{ resize: 'vertical' }} placeholder="Ürün detay sayfasındaki uzun açıklama" />
-                  </div>
-                  <div className={styles.formField} style={{ gridColumn: 'span 2', display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 13, cursor: 'pointer', userSelect: 'none' }}>
-                      <input type="checkbox" checked={isNew} onChange={e => setIsNew(e.target.checked)} /> Yeni Ürün
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 13, cursor: 'pointer', userSelect: 'none' }}>
-                      <input type="checkbox" checked={isSale} onChange={e => setIsSale(e.target.checked)} /> İndirimde
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 13, cursor: 'pointer', userSelect: 'none' }}>
-                      <input type="checkbox" checked={isFeatured} onChange={e => setIsFeatured(e.target.checked)} /> Öne Çıkar
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 13, cursor: 'pointer', userSelect: 'none' }}>
-                      <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} /> Satışa Açık
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              {/* BUTONLAR (Sihirbaz Navigasyonu) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                {modalStep > 1 ? (
-                  <button 
-                    type="button" 
-                    onClick={() => setModalStep(s => s - 1)} 
-                    className={styles.seeAllBtn}
-                    style={{ padding: '8px 16px', fontSize: 13 }}
-                  >
-                    ← Geri
-                  </button>
-                ) : (
-                  <button 
-                    type="button" 
-                    onClick={() => setShowModal(false)} 
-                    className={styles.seeAllBtn}
-                    style={{ padding: '8px 16px', fontSize: 13 }}
-                  >
-                    İptal
-                  </button>
-                )}
-
-                {modalStep < 4 ? (
-                  <button 
-                    type="button" 
-                    onClick={() => {
-                      // Temel Validasyonlar
-                      if (modalStep === 1 && !name.trim()) {
-                        alert("Lütfen ürün adını doldurun.");
-                        return;
-                      }
-                      if (modalStep === 2 && (!price || !stockQuantity)) {
-                        alert("Lütfen fiyat ve stok alanlarını doldurun.");
-                        return;
-                      }
-                      setModalStep(s => s + 1);
-                    }} 
-                    className={styles.shopBtn}
-                    style={{ padding: '8px 16px', fontSize: 13 }}
-                  >
-                    İleri →
-                  </button>
-                ) : (
-                  <button 
-                    type="submit" 
-                    className={styles.shopBtn}
-                    style={{ padding: '8px 24px', fontSize: 13, fontWeight: 'bold' }}
-                  >
-                    ✓ Kaydet
-                  </button>
-                )}
+                <button 
+                  type="button" 
+                  onClick={() => setShowModal(false)}
+                  style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(0,0,0,0.2)', border: 'none', width: 28, height: 28, borderRadius: '50%', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 'bold', transition: 'all 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.4)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
+                >
+                  ✕
+                </button>
               </div>
 
-            </form>
+              {/* Step indicator (Progress Bar) */}
+              <div style={{ 
+                margin: '20px 24px 0 24px', 
+                background: 'rgba(255, 255, 255, 0.02)', 
+                border: '1px solid rgba(255, 255, 255, 0.05)', 
+                borderRadius: 12, 
+                padding: '16px 20px', 
+                position: 'relative' 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: '18px', left: '20px', right: '20px', height: 2, background: 'rgba(255, 255, 255, 0.05)', zIndex: 1 }} />
+                  <div style={{ 
+                    position: 'absolute', 
+                    top: '18px', 
+                    left: '20px', 
+                    width: `${((modalStep - 1) / (STEPS.length - 1)) * 88}%`, 
+                    height: 2, 
+                    background: 'linear-gradient(90deg, #10b981, #3b82f6)', 
+                    zIndex: 2, 
+                    transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)' 
+                  }} />
+                  
+                  {STEPS.map((s) => {
+                    const StepIcon = s.icon;
+                    const isCompleted = modalStep > s.id;
+                    const isActive = modalStep === s.id;
+                    
+                    return (
+                      <div 
+                        key={s.id} 
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3, cursor: 'pointer' }}
+                        onClick={() => {
+                          if (s.id < modalStep || (s.id === modalStep + 1 && (modalStep === 1 ? name.trim() : modalStep === 2 ? (price && stockQuantity) : true))) {
+                            setModalStep(s.id);
+                          }
+                        }}
+                      >
+                        <div style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: '50%',
+                          background: isCompleted ? 'linear-gradient(135deg, #10b981, #059669)' : isActive ? 'var(--bg-dark)' : 'rgba(255, 255, 255, 0.04)',
+                          border: isActive ? '2px solid #3b82f6' : isCompleted ? 'none' : '2px solid rgba(255,255,255,0.05)',
+                          color: isCompleted ? '#fff' : isActive ? '#3b82f6' : 'var(--text-muted)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: isActive ? '0 0 10px rgba(59, 130, 246, 0.3)' : 'none',
+                          transition: 'all 0.3s ease'
+                        }}>
+                          {isCompleted ? <FiCheck size={16} /> : <StepIcon size={16} />}
+                        </div>
+                        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <span style={{ fontSize: 9, color: isActive ? '#3b82f6' : 'var(--text-muted)', fontWeight: isActive ? '600' : 'normal' }}>
+                            Adım {s.id}
+                          </span>
+                          <span style={{ fontSize: 11, color: isActive ? '#fff' : 'var(--text-secondary)', fontWeight: isActive ? '600' : 'normal', marginTop: 2 }}>
+                            {s.label}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Form Content */}
+              <form onSubmit={handleSave} style={{ padding: 24 }} className={styles.profileForm}>
+                
+                <AnimatePresence mode="wait">
+                  {/* ADIM 1: GENEL BİLGİLER */}
+                  {modalStep === 1 && (
+                    <motion.div 
+                      key="step1"
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 15 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {/* Section 1: Temel Bilgiler */}
+                      <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(201, 162, 39, 0.1)', border: '1px solid rgba(201, 162, 39, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold-light)' }}>
+                            <FiFileText size={16} />
+                          </div>
+                          <div>
+                            <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>Temel Bilgiler</span>
+                            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Ürünün adını ve kategorisini belirtin</span>
+                          </div>
+                        </div>
+
+                        <div className={styles.formGrid} style={{ gridTemplateColumns: '1fr', gap: 12 }}>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>Ürün Adı *</label>
+                            <input type="text" required value={name} onChange={e => setName(e.target.value)} className={styles.fieldInput} placeholder="Örn: Ametist Doğal Taş Kolye" />
+                          </div>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>Kategori *</label>
+                            <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={styles.fieldInput} style={{ background: 'rgba(0,0,0,0.3)', color: '#fff' }}>
+                              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 2: Birim & Yayın Detayları */}
+                      <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 20 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(201, 162, 39, 0.1)', border: '1px solid rgba(201, 162, 39, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold-light)' }}>
+                            <FiTag size={16} />
+                          </div>
+                          <div>
+                            <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>Birim & Yayın Detayları</span>
+                            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Mağaza içi arama ve birim etiketleri</span>
+                          </div>
+                        </div>
+
+                        <div className={styles.formGrid} style={{ gap: 12 }}>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>Birim (Örn: Adet, Gram)</label>
+                            <input type="text" value={unit} onChange={e => setUnit(e.target.value)} className={styles.fieldInput} placeholder="Adet" />
+                          </div>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>Takma Ad (Slug)</label>
+                            <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className={styles.fieldInput} placeholder="Boş bırakılırsa otomatik üretilir" />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* ADIM 2: FİYAT & STOK */}
+                  {modalStep === 2 && (
+                    <motion.div 
+                      key="step2"
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 15 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {/* Section 1: Fiyatlandırma */}
+                      <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(201, 162, 39, 0.1)', border: '1px solid rgba(201, 162, 39, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold-light)' }}>
+                            <FiDollarSign size={16} />
+                          </div>
+                          <div>
+                            <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>Fiyatlandırma</span>
+                            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Fiyat değerleri ve indirimler</span>
+                          </div>
+                        </div>
+
+                        <div className={styles.formGrid} style={{ gap: 12 }}>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>Fiyat (₺) *</label>
+                            <input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} className={styles.fieldInput} placeholder="0.00" />
+                          </div>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>Eski Fiyat (₺)</label>
+                            <input type="number" step="0.01" value={oldPrice} onChange={e => setOldPrice(e.target.value)} className={styles.fieldInput} placeholder="0.00" />
+                          </div>
+                          <div className={styles.formField} style={{ gridColumn: 'span 2' }}>
+                            <label className={styles.fieldLabel}>İndirim Notu (Örn: %20 İndirim)</label>
+                            <input type="text" value={discount} onChange={e => setDiscount(e.target.value)} className={styles.fieldInput} placeholder="Sadece İndirim seçeneğinde görünür" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 2: Envanter */}
+                      <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 20 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(201, 162, 39, 0.1)', border: '1px solid rgba(201, 162, 39, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold-light)' }}>
+                            <FiBox size={16} />
+                          </div>
+                          <div>
+                            <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>Envanter</span>
+                            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Stok miktarı ve takibi</span>
+                          </div>
+                        </div>
+
+                        <div className={styles.formGrid} style={{ gridTemplateColumns: '1fr', gap: 12 }}>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>Stok Adedi *</label>
+                            <input type="number" required value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} className={styles.fieldInput} placeholder="0" />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* ADIM 3: GÖRSEL YÜKLE */}
+                  {modalStep === 3 && (
+                    <motion.div 
+                      key="step3"
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 15 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 20 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(201, 162, 39, 0.1)', border: '1px solid rgba(201, 162, 39, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold-light)' }}>
+                            <FiImage size={16} />
+                          </div>
+                          <div>
+                            <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>Ürün Görseli</span>
+                            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Müşterilerin liste sayfalarında göreceği ana resim</span>
+                          </div>
+                        </div>
+
+                        {!imageUrl ? (
+                          <div 
+                            style={{
+                              border: '2px dashed rgba(201, 162, 39, 0.25)',
+                              borderRadius: 12,
+                              padding: '40px 20px',
+                              textAlign: 'center',
+                              background: 'rgba(0, 0, 0, 0.2)',
+                              cursor: 'pointer',
+                              position: 'relative',
+                              transition: 'border-color 0.2s',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: 12
+                            }}
+                            onClick={() => document.getElementById('imageFileInput').click()}
+                            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--gold)'}
+                            onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(201, 162, 39, 0.25)'}
+                          >
+                            <input 
+                              id="imageFileInput"
+                              type="file" 
+                              accept="image/*"
+                              onChange={handleImageUpload} 
+                              style={{ display: 'none' }} 
+                            />
+                            <FiUploadCloud size={36} style={{ color: 'var(--gold-light)' }} />
+                            <div>
+                              <span style={{ color: 'var(--text-secondary)', fontSize: 13, display: 'block', fontWeight: 600 }}>Görsel yüklemek için tıklayın</span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: 11, display: 'block', marginTop: 4 }}>Tavsiye edilen: Kare (1:1) JPG, PNG, WEBP</span>
+                            </div>
+                            
+                            {uploadingImg && (
+                              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(18,9,31,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12 }}>
+                                <span style={{ color: 'var(--gold-light)', fontSize: 13, fontWeight: 'bold' }}>Görsel Yükleniyor...</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{
+                            border: '1px solid rgba(201, 162, 39, 0.2)',
+                            borderRadius: 12,
+                            padding: 16,
+                            background: 'rgba(0, 0, 0, 0.3)',
+                            position: 'relative',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center'
+                          }}>
+                            <img src={imageUrl} alt="Ürün" style={{ width: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8, background: 'rgba(0,0,0,0.1)' }} />
+                            <button 
+                              type="button" 
+                              onClick={() => setImageUrl('')}
+                              style={{
+                                position: 'absolute',
+                                top: 12,
+                                right: 12,
+                                background: '#e05594',
+                                color: '#fff',
+                                border: 'none',
+                                width: 28,
+                                height: 28,
+                                borderRadius: '50%',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: 12,
+                                fontWeight: 'bold',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                                transition: 'transform 0.2s'
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                              title="Görseli Kaldır"
+                            >
+                              ✕
+                            </button>
+                            <span style={{ color: '#2ecc71', fontSize: 12, marginTop: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <FiCheck /> Görsel başarıyla yüklendi
+                            </span>
+                          </div>
+                        )}
+
+                        <div style={{ marginTop: 20 }}>
+                          <label className={styles.fieldLabel}>Alternatif: Görsel Web Adresi (URL)</label>
+                          <input 
+                            type="text" 
+                            value={imageUrl} 
+                            onChange={e => setImageUrl(e.target.value)} 
+                            className={styles.fieldInput} 
+                            placeholder="Örn: https://example.com/resim.jpg" 
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* ADIM 4: DETAYLAR VE SEÇENEKLER */}
+                  {modalStep === 4 && (
+                    <motion.div 
+                      key="step4"
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 15 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {/* Section 1: Açıklamalar */}
+                      <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(201, 162, 39, 0.1)', border: '1px solid rgba(201, 162, 39, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold-light)' }}>
+                            <FiFileText size={16} />
+                          </div>
+                          <div>
+                            <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>Açıklamalar</span>
+                            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Kart ve detay açıklama metinleri</span>
+                          </div>
+                        </div>
+
+                        <div className={styles.formGrid} style={{ gridTemplateColumns: '1fr', gap: 12 }}>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>Kısa Açıklama</label>
+                            <input type="text" value={shortDescription} onChange={e => setShortDescription(e.target.value)} className={styles.fieldInput} placeholder="Ürün kartında listelenen kısa özet metin" />
+                          </div>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>Detaylı Açıklama</label>
+                            <textarea value={description} onChange={e => setDescription(e.target.value)} className={styles.fieldInput} rows={3} style={{ resize: 'vertical' }} placeholder="Ürün detay sayfasındaki tam açıklama" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 2: Seçenekler (iOS Switch UI) */}
+                      <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 20 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(201, 162, 39, 0.1)', border: '1px solid rgba(201, 162, 39, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold-light)' }}>
+                            <FiSliders size={16} />
+                          </div>
+                          <div>
+                            <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>Yayın Seçenekleri</span>
+                            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Ürünün sitedeki etiketlerini ve durumunu açın</span>
+                          </div>
+                        </div>
+
+                        {/* iOS Style switches */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                          {[
+                            { label: "Yeni Ürün", sub: "Ürüne 'YENİ' rozeti ekler", checked: isNew, set: setIsNew },
+                            { label: "İndirimde", sub: "İndirim rozeti ve indirim notu gösterilir", checked: isSale, set: setIsSale },
+                            { label: "Öne Çıkar", sub: "Ana sayfada vitrine yerleştirilir", checked: isFeatured, set: setIsFeatured },
+                            { label: "Satışa Açık", sub: "Müşteriler bu ürünü sipariş edebilir", checked: isActive, set: setIsActive }
+                          ].map((t, idx) => (
+                            <div key={idx} style={{ 
+                              display: 'flex', 
+                              justifyContent: 'space-between', 
+                              alignItems: 'center', 
+                              padding: 12, 
+                              background: 'rgba(0,0,0,0.15)', 
+                              border: '1px solid rgba(255,255,255,0.03)', 
+                              borderRadius: 10 
+                            }}>
+                              <div style={{ paddingRight: 8 }}>
+                                <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#fff' }}>{t.label}</span>
+                                <span style={{ display: 'block', fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{t.sub}</span>
+                              </div>
+                              <button 
+                                type="button"
+                                onClick={() => t.set(!t.checked)}
+                                style={{
+                                  width: 40,
+                                  height: 22,
+                                  borderRadius: 11,
+                                  background: t.checked ? '#2ecc71' : 'rgba(255,255,255,0.08)',
+                                  border: 'none',
+                                  position: 'relative',
+                                  cursor: 'pointer',
+                                  transition: 'background-color 0.2s ease',
+                                  padding: 0,
+                                  flexShrink: 0
+                                }}
+                              >
+                                <div style={{
+                                  width: 18,
+                                  height: 18,
+                                  borderRadius: '50%',
+                                  background: '#fff',
+                                  position: 'absolute',
+                                  top: 2,
+                                  left: t.checked ? 20 : 2,
+                                  transition: 'left 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                                }} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Sihirbaz Navigasyon Butonları */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  {modalStep > 1 ? (
+                    <button 
+                      type="button" 
+                      onClick={() => setModalStep(s => s - 1)} 
+                      className={styles.seeAllBtn}
+                      style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <FiChevronLeft size={16} /> Geri
+                    </button>
+                  ) : (
+                    <button 
+                      type="button" 
+                      onClick={() => setShowModal(false)} 
+                      className={styles.seeAllBtn}
+                      style={{ padding: '10px 18px', fontSize: 13 }}
+                    >
+                      İptal
+                    </button>
+                  )}
+
+                  {modalStep < 4 ? (
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        if (modalStep === 1 && !name.trim()) {
+                          alert("Lütfen ürün adını doldurun.");
+                          return;
+                        }
+                        if (modalStep === 2 && (!price || !stockQuantity)) {
+                          alert("Lütfen fiyat ve stok alanlarını doldurun.");
+                          return;
+                        }
+                        setModalStep(s => s + 1);
+                      }} 
+                      className={styles.shopBtn}
+                      style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
+                    >
+                      İleri <FiChevronRight size={16} />
+                    </button>
+                  ) : (
+                    <button 
+                      type="submit" 
+                      className={styles.shopBtn}
+                      style={{ padding: '10px 24px', fontSize: 13, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000' }}
+                    >
+                      <FiCheck size={16} /> Ürünü Kaydet
+                    </button>
+                  )}
+                </div>
+
+              </form>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

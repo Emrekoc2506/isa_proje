@@ -6,25 +6,147 @@
   background: linear-gradient(180deg, var(--bg-mid), var(--bg-dark));
   border-bottom: 1px solid var(--border-gold);
   position: sticky;
-  top: 85px; /* header yüksekliği kadar */
+  top: 85px;
   z-index: calc(var(--z-sticky) - 1);
 }
 
-.inner {
+/* ── Scroll Wrapper ─────────────────────────────────────── */
+
+.scrollWrapper {
+  position: relative;
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: 0 var(--space-md);
+  /* overflow: hidden burada OLMAMALI — ul'nin scroll'u çalışsın */
 }
 
+/* Kategori listesi */
 .list {
   display: flex;
   align-items: center;
   gap: 0;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+  list-style: none;
+  margin: 0;
+  padding: 0 16px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .list::-webkit-scrollbar {
   display: none;
+}
+
+.list:active {
+  cursor: grabbing;
+}
+
+/* ── Gradient Fade Göstergeleri ────────────────────────── */
+
+/* Sağ taraf — devamı var */
+.fadeRight {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 120px;
+  background: linear-gradient(to left,
+    var(--bg-dark) 0%,
+    var(--bg-dark) 30%,
+    rgba(28, 15, 53, 0.7) 70%,
+    transparent 100%
+  );
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12px;
+  transition: opacity 0.3s ease;
+  opacity: 1;
+}
+
+.fadeRight.hidden {
+  opacity: 0;
+}
+
+/* Sol taraf — geri gidilebilir */
+.fadeLeft {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 120px;
+  background: linear-gradient(to right,
+    var(--bg-dark) 0%,
+    var(--bg-dark) 30%,
+    rgba(28, 15, 53, 0.7) 70%,
+    transparent 100%
+  );
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 12px;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.fadeLeft.visible {
+  opacity: 1;
+}
+
+/* Ok butonu — gradient içinde, tıklanabilir */
+.scrollArrowBtn {
+  pointer-events: all;
+  background: rgba(201, 162, 39, 0.12);
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--gold);
+  font-size: 16px;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+
+.scrollArrowBtn:hover {
+  background: rgba(201, 162, 39, 0.28);
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.4);
+  transform: scale(1.1);
+}
+
+/* Sağa titreşim animasyonu */
+@keyframes nudgeRight {
+  0%, 100% { transform: translateX(0); }
+  50%       { transform: translateX(3px); }
+}
+
+/* Sola titreşim animasyonu */
+@keyframes nudgeLeft {
+  0%, 100% { transform: translateX(0); }
+  50%       { transform: translateX(-3px); }
+}
+
+.fadeRight .scrollArrowBtn {
+  animation: nudgeRight 1.8s ease-in-out infinite;
+}
+
+.fadeLeft .scrollArrowBtn {
+  animation: nudgeLeft 1.8s ease-in-out infinite;
+}
+
+.fadeRight .scrollArrowBtn:hover,
+.fadeLeft .scrollArrowBtn:hover {
+  animation: none;
 }
 
 /* ── Nav Item ─────────────────────────────────────────────── */
@@ -67,12 +189,10 @@
   transform: rotate(180deg);
 }
 
-/* ── Dropdown ────────────────────────────────────────────── */
+/* ── Dropdown (Portal içinde render edilir) ─────────────── */
 
 .dropdown {
-  position: absolute;
-  top: calc(100% + 1px);
-  left: 0;
+  position: static;
   min-width: 200px;
   background: var(--bg-mid);
   border: 1px solid var(--border-gold);
@@ -80,7 +200,9 @@
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(201,162,39,0.1);
   overflow: hidden;
-  z-index: var(--z-dropdown);
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .dropdownLink {
@@ -233,7 +355,7 @@
 
 @media (max-width: 768px) {
   .nav {
-    display: none; /* mobil menü panel ile değiştirildi */
+    display: none;
   }
 }
 

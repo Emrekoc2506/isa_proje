@@ -75,7 +75,7 @@ export default function CategoriesSection() {
         const catId = editingCategory.databaseId ?? editingCategory.id;
         await categoryApi.updateAdminCategory(catId, {
           name: finalName,
-          parentId: parentId || null
+          ParentCategoryId: parentId || null
         });
         alert("Kategori güncellendi.");
         setNewCatName('');
@@ -87,7 +87,7 @@ export default function CategoriesSection() {
         // Create Mode
         await categoryApi.createAdminCategory({
           name: finalName,
-          parentId: parentId || null
+          ParentCategoryId: parentId || null
         });
         alert("Kategori eklendi.");
         setNewCatName('');

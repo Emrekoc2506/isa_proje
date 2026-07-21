@@ -115,7 +115,6 @@ export function AuthProvider({ children }) {
   }, [reloadUser]);
 
   const login = useCallback(async (credentials) => {
-    setIsLoading(true);
     try {
       const res = await authApi.login(credentials);
       const userProfile = await reloadUser();
@@ -127,19 +126,11 @@ export function AuthProvider({ children }) {
       setUser(null);
       setRoles([]);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   }, [reloadUser]);
 
   const register = useCallback(async (payload) => {
-    setIsLoading(true);
-    try {
-      const res = await authApi.register(payload);
-      return res;
-    } finally {
-      setIsLoading(false);
-    }
+    return authApi.register(payload);
   }, []);
 
   const logout = useCallback(async () => {
