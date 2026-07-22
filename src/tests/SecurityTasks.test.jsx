@@ -13,19 +13,20 @@ import HeroSlider from '../components/HeroSlider/HeroSlider';
 import { ProductProvider } from '../context/ProductContext';
 
 // Server Setup for Wishlist, Categories, and Banners APIs
+const MOCK_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjI1MjQ2MDgwMDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+
 const server = setupServer(
-  http.get('https://localhost:7148/api/auth/me', () => {
+  http.get('*/api/auth/me', () => {
     return HttpResponse.json({ id: 'user-1', email: 'test@example.com', fullName: 'Test User', roles: ['Customer'] });
   }),
-  http.get('https://localhost:7148/api/wishlist', () => {
+  http.get('*/api/wishlist', () => {
     return HttpResponse.json([
       { id: 'item-1', productId: '36b98b9c-7ad5-4cc8-a943-f98524566f04', productName: 'Server Product 1', price: 100 }
     ]);
   }),
-  http.post('https://localhost:7148/api/wishlist/merge', async ({ request }) => {
+  http.post('*/api/wishlist/merge', async ({ request }) => {
     const cloned = request.clone();
     const body = await cloned.json().catch(() => ({}));
-    // Return the merged array including whatever IDs are sent
     const merged = [
       { id: 'item-1', productId: '36b98b9c-7ad5-4cc8-a943-f98524566f04', productName: 'Server Product 1', price: 100 }
     ];
@@ -36,13 +37,13 @@ const server = setupServer(
     }
     return HttpResponse.json(merged);
   }),
-  http.post('https://localhost:7148/api/wishlist/36b98b9c-7ad5-4cc8-a943-f98524566f04', () => {
+  http.post('*/api/wishlist/36b98b9c-7ad5-4cc8-a943-f98524566f04', () => {
     return HttpResponse.json({ id: 'new-fav', productId: '36b98b9c-7ad5-4cc8-a943-f98524566f04' });
   }),
-  http.delete('https://localhost:7148/api/wishlist/36b98b9c-7ad5-4cc8-a943-f98524566f04', () => {
+  http.delete('*/api/wishlist/36b98b9c-7ad5-4cc8-a943-f98524566f04', () => {
     return new Response(null, { status: 204 });
   }),
-  http.get('https://localhost:7148/api/products', () => {
+  http.get('*/api/products', () => {
     return HttpResponse.json({
       items: [
         { id: '36b98b9c-7ad5-4cc8-a943-f98524566f04', name: 'Server Product 1', price: 100, isActive: true },
@@ -138,6 +139,7 @@ describe('Wishlist State & Actions Tests', () => {
   });
 
   test('should clear guest wishlist from localStorage and save response in state on merge guest success', async () => {
+    localStorage.setItem('accessToken', MOCK_JWT);
     localStorage.setItem('isa_guest_wishlist', JSON.stringify(['22623049-f7db-4dd8-8665-d67ed3cf6a94']));
 
     render(

@@ -6,7 +6,7 @@ import {
   FiShoppingCart, FiHeart, FiCheck, FiStar,
   FiChevronRight, FiPackage, FiTruck,
   FiShield, FiMinus, FiPlus, FiShare2, FiAward,
-  FiZap, FiChevronDown, FiMessageCircle
+  FiZap, FiChevronDown, FiMessageCircle, FiBell
 } from 'react-icons/fi';
 import { FaHeart, FaWhatsapp, FaInstagram } from 'react-icons/fa';
 import { useProducts } from '../../context/ProductContext';
@@ -16,6 +16,10 @@ import { getProductById, getProductBySlug, getProductReviews, createProductRevie
 import MainLayout from '../../layouts/MainLayout/MainLayout';
 import SEO from '../../components/SEO/SEO';
 import { ProductDetailSkeleton } from '../../components/Skeleton/Skeleton';
+import ProductReviews from '../../components/ProductReviews/ProductReviews';
+import RecentlyViewed from '../../components/RecentlyViewed/RecentlyViewed';
+import StockNotifyModal from '../../components/StockNotifyModal/StockNotifyModal';
+import { addRecentlyViewed } from '../../utils/recentlyViewed';
 
 /* ─── Animasyon Varyantları ──────────────────────────────── */
 const fadeUp = {
@@ -69,9 +73,16 @@ export default function ProductDetailPage() {
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
+  const [stockModalOpen, setStockModalOpen] = useState(false);
 
   /* ─── Ürünü Bul ─────────────────────────────────────── */
   const product = products.find(p => String(p.id) === String(id) || p.slug === id);
+
+  useEffect(() => {
+    if (product) {
+      addRecentlyViewed(product);
+    }
+  }, [product]);
 
   useEffect(() => {
     async function fetchDetail() {
@@ -89,6 +100,7 @@ export default function ProductDetailPage() {
 
         if (detailData) {
           setProductDetail(detailData);
+          addRecentlyViewed(detailData);
           // Yorumları getir
           const reviewsData = await getProductReviews(detailData.id).catch(() => []);
           setReviews(reviewsData || []);
@@ -480,11 +492,10 @@ export default function ProductDetailPage() {
             <div className={styles.ctaGroup}>
               <button
                 className={`${styles.cartBtn} ${addedToCart ? styles.cartAdded : ''}`}
-                onClick={handleAddToCart}
-                disabled={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0}
+                onClick={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0 ? () => setStockModalOpen(true) : handleAddToCart}
               >
                 {(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0 ? (
-                  <span>Tükendi</span>
+                  <span><FiBell /> Stoka Gelince Bildir</span>
                 ) : addedToCart ? (
                   <span><FiCheck /> Sepete Eklendi!</span>
                 ) : (
@@ -743,6 +754,19 @@ export default function ProductDetailPage() {
             </div>
           </section>
         )}
+
+        {/* Müşteri Değerlendirmeleri (Product Reviews) */}
+        <ProductReviews productId={productDetail?.id || product?.id || id} />
+
+        {/* Son İnceledikleriniz (Recently Viewed Products) */}
+        <RecentlyViewed currentProductId={productDetail?.id || product?.id || id} />
+
+        {/* Stoka Gelince Bildir Modali */}
+        <StockNotifyModal
+          isOpen={stockModalOpen}
+          onClose={() => setStockModalOpen(false)}
+          product={productDetail || product}
+        />
 
       </div>
     </MainLayout>

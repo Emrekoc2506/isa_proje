@@ -41,10 +41,10 @@ vi.mock('@microsoft/signalr', () => {
 
 // Setup mock server
 export const handlers = [
-  http.get('https://localhost:7148/api/auth/me', () => {
+  http.get('*/api/auth/me', () => {
     return HttpResponse.json({ id: 'user-1', email: 'test@example.com', fullName: 'Test User' });
   }),
-  http.get('https://localhost:7148/api/admin/dashboard', () => {
+  http.get('*/api/admin/dashboard', () => {
     return HttpResponse.json({
       totalRevenue: 15400,
       totalOrders: 42,
@@ -52,7 +52,7 @@ export const handlers = [
       lowStockCount: 2
     });
   }),
-  http.get('https://localhost:7148/api/admin/products', () => {
+  http.get('*/api/admin/products', () => {
     return HttpResponse.json({
       items: [
         { id: 'p1', name: 'Gumus Kolye', price: 250, stockQuantity: 2, isNew: true, isSale: false, isActive: true },
@@ -61,7 +61,7 @@ export const handlers = [
       totalPages: 1
     });
   }),
-  http.get('https://localhost:7148/api/admin/products/p1', () => {
+  http.get('*/api/admin/products/p1', () => {
     return HttpResponse.json({
       id: 'p1',
       name: 'Gumus Kolye',
@@ -71,15 +71,15 @@ export const handlers = [
       ]
     });
   }),
-  http.get('https://localhost:7148/api/admin/inventory/low-stock', () => {
+  http.get('*/api/admin/inventory/low-stock', () => {
     return HttpResponse.json([
       { id: 'p1', name: 'Gumus Kolye', price: 250, stockQuantity: 2 }
     ]);
   }),
-  http.get('https://localhost:7148/api/categories/tree', () => {
+  http.get('*/api/categories/tree', () => {
     return HttpResponse.json([]);
   }),
-  http.get('https://localhost:7148/api/banners', () => {
+  http.get('*/api/banners', () => {
     return HttpResponse.json([]);
   })
 ];

@@ -12,6 +12,8 @@ import { useCart } from '../../context/CartContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useWishlist } from '../../context/WishlistContext';
 
+import { useProducts } from '../../context/ProductContext';
+
 export default function Header() {
   const { isSticky } = useStickyHeader(60);
   const [searchOpen, setSearchOpen]     = useState(false);
@@ -24,6 +26,12 @@ export default function Header() {
   const { totalCount, totalPrice } = useCart();
   const { unreadCount } = useNotifications();
   const { totalCount: wishlistCount } = useWishlist();
+  const productContext = useProducts();
+  const allProducts = productContext?.products || [];
+
+  const searchResults = searchQuery.trim().length >= 2
+    ? allProducts.filter(p => p.name?.toLowerCase().includes(searchQuery.toLowerCase().trim())).slice(0, 5)
+    : [];
 
   return (
     <>
@@ -43,7 +51,7 @@ export default function Header() {
             <span className={styles.brandName}>mysticvelora</span>
           </a>
 
-          {/* Arama Kutusu */}
+          {/* Arama Kutusu & Live Autocomplete */}
           <div className={`${styles.searchWrapper} ${searchOpen ? styles.searchOpen : ''}`}>
             <form className={styles.searchForm} onSubmit={e => e.preventDefault()}>
               <input
@@ -58,6 +66,35 @@ export default function Header() {
                 <FiSearch />
               </button>
             </form>
+
+            {/* Live Autocomplete Dropdown */}
+            {searchQuery.trim().length >= 2 && (
+              <div className={styles.searchDropdown}>
+                {searchResults.length > 0 ? (
+                  searchResults.map(item => (
+                    <a
+                      key={item.id}
+                      href={`/urun/${item.id}`}
+                      className={styles.searchDropdownItem}
+                      onClick={() => setSearchQuery('')}
+                    >
+                      <img
+                        src={item.imageUrl || item.image || "/ornek resim.jpg"}
+                        alt={item.name}
+                        className={styles.searchThumb}
+                        onError={(e) => { e.target.src = "/ornek resim.jpg"; }}
+                      />
+                      <div className={styles.searchInfo}>
+                        <span className={styles.searchItemTitle}>{item.name}</span>
+                        <span className={styles.searchItemPrice}>{item.price} ₺</span>
+                      </div>
+                    </a>
+                  ))
+                ) : (
+                  <div className={styles.searchNoResults}>Eşleşen ürün bulunamadı.</div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Üst Aksiyonlar */}

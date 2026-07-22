@@ -4,10 +4,12 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 
+const MOCK_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjI1MjQ2MDgwMDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+
 const server = setupServer(
-  http.post('https://localhost:7148/api/auth/login', () => {
+  http.post('*/api/auth/login', () => {
     return HttpResponse.json({
-      accessToken: 'mock-access',
+      accessToken: MOCK_JWT,
       refreshToken: 'mock-refresh',
       user: {
         id: 'test-user-id',
@@ -17,7 +19,7 @@ const server = setupServer(
       }
     });
   }),
-  http.get('https://localhost:7148/api/auth/me', () => {
+  http.get('*/api/auth/me', () => {
     return HttpResponse.json({
       id: 'test-user-id',
       email: 'admin@gmail.com',
@@ -66,7 +68,7 @@ describe('AuthContext Tests', () => {
       loginBtn.click();
     });
 
-    expect(localStorage.getItem('accessToken')).toBe('mock-access');
+    expect(localStorage.getItem('accessToken')).toBe(MOCK_JWT);
     expect(screen.getByTestId('auth-state').textContent).toBe('logged-in');
     expect(screen.getByTestId('user-email').textContent).toBe('admin@gmail.com');
   });
