@@ -7,16 +7,14 @@ import SEO from '../components/SEO/SEO';
 import { Skeleton, ProductCardSkeleton, ProductDetailSkeleton } from '../components/Skeleton/Skeleton';
 
 describe('SEO Component Tests', () => {
-  test('should render without crashing and update title tag', async () => {
-    const helmetContext = {};
+  test('should render without crashing and update document title', async () => {
     render(
-      <HelmetProvider context={helmetContext}>
-        <SEO title="Özel Kolye | mysticvelora" description="Şık gümüş kolye modelleri" />
+      <HelmetProvider>
+        <SEO title="Özel Kolye" description="Şık gümüş kolye modelleri" />
       </HelmetProvider>
     );
 
-    expect(helmetContext.helmet).toBeDefined();
-    expect(helmetContext.helmet.title).toBeDefined();
+    expect(document.title).toContain('Özel Kolye');
   });
 });
 
