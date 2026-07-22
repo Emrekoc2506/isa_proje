@@ -91,21 +91,25 @@ function AppRoutes() {
   );
 }
 
+import { HelmetProvider } from 'react-helmet-async';
+
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ProductProvider>
-          <WishlistProvider>
-            <CartProvider>
-              <NotificationProvider>
-                <AppRoutes />
-              </NotificationProvider>
-            </CartProvider>
-          </WishlistProvider>
-        </ProductProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <ProductProvider>
+            <WishlistProvider>
+              <CartProvider>
+                <NotificationProvider>
+                  <AppRoutes />
+                </NotificationProvider>
+              </CartProvider>
+            </WishlistProvider>
+          </ProductProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </HelmetProvider>
   );
 }
 

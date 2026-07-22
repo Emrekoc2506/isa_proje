@@ -14,6 +14,8 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { getProductById, getProductBySlug, getProductReviews, createProductReview } from '../../services/productApi';
 import MainLayout from '../../layouts/MainLayout/MainLayout';
+import SEO from '../../components/SEO/SEO';
+import { ProductDetailSkeleton } from '../../components/Skeleton/Skeleton';
 
 /* ─── Animasyon Varyantları ──────────────────────────────── */
 const fadeUp = {
@@ -236,8 +238,24 @@ export default function ProductDetailPage() {
     { key: 'reviews', label: `Yorumlar (${reviews.length || 0})` },
   ];
 
+  if (loadingDetail || !productDetail) {
+    return (
+      <MainLayout>
+        <div className={styles.page}>
+          <SEO title="Ürün Yükleniyor... | mysticvelora" />
+          <ProductDetailSkeleton />
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
+      <SEO
+        title={productDetail.name}
+        description={productDetail.description || `${productDetail.name} özel tasarım takı ve aksesuar.`}
+        image={productDetail.imageUrl || (productDetail.images?.[0]?.url || '')}
+      />
       <div className={styles.page}>
 
         {/* ════ BREADCRUMB ══════════════════════════════════ */}

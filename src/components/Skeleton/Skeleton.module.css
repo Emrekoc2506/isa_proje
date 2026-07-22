@@ -1,0 +1,102 @@
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #1a0f2e 0%,
+    #2a1b44 50%,
+    #1a0f2e 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Light Theme Skeleton Override when needed */
+.lightSkeleton {
+  background: linear-gradient(
+    90deg,
+    #e2e8f0 0%,
+    #f1f5f9 50%,
+    #e2e8f0 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+  border-radius: 8px;
+}
+
+/* Product Card Skeleton Structure */
+.cardSkeleton {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #140a24;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardImage {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.cardBody {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.titleLine {
+  height: 18px;
+  width: 80%;
+}
+
+.subLine {
+  height: 14px;
+  width: 50%;
+}
+
+.priceLine {
+  height: 24px;
+  width: 40%;
+}
+
+.buttonLine {
+  height: 40px;
+  width: 100%;
+  border-radius: 10px;
+}
+
+/* Product Detail Skeleton */
+.detailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  margin: 2rem 0;
+}
+
+@media (max-width: 768px) {
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detailGallery {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+}
+
+.detailInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
