@@ -31,7 +31,7 @@ import {
 export default function ChatUI({ isAdmin = false, initialUserId = null, initialUserName = null }) {
   const [conversations, setConversations]   = useState([]);
   const [selectedConv, setSelectedConv]     = useState(null); // { id, name, initials, isClosed, isOnline, lastSeenAt }
-  const [messages, setMessages]             = useState([]);
+  const [messages, setMessagesRaw]          = useState([]);
   const [newMessage, setNewMessage]         = useState('');
   const [isConnected, setIsConnected]       = useState(false);
   const [isTyping, setIsTyping]             = useState(false);
@@ -45,6 +45,45 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
   const { user }       = useAuth();
   const selectedConvRef = useRef(null);
   selectedConvRef.current = selectedConv;
+
+  // ── Dedup Helper: Mesaj listesinden duplikeleri temizle ─────────
+  const deduplicateMessages = useCallback((msgList) => {
+    const seen = new Map();
+    for (const msg of msgList) {
+      // Öncelikli anahtar: clientMessageId (optimistic + server eşleşmesi)
+      const key = msg.clientMessageId || msg.id;
+      const tempKey = msg.clientMessageId ? `temp-${msg.clientMessageId}` : null;
+
+      // temp-xxx id ile aynı clientMessageId'li sunucu mesajı varsa, sunucu versiyonunu tut
+      if (tempKey && seen.has(tempKey)) {
+        seen.delete(tempKey);
+      }
+
+      if (seen.has(key)) {
+        // Zaten var: sunucu id'li olanı tercih et (temp olmayan)
+        const existing = seen.get(key);
+        if (String(existing.id).startsWith('temp-') && !String(msg.id).startsWith('temp-')) {
+          seen.set(key, { ...existing, ...msg, status: msg.status || 'sent' });
+        } else if (!String(existing.id).startsWith('temp-') && String(msg.id).startsWith('temp-')) {
+          // Mevcut sunucu versiyonu zaten var, atla
+        } else {
+          // Her ikisi de aynı tip, son gelen bilgiyle güncelle
+          seen.set(key, { ...existing, ...msg, status: msg.status || existing.status });
+        }
+      } else {
+        seen.set(key, msg);
+      }
+    }
+    return Array.from(seen.values());
+  }, []);
+
+  // setMessages her çağrıldığında dedup uygula
+  const setMessages = useCallback((updater) => {
+    setMessagesRaw(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      return deduplicateMessages(next);
+    });
+  }, [deduplicateMessages]);
 
   // ── URL yardımcıları ──────────────────────────────────────────────
   const renderMessageContent = (content) => {
@@ -188,16 +227,9 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
         }
       };
 
-      // NotifyNewMessage, NewMessage ile aynı payload'u taşır; 
-      // ikisini ayrı handler olarak dinlemek mesajın 2 kez eklenmesine neden olur.
-      // Sadece birini dinliyoruz, diğerini yoksayıyoruz.
-      const handleNotifyNew = (conversationId, msgObj) => {
-        // Sadece farklı konuşma için konuşma listesini yenile
-        if (String(selectedConvRef.current?.id) !== String(conversationId)) {
-          fetchConversations();
-        }
-        // Aynı konuşma ise NewMessage zaten mesajı eklemiş olacak, tekrar ekleme
-      };
+      // NotifyNewMessage, NewMessage ile aynı payload'u taşıyabilir.
+      // setMessages artık her çağrıda dedup uyguladığı için ikisi de aynı handleNew'e bağlanabilir.
+      // Dedup, mesajın tekrar eklenmesini otomatik olarak engeller.
 
       const handleUserStatusChanged = (status) => {
         setConversations(previous =>
@@ -251,7 +283,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
       const handleMarkAsRead = () => {};
 
       conn.on('NewMessage', handleNew);
-      conn.on('NotifyNewMessage', handleNotifyNew);
+      conn.on('NotifyNewMessage', handleNew);
       conn.on('Typing', (cid) => {
         if (String(selectedConvRef.current?.id) === String(cid)) {
           setIsTyping(true);
