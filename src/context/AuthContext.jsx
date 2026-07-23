@@ -28,80 +28,23 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const reloadUser = useCallback(async () => {
-    let token = localStorage.getItem("accessToken");
-    const rToken = localStorage.getItem("refreshToken");
-
+    const token = typeof localStorage !== "undefined" ? localStorage.getItem("accessToken") : null;
     if (!token) {
-      if (rToken) {
-        try {
-          setIsLoading(true);
-          const refreshed = await authApi.refreshToken(rToken);
-          if (refreshed?.accessToken) {
-            localStorage.setItem("accessToken", refreshed.accessToken);
-            if (refreshed.refreshToken) {
-              localStorage.setItem("refreshToken", refreshed.refreshToken);
-            }
-            token = refreshed.accessToken;
-          } else {
-            throw new Error("Refresh failed");
-          }
-        } catch {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          setUser(null);
-          setRoles([]);
-          setIsLoading(false);
-          return null;
-        }
-      } else {
-        setUser(null);
-        setRoles([]);
-        setIsLoading(false);
-        return null;
-      }
-    }
-
-    if (isJwtExpired(token)) {
-      if (rToken) {
-        try {
-          setIsLoading(true);
-          const refreshed = await authApi.refreshToken(rToken);
-          if (refreshed?.accessToken) {
-            localStorage.setItem("accessToken", refreshed.accessToken);
-            if (refreshed.refreshToken) {
-              localStorage.setItem("refreshToken", refreshed.refreshToken);
-            }
-            token = refreshed.accessToken;
-          } else {
-            throw new Error("Refresh failed");
-          }
-        } catch {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          setUser(null);
-          setRoles([]);
-          setIsLoading(false);
-          return null;
-        }
-      } else {
-        localStorage.removeItem("accessToken");
-        setUser(null);
-        setRoles([]);
-        setIsLoading(false);
-        return null;
-      }
+      setUser(null);
+      setRoles([]);
+      setIsLoading(false);
+      return null;
     }
 
     try {
       setIsLoading(true);
       const res = await authApi.me();
-      if (res) {
+      if (res && (typeof localStorage === "undefined" || localStorage.getItem("accessToken"))) {
         setUser(res);
         setRoles(res.roles || []);
         return res;
       }
     } catch (err) {
-      console.error("Failed to fetch user context profile:", err);
       setUser(null);
       setRoles([]);
     } finally {
@@ -112,6 +55,21 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     reloadUser();
+
+    if (typeof window === "undefined") return;
+    const handleSessionExpired = () => {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+      }
+      setUser(null);
+      setRoles([]);
+    };
+
+    window.addEventListener("auth:session-expired", handleSessionExpired);
+    return () => {
+      window.removeEventListener("auth:session-expired", handleSessionExpired);
+    };
   }, [reloadUser]);
 
   const login = useCallback(async (credentials) => {
@@ -134,26 +92,35 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    setUser(null);
-    setRoles([]);
+    const refreshTokenVal = typeof localStorage !== "undefined" ? localStorage.getItem("refreshToken") : null;
     try {
-      await authApi.logout();
+      if (refreshTokenVal) {
+        await authApi.logout(refreshTokenVal);
+      }
     } catch (err) {
       console.warn("Backend logout request error:", err);
+    } finally {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+      }
+      setUser(null);
+      setRoles([]);
     }
   }, []);
 
   const logoutAll = useCallback(async () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    setUser(null);
-    setRoles([]);
     try {
       await authApi.logoutAll();
     } catch (err) {
       console.warn("Backend logoutAll request error:", err);
+    } finally {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+      }
+      setUser(null);
+      setRoles([]);
     }
   }, []);
 

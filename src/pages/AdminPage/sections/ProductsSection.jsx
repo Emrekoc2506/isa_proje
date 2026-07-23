@@ -50,6 +50,11 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [modalStep, setModalStep] = useState(1); // Sihirbaz Adım Lojiği
   const [statusUpdatingId, setStatusUpdatingId] = useState(null); // Ürün durum güncelleme yükleniyor state'i
 
+  // Validation States
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [formGeneralError, setFormGeneralError] = useState('');
+
   // Ana ve Alt Kategori Hesaplama
   const mainCategories = categories.filter(c => !c.parentCategoryId && !c.parentId);
   const displayMainCategories = mainCategories.length > 0 ? mainCategories : categories;
@@ -65,11 +70,13 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setSelectedMainCatId(mainId);
     setSelectedSubCatId('');
     setCategoryId(mainId);
+    setFieldErrors(prev => ({ ...prev, categoryId: '' }));
   };
 
   const handleSubCategoryChange = (subId) => {
     setSelectedSubCatId(subId);
     setCategoryId(subId || selectedMainCatId);
+    setFieldErrors(prev => ({ ...prev, categoryId: '' }));
   };
 
   const fetchProducts = async () => {
@@ -125,7 +132,9 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setDiscount('');
     setSlug('');
     setIsActive(true);
-    setModalStep(1); // Adımı sıfırla
+    setModalStep(1);
+    setFieldErrors({});
+    setFormGeneralError('');
     setShowModal(true);
   };
 
@@ -161,7 +170,9 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setDiscount(p.discount || '');
     setSlug(p.slug || '');
     setIsActive(p.isActive ?? true);
-    setModalStep(1); // Adımı sıfırla
+    setModalStep(1);
+    setFieldErrors({});
+    setFormGeneralError('');
     setShowModal(true);
   };
 
@@ -182,17 +193,44 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     }
   };
 
+  const validateForm = () => {
+    const errors = {};
+    if (!name || !name.trim()) {
+      errors.name = "Ürün adı zorunludur.";
+    }
+    if (!categoryId) {
+      errors.categoryId = "Lütfen bir kategori seçiniz.";
+    }
+    const parsedPrice = parseFloat(price);
+    if (price === '' || price == null || isNaN(parsedPrice) || parsedPrice < 0) {
+      errors.price = "Fiyat 0 veya daha büyük geçerli bir sayı olmalıdır.";
+    }
+    const parsedStock = parseInt(stockQuantity, 10);
+    if (stockQuantity === '' || stockQuantity == null || isNaN(parsedStock) || parsedStock < 0) {
+      errors.stockQuantity = "Stok miktarı 0 veya daha büyük bir sayı olmalıdır.";
+    }
+    if (!shortDescription || !shortDescription.trim()) {
+      errors.shortDescription = "Kısa açıklama zorunludur.";
+    }
+    if (!description || !description.trim()) {
+      errors.description = "Detaylı açıklama zorunludur.";
+    }
+    if (oldPrice && !isNaN(parseFloat(oldPrice)) && parseFloat(oldPrice) < 0) {
+      errors.oldPrice = "Eski fiyat 0'dan küçük olamaz.";
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSave = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
+    setFormGeneralError('');
 
-    if (!name.trim()) {
-      alert("Lütfen ürün adını giriniz.");
+    if (!validateForm()) {
       return;
     }
-    if (!price || isNaN(parseFloat(price))) {
-      alert("Lütfen geçerli bir ürün fiyatı giriniz.");
-      return;
-    }
+
+    if (submitting) return;
 
     const cleanName = name.trim();
     const payload = {
@@ -200,20 +238,21 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       price: parseFloat(price) || 0,
       oldPrice: oldPrice ? parseFloat(oldPrice) : null,
       stockQuantity: stockQuantity ? parseInt(stockQuantity, 10) : 0,
-      categoryId: categoryId || null,
+      categoryId: categoryId,
       imageUrl: imageUrl || null,
       imageUrls: imageUrl ? [imageUrl] : [],
       isNew,
       isSale,
       isFeatured,
-      shortDescription: (shortDescription || cleanName || 'Kaliteli ürün').trim(),
-      description: (description || shortDescription || cleanName || 'Detaylı ürün açıklaması').trim(),
+      shortDescription: shortDescription.trim(),
+      description: description.trim(),
       unit: unit || 'adet',
       discount: discount || null,
       slug: (slug || cleanName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ('urun-' + Date.now()),
       isActive
     };
 
+    setSubmitting(true);
     try {
       if (modalMode === 'create') {
         await productApi.createAdminProduct(payload);
@@ -225,7 +264,23 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       alert(modalMode === 'create' ? "Ürün başarıyla oluşturuldu!" : "Ürün başarıyla güncellendi!");
     } catch (err) {
       console.error("Ürün kaydetme hatası:", err);
-      alert("Ürün kaydedilemedi: " + (err.message || 'Lütfen tüm zorunlu alanları doldurunuz.'));
+      if (err.errors) {
+        const mappedErrors = {};
+        Object.entries(err.errors).forEach(([k, v]) => {
+          const keyLower = k.toLowerCase();
+          const msg = Array.isArray(v) ? v.join(', ') : String(v);
+          if (keyLower.includes('name')) mappedErrors.name = msg;
+          else if (keyLower.includes('category')) mappedErrors.categoryId = msg;
+          else if (keyLower.includes('price')) mappedErrors.price = msg;
+          else if (keyLower.includes('stock')) mappedErrors.stockQuantity = msg;
+          else if (keyLower.includes('shortdescription')) mappedErrors.shortDescription = msg;
+          else if (keyLower.includes('description')) mappedErrors.description = msg;
+        });
+        setFieldErrors(mappedErrors);
+      }
+      setFormGeneralError(err.message || 'Ürün kaydedilemedi. Lütfen zorunlu alanları kontrol ediniz.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -481,6 +536,12 @@ export default function ProductsSection({ onSelectProductForVariants }) {
               {/* Form Content */}
               <form onSubmit={handleSave} style={{ padding: 24 }} className={styles.profileForm}>
                 
+                {formGeneralError && (
+                  <div style={{ background: 'rgba(224, 85, 148, 0.15)', border: '1px solid #e05594', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#ff6b9d', fontSize: 13 }}>
+                    {formGeneralError}
+                  </div>
+                )}
+
                 <AnimatePresence mode="wait">
                   {/* ADIM 1: GENEL BİLGİLER */}
                   {modalStep === 1 && (
@@ -506,7 +567,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                         <div className={styles.formGrid} style={{ gridTemplateColumns: '1fr', gap: 12 }}>
                           <div className={styles.formField}>
                             <label className={styles.fieldLabel}>Ürün Adı *</label>
-                            <input type="text" required value={name} onChange={e => setName(e.target.value)} className={styles.fieldInput} placeholder="Örn: Ametist Doğal Taş Kolye" />
+                            <input type="text" required value={name} onChange={e => { setName(e.target.value); setFieldErrors(prev => ({ ...prev, name: '' })); }} className={styles.fieldInput} placeholder="Örn: Ametist Doğal Taş Kolye" />
+                            {fieldErrors.name && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.name}</span>}
                           </div>
                           <div className={styles.formField}>
                             <label className={styles.fieldLabel}>Kategori *</label>
@@ -521,6 +583,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                                 <option key={c.id} value={c.id}>{c.name}</option>
                               ))}
                             </select>
+                            {fieldErrors.categoryId && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.categoryId}</span>}
                           </div>
 
                           <div className={styles.formField}>
@@ -599,11 +662,13 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                         <div className={styles.formGrid} style={{ gap: 12 }}>
                           <div className={styles.formField}>
                             <label className={styles.fieldLabel}>Fiyat (₺) *</label>
-                            <input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} className={styles.fieldInput} placeholder="0.00" />
+                            <input type="number" step="0.01" required value={price} onChange={e => { setPrice(e.target.value); setFieldErrors(prev => ({ ...prev, price: '' })); }} className={styles.fieldInput} placeholder="0.00" />
+                            {fieldErrors.price && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.price}</span>}
                           </div>
                           <div className={styles.formField}>
                             <label className={styles.fieldLabel}>Eski Fiyat (₺)</label>
-                            <input type="number" step="0.01" value={oldPrice} onChange={e => setOldPrice(e.target.value)} className={styles.fieldInput} placeholder="0.00" />
+                            <input type="number" step="0.01" value={oldPrice} onChange={e => { setOldPrice(e.target.value); setFieldErrors(prev => ({ ...prev, oldPrice: '' })); }} className={styles.fieldInput} placeholder="0.00" />
+                            {fieldErrors.oldPrice && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.oldPrice}</span>}
                           </div>
                           <div className={styles.formField} style={{ gridColumn: 'span 2' }}>
                             <label className={styles.fieldLabel}>İndirim Notu (Örn: %20 İndirim)</label>
@@ -627,7 +692,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                         <div className={styles.formGrid} style={{ gridTemplateColumns: '1fr', gap: 12 }}>
                           <div className={styles.formField}>
                             <label className={styles.fieldLabel}>Stok Adedi *</label>
-                            <input type="number" required value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} className={styles.fieldInput} placeholder="0" />
+                            <input type="number" required value={stockQuantity} onChange={e => { setStockQuantity(e.target.value); setFieldErrors(prev => ({ ...prev, stockQuantity: '' })); }} className={styles.fieldInput} placeholder="0" />
+                            {fieldErrors.stockQuantity && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.stockQuantity}</span>}
                           </div>
                         </div>
                       </div>
@@ -776,12 +842,14 @@ export default function ProductsSection({ onSelectProductForVariants }) {
 
                         <div className={styles.formGrid} style={{ gridTemplateColumns: '1fr', gap: 12 }}>
                           <div className={styles.formField}>
-                            <label className={styles.fieldLabel}>Kısa Açıklama</label>
-                            <input type="text" value={shortDescription} onChange={e => setShortDescription(e.target.value)} className={styles.fieldInput} placeholder="Ürün kartında listelenen kısa özet metin" />
+                            <label className={styles.fieldLabel}>Kısa Açıklama *</label>
+                            <input type="text" required value={shortDescription} onChange={e => { setShortDescription(e.target.value); setFieldErrors(prev => ({ ...prev, shortDescription: '' })); }} className={styles.fieldInput} placeholder="Ürün kartında listelenen kısa özet metin" />
+                            {fieldErrors.shortDescription && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.shortDescription}</span>}
                           </div>
                           <div className={styles.formField}>
-                            <label className={styles.fieldLabel}>Detaylı Açıklama</label>
-                            <textarea value={description} onChange={e => setDescription(e.target.value)} className={styles.fieldInput} rows={3} style={{ resize: 'vertical' }} placeholder="Ürün detay sayfasındaki tam açıklama" />
+                            <label className={styles.fieldLabel}>Detaylı Açıklama *</label>
+                            <textarea required value={description} onChange={e => { setDescription(e.target.value); setFieldErrors(prev => ({ ...prev, description: '' })); }} className={styles.fieldInput} rows={3} style={{ resize: 'vertical' }} placeholder="Ürün detay sayfasındaki tam açıklama" />
+                            {fieldErrors.description && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.description}</span>}
                           </div>
                         </div>
                       </div>

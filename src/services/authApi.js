@@ -29,19 +29,16 @@ export function me() {
   return request("/auth/me");
 }
 
-export async function logout() {
-  const refreshTokenVal = localStorage.getItem("refreshToken");
+export async function logout(refreshTokenVal) {
+  const tokenToUse = refreshTokenVal ?? (typeof localStorage !== "undefined" ? localStorage.getItem("refreshToken") : null);
 
   try {
     return await request("/auth/logout", { 
       method: "POST",
-      body: JSON.stringify({ refreshToken: refreshTokenVal })
+      body: JSON.stringify({ refreshToken: tokenToUse })
     });
   } catch (err) {
     return null;
-  } finally {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
   }
 }
 
@@ -52,9 +49,6 @@ export async function logoutAll() {
     });
   } catch (err) {
     return null;
-  } finally {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
   }
 }
 

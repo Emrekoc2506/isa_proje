@@ -17,3 +17,10 @@ export function initializePayment(payload) {
     })
   });
 }
+
+export function cancelPayment(orderId, reason = null) {
+  return request(`/payments/${orderId}/cancel`, {
+    method: "POST",
+    body: reason ? JSON.stringify({ reason }) : undefined
+  });
+}
