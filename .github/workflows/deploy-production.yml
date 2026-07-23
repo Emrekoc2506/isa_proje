@@ -50,8 +50,8 @@ jobs:
       - name: Canlı frontend build
         run: npm run build
         env:
-          VITE_API_BASE_URL: http://api.ozeldersvip.xyz/api
-          VITE_SIGNALR_BASE_URL: http://api.ozeldersvip.xyz/hubs
+          VITE_API_BASE_URL: https://api.ozeldersvip.xyz/api
+          VITE_SIGNALR_BASE_URL: https://api.ozeldersvip.xyz/hubs
 
       - name: Natro canlı frontend klasörüne yükle
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6

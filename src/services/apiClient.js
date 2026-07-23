@@ -5,8 +5,17 @@ import {
   translateErrorMessage,
 } from "../api/apiError";
 
-const apiBaseUrl =
+let apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7148/api";
+
+if (
+  typeof window !== "undefined" &&
+  window.location.protocol === "https:" &&
+  apiBaseUrl.startsWith("http://") &&
+  !apiBaseUrl.includes("localhost")
+) {
+  apiBaseUrl = apiBaseUrl.replace("http://", "https://");
+}
 
 let isRefreshing = false;
 let refreshQueue = [];
