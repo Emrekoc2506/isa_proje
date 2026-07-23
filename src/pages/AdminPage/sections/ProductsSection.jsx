@@ -138,22 +138,34 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   };
 
   const handleSave = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+
+    if (!name.trim()) {
+      alert("Lütfen ürün adını giriniz.");
+      return;
+    }
+    if (!price || isNaN(parseFloat(price))) {
+      alert("Lütfen geçerli bir ürün fiyatı giriniz.");
+      return;
+    }
+
+    const cleanName = name.trim();
     const payload = {
-      name,
-      price: parseFloat(price),
+      name: cleanName,
+      price: parseFloat(price) || 0,
       oldPrice: oldPrice ? parseFloat(oldPrice) : null,
-      stockQuantity: stockQuantity ? parseInt(stockQuantity) : 0,
-      categoryId,
+      stockQuantity: stockQuantity ? parseInt(stockQuantity, 10) : 0,
+      categoryId: categoryId || null,
       imageUrl: imageUrl || null,
+      imageUrls: imageUrl ? [imageUrl] : [],
       isNew,
       isSale,
       isFeatured,
-      shortDescription: shortDescription || null,
-      description: description || null,
-      unit,
+      shortDescription: (shortDescription || cleanName || 'Kaliteli ürün').trim(),
+      description: (description || shortDescription || cleanName || 'Detaylı ürün açıklaması').trim(),
+      unit: unit || 'adet',
       discount: discount || null,
-      slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      slug: (slug || cleanName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ('urun-' + Date.now()),
       isActive
     };
 
@@ -165,8 +177,10 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       }
       setShowModal(false);
       fetchProducts();
+      alert(modalMode === 'create' ? "Ürün başarıyla oluşturuldu!" : "Ürün başarıyla güncellendi!");
     } catch (err) {
-      alert(err.message || 'Ürün kaydedilemedi.');
+      console.error("Ürün kaydetme hatası:", err);
+      alert("Ürün kaydedilemedi: " + (err.message || 'Lütfen tüm zorunlu alanları doldurunuz.'));
     }
   };
 
