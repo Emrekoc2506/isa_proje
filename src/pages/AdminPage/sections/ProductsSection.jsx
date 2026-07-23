@@ -779,28 +779,31 @@ export default function ProductsSection({ onSelectProductForVariants }) {
 
                 {/* Sihirbaz Navigasyon Butonları */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                  {modalStep > 1 ? (
-                    <button 
-                      type="button" 
-                      onClick={() => setModalStep(s => s - 1)} 
-                      className={styles.seeAllBtn}
-                      style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
-                    >
-                      <FiChevronLeft size={16} /> Geri
-                    </button>
-                  ) : (
+                  {/* Sol Taraf: İptal ve Geri Butonları */}
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <button 
                       type="button" 
                       onClick={() => setShowModal(false)} 
                       className={styles.seeAllBtn}
-                      style={{ padding: '10px 18px', fontSize: 13 }}
+                      style={{ padding: '10px 18px', fontSize: 13, background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)' }}
                     >
                       İptal
                     </button>
-                  )}
+                    {modalStep > 1 && (
+                      <button 
+                        type="button" 
+                        onClick={() => setModalStep(s => s - 1)} 
+                        className={styles.seeAllBtn}
+                        style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.08)', color: '#fff' }}
+                      >
+                        <FiChevronLeft size={16} /> Geri
+                      </button>
+                    )}
+                  </div>
 
+                  {/* Sağ Taraf: İleri (Adım 1-3) veya Ürünü Kaydet (Yalnızca Adım 4) */}
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    {modalStep < 4 && (
+                    {modalStep < 4 ? (
                       <button 
                         type="button" 
                         onClick={() => {
@@ -815,19 +818,19 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                           setModalStep(s => s + 1);
                         }} 
                         className={styles.seeAllBtn}
-                        style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.08)', color: '#fff' }}
+                        style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: 8, cursor: 'pointer' }}
                       >
                         İleri <FiChevronRight size={16} />
                       </button>
+                    ) : (
+                      <button 
+                        type="submit" 
+                        className={styles.shopBtn}
+                        style={{ padding: '10px 24px', fontSize: 13, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', borderRadius: 8, cursor: 'pointer', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}
+                      >
+                        <FiCheck size={16} /> {modalMode === 'create' ? 'Ürünü Kaydet' : 'Değişiklikleri Kaydet'}
+                      </button>
                     )}
-
-                    <button 
-                      type="submit" 
-                      className={styles.shopBtn}
-                      style={{ padding: '10px 24px', fontSize: 13, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', borderRadius: 8, cursor: 'pointer' }}
-                    >
-                      <FiCheck size={16} /> {modalMode === 'create' ? 'Ürünü Kaydet' : 'Değişiklikleri Kaydet'}
-                    </button>
                   </div>
                 </div>
 
