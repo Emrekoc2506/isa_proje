@@ -1,7 +1,7 @@
 import styles from './Header.module.css';
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiShoppingCart, FiHeart, FiUser, FiX, FiMenu, FiBell } from 'react-icons/fi';
+import { FiSearch, FiShoppingCart, FiHeart, FiUser, FiX, FiMenu, FiBell, FiLogOut } from 'react-icons/fi';
 import { MdOutlineLocalShipping } from 'react-icons/md';
 import { useStickyHeader } from '../../hooks/useStickyHeader';
 import CategoryNav from '../CategoryNav/CategoryNav';
@@ -11,17 +11,23 @@ import logoImage from '../../assets/images/logo.png';
 import { useCart } from '../../context/CartContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useWishlist } from '../../context/WishlistContext';
-
+import { useAuth } from '../../context/AuthContext';
 import { useProducts } from '../../context/ProductContext';
 
 export default function Header() {
   const { isSticky } = useStickyHeader(60);
+  const { isAuthenticated, isAdmin, logout } = useAuth();
   const [searchOpen, setSearchOpen]     = useState(false);
   const [searchQuery, setSearchQuery]   = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartOpen, setCartOpen]         = useState(false);
   const [notifOpen, setNotifOpen]       = useState(false);
   const notifRef = useRef(null);
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/giris';
+  };
 
   const { totalCount, totalPrice } = useCart();
   const { unreadCount } = useNotifications();
@@ -108,11 +114,30 @@ export default function Header() {
               {searchOpen ? <FiX /> : <FiSearch />}
             </button>
 
-            {/* Giriş */}
-            <a href="/giris" className={styles.actionBtn} aria-label="Hesap">
-              <FiUser />
-              <span className={styles.actionLabel}>Giriş Yap</span>
-            </a>
+            {/* Kullanıcı Durumu (Panelim & Çıkış Yap) */}
+            {isAuthenticated ? (
+              <>
+                <a href={isAdmin ? "/admin" : "/panel"} className={styles.actionBtn} aria-label="Panelim">
+                  <FiUser />
+                  <span className={styles.actionLabel}>Panelim</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className={styles.actionBtn}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  aria-label="Çıkış Yap"
+                >
+                  <FiLogOut />
+                  <span className={styles.actionLabel}>Çıkış Yap</span>
+                </button>
+              </>
+            ) : (
+              <a href="/giris" className={styles.actionBtn} aria-label="Giriş Yap">
+                <FiUser />
+                <span className={styles.actionLabel}>Giriş Yap</span>
+              </a>
+            )}
 
             {/* Favoriler */}
             <div className={styles.wishlistWrapper}>
