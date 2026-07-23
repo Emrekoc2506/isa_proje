@@ -34,6 +34,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [oldPrice, setOldPrice] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [selectedMainCatId, setSelectedMainCatId] = useState('');
+  const [selectedSubCatId, setSelectedSubCatId] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [isNew, setIsNew] = useState(false);
   const [isSale, setIsSale] = useState(false);
@@ -47,6 +49,28 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [uploadingImg, setUploadingImg] = useState(false);
   const [modalStep, setModalStep] = useState(1); // Sihirbaz Adım Lojiği
   const [statusUpdatingId, setStatusUpdatingId] = useState(null); // Ürün durum güncelleme yükleniyor state'i
+
+  // Ana ve Alt Kategori Hesaplama
+  const mainCategories = categories.filter(c => !c.parentCategoryId && !c.parentId);
+  const displayMainCategories = mainCategories.length > 0 ? mainCategories : categories;
+
+  const availableSubCategories = selectedMainCatId
+    ? categories.filter(c => {
+        const parent = c.parentCategoryId || c.parentId;
+        return parent && String(parent) === String(selectedMainCatId);
+      })
+    : [];
+
+  const handleMainCategoryChange = (mainId) => {
+    setSelectedMainCatId(mainId);
+    setSelectedSubCatId('');
+    setCategoryId(mainId);
+  };
+
+  const handleSubCategoryChange = (subId) => {
+    setSelectedSubCatId(subId);
+    setCategoryId(subId || selectedMainCatId);
+  };
 
   const fetchProducts = async () => {
     try {
@@ -65,7 +89,11 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     try {
       const data = await categoryApi.getAdminCategories();
       setCategories(data || []);
-      if (data?.length > 0) setCategoryId(data[0].id);
+      if (data?.length > 0 && !categoryId) {
+        const firstId = data[0].id;
+        setSelectedMainCatId(firstId);
+        setCategoryId(firstId);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -83,7 +111,10 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setPrice('');
     setOldPrice('');
     setStockQuantity('');
-    if (categories.length > 0) setCategoryId(categories[0].id);
+    const firstCat = categories[0]?.id || '';
+    setSelectedMainCatId(firstCat);
+    setSelectedSubCatId('');
+    setCategoryId(firstCat);
     setImageUrl('');
     setIsNew(false);
     setIsSale(false);
@@ -105,7 +136,21 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setPrice(p.price || '');
     setOldPrice(p.oldPrice || '');
     setStockQuantity(p.stockQuantity || 0);
-    setCategoryId(p.categoryId || '');
+
+    const targetCatId = p.categoryId || '';
+    setCategoryId(targetCatId);
+
+    const matchedCat = categories.find(c => String(c.id) === String(targetCatId));
+    const parentIdOfCat = matchedCat?.parentCategoryId || matchedCat?.parentId;
+
+    if (parentIdOfCat) {
+      setSelectedMainCatId(String(parentIdOfCat));
+      setSelectedSubCatId(String(targetCatId));
+    } else {
+      setSelectedMainCatId(String(targetCatId));
+      setSelectedSubCatId('');
+    }
+
     setImageUrl(p.imageUrl || '');
     setIsNew(p.isNew || false);
     setIsSale(p.isSale || false);
@@ -465,8 +510,40 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                           </div>
                           <div className={styles.formField}>
                             <label className={styles.fieldLabel}>Kategori *</label>
-                            <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={styles.fieldInput} style={{ background: 'rgba(0,0,0,0.3)', color: '#fff' }}>
-                              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            <select 
+                              value={selectedMainCatId} 
+                              onChange={e => handleMainCategoryChange(e.target.value)} 
+                              className={styles.fieldInput} 
+                              style={{ background: 'rgba(0,0,0,0.3)', color: '#fff' }}
+                            >
+                              <option value="">Kategori Seçin</option>
+                              {displayMainCategories.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>Alt Kategori</label>
+                            <select 
+                              value={selectedSubCatId} 
+                              onChange={e => handleSubCategoryChange(e.target.value)} 
+                              className={styles.fieldInput} 
+                              disabled={availableSubCategories.length === 0}
+                              style={{ 
+                                background: availableSubCategories.length === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.3)', 
+                                color: availableSubCategories.length === 0 ? 'var(--text-muted)' : '#fff',
+                                opacity: availableSubCategories.length === 0 ? 0.5 : 1
+                              }}
+                            >
+                              <option value="">
+                                {availableSubCategories.length === 0 
+                                  ? (selectedMainCatId ? 'Alt kategori bulunmuyor' : 'Önce Kategori Seçin') 
+                                  : 'Alt Kategori Seçin (İsteğe Bağlı)'}
+                              </option>
+                              {availableSubCategories.map(sc => (
+                                <option key={sc.id} value={sc.id}>└ {sc.name}</option>
+                              ))}
                             </select>
                           </div>
                         </div>
