@@ -89,22 +89,27 @@ export default function AddressesSection() {
     e.preventDefault();
     setErrorMsg('');
 
+    // Telefon numarasını 5xx xxx xx xx (10 haneli) formatına temizle
+    let cleanPhone = phoneNumber.replace(/\D/g, '');
+    if (cleanPhone.startsWith('90')) cleanPhone = cleanPhone.substring(2);
+    if (cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
+
     const payload = {
       title,
       fullName,
-      phoneNumber,
+      phoneNumber: cleanPhone,
       city,
       district,
       neighborhood,
       addressLine,
-      postalCode,
-      country,
-      addressType,
+      postalCode: postalCode || null,
+      country: country || 'TR',
+      type: addressType,
       isCorporate,
       companyName: isCorporate ? companyName : null,
       taxOffice: isCorporate ? taxOffice : null,
       taxNumber: isCorporate ? taxNumber : null,
-      tcIdentificationNumber: !isCorporate ? tcIdentificationNumber : null,
+      nationalIdentityNumber: !isCorporate ? tcIdentificationNumber : null,
     };
 
     try {
@@ -181,7 +186,7 @@ export default function AddressesSection() {
 
             <div className={styles.formField}>
               <label className={styles.fieldLabel}>Telefon *</label>
-              <input type="tel" required value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="Örn: 905550000000" className={styles.fieldInput} />
+              <input type="tel" required value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="Örn: 5551234567" className={styles.fieldInput} />
             </div>
 
             <div className={styles.formField}>
