@@ -94,6 +94,8 @@ export default function AddressesSection() {
     if (cleanPhone.startsWith('90')) cleanPhone = cleanPhone.substring(2);
     if (cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
 
+    const mappedType = addressType === 'Shipping' || addressType === 0 ? 0 : addressType === 'Billing' || addressType === 1 ? 1 : 2;
+
     const payload = {
       title,
       fullName,
@@ -104,7 +106,7 @@ export default function AddressesSection() {
       addressLine,
       postalCode: postalCode || null,
       country: country || 'TR',
-      type: addressType,
+      type: mappedType,
       isCorporate,
       companyName: isCorporate ? companyName : null,
       taxOffice: isCorporate ? taxOffice : null,
