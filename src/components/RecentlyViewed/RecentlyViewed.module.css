@@ -1,13 +1,14 @@
 .container {
   margin-top: 3.5rem;
   padding-top: 2rem;
-  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .heading {
+  font-family: var(--font-heading);
   font-size: 1.35rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #ffffff;
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
@@ -15,7 +16,7 @@
 }
 
 .icon {
-  color: #6366f1;
+  color: #d4af37;
 }
 
 .grid {
@@ -25,28 +26,29 @@
 }
 
 .card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  background: rgba(20, 10, 35, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 14px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   position: relative;
   text-decoration: none;
   color: inherit;
 }
 
 .card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
-  border-color: #cbd5e1;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  border-color: #d4af37;
 }
 
 .imageWrapper {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.03);
   overflow: hidden;
   position: relative;
 }
@@ -55,11 +57,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s ease;
 }
 
 .card:hover .image {
-  transform: scale(1.05);
+  transform: scale(1.06);
 }
 
 .content {
@@ -73,7 +75,7 @@
 .title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #ffffff;
   margin-bottom: 0.5rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -92,13 +94,13 @@
 .price {
   font-size: 1rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #fce072;
 }
 
 .quickAddBtn {
-  background: #f1f5f9;
-  color: #0f172a;
-  border: none;
+  background: rgba(212, 175, 55, 0.15);
+  color: #fce072;
+  border: 1px solid #d4af37;
   border-radius: 8px;
   width: 34px;
   height: 34px;
@@ -110,6 +112,6 @@
 }
 
 .quickAddBtn:hover {
-  background: #0f172a;
-  color: #ffffff;
+  background: #d4af37;
+  color: #0d0614;
 }

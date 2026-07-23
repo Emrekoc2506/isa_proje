@@ -1,13 +1,14 @@
 .container {
-  margin-top: 3rem;
+  margin-top: 3.5rem;
   padding-top: 2.5rem;
-  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .heading {
+  font-family: var(--font-heading);
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #ffffff;
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
@@ -15,7 +16,7 @@
 }
 
 .headerIcon {
-  color: #f59e0b;
+  color: #d4af37;
 }
 
 /* Summary Grid */
@@ -23,11 +24,13 @@
   display: grid;
   grid-template-columns: 240px 1fr;
   gap: 2rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: rgba(20, 10, 35, 0.75);
+  backdrop-filter: blur(12px);
   padding: 2rem;
   border-radius: 16px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.25);
   margin-bottom: 2rem;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
 }
 
 @media (max-width: 768px) {
@@ -44,7 +47,7 @@
   justify-content: center;
   text-align: center;
   padding-right: 1.5rem;
-  border-right: 1px solid rgba(203, 213, 225, 0.5);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 @media (max-width: 768px) {
@@ -52,36 +55,36 @@
     padding-right: 0;
     padding-bottom: 1.5rem;
     border-right: none;
-    border-bottom: 1px solid rgba(203, 213, 225, 0.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
 
 .averageScore {
   font-size: 3.25rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #ffffff;
   line-height: 1;
 }
 
 .starsRow {
   display: flex;
   gap: 4px;
-  color: #f59e0b;
+  color: #d4af37;
   margin: 0.5rem 0;
 }
 
 .starFilled {
-  color: #f59e0b;
-  fill: #f59e0b;
+  color: #d4af37;
+  fill: #d4af37;
 }
 
 .starEmpty {
-  color: #cbd5e1;
+  color: rgba(255, 255, 255, 0.2);
 }
 
 .reviewCountText {
   font-size: 0.875rem;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
 }
 
@@ -98,25 +101,25 @@
   align-items: center;
   gap: 0.75rem;
   font-size: 0.875rem;
-  color: #475569;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .starLabel {
-  width: 50px;
+  width: 55px;
   font-weight: 600;
 }
 
 .progressBarBg {
   flex: 1;
   height: 8px;
-  background: #e2e8f0;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 999px;
   overflow: hidden;
 }
 
 .progressBarFill {
   height: 100%;
-  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+  background: linear-gradient(90deg, #d4af37 0%, #fce072 100%);
   border-radius: 999px;
   transition: width 0.3s ease;
 }
@@ -125,7 +128,7 @@
   width: 35px;
   text-align: right;
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 /* Action Header */
@@ -140,35 +143,35 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #0f172a;
-  color: #ffffff;
+  background: linear-gradient(135deg, #d4af37, #aa7c11);
+  color: #0d0614;
   padding: 0.75rem 1.25rem;
   border-radius: 10px;
-  font-weight: 600;
+  font-weight: 700;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .writeBtn:hover {
-  background: #1e293b;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
 }
 
 /* Form Container */
 .formContainer {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(20, 10, 35, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 14px;
   padding: 1.75rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .formTitle {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #ffffff;
   margin-bottom: 1rem;
 }
 
@@ -200,23 +203,26 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #334155;
+  color: #d4af37;
   margin-bottom: 0.35rem;
 }
 
 .input, .textarea {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #cbd5e1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
   font-size: 0.95rem;
+  color: #ffffff;
   outline: none;
   transition: border-color 0.2s ease;
 }
 
 .input:focus, .textarea:focus {
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+  border-color: #d4af37;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
 }
 
 .textarea {
@@ -232,28 +238,28 @@
 }
 
 .cancelBtn {
-  background: #f1f5f9;
-  color: #475569;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
   padding: 0.6rem 1.25rem;
   border-radius: 8px;
   font-weight: 600;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
 }
 
 .submitBtn {
-  background: #f59e0b;
-  color: #ffffff;
+  background: linear-gradient(135deg, #d4af37, #aa7c11);
+  color: #0d0614;
   padding: 0.6rem 1.5rem;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
   border: none;
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .submitBtn:hover {
-  background: #d97706;
+  box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
 }
 
 /* Reviews List */
@@ -264,15 +270,16 @@
 }
 
 .reviewCard {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(20, 10, 35, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 1.5rem;
-  transition: box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .reviewCard:hover {
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
 .reviewHeader {
@@ -292,8 +299,8 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
+  color: #0d0614;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -309,35 +316,36 @@
 
 .userName {
   font-weight: 700;
-  color: #0f172a;
+  color: #ffffff;
 }
 
 .verifiedBadge {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  background: #dcfce7;
-  color: #15803d;
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
+  border: 1px solid rgba(46, 204, 113, 0.3);
 }
 
 .date {
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .reviewTitle {
   font-weight: 700;
   font-size: 1rem;
-  color: #1e293b;
+  color: #ffffff;
   margin: 0.4rem 0;
 }
 
 .commentBody {
-  color: #475569;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -348,15 +356,15 @@
   gap: 0.5rem;
   margin-top: 1rem;
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .helpfulBtn {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
   padding: 4px 10px;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -366,14 +374,16 @@
 }
 
 .helpfulBtn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: rgba(212, 175, 55, 0.15);
+  color: #fce072;
+  border-color: #d4af37;
 }
 
 .emptyState {
   text-align: center;
   padding: 3rem;
-  background: #f8fafc;
+  background: rgba(20, 10, 35, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.6);
 }
