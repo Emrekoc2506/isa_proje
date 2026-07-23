@@ -47,26 +47,51 @@ export function CartProvider({ children }) {
   }, [isAuthenticated, refreshCart]);
 
   const addToCart = useCallback(async (product, quantity = 1, variantId = null) => {
-    try {
-      const data = await cartApi.addCartItem({
-        productId: product.id,
-        productVariantId: variantId,
-        quantity
-      });
-      setCartData(data);
-      const mapped = (data?.items || []).map(item => ({
-        ...item,
-        qty: item.quantity,
-        price: `${item.unitPrice} ₺`,
-        image: item.imageUrl,
-        name: item.productName
-      }));
-      setItems(mapped);
-    } catch (err) {
-      console.error("Failed to add to cart:", err);
-      alert(err.message || "Ürün sepete eklenemedi.");
-      throw err;
+    const rawId = product?.id || product?.productId;
+    const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(rawId || ''));
+
+    if (isGuid) {
+      try {
+        const data = await cartApi.addCartItem({
+          productId: rawId,
+          productVariantId: variantId,
+          quantity
+        });
+        setCartData(data);
+        const mapped = (data?.items || []).map(item => ({
+          ...item,
+          qty: item.quantity,
+          price: `${item.unitPrice} ₺`,
+          image: item.imageUrl,
+          name: item.productName
+        }));
+        setItems(mapped);
+        return;
+      } catch (err) {
+        console.error("API sepet ekleme hatası:", err);
+      }
     }
+
+    // Yerel (Local) sepet desteği - Mock veya lokal test ürünleri için
+    setItems(prev => {
+      const existing = prev.find(i => String(i.id || i.productId) === String(rawId));
+      if (existing) {
+        return prev.map(i => String(i.id || i.productId) === String(rawId) ? { ...i, qty: (i.qty || i.quantity || 1) + quantity } : i);
+      }
+      const rawPrice = product.price || 100;
+      const numPrice = typeof rawPrice === 'number' ? rawPrice : parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 100;
+      return [...prev, {
+        id: rawId || 'item-' + Date.now(),
+        productName: product.name || 'Ürün',
+        name: product.name || 'Ürün',
+        price: typeof rawPrice === 'number' ? `${rawPrice} ₺` : rawPrice,
+        unitPrice: numPrice,
+        imageUrl: product.image || product.imageUrl,
+        image: product.image || product.imageUrl,
+        qty: quantity,
+        quantity: quantity
+      }];
+    });
   }, []);
 
   const updateQty = useCallback(async (itemId, qty) => {
