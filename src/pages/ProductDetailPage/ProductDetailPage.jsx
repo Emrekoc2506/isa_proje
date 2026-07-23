@@ -93,26 +93,30 @@ export default function ProductDetailPage() {
         let detailData = null;
         
         if (isGuid) {
-          detailData = await getProductById(id);
+          detailData = await getProductById(id).catch(() => null);
         } else {
-          detailData = await getProductBySlug(id);
+          detailData = await getProductBySlug(id).catch(() => null);
         }
 
         if (detailData) {
           setProductDetail(detailData);
           addRecentlyViewed(detailData);
-          // Yorumları getir
           const reviewsData = await getProductReviews(detailData.id).catch(() => []);
           setReviews(reviewsData || []);
+        } else if (product) {
+          setProductDetail(product);
         }
       } catch (err) {
         console.error("Detay yükleme hatası:", err);
+        if (product) {
+          setProductDetail(product);
+        }
       } finally {
         setLoadingDetail(false);
       }
     }
     fetchDetail();
-  }, [id]);
+  }, [id, product]);
 
   /* ─── Benzer Ürünler (Random) ───────────────────────── */
   const relatedProducts = useMemo(() => {
@@ -250,12 +254,27 @@ export default function ProductDetailPage() {
     { key: 'reviews', label: `Yorumlar (${reviews.length || 0})` },
   ];
 
-  if (loadingDetail || !productDetail) {
+  if (loadingDetail) {
     return (
       <MainLayout>
         <div className={styles.page}>
           <SEO title="Ürün Yükleniyor... | mysticvelora" />
           <ProductDetailSkeleton />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!productDetail) {
+    return (
+      <MainLayout>
+        <div className={styles.page} style={{ textAlign: 'center', padding: '120px 20px', minHeight: '60vh' }}>
+          <SEO title="Ürün Bulunamadı | mysticvelora" />
+          <h2 style={{ color: 'var(--gold-light)', fontSize: '32px', marginBottom: '12px', fontFamily: 'var(--font-heading)' }}>Ürün Bulunamadı</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '28px', fontSize: '16px' }}>Aradığınız ilan veya ürün mevcut değil ya da kaldırılmış olabilir.</p>
+          <Link to="/urunler" style={{ background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: 'var(--bg-dark)', padding: '14px 28px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '15px' }}>
+            Tüm İlanları / Ürünleri İncele
+          </Link>
         </div>
       </MainLayout>
     );

@@ -74,7 +74,7 @@ export default function Header() {
                   searchResults.map(item => (
                     <a
                       key={item.id}
-                      href={`/urun/${item.id}`}
+                      href={`/urun/${item.slug || item.id}`}
                       className={styles.searchDropdownItem}
                       onClick={() => setSearchQuery('')}
                     >

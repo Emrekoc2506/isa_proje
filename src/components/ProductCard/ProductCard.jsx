@@ -16,8 +16,9 @@ export default function ProductCard({ product }) {
   const navigate = useNavigate();
 
   const productId = id || name;
+  const detailSlugOrId = product.slug || id || name;
   const isFavorite = isInWishlist(productId);
-  const detailHref = `/urun/${productId}`;
+  const detailHref = `/urun/${detailSlugOrId}`;
 
   const handleAdd = async () => {
     try {
