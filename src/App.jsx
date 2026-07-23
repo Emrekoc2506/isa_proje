@@ -25,7 +25,6 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ForgotPasswordPage/ResetPasswordPage';
 import CheckoutPage from './pages/CheckoutPage/CheckoutPage';
 import PaymentResultPage from './pages/CheckoutPage/PaymentResultPage';
-import OrderTrackingPage from './pages/CheckoutPage/OrderTrackingPage';
 
 function UnauthorizedPage() {
   return (
@@ -55,7 +54,6 @@ function AppRoutes() {
       <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
       <Route path="/urunler" element={<MainLayout><ProductsPage /></MainLayout>} />
       <Route path="/urun/:id" element={<ProductDetailPage />} />
-      <Route path="/siparis-takip" element={<OrderTrackingPage />} />
 
       {/* Guest Rotaları (Giriş yapanlar giremez) */}
       <Route path="/giris" element={<GuestRoute><AuthPage /></GuestRoute>} />
