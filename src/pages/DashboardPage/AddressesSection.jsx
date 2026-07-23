@@ -94,17 +94,19 @@ export default function AddressesSection() {
     if (cleanPhone.startsWith('90')) cleanPhone = cleanPhone.substring(2);
     if (cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
 
+    const mappedType = addressType === 'Shipping' || addressType === 0 ? 0 : addressType === 'Billing' || addressType === 1 ? 1 : 2;
+
     const payload = {
       title,
       fullName,
       phoneNumber: cleanPhone,
       city,
       district,
-      neighborhood,
+      neighborhood: neighborhood || 'Merkez',
       addressLine,
       postalCode: postalCode || null,
       country: country || 'TR',
-      type: addressType,
+      type: mappedType,
       isCorporate,
       companyName: isCorporate ? companyName : null,
       taxOffice: isCorporate ? taxOffice : null,
@@ -202,11 +204,6 @@ export default function AddressesSection() {
             <div className={styles.formField}>
               <label className={styles.fieldLabel}>İlçe *</label>
               <input type="text" required value={district} onChange={e => setDistrict(e.target.value)} placeholder="İlçe girin" className={styles.fieldInput} />
-            </div>
-
-            <div className={styles.formField}>
-              <label className={styles.fieldLabel}>Mahalle *</label>
-              <input type="text" required value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="Mahalle girin" className={styles.fieldInput} />
             </div>
 
             <div className={styles.formField}>

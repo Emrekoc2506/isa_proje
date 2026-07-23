@@ -138,22 +138,34 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   };
 
   const handleSave = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+
+    if (!name.trim()) {
+      alert("Lütfen ürün adını giriniz.");
+      return;
+    }
+    if (!price || isNaN(parseFloat(price))) {
+      alert("Lütfen geçerli bir ürün fiyatı giriniz.");
+      return;
+    }
+
+    const cleanName = name.trim();
     const payload = {
-      name,
-      price: parseFloat(price),
+      name: cleanName,
+      price: parseFloat(price) || 0,
       oldPrice: oldPrice ? parseFloat(oldPrice) : null,
-      stockQuantity: stockQuantity ? parseInt(stockQuantity) : 0,
-      categoryId,
+      stockQuantity: stockQuantity ? parseInt(stockQuantity, 10) : 0,
+      categoryId: categoryId || null,
       imageUrl: imageUrl || null,
+      imageUrls: imageUrl ? [imageUrl] : [],
       isNew,
       isSale,
       isFeatured,
-      shortDescription: shortDescription || null,
-      description: description || null,
-      unit,
+      shortDescription: (shortDescription || cleanName || 'Kaliteli ürün').trim(),
+      description: (description || shortDescription || cleanName || 'Detaylı ürün açıklaması').trim(),
+      unit: unit || 'adet',
       discount: discount || null,
-      slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      slug: (slug || cleanName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ('urun-' + Date.now()),
       isActive
     };
 
@@ -165,8 +177,10 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       }
       setShowModal(false);
       fetchProducts();
+      alert(modalMode === 'create' ? "Ürün başarıyla oluşturuldu!" : "Ürün başarıyla güncellendi!");
     } catch (err) {
-      alert(err.message || 'Ürün kaydedilemedi.');
+      console.error("Ürün kaydetme hatası:", err);
+      alert("Ürün kaydedilemedi: " + (err.message || 'Lütfen tüm zorunlu alanları doldurunuz.'));
     }
   };
 
@@ -195,16 +209,41 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   };
 
   return (
-    <div className={styles.sectionCard}>
-      <div className={styles.sectionHeader}>
-        <h3 className={styles.sectionTitle}>Ürün Yönetimi</h3>
-        <button onClick={handleOpenCreate} className={styles.shopBtn}>
-          <FiPlus /> Yeni Ürün Ekle
+    <div>
+      {/* ── PAGE HEADER ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h3 style={{ color: 'var(--gold-light)', fontSize: 20, fontWeight: 700, margin: 0, fontFamily: 'var(--font-heading)' }}>
+            Ürün Yönetimi
+          </h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '4px 0 0 0' }}>
+            {products.length} ürün • Mağazada listelenen tüm ürün kataloğunuz
+          </p>
+        </div>
+        <button
+          onClick={handleOpenCreate}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', border: 'none', borderRadius: 10, padding: '12px 22px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)', transition: 'transform 0.15s ease' }}
+        >
+          <FiPlus size={18} /> Yeni Ürün Ekle
         </button>
       </div>
 
       {loading ? (
-        <p>Yükleniyor...</p>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid rgba(201,162,39,0.2)', borderTopColor: 'var(--gold-light)', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+      ) : products.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,162,39,0.15)', borderRadius: 16 }}>
+          <FiBox size={48} style={{ color: 'var(--gold-light, #c9a227)', opacity: 0.7, marginBottom: 16 }} />
+          <h4 style={{ color: '#fff', margin: '0 0 8px 0', fontSize: 16, fontWeight: 700 }}>Henüz Ürün Eklenmemiş</h4>
+          <p style={{ color: 'var(--text-muted)', margin: '0 0 24px 0', fontSize: 14 }}>Mağazanızda satılacak ilk ürününüzü hemen oluşturun.</p>
+          <button
+            onClick={handleOpenCreate}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', border: 'none', borderRadius: 10, padding: '14px 28px', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)' }}
+          >
+            <FiPlus size={18} /> İlk Ürünü Ekleyin
+          </button>
+        </div>
       ) : (
         <>
           <div style={{ overflowX: 'auto' }}>
@@ -739,7 +778,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                 </AnimatePresence>
 
                 {/* Sihirbaz Navigasyon Butonları */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   {modalStep > 1 ? (
                     <button 
                       type="button" 
@@ -760,34 +799,36 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                     </button>
                   )}
 
-                  {modalStep < 4 ? (
-                    <button 
-                      type="button" 
-                      onClick={() => {
-                        if (modalStep === 1 && !name.trim()) {
-                          alert("Lütfen ürün adını doldurun.");
-                          return;
-                        }
-                        if (modalStep === 2 && (!price || !stockQuantity)) {
-                          alert("Lütfen fiyat ve stok alanlarını doldurun.");
-                          return;
-                        }
-                        setModalStep(s => s + 1);
-                      }} 
-                      className={styles.shopBtn}
-                      style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
-                    >
-                      İleri <FiChevronRight size={16} />
-                    </button>
-                  ) : (
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    {modalStep < 4 && (
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          if (modalStep === 1 && !name.trim()) {
+                            alert("Lütfen ürün adını doldurun.");
+                            return;
+                          }
+                          if (modalStep === 2 && (price === "" || price == null || isNaN(parseFloat(price)))) {
+                            alert("Lütfen geçerli bir fiyat girin.");
+                            return;
+                          }
+                          setModalStep(s => s + 1);
+                        }} 
+                        className={styles.seeAllBtn}
+                        style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.08)', color: '#fff' }}
+                      >
+                        İleri <FiChevronRight size={16} />
+                      </button>
+                    )}
+
                     <button 
                       type="submit" 
                       className={styles.shopBtn}
-                      style={{ padding: '10px 24px', fontSize: 13, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000' }}
+                      style={{ padding: '10px 24px', fontSize: 13, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', borderRadius: 8, cursor: 'pointer' }}
                     >
-                      <FiCheck size={16} /> Ürünü Kaydet
+                      <FiCheck size={16} /> {modalMode === 'create' ? 'Ürünü Kaydet' : 'Değişiklikleri Kaydet'}
                     </button>
-                  )}
+                  </div>
                 </div>
 
               </form>

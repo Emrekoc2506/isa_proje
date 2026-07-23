@@ -48,7 +48,7 @@ export function CartProvider({ children }) {
 
   const addToCart = useCallback(async (product, quantity = 1, variantId = null) => {
     const rawId = product?.id || product?.productId;
-    const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(rawId || ''));
+    const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(rawId || ''));
 
     if (isGuid) {
       try {
@@ -112,9 +112,10 @@ export function CartProvider({ children }) {
       setItems(mapped);
     } catch (err) {
       console.error("Failed to update cart quantity:", err);
-      alert(err.message || "Sepet güncellenemedi.");
+      // Eğer eski/silinmiş ürün ID'sinden dolayı 404 alındıysa sepeti veritabanından tazele
+      await refreshCart();
     }
-  }, []);
+  }, [refreshCart]);
 
   const removeFromCart = useCallback(async (itemId) => {
     try {
@@ -122,7 +123,7 @@ export function CartProvider({ children }) {
       await refreshCart();
     } catch (err) {
       console.error("Failed to remove item from cart:", err);
-      alert(err.message || "Ürün sepetten silinemedi.");
+      await refreshCart();
     }
   }, [refreshCart]);
 

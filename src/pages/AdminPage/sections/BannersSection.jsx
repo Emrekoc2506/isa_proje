@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import * as bannerApi from '../../../services/bannerApi';
 import { uploadFile } from '../../../services/fileApi';
+import { parseBannerContent } from '../../../utils/bannerContent';
 import styles from '../AdminPage.module.css';
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
@@ -257,18 +258,38 @@ export default function BannersSection() {
 
     setSaving(true);
     try {
+      const content = {
+        quote: form.quote ? form.quote.trim() : "",
+        description: form.description ? form.description.trim() : "",
+        features: form.features.map(item => ({
+          title: item.title ? item.title.trim() : "",
+          description: item.description ? item.description.trim() : (item.desc ? item.desc.trim() : "")
+        })),
+        specs: form.specs.map(item => ({
+          key: item.key ? item.key.trim() : "",
+          value: item.value ? item.value.trim() : ""
+        })),
+        sections: form.sections.map(item => ({
+          title: item.title ? item.title.trim() : "",
+          body: item.body ? item.body.trim() : ""
+        }))
+      };
+
       const created = await bannerApi.createAdminBanner({
-        title: form.title,
-        subtitle: form.subtitle,
+        title: form.title.trim(),
+        subtitle: form.subtitle ? form.subtitle.trim() : null,
         image: form.image,
         imageMobile: form.imageMobile || form.image,
-        cta: form.cta || 'Keşfet',
-        href: form.href || '/urunler',
-        sortOrder: parseInt(form.sortOrder) || 0,
+        cta: form.cta ? form.cta.trim() : 'Keşfet',
+        href: form.href ? form.href.trim() : '/urunler',
+        sortOrder: Number(form.sortOrder) || 0,
         isActive: true,
+        price: form.price === "" || form.price == null ? null : Number(form.price),
+        videoUrl: form.videoUrl ? form.videoUrl.trim() : null,
+        contentJson: JSON.stringify(content)
       });
 
-      // Save rich content locally using the returned ID (or a timestamp fallback)
+      // Save rich content locally as fallback
       const id = created?.id || `local_${Date.now()}`;
       saveRich(id, {
         price: form.price,
@@ -309,7 +330,17 @@ export default function BannersSection() {
   };
 
   // ── Preview modal ─────────────────────────────────────────────────────────────
-  const getBannerRich = (b) => richContent[b.id] || {};
+  const getBannerRich = (b) => {
+    if (b?.contentJson || b?.price != null || b?.videoUrl) {
+      const parsed = parseBannerContent(b.contentJson);
+      return {
+        ...parsed,
+        price: b.price != null ? b.price : (richContent[b.id]?.price || ''),
+        videoUrl: b.videoUrl || (richContent[b.id]?.videoUrl || '')
+      };
+    }
+    return richContent[b.id] || parseBannerContent(null);
+  };
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
@@ -662,48 +693,48 @@ export default function BannersSection() {
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 3000, overflowY: 'auto', backdropFilter: 'blur(12px)' }} onClick={() => setPreviewBanner(null)}>
             <div style={{ maxWidth: 720, margin: '24px auto', padding: '0 16px 40px' }} onClick={e => e.stopPropagation()}>
               <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }} transition={{ duration: 0.3 }}
-                style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 30px 80px rgba(0,0,0,0.8)' }}>
+                style={{ background: 'rgba(18, 9, 31, 0.95)', border: '1px solid var(--border-gold, rgba(201,162,39,0.25))', borderRadius: 20, overflow: 'hidden', boxShadow: '0 30px 80px rgba(0,0,0,0.9)' }}>
 
                 {/* Preview close */}
-                <div style={{ background: '#f8f5ef', padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5dfc5' }}>
-                  <span style={{ fontSize: 12, color: '#666', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>İlan Önizleme</span>
-                  <button onClick={() => setPreviewBanner(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999', fontSize: 18 }}>✕</button>
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span style={{ fontSize: 13, color: 'var(--gold-light, #c9a227)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>✦ İlan Önizleme</span>
+                  <button onClick={() => setPreviewBanner(null)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: '#fff', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                 </div>
 
                 {/* Preview content */}
-                <div style={{ padding: '40px 48px', fontFamily: 'Georgia, serif', color: '#2d2416' }}>
+                <div style={{ padding: '36px 40px', color: 'var(--text-light, #f0ede6)' }}>
                   {/* Title */}
-                  <h1 style={{ fontSize: 26, fontWeight: 800, textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 8, lineHeight: 1.3 }}>
+                  <h1 style={{ fontSize: 26, fontWeight: 800, textAlign: 'center', color: 'var(--gold-light, #c9a227)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8, lineHeight: 1.3 }}>
                     {previewBanner.title}
                   </h1>
                   {previewBanner.subtitle && (
-                    <p style={{ textAlign: 'center', fontStyle: 'italic', fontSize: 15, color: '#7a6545', marginBottom: 24, lineHeight: 1.6 }}>
+                    <p style={{ textAlign: 'center', fontStyle: 'italic', fontSize: 15, color: 'var(--text-secondary, rgba(255,255,255,0.7))', marginBottom: 24, lineHeight: 1.6 }}>
                       "{previewBanner.subtitle}"
                     </p>
                   )}
 
                   {/* Price */}
                   {previewBanner.rich?.price && (
-                    <div style={{ textAlign: 'center', marginBottom: 20 }}>
-                      <span style={{ background: 'linear-gradient(135deg, #c9a227, #a07820)', color: '#fff', fontSize: 22, fontWeight: 800, padding: '8px 24px', borderRadius: 12, display: 'inline-block' }}>
+                    <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                      <span style={{ background: 'linear-gradient(135deg, #c9a227, #a07820)', color: '#000', fontSize: 22, fontWeight: 800, padding: '8px 24px', borderRadius: 12, display: 'inline-block', boxShadow: '0 4px 20px rgba(201,162,39,0.3)' }}>
                         ₺{previewBanner.rich.price}
                       </span>
                     </div>
                   )}
 
                   {/* Main image */}
-                  <img src={previewBanner.image} alt={previewBanner.title} style={{ width: '100%', borderRadius: 12, marginBottom: 28, maxHeight: 400, objectFit: 'cover' }} />
+                  <img src={previewBanner.image} alt={previewBanner.title} style={{ width: '100%', borderRadius: 14, marginBottom: 28, maxHeight: 400, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
 
                   {/* Description */}
                   {previewBanner.rich?.description && (
-                    <p style={{ fontSize: 15, lineHeight: 1.8, marginBottom: 24, color: '#3a2e1a' }}>
+                    <p style={{ fontSize: 15, lineHeight: 1.8, marginBottom: 24, color: 'var(--text-light, #e2ded4)' }}>
                       {previewBanner.rich.description}
                     </p>
                   )}
 
                   {/* Quote */}
                   {previewBanner.rich?.quote && (
-                    <blockquote style={{ borderLeft: '4px solid #c9a227', paddingLeft: 20, margin: '28px 0', fontStyle: 'italic', fontSize: 15, color: '#7a6545', lineHeight: 1.7, background: '#faf7f0', padding: '16px 20px', borderRadius: '0 8px 8px 0' }}>
+                    <blockquote style={{ borderLeft: '4px solid var(--gold-light, #c9a227)', margin: '28px 0', fontStyle: 'italic', fontSize: 15, color: 'var(--gold-light, #e5cf85)', lineHeight: 1.7, background: 'rgba(201,162,39,0.06)', padding: '18px 22px', borderRadius: '0 12px 12px 0', border: '1px solid rgba(201,162,39,0.12)' }}>
                       "{previewBanner.rich.quote}"
                     </blockquote>
                   )}
@@ -711,15 +742,15 @@ export default function BannersSection() {
                   {/* Features */}
                   {previewBanner.rich?.features?.length > 0 && (
                     <div style={{ marginBottom: 28 }}>
-                      <h2 style={{ fontSize: 16, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid #c9a227', paddingLeft: 14, marginBottom: 16, color: '#2d2416' }}>
+                      <h2 style={{ fontSize: 15, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid var(--gold-light, #c9a227)', paddingLeft: 14, marginBottom: 16, color: 'var(--gold-light, #c9a227)' }}>
                         ÜRÜNÜN ÖNE ÇIKAN AYRICALIKLARI
                       </h2>
                       {previewBanner.rich.features.map((f, i) => (
-                        <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-                          <span style={{ color: '#c9a227', fontSize: 16, marginTop: 1, flexShrink: 0 }}>✦</span>
+                        <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 12, background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.04)' }}>
+                          <span style={{ color: 'var(--gold-light, #c9a227)', fontSize: 16, marginTop: 1, flexShrink: 0 }}>✦</span>
                           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7 }}>
-                            <strong style={{ color: '#2d2416' }}>{f.title}:</strong>{' '}
-                            <span style={{ color: '#5a4a2a' }}>{f.desc}</span>
+                            <strong style={{ color: '#fff' }}>{f.title}:</strong>{' '}
+                            <span style={{ color: 'var(--text-secondary, rgba(255,255,255,0.7))' }}>{f.desc}</span>
                           </p>
                         </div>
                       ))}
@@ -729,15 +760,15 @@ export default function BannersSection() {
                   {/* Sections */}
                   {previewBanner.rich?.sections?.map((sec, i) => (
                     <div key={i} style={{ marginBottom: 28 }}>
-                      {sec.title && <h2 style={{ fontSize: 16, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid #c9a227', paddingLeft: 14, marginBottom: 14, color: '#2d2416' }}>{sec.title}</h2>}
-                      {sec.body && <p style={{ fontSize: 14, lineHeight: 1.8, color: '#3a2e1a' }}>{sec.body}</p>}
+                      {sec.title && <h2 style={{ fontSize: 15, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid var(--gold-light, #c9a227)', paddingLeft: 14, marginBottom: 14, color: 'var(--gold-light, #c9a227)' }}>{sec.title}</h2>}
+                      {sec.body && <p style={{ fontSize: 14, lineHeight: 1.8, color: 'var(--text-light, #e2ded4)' }}>{sec.body}</p>}
                     </div>
                   ))}
 
                   {/* Video */}
                   {previewBanner.rich?.videoUrl && (
                     <div style={{ marginBottom: 28 }}>
-                      <div style={{ background: '#000', borderRadius: 10, overflow: 'hidden', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ background: '#000', borderRadius: 12, overflow: 'hidden', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
                         {previewBanner.rich.videoUrl.includes('youtube') || previewBanner.rich.videoUrl.includes('vimeo') ? (
                           <iframe src={previewBanner.rich.videoUrl} style={{ width: '100%', height: '100%', border: 'none' }} allowFullScreen />
                         ) : (
@@ -749,16 +780,16 @@ export default function BannersSection() {
 
                   {/* Specs table */}
                   {previewBanner.rich?.specs?.length > 0 && (
-                    <div style={{ marginBottom: 20 }}>
-                      <h2 style={{ fontSize: 16, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid #c9a227', paddingLeft: 14, marginBottom: 16, color: '#2d2416' }}>
+                    <div style={{ marginBottom: 24 }}>
+                      <h2 style={{ fontSize: 15, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid var(--gold-light, #c9a227)', paddingLeft: 14, marginBottom: 16, color: 'var(--gold-light, #c9a227)' }}>
                         TEKNİK KOLEKSİYON BİLGİLERİ
                       </h2>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
                         <tbody>
                           {previewBanner.rich.specs.map((spec, i) => (
-                            <tr key={i} style={{ borderBottom: '1px solid #e5dfc5', background: i % 2 === 0 ? '#faf7f0' : '#fff' }}>
-                              <td style={{ padding: '10px 14px', fontWeight: 600, color: '#2d2416', width: '35%' }}>{spec.key}</td>
-                              <td style={{ padding: '10px 14px', color: '#5a4a2a' }}>{spec.value}</td>
+                            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
+                              <td style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--gold-light, #c9a227)', width: '35%' }}>{spec.key}</td>
+                              <td style={{ padding: '12px 16px', color: 'var(--text-light, #e2ded4)' }}>{spec.value}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -769,7 +800,7 @@ export default function BannersSection() {
                   {/* CTA Button */}
                   {previewBanner.cta && (
                     <div style={{ textAlign: 'center', marginTop: 32 }}>
-                      <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, #c9a227, #a07820)', color: '#fff', fontSize: 15, fontWeight: 700, padding: '14px 36px', borderRadius: 10 }}>
+                      <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', fontSize: 15, fontWeight: 800, padding: '14px 40px', borderRadius: 12, boxShadow: '0 6px 20px rgba(201,162,39,0.3)' }}>
                         {previewBanner.cta}
                       </span>
                     </div>
