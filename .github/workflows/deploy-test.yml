@@ -26,6 +26,12 @@ jobs:
       - name: Paketleri yükle
         run: npm ci
 
+      - name: Lint kontrolü
+        run: npm run lint
+
+      - name: Testleri çalıştır
+        run: npm run test:ci
+
       - name: Test frontend build
         run: npm run build
         env:

@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import * as bannerApi from '../../../services/bannerApi';
 import { uploadFile } from '../../../services/fileApi';
+import { parseBannerContent } from '../../../utils/bannerContent';
 import styles from '../AdminPage.module.css';
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
@@ -257,18 +258,38 @@ export default function BannersSection() {
 
     setSaving(true);
     try {
+      const content = {
+        quote: form.quote ? form.quote.trim() : "",
+        description: form.description ? form.description.trim() : "",
+        features: form.features.map(item => ({
+          title: item.title ? item.title.trim() : "",
+          description: item.description ? item.description.trim() : (item.desc ? item.desc.trim() : "")
+        })),
+        specs: form.specs.map(item => ({
+          key: item.key ? item.key.trim() : "",
+          value: item.value ? item.value.trim() : ""
+        })),
+        sections: form.sections.map(item => ({
+          title: item.title ? item.title.trim() : "",
+          body: item.body ? item.body.trim() : ""
+        }))
+      };
+
       const created = await bannerApi.createAdminBanner({
-        title: form.title,
-        subtitle: form.subtitle,
+        title: form.title.trim(),
+        subtitle: form.subtitle ? form.subtitle.trim() : null,
         image: form.image,
         imageMobile: form.imageMobile || form.image,
-        cta: form.cta || 'Keşfet',
-        href: form.href || '/urunler',
-        sortOrder: parseInt(form.sortOrder) || 0,
+        cta: form.cta ? form.cta.trim() : 'Keşfet',
+        href: form.href ? form.href.trim() : '/urunler',
+        sortOrder: Number(form.sortOrder) || 0,
         isActive: true,
+        price: form.price === "" || form.price == null ? null : Number(form.price),
+        videoUrl: form.videoUrl ? form.videoUrl.trim() : null,
+        contentJson: JSON.stringify(content)
       });
 
-      // Save rich content locally using the returned ID (or a timestamp fallback)
+      // Save rich content locally as fallback
       const id = created?.id || `local_${Date.now()}`;
       saveRich(id, {
         price: form.price,
@@ -309,7 +330,17 @@ export default function BannersSection() {
   };
 
   // ── Preview modal ─────────────────────────────────────────────────────────────
-  const getBannerRich = (b) => richContent[b.id] || {};
+  const getBannerRich = (b) => {
+    if (b?.contentJson || b?.price != null || b?.videoUrl) {
+      const parsed = parseBannerContent(b.contentJson);
+      return {
+        ...parsed,
+        price: b.price != null ? b.price : (richContent[b.id]?.price || ''),
+        videoUrl: b.videoUrl || (richContent[b.id]?.videoUrl || '')
+      };
+    }
+    return richContent[b.id] || parseBannerContent(null);
+  };
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
