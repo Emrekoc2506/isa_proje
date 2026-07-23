@@ -167,9 +167,14 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
         };
         if (String(selectedConvRef.current?.id) === String(conversationId)) {
           setMessages(prev => {
+            // Dedup: server id, clientMessageId, veya optimistic temp-id ile eşleştir
             const existsIdx = prev.findIndex(m =>
-              String(m.id) === String(mapped.id) ||
-              (m.clientMessageId && mapped.clientMessageId && m.clientMessageId === mapped.clientMessageId)
+              // Sunucu id eşleşmesi
+              (mapped.id && m.id && String(m.id) === String(mapped.id)) ||
+              // clientMessageId eşleşmesi (optimistic update ile)
+              (m.clientMessageId && mapped.clientMessageId && m.clientMessageId === mapped.clientMessageId) ||
+              // temp-id içeren optimistic mesajla clientMessageId eşleşmesi
+              (mapped.clientMessageId && String(m.id) === `temp-${mapped.clientMessageId}`)
             );
             if (existsIdx !== -1) {
               const copy = [...prev];
@@ -181,6 +186,17 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
         } else {
           fetchConversations();
         }
+      };
+
+      // NotifyNewMessage, NewMessage ile aynı payload'u taşır; 
+      // ikisini ayrı handler olarak dinlemek mesajın 2 kez eklenmesine neden olur.
+      // Sadece birini dinliyoruz, diğerini yoksayıyoruz.
+      const handleNotifyNew = (conversationId, msgObj) => {
+        // Sadece farklı konuşma için konuşma listesini yenile
+        if (String(selectedConvRef.current?.id) !== String(conversationId)) {
+          fetchConversations();
+        }
+        // Aynı konuşma ise NewMessage zaten mesajı eklemiş olacak, tekrar ekleme
       };
 
       const handleUserStatusChanged = (status) => {
@@ -235,7 +251,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
       const handleMarkAsRead = () => {};
 
       conn.on('NewMessage', handleNew);
-      conn.on('NotifyNewMessage', handleNew);
+      conn.on('NotifyNewMessage', handleNotifyNew);
       conn.on('Typing', (cid) => {
         if (String(selectedConvRef.current?.id) === String(cid)) {
           setIsTyping(true);
