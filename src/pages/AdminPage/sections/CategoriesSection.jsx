@@ -75,7 +75,10 @@ export default function CategoriesSection() {
         const catId = editingCategory.databaseId ?? editingCategory.id;
         await categoryApi.updateAdminCategory(catId, {
           name: finalName,
-          ParentCategoryId: parentId || null
+          parentCategoryId: parentId || null,
+          isSecret: isSecret,
+          isActive: editingCategory.isActive ?? true,
+          sortOrder: editingCategory.sortOrder ?? 0
         });
         alert("Kategori güncellendi.");
         setNewCatName('');
@@ -87,7 +90,8 @@ export default function CategoriesSection() {
         // Create Mode
         await categoryApi.createAdminCategory({
           name: finalName,
-          ParentCategoryId: parentId || null
+          parentCategoryId: parentId || null,
+          isSecret: isSecret
         });
         alert("Kategori eklendi.");
         setNewCatName('');
