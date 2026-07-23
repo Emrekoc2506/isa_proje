@@ -1,0 +1,57 @@
+name: Deploy Production Frontend
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      confirm_deployment:
+        description: "Canlı yayın için DEPLOY yazın"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    if: ${{ github.event_name == 'push' || github.event.inputs.confirm_deployment == 'DEPLOY' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Main branch kontrolü
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "Canlı frontend yalnızca main branch üzerinden yayınlanabilir."
+            exit 1
+          fi
+
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Paketleri yükle
+        run: npm ci
+
+      - name: Canlı frontend build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: http://api.ozeldersvip.xyz/api
+          VITE_SIGNALR_BASE_URL: http://api.ozeldersvip.xyz/hubs
+
+      - name: Natro canlı frontend klasörüne yükle
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: ${{ vars.FTP_PROD_DIR }}

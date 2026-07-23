@@ -193,8 +193,9 @@ export default function AuthPage() {
         password: regPassword
       });
 
-      // Kayıt başarılı olduğunda OTP sayfası yerine "bekleniyor" sayfasına e-posta ile yönlendir
-      navigate('/email-dogrulama-bekleniyor', { state: { email: regEmail, userId: res?.userId } });
+      // Kayıt başarılı olduğunda otomatik giriş yap ve panele yönlendir
+      await login({ email: regEmail, password: regPassword });
+      navigate('/panel');
     } catch (err) {
       let errorMessage = err.message || "Kayıt işlemi başarısız.";
       if (err.errors) {
