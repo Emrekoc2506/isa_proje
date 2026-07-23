@@ -19,18 +19,11 @@ import {
   updateAdminBannerStatus 
 } from '../services/bannerApi';
 
-
-import { 
-  navCategories as mockCategories
-} from '../data/index';
-
 const INITIAL_SLIDES = [];
-
 const ProductContext = createContext(null);
 
 export function ProductProvider({ children }) {
-  // İlk yüklemede boş gelmemesi için mock verilerle başlatıyoruz (Stale-While-Revalidate)
-  const [categories, setCategories] = useState(mockCategories || []);
+  const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [slides, setSlides] = useState(INITIAL_SLIDES);
   const [loading, setLoading] = useState(true);

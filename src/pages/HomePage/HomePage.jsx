@@ -21,7 +21,7 @@ export default function HomePage() {
       <ProductSection
         title="Yeni Gelenler"
         viewAllHref="/urunler"
-        products={newsProducts}
+        products={newsProducts.length > 0 ? newsProducts : products.slice(0, 4)}
       />
 
       {/* ── Satış (Sale) ─────────────────────────────────── */}
@@ -29,7 +29,7 @@ export default function HomePage() {
         <ProductSection
           title="İndirimdekiler"
           viewAllHref="/urunler"
-          products={saleProducts}
+          products={saleProducts.length > 0 ? saleProducts : products.slice(4, 8)}
         />
       </section>
 
@@ -37,7 +37,7 @@ export default function HomePage() {
       <ProductSection
         title="Öne Çıkan Ürünler"
         viewAllHref="/urunler"
-        products={featuredProducts}
+        products={featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8)}
       />
 
       {/* ── Blog ─────────────────────────────────────────── */}
