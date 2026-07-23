@@ -48,7 +48,7 @@ export function CartProvider({ children }) {
 
   const addToCart = useCallback(async (product, quantity = 1, variantId = null) => {
     const rawId = product?.id || product?.productId;
-    const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(rawId || ''));
+    const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(rawId || ''));
 
     if (isGuid) {
       try {
