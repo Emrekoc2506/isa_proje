@@ -165,7 +165,7 @@ describe('Category cycles & Cycle protection UI logic tests', () => {
       <CategoriesSection />
     );
 
-    expect(await screen.findByText('Kategori Ağacı')).toBeInTheDocument();
+    expect(await screen.findByText('Kategori Yönetimi')).toBeInTheDocument();
   });
 });
 
