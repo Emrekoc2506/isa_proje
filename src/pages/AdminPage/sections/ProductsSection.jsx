@@ -209,16 +209,41 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   };
 
   return (
-    <div className={styles.sectionCard}>
-      <div className={styles.sectionHeader}>
-        <h3 className={styles.sectionTitle}>Ürün Yönetimi</h3>
-        <button onClick={handleOpenCreate} className={styles.shopBtn}>
-          <FiPlus /> Yeni Ürün Ekle
+    <div>
+      {/* ── PAGE HEADER ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h3 style={{ color: 'var(--gold-light)', fontSize: 20, fontWeight: 700, margin: 0, fontFamily: 'var(--font-heading)' }}>
+            Ürün Yönetimi
+          </h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '4px 0 0 0' }}>
+            {products.length} ürün • Mağazada listelenen tüm ürün kataloğunuz
+          </p>
+        </div>
+        <button
+          onClick={handleOpenCreate}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', border: 'none', borderRadius: 10, padding: '12px 22px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)', transition: 'transform 0.15s ease' }}
+        >
+          <FiPlus size={18} /> Yeni Ürün Ekle
         </button>
       </div>
 
       {loading ? (
-        <p>Yükleniyor...</p>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid rgba(201,162,39,0.2)', borderTopColor: 'var(--gold-light)', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+      ) : products.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,162,39,0.15)', borderRadius: 16 }}>
+          <FiBox size={48} style={{ color: 'var(--gold-light, #c9a227)', opacity: 0.7, marginBottom: 16 }} />
+          <h4 style={{ color: '#fff', margin: '0 0 8px 0', fontSize: 16, fontWeight: 700 }}>Henüz Ürün Eklenmemiş</h4>
+          <p style={{ color: 'var(--text-muted)', margin: '0 0 24px 0', fontSize: 14 }}>Mağazanızda satılacak ilk ürününüzü hemen oluşturun.</p>
+          <button
+            onClick={handleOpenCreate}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', border: 'none', borderRadius: 10, padding: '14px 28px', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)' }}
+          >
+            <FiPlus size={18} /> İlk Ürünü Ekleyin
+          </button>
+        </div>
       ) : (
         <>
           <div style={{ overflowX: 'auto' }}>
