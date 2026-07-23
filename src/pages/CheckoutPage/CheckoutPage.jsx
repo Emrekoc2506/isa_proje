@@ -79,8 +79,10 @@ export default function CheckoutPage() {
     };
 
     if (isAuthenticated) {
-      payload.shippingAddressId = shippingAddressId;
-      payload.billingAddressId = sameAddress ? shippingAddressId : billingAddressId;
+      if (shippingAddressId && shippingAddressId.trim() !== '') {
+        payload.shippingAddressId = shippingAddressId;
+        payload.billingAddressId = sameAddress ? shippingAddressId : (billingAddressId || shippingAddressId);
+      }
     } else {
       const cleanShippingPhone = guestShipping.phoneNumber ? guestShipping.phoneNumber.replace(/\s+/g, '') : '';
       const cleanBillingPhone = guestBilling.phoneNumber ? guestBilling.phoneNumber.replace(/\s+/g, '') : '';

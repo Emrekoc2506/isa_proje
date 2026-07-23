@@ -112,9 +112,10 @@ export function CartProvider({ children }) {
       setItems(mapped);
     } catch (err) {
       console.error("Failed to update cart quantity:", err);
-      alert(err.message || "Sepet güncellenemedi.");
+      // Eğer eski/silinmiş ürün ID'sinden dolayı 404 alındıysa sepeti veritabanından tazele
+      await refreshCart();
     }
-  }, []);
+  }, [refreshCart]);
 
   const removeFromCart = useCallback(async (itemId) => {
     try {
@@ -122,7 +123,7 @@ export function CartProvider({ children }) {
       await refreshCart();
     } catch (err) {
       console.error("Failed to remove item from cart:", err);
-      alert(err.message || "Ürün sepetten silinemedi.");
+      await refreshCart();
     }
   }, [refreshCart]);
 

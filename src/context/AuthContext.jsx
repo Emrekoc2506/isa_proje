@@ -134,17 +134,27 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
-    // Run backend logout in the background so it doesn't block the UI
-    authApi.logout().catch(() => null);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     setUser(null);
     setRoles([]);
+    try {
+      await authApi.logout();
+    } catch (err) {
+      console.warn("Backend logout request error:", err);
+    }
   }, []);
 
   const logoutAll = useCallback(async () => {
-    // Run backend logoutAll in the background so it doesn't block the UI
-    authApi.logoutAll().catch(() => null);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     setUser(null);
     setRoles([]);
+    try {
+      await authApi.logoutAll();
+    } catch (err) {
+      console.warn("Backend logoutAll request error:", err);
+    }
   }, []);
 
   const refreshSession = useCallback(async () => {
