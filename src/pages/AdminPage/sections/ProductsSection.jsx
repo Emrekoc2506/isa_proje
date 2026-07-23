@@ -753,7 +753,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                 </AnimatePresence>
 
                 {/* Sihirbaz Navigasyon Butonları */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   {modalStep > 1 ? (
                     <button 
                       type="button" 
@@ -774,34 +774,36 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                     </button>
                   )}
 
-                  {modalStep < 4 ? (
-                    <button 
-                      type="button" 
-                      onClick={() => {
-                        if (modalStep === 1 && !name.trim()) {
-                          alert("Lütfen ürün adını doldurun.");
-                          return;
-                        }
-                        if (modalStep === 2 && (!price || !stockQuantity)) {
-                          alert("Lütfen fiyat ve stok alanlarını doldurun.");
-                          return;
-                        }
-                        setModalStep(s => s + 1);
-                      }} 
-                      className={styles.shopBtn}
-                      style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
-                    >
-                      İleri <FiChevronRight size={16} />
-                    </button>
-                  ) : (
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    {modalStep < 4 && (
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          if (modalStep === 1 && !name.trim()) {
+                            alert("Lütfen ürün adını doldurun.");
+                            return;
+                          }
+                          if (modalStep === 2 && (price === "" || price == null || isNaN(parseFloat(price)))) {
+                            alert("Lütfen geçerli bir fiyat girin.");
+                            return;
+                          }
+                          setModalStep(s => s + 1);
+                        }} 
+                        className={styles.seeAllBtn}
+                        style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.08)', color: '#fff' }}
+                      >
+                        İleri <FiChevronRight size={16} />
+                      </button>
+                    )}
+
                     <button 
                       type="submit" 
                       className={styles.shopBtn}
-                      style={{ padding: '10px 24px', fontSize: 13, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000' }}
+                      style={{ padding: '10px 24px', fontSize: 13, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', borderRadius: 8, cursor: 'pointer' }}
                     >
-                      <FiCheck size={16} /> Ürünü Kaydet
+                      <FiCheck size={16} /> {modalMode === 'create' ? 'Ürünü Kaydet' : 'Değişiklikleri Kaydet'}
                     </button>
-                  )}
+                  </div>
                 </div>
 
               </form>
