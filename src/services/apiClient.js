@@ -39,9 +39,9 @@ async function request(path, options = {}) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  // Timeout logic (default 3 seconds, except for file upload)
+  // Timeout logic: isUpload ? 60000 : 15000 (options.timeout takes precedence)
   const isUpload = options.body instanceof FormData;
-  const timeoutMs = options.timeout ?? (isUpload ? 60000 : 3000);
+  const timeoutMs = options.timeout ?? (isUpload ? 60000 : 15000);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 

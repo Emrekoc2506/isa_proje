@@ -3,12 +3,13 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import ProductCard from '../../components/ProductCard/ProductCard';
-import MainLayout from '../../layouts/MainLayout/MainLayout';
+import SEO from '../../components/SEO/SEO';
+import { ProductCardSkeleton } from '../../components/Skeleton/Skeleton';
 import { FiSearch, FiSliders, FiGrid, FiList, FiChevronRight, FiChevronDown, FiBook, FiFolder, FiCheckSquare, FiSquare } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ProductsPage() {
-  const { products, categories } = useProducts();
+  const { products, categories, loading } = useProducts();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Arama parametrelerini oku
@@ -152,8 +153,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <MainLayout>
-      <div className={styles.shopContainer}>
+    <div className={styles.shopContainer}>
         
         {/* Üst Kısım: Breadcrumb & Başlık */}
         <div className={styles.shopHeader}>
@@ -403,36 +403,46 @@ export default function ProductsPage() {
             </div>
           </aside>
 
-          {/* ── SAĞ TARAF: ÜRÜN GRİDİ ──────────────────────────────── */}
-          <main className={styles.productsArea}>
-            <div className={styles.resultsInfoRow}>
-              <span>{filteredProducts.length} ürün listeleniyor</span>
-            </div>
+      <SEO
+        title={selectedCategory !== 'hepsi' ? `${selectedCategory} | mysticvelora` : 'Tüm Ürünler | mysticvelora'}
+        description="Özel tasarım gümüş kolyeler, yüzükler, bileklikler ve şık aksesuarlar mysticvelora'da."
+      />
 
-            {filteredProducts.length === 0 ? (
-              <div className={styles.emptyGridState}>
-                <span className={styles.emptyGridIcon}>🔍</span>
-                <p>Aradığınız kriterlere uygun ürün bulunamadı.</p>
-                <button 
-                  onClick={handleResetAll}
-                  className={styles.resetFiltersBtn}
-                >
-                  Filtreleri Temizle
-                </button>
+      {/* ── SAĞ TARAF: ÜRÜN GRİDİ ──────────────────────────────── */}
+      <main className={styles.productsArea}>
+        <div className={styles.resultsInfoRow}>
+          <span>{loading ? 'Yükleniyor...' : `${filteredProducts.length} ürün listeleniyor`}</span>
+        </div>
+
+        {loading ? (
+          <div className={styles.productsGrid}>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className={styles.emptyGridState}>
+            <span className={styles.emptyGridIcon}>🔍</span>
+            <p>Aradığınız kriterlere uygun ürün bulunamadı.</p>
+            <button 
+              onClick={handleResetAll}
+              className={styles.resetFiltersBtn}
+            >
+              Filtreleri Temizle
+            </button>
+          </div>
+        ) : (
+          <div className={styles.productsGrid}>
+            {filteredProducts.map(p => (
+              <div key={p.id} className={styles.cardWrapper}>
+                <ProductCard product={p} />
               </div>
-            ) : (
-              <div className={styles.productsGrid}>
-                {filteredProducts.map(p => (
-                  <div key={p.id} className={styles.cardWrapper}>
-                    <ProductCard product={p} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </main>
+            ))}
+          </div>
+        )}
+      </main>
         </div>
 
       </div>
-    </MainLayout>
   );
 }

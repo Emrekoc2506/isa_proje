@@ -115,7 +115,6 @@ export function AuthProvider({ children }) {
   }, [reloadUser]);
 
   const login = useCallback(async (credentials) => {
-    setIsLoading(true);
     try {
       const res = await authApi.login(credentials);
       const userProfile = await reloadUser();
@@ -127,33 +126,35 @@ export function AuthProvider({ children }) {
       setUser(null);
       setRoles([]);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   }, [reloadUser]);
 
   const register = useCallback(async (payload) => {
-    setIsLoading(true);
-    try {
-      const res = await authApi.register(payload);
-      return res;
-    } finally {
-      setIsLoading(false);
-    }
+    return authApi.register(payload);
   }, []);
 
   const logout = useCallback(async () => {
-    // Run backend logout in the background so it doesn't block the UI
-    authApi.logout().catch(() => null);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     setUser(null);
     setRoles([]);
+    try {
+      await authApi.logout();
+    } catch (err) {
+      console.warn("Backend logout request error:", err);
+    }
   }, []);
 
   const logoutAll = useCallback(async () => {
-    // Run backend logoutAll in the background so it doesn't block the UI
-    authApi.logoutAll().catch(() => null);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     setUser(null);
     setRoles([]);
+    try {
+      await authApi.logoutAll();
+    } catch (err) {
+      console.warn("Backend logoutAll request error:", err);
+    }
   }, []);
 
   const refreshSession = useCallback(async () => {

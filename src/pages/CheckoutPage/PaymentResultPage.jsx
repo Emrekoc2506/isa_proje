@@ -116,10 +116,7 @@ export default function PaymentResultPage() {
               <FiXCircle className={styles.errorIcon} />
               <h2 className={styles.title}>Sorgulama Hatası</h2>
               <p className={styles.sub}>{errorMsg}</p>
-              <button onClick={() => navigate('/siparis-takip')} className={styles.btn} style={{ marginBottom: 12 }}>
-                Sipariş Takip Sayfasına Git
-              </button>
-              <button onClick={() => navigate('/')} className={styles.btnOutline}>
+              <button onClick={() => navigate('/')} className={styles.btn}>
                 Ana Sayfaya Dön
               </button>
             </div>

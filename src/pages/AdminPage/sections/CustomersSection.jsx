@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { FiToggleLeft, FiToggleRight, FiMail, FiPhone, FiCalendar } from 'react-icons/fi';
+import { FiToggleLeft, FiToggleRight, FiMail, FiPhone, FiCalendar, FiMessageCircle } from 'react-icons/fi';
 import * as customerApi from '../../../services/customerApi';
 import styles from '../AdminPage.module.css';
 
-export default function CustomersSection() {
+export default function CustomersSection({ onMessageUser }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,6 +46,7 @@ export default function CustomersSection() {
             <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Telefon</th>
             <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Kayıt Tarihi</th>
             <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Hesap Durumu</th>
+            <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>İşlemler</th>
           </tr>
         </thead>
         <tbody>
@@ -65,11 +66,42 @@ export default function CustomersSection() {
                   {c.isActive ? 'Aktif' : 'Pasif'}
                 </button>
               </td>
+              <td style={{ padding: 8 }}>
+                <button
+                  onClick={() => onMessageUser?.(c.userId || c.id, c.fullName)}
+                  title={`${c.fullName} adlı müşteriye mesaj gönder`}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(201,162,39,0.15), rgba(201,162,39,0.08))',
+                    border: '1px solid rgba(201,162,39,0.35)',
+                    borderRadius: 8,
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    color: 'var(--gold-light)',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(201,162,39,0.28), rgba(201,162,39,0.15))';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(201,162,39,0.15), rgba(201,162,39,0.08))';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <FiMessageCircle size={15} />
+                  Mesaj
+                </button>
+              </td>
             </tr>
           ))}
           {customers.length === 0 && (
             <tr>
-              <td colSpan={5} style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>Sistemde kayıtlı müşteri bulunmamaktadır.</td>
+              <td colSpan={6} style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>Sistemde kayıtlı müşteri bulunmamaktadır.</td>
             </tr>
           )}
         </tbody>

@@ -39,6 +39,7 @@ export default function AdminPage() {
   const [active, setActive] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedChatUser, setSelectedChatUser] = useState(null); // { id, name }
   
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -149,13 +150,20 @@ export default function AdminPage() {
               
               {active === 'orders' && <OrdersSection />}
               
-              {active === 'messages' && <ChatUI isAdmin={true} />}
+              {active === 'messages' && <ChatUI key={selectedChatUser?.id ?? 'all'} isAdmin={true} initialUserId={selectedChatUser?.id} initialUserName={selectedChatUser?.name} />}
 
               {active === 'coupons' && <CouponsSection />}
 
               {active === 'inventory' && <InventorySection />}
 
-              {active === 'customers' && <CustomersSection />}
+              {active === 'customers' && (
+                <CustomersSection
+                  onMessageUser={(userId, userName) => {
+                    setSelectedChatUser({ id: userId, name: userName });
+                    setActive('messages');
+                  }}
+                />
+              )}
 
               {active === 'reports' && <ReportsSection />}
             </motion.div>

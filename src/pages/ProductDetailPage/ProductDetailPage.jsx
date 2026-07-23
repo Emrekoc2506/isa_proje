@@ -6,7 +6,7 @@ import {
   FiShoppingCart, FiHeart, FiCheck, FiStar,
   FiChevronRight, FiPackage, FiTruck,
   FiShield, FiMinus, FiPlus, FiShare2, FiAward,
-  FiZap, FiChevronDown, FiMessageCircle
+  FiZap, FiChevronDown, FiMessageCircle, FiBell
 } from 'react-icons/fi';
 import { FaHeart, FaWhatsapp, FaInstagram } from 'react-icons/fa';
 import { useProducts } from '../../context/ProductContext';
@@ -14,6 +14,12 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { getProductById, getProductBySlug, getProductReviews, createProductReview } from '../../services/productApi';
 import MainLayout from '../../layouts/MainLayout/MainLayout';
+import SEO from '../../components/SEO/SEO';
+import { ProductDetailSkeleton } from '../../components/Skeleton/Skeleton';
+import ProductReviews from '../../components/ProductReviews/ProductReviews';
+import RecentlyViewed from '../../components/RecentlyViewed/RecentlyViewed';
+import StockNotifyModal from '../../components/StockNotifyModal/StockNotifyModal';
+import { addRecentlyViewed } from '../../utils/recentlyViewed';
 
 /* ─── Animasyon Varyantları ──────────────────────────────── */
 const fadeUp = {
@@ -67,9 +73,16 @@ export default function ProductDetailPage() {
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
+  const [stockModalOpen, setStockModalOpen] = useState(false);
 
   /* ─── Ürünü Bul ─────────────────────────────────────── */
   const product = products.find(p => String(p.id) === String(id) || p.slug === id);
+
+  useEffect(() => {
+    if (product) {
+      addRecentlyViewed(product);
+    }
+  }, [product]);
 
   useEffect(() => {
     async function fetchDetail() {
@@ -80,25 +93,30 @@ export default function ProductDetailPage() {
         let detailData = null;
         
         if (isGuid) {
-          detailData = await getProductById(id);
+          detailData = await getProductById(id).catch(() => null);
         } else {
-          detailData = await getProductBySlug(id);
+          detailData = await getProductBySlug(id).catch(() => null);
         }
 
         if (detailData) {
           setProductDetail(detailData);
-          // Yorumları getir
+          addRecentlyViewed(detailData);
           const reviewsData = await getProductReviews(detailData.id).catch(() => []);
           setReviews(reviewsData || []);
+        } else if (product) {
+          setProductDetail(product);
         }
       } catch (err) {
         console.error("Detay yükleme hatası:", err);
+        if (product) {
+          setProductDetail(product);
+        }
       } finally {
         setLoadingDetail(false);
       }
     }
     fetchDetail();
-  }, [id]);
+  }, [id, product]);
 
   /* ─── Benzer Ürünler (Random) ───────────────────────── */
   const relatedProducts = useMemo(() => {
@@ -236,8 +254,39 @@ export default function ProductDetailPage() {
     { key: 'reviews', label: `Yorumlar (${reviews.length || 0})` },
   ];
 
+  if (loadingDetail) {
+    return (
+      <MainLayout>
+        <div className={styles.page}>
+          <SEO title="Ürün Yükleniyor... | mysticvelora" />
+          <ProductDetailSkeleton />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!productDetail) {
+    return (
+      <MainLayout>
+        <div className={styles.page} style={{ textAlign: 'center', padding: '120px 20px', minHeight: '60vh' }}>
+          <SEO title="Ürün Bulunamadı | mysticvelora" />
+          <h2 style={{ color: 'var(--gold-light)', fontSize: '32px', marginBottom: '12px', fontFamily: 'var(--font-heading)' }}>Ürün Bulunamadı</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '28px', fontSize: '16px' }}>Aradığınız ilan veya ürün mevcut değil ya da kaldırılmış olabilir.</p>
+          <Link to="/urunler" style={{ background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: 'var(--bg-dark)', padding: '14px 28px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '15px' }}>
+            Tüm İlanları / Ürünleri İncele
+          </Link>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
+      <SEO
+        title={productDetail.name}
+        description={productDetail.description || `${productDetail.name} özel tasarım takı ve aksesuar.`}
+        image={productDetail.imageUrl || (productDetail.images?.[0]?.url || '')}
+      />
       <div className={styles.page}>
 
         {/* ════ BREADCRUMB ══════════════════════════════════ */}
@@ -462,11 +511,10 @@ export default function ProductDetailPage() {
             <div className={styles.ctaGroup}>
               <button
                 className={`${styles.cartBtn} ${addedToCart ? styles.cartAdded : ''}`}
-                onClick={handleAddToCart}
-                disabled={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0}
+                onClick={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0 ? () => setStockModalOpen(true) : handleAddToCart}
               >
                 {(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0 ? (
-                  <span>Tükendi</span>
+                  <span><FiBell /> Stoka Gelince Bildir</span>
                 ) : addedToCart ? (
                   <span><FiCheck /> Sepete Eklendi!</span>
                 ) : (
@@ -725,6 +773,19 @@ export default function ProductDetailPage() {
             </div>
           </section>
         )}
+
+        {/* Müşteri Değerlendirmeleri (Product Reviews) */}
+        <ProductReviews productId={productDetail?.id || product?.id || id} />
+
+        {/* Son İnceledikleriniz (Recently Viewed Products) */}
+        <RecentlyViewed currentProductId={productDetail?.id || product?.id || id} />
+
+        {/* Stoka Gelince Bildir Modali */}
+        <StockNotifyModal
+          isOpen={stockModalOpen}
+          onClose={() => setStockModalOpen(false)}
+          product={productDetail || product}
+        />
 
       </div>
     </MainLayout>
