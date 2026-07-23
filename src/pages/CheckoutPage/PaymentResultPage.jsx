@@ -90,6 +90,32 @@ export default function PaymentResultPage() {
   const isSuccess = order && String(order.paymentStatus).toLowerCase() === 'paid';
   const isPending = order && String(order.paymentStatus).toLowerCase() === 'pending';
 
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancelPayment = async () => {
+    if (!orderId) return;
+    if (!window.confirm("Ödemeyi iptal etmek istediğinize emin misiniz?")) return;
+
+    setCancelling(true);
+    try {
+      await paymentApi.cancelPayment(orderId, "Kullanıcı iptali");
+      alert("Ödemeniz başarıyla iptal edildi.");
+      await fetchOrderStatus();
+    } catch (err) {
+      if (err.code === "payment_already_completed") {
+        alert("Bu ödeme zaten tamamlanmış.");
+        await fetchOrderStatus();
+      } else if (err.code === "payment_cancellation_conflict") {
+        alert("Ödeme iptal durumu güncellendi. Sipariş durumu kontrol ediliyor.");
+        await fetchOrderStatus();
+      } else {
+        alert(err.message || "Ödeme iptal edilemedi.");
+      }
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   return (
     <div className={styles.emptyContainer} style={{ minHeight: '100vh', padding: '120px 20px' }}>
       <div className={styles.wrapper} style={{ maxWidth: 500, width: '100%' }}>
@@ -145,6 +171,14 @@ export default function PaymentResultPage() {
               <button onClick={fetchOrderStatus} className={styles.btn} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 <FiRefreshCw /> Yeniden Kontrol Et
               </button>
+              <button 
+                onClick={handleCancelPayment} 
+                disabled={cancelling}
+                className={styles.btnOutline}
+                style={{ marginBottom: 12, color: '#e05594', borderColor: 'rgba(224,85,148,0.4)' }}
+              >
+                {cancelling ? <FiLoader className={styles.spinner} /> : null} Ödemeyi İptal Et
+              </button>
               <button onClick={() => navigate(isAuthenticated ? '/siparislerim' : '/')} className={styles.btnOutline}>
                 {isAuthenticated ? 'Siparişlerime Git' : 'Ana Sayfaya Dön'}
               </button>
@@ -163,6 +197,14 @@ export default function PaymentResultPage() {
               >
                 {retryLoading ? <FiLoader className={styles.spinner} /> : <FiRefreshCw />}
                 Ödemeyi Tekrar Dene
+              </button>
+              <button 
+                onClick={handleCancelPayment} 
+                disabled={cancelling}
+                className={styles.btnOutline}
+                style={{ marginBottom: 12, color: '#e05594', borderColor: 'rgba(224,85,148,0.4)' }}
+              >
+                {cancelling ? <FiLoader className={styles.spinner} /> : null} Ödemeyi İptal Et
               </button>
               <button onClick={() => navigate('/')} className={styles.btnOutline}>
                 Ana Sayfaya Dön

@@ -193,9 +193,8 @@ export default function AuthPage() {
         password: regPassword
       });
 
-      // Kayıt başarılı olduğunda otomatik giriş yap ve panele yönlendir
-      await login({ email: regEmail, password: regPassword });
-      navigate('/panel');
+      // Kayıt başarılı olduğunda e-posta doğrulama bekleme sayfasına yönlendir (otomatik login yapılmaz)
+      navigate('/email-dogrulama-bekleniyor', { state: { email: regEmail, userId: res?.userId } });
     } catch (err) {
       let errorMessage = err.message || "Kayıt işlemi başarısız.";
       if (err.errors) {

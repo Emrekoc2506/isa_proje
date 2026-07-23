@@ -9,19 +9,33 @@ const apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7148/api";
 
 let isRefreshing = false;
-let refreshSubscribers = [];
+let refreshQueue = [];
+let activeRefreshPromise = null;
 
-function subscribeTokenRefresh(cb) {
-  refreshSubscribers.push(cb);
+function subscribeTokenRefresh(resolve, reject) {
+  refreshQueue.push({ resolve, reject });
 }
 
-function onRefreshed(token) {
-  refreshSubscribers.map((cb) => cb(token));
-  refreshSubscribers = [];
+function resolveRefreshQueue(token) {
+  const queue = refreshQueue;
+  refreshQueue = [];
+  queue.forEach((item) => item.resolve(token));
+}
+
+function rejectRefreshQueue(error) {
+  const queue = refreshQueue;
+  refreshQueue = [];
+  queue.forEach((item) => item.reject(error));
+}
+
+function dispatchSessionExpired() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("auth:session-expired"));
+  }
 }
 
 async function request(path, options = {}) {
-  const token = localStorage.getItem("accessToken");
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("accessToken") : null;
   const headers = new Headers(options.headers || {});
 
   if (!(options.body instanceof FormData)) {
@@ -61,14 +75,17 @@ async function request(path, options = {}) {
     }
 
     // Handle 401 Unauthorized
-    if (
-      response.status === 401 &&
-      !path.includes("/auth/refresh-token") &&
-      !path.includes("/auth/login")
-    ) {
-      const refreshToken = localStorage.getItem("refreshToken");
+    const isRetry = options._isRetry === true;
+    const isAuthPath =
+      path.includes("/auth/refresh-token") ||
+      path.includes("/auth/login") ||
+      path.includes("/auth/register");
 
-      if (!refreshToken) {
+    if (response.status === 401 && !isAuthPath && !isRetry) {
+      const refreshTokenVal = typeof localStorage !== "undefined" ? localStorage.getItem("refreshToken") : null;
+
+      if (!refreshTokenVal) {
+        dispatchSessionExpired();
         handleLogoutRedirect();
         throw new ApiError({
           message: "Oturum süresi doldu.",
@@ -77,61 +94,69 @@ async function request(path, options = {}) {
         });
       }
 
+      // If token in localStorage changed while this request was in flight, retry with new token
+      const currentToken = typeof localStorage !== "undefined" ? localStorage.getItem("accessToken") : null;
+      if (currentToken && currentToken !== token) {
+        const retryOptions = { ...options, _isRetry: true };
+        const retryHeaders = new Headers(options.headers || {});
+        if (!(options.body instanceof FormData)) {
+          retryHeaders.set("Content-Type", "application/json");
+        }
+        if (guestSessionId) {
+          retryHeaders.set("X-Guest-Session-Id", guestSessionId);
+          retryHeaders.set("X-Guest-SessionId", guestSessionId);
+        }
+        retryHeaders.set("Authorization", `Bearer ${currentToken}`);
+        retryOptions.headers = retryHeaders;
+        return request(path, retryOptions);
+      }
+
       if (!isRefreshing) {
         isRefreshing = true;
-        refreshAccessToken(refreshToken)
+        refreshAccessToken(refreshTokenVal)
           .then((newAccessToken) => {
             isRefreshing = false;
-            onRefreshed(newAccessToken);
+            resolveRefreshQueue(newAccessToken);
           })
           .catch((err) => {
             isRefreshing = false;
+            const authErr = new ApiError({
+              message: "Oturum süresi doldu.",
+              status: 401,
+              code: "unauthorized",
+            });
+            rejectRefreshQueue(authErr);
+            dispatchSessionExpired();
             handleLogoutRedirect();
-            processQueueReject(err);
           });
       }
 
       // Queue the original request
-      const retryOriginalRequest = new Promise((resolve, reject) => {
-        subscribeTokenRefresh((newAccessToken) => {
-          // Clone request options with the new authorization header
-          const newOptions = { ...options };
-          const newHeaders = new Headers(options.headers || {});
-          if (!(options.body instanceof FormData)) {
-            newHeaders.set("Content-Type", "application/json");
-          }
-          if (guestSessionId) {
-            newHeaders.set("X-Guest-Session-Id", guestSessionId);
-            newHeaders.set("X-Guest-SessionId", guestSessionId);
-          }
-          newHeaders.set("Authorization", `Bearer ${newAccessToken}`);
-          newOptions.headers = newHeaders;
+      return new Promise((resolve, reject) => {
+        subscribeTokenRefresh(
+          (newAccessToken) => {
+            // Retry once with _isRetry flag
+            const newOptions = { ...options, _isRetry: true };
+            const newHeaders = new Headers(options.headers || {});
+            if (!(options.body instanceof FormData)) {
+              newHeaders.set("Content-Type", "application/json");
+            }
+            if (guestSessionId) {
+              newHeaders.set("X-Guest-Session-Id", guestSessionId);
+              newHeaders.set("X-Guest-SessionId", guestSessionId);
+            }
+            newHeaders.set("Authorization", `Bearer ${newAccessToken}`);
+            newOptions.headers = newHeaders;
 
-          const retryController = new AbortController();
-          const retryTimeoutId = setTimeout(
-            () => retryController.abort(),
-            timeoutMs,
-          );
-          newOptions.signal = retryController.signal;
-
-          fetch(`${apiBaseUrl}${path}`, newOptions)
-            .then((res) => {
-              clearTimeout(retryTimeoutId);
-              if (res.ok) {
-                if (res.status === 204) resolve(null);
-                else resolve(res.json());
-              } else {
-                parseResponseError(res).then(reject);
-              }
-            })
-            .catch((e) => {
-              clearTimeout(retryTimeoutId);
-              reject(e);
-            });
-        });
+            request(path, newOptions)
+              .then(resolve)
+              .catch(reject);
+          },
+          (queueError) => {
+            reject(queueError);
+          }
+        );
       });
-
-      return retryOriginalRequest;
     }
 
     // Process regular error response
@@ -158,34 +183,40 @@ async function request(path, options = {}) {
   }
 }
 
-async function refreshAccessToken(refreshToken) {
-  const response = await fetch(`${apiBaseUrl}/auth/refresh-token`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ refreshToken }),
+function refreshAccessToken(refreshTokenVal) {
+  if (activeRefreshPromise) return activeRefreshPromise;
+
+  activeRefreshPromise = (async () => {
+    const response = await fetch(`${apiBaseUrl}/auth/refresh-token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken: refreshTokenVal }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Refresh token rotation failed");
+    }
+
+    const data = await response.json();
+    if (data.accessToken && data.refreshToken) {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
+      }
+      return data.accessToken;
+    }
+    throw new Error("Invalid token response");
+  })().finally(() => {
+    activeRefreshPromise = null;
   });
 
-  if (!response.ok) {
-    throw new Error("Refresh token rotation failed");
-  }
-
-  const data = await response.json();
-  if (data.accessToken && data.refreshToken) {
-    localStorage.setItem("accessToken", data.accessToken);
-    localStorage.setItem("refreshToken", data.refreshToken);
-    return data.accessToken;
-  }
-  throw new Error("Invalid token response");
-}
-
-function processQueueReject(err) {
-  // Clear any subscribers
-  refreshSubscribers = [];
+  return activeRefreshPromise;
 }
 
 function handleLogoutRedirect() {
+  if (typeof localStorage === "undefined") return;
   const hadToken =
     localStorage.getItem("accessToken") || localStorage.getItem("refreshToken");
   localStorage.removeItem("accessToken");

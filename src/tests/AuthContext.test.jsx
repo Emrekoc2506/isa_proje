@@ -84,6 +84,7 @@ describe('AuthContext Tests', () => {
     const logoutBtn = screen.getByTestId('btn-logout');
     await act(async () => {
       logoutBtn.click();
+      await new Promise(r => setTimeout(r, 50));
     });
 
     expect(localStorage.getItem('accessToken')).toBeNull();
