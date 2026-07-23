@@ -82,8 +82,14 @@ export default function CheckoutPage() {
       payload.shippingAddressId = shippingAddressId;
       payload.billingAddressId = sameAddress ? shippingAddressId : billingAddressId;
     } else {
-      payload.guestShippingAddress = guestShipping;
-      payload.guestBillingAddress = sameAddress ? guestShipping : guestBilling;
+      const cleanShippingPhone = guestShipping.phoneNumber ? guestShipping.phoneNumber.replace(/\s+/g, '') : '';
+      const cleanBillingPhone = guestBilling.phoneNumber ? guestBilling.phoneNumber.replace(/\s+/g, '') : '';
+
+      const cleanGuestShipping = { ...guestShipping, neighborhood: guestShipping.neighborhood || 'Merkez', phoneNumber: cleanShippingPhone };
+      const cleanGuestBilling = { ...guestBilling, neighborhood: guestBilling.neighborhood || 'Merkez', phoneNumber: cleanBillingPhone };
+
+      payload.guestShippingAddress = cleanGuestShipping;
+      payload.guestBillingAddress = sameAddress ? cleanGuestShipping : cleanGuestBilling;
     }
 
     try {
@@ -159,11 +165,17 @@ export default function CheckoutPage() {
         return;
       }
 
-      payload.guestShippingAddress = guestShipping;
-      payload.guestBillingAddress = sameAddress ? guestShipping : guestBilling;
+      const cleanShippingPhone = guestShipping.phoneNumber ? guestShipping.phoneNumber.replace(/\s+/g, '') : '';
+      const cleanBillingPhone = guestBilling.phoneNumber ? guestBilling.phoneNumber.replace(/\s+/g, '') : '';
+
+      const cleanGuestShipping = { ...guestShipping, neighborhood: guestShipping.neighborhood || 'Merkez', phoneNumber: cleanShippingPhone };
+      const cleanGuestBilling = { ...guestBilling, neighborhood: guestBilling.neighborhood || 'Merkez', phoneNumber: cleanBillingPhone };
+
+      payload.guestShippingAddress = cleanGuestShipping;
+      payload.guestBillingAddress = sameAddress ? cleanGuestShipping : cleanGuestBilling;
       payload.customerName = guestShipping.fullName;
       payload.customerEmail = guestShipping.email;
-      payload.customerPhone = guestShipping.phoneNumber;
+      payload.customerPhone = cleanShippingPhone;
     }
 
     try {
@@ -299,7 +311,6 @@ export default function CheckoutPage() {
                   <input type="tel" placeholder="Telefon *" required value={guestShipping.phoneNumber} onChange={e => handleGuestShippingChange('phoneNumber', e.target.value)} className={styles.input} />
                   <input type="text" placeholder="Şehir *" required value={guestShipping.city} onChange={e => handleGuestShippingChange('city', e.target.value)} className={styles.input} />
                   <input type="text" placeholder="İlçe *" required value={guestShipping.district} onChange={e => handleGuestShippingChange('district', e.target.value)} className={styles.input} />
-                  <input type="text" placeholder="Mahalle *" required value={guestShipping.neighborhood} onChange={e => handleGuestShippingChange('neighborhood', e.target.value)} className={styles.input} />
                   <input type="text" placeholder="Posta Kodu *" required value={guestShipping.postalCode} onChange={e => handleGuestShippingChange('postalCode', e.target.value)} className={styles.input} />
                   <input type="text" placeholder="Açık Adres *" required value={guestShipping.addressLine} onChange={e => handleGuestShippingChange('addressLine', e.target.value)} className={styles.input} style={{ gridColumn: 'span 2' }} />
                 </div>
@@ -341,7 +352,6 @@ export default function CheckoutPage() {
                       <input type="tel" placeholder="Telefon *" required value={guestBilling.phoneNumber} onChange={e => handleGuestBillingChange('phoneNumber', e.target.value)} className={styles.input} />
                       <input type="text" placeholder="Şehir *" required value={guestBilling.city} onChange={e => handleGuestBillingChange('city', e.target.value)} className={styles.input} />
                       <input type="text" placeholder="İlçe *" required value={guestBilling.district} onChange={e => handleGuestBillingChange('district', e.target.value)} className={styles.input} />
-                      <input type="text" placeholder="Mahalle *" required value={guestBilling.neighborhood} onChange={e => handleGuestBillingChange('neighborhood', e.target.value)} className={styles.input} />
                       <input type="text" placeholder="Posta Kodu *" required value={guestBilling.postalCode} onChange={e => handleGuestBillingChange('postalCode', e.target.value)} className={styles.input} />
                       <input type="text" placeholder="Açık Adres *" required value={guestBilling.addressLine} onChange={e => handleGuestBillingChange('addressLine', e.target.value)} className={styles.input} style={{ gridColumn: 'span 2' }} />
                     </div>

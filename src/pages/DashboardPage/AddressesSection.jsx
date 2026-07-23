@@ -100,7 +100,7 @@ export default function AddressesSection() {
       phoneNumber: cleanPhone,
       city,
       district,
-      neighborhood,
+      neighborhood: neighborhood || 'Merkez',
       addressLine,
       postalCode: postalCode || null,
       country: country || 'TR',
@@ -202,11 +202,6 @@ export default function AddressesSection() {
             <div className={styles.formField}>
               <label className={styles.fieldLabel}>İlçe *</label>
               <input type="text" required value={district} onChange={e => setDistrict(e.target.value)} placeholder="İlçe girin" className={styles.fieldInput} />
-            </div>
-
-            <div className={styles.formField}>
-              <label className={styles.fieldLabel}>Mahalle *</label>
-              <input type="text" required value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="Mahalle girin" className={styles.fieldInput} />
             </div>
 
             <div className={styles.formField}>
