@@ -79,10 +79,24 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Ürün 
             { title: 'Sağa Hizalı', value: 'rte-right' },
           ],
 
-          // Video embed (YouTube, Vimeo, MP4 iframe)
+          // Video embed (YouTube, Vimeo, Google Drive)
           media_live_embeds: true,
           media_alt_source: false,
           media_poster: false,
+          media_url_resolver: (data, resolve) => {
+            if (data.url && data.url.includes('drive.google.com')) {
+              let driveId = '';
+              if (data.url.includes('/file/d/')) {
+                driveId = data.url.split('/file/d/')[1]?.split('/')[0]?.split('?')[0];
+              }
+              if (driveId) {
+                const embedHtml = `<iframe src="https://drive.google.com/file/d/${driveId}/preview" width="100%" height="360" frameborder="0" allow="autoplay" allowfullscreen></iframe>`;
+                resolve({ html: embedHtml });
+                return;
+              }
+            }
+            resolve({ html: '' });
+          },
 
           // Güvenlik — relative URL dönüşümü engelle
           convert_urls: false,
