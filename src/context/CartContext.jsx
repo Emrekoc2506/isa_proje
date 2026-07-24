@@ -80,13 +80,13 @@ export function CartProvider({ children }) {
 
   const refreshCart = useCallback(async () => {
     try {
-      setLoading(true);
+      if (typeof window !== 'undefined') setLoading(true);
       const data = await cartApi.getCart();
-      applyServerCart(data);
+      if (typeof window !== 'undefined') applyServerCart(data);
     } catch (err) {
       console.error("Cart fetch failed:", err);
     } finally {
-      setLoading(false);
+      if (typeof window !== 'undefined') setLoading(false);
     }
   }, [applyServerCart]);
 
@@ -103,20 +103,28 @@ export function CartProvider({ children }) {
       try {
         await cartApi.mergeGuestCart();
         await refreshCart();
-        setItems(prev => prev.filter(i => i.source !== 'mock'));
+        if (typeof window !== 'undefined') {
+          setItems(prev => prev.filter(i => i.source !== 'mock'));
+        }
       } catch (err) {
         if (err.code === 'cart_concurrency_conflict' && retryCount === 0) {
           await new Promise(r => setTimeout(r, 400));
           isMergingCartRef.current = false;
-          setIsMergingCart(false);
+          if (typeof window !== 'undefined') {
+            setIsMergingCart(false);
+          }
           activeMergePromise = null;
           return triggerGuestCartMerge(1);
         }
         await refreshCart();
-        setCartError(getCartErrorMessage(err));
+        if (typeof window !== 'undefined') {
+          setCartError(getCartErrorMessage(err));
+        }
       } finally {
         isMergingCartRef.current = false;
-        setIsMergingCart(false);
+        if (typeof window !== 'undefined') {
+          setIsMergingCart(false);
+        }
       }
     })();
 
