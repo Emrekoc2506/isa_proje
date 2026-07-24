@@ -55,12 +55,30 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [submitting, setSubmitting] = useState(false);
   const [formGeneralError, setFormGeneralError] = useState('');
 
+  // Kategori Ağacını Düzleştirme Yardımcısı
+  const flattenCategories = (catList) => {
+    const result = [];
+    const traverse = (items) => {
+      if (!items || !Array.isArray(items)) return;
+      for (const item of items) {
+        result.push(item);
+        if (item.children && item.children.length > 0) {
+          traverse(item.children);
+        }
+      }
+    };
+    traverse(catList);
+    return result;
+  };
+
+  const allCategories = flattenCategories(categories);
+
   // Ana ve Alt Kategori Hesaplama
-  const mainCategories = categories.filter(c => !c.parentCategoryId && !c.parentId);
-  const displayMainCategories = mainCategories.length > 0 ? mainCategories : categories;
+  const mainCategories = allCategories.filter(c => !c.parentCategoryId && !c.parentId);
+  const displayMainCategories = mainCategories.length > 0 ? mainCategories : allCategories;
 
   const availableSubCategories = selectedMainCatId
-    ? categories.filter(c => {
+    ? allCategories.filter(c => {
         const parent = c.parentCategoryId || c.parentId;
         return parent && String(parent) === String(selectedMainCatId);
       })
@@ -149,7 +167,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     const targetCatId = p.categoryId || '';
     setCategoryId(targetCatId);
 
-    const matchedCat = categories.find(c => String(c.id) === String(targetCatId));
+    const allCats = flattenCategories(categories);
+    const matchedCat = allCats.find(c => String(c.id) === String(targetCatId));
     const parentIdOfCat = matchedCat?.parentCategoryId || matchedCat?.parentId;
 
     if (parentIdOfCat) {
