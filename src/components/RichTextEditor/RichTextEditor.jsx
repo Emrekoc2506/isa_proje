@@ -45,7 +45,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Ürün 
   return (
     <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
       <Editor
-        apiKey={TINYMCE_API_KEY}
+        tinymceScriptSrc="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"
         value={value}
         onEditorChange={(content) => onChange(content)}
         init={{
