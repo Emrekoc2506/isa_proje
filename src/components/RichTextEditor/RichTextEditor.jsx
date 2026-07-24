@@ -55,7 +55,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Ürün 
           content_css: 'dark',
           placeholder,
           plugins: [
-            'anchor', 'autolink', 'charmap', 'codesample', 'link', 'lists',
+            'anchor', 'autolink', 'charmap', 'codesample', 'code', 'link', 'lists',
             'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
             'image', 'quickbars', 'emoticons'
           ],
@@ -63,7 +63,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Ürün 
             'undo redo | styles | bold italic underline strikethrough | ' +
             'forecolor backcolor | alignleft aligncenter alignright alignjustify | ' +
             'bullist numlist outdent indent | link image media table | ' +
-            'emoticons charmap | removeformat | wordcount',
+            'code emoticons charmap | removeformat | wordcount',
           toolbar_mode: 'wrap',
 
           // Görsel yükleme
