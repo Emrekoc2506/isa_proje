@@ -23,6 +23,38 @@ import { parseBannerContent } from '../utils/bannerContent';
 const INITIAL_SLIDES = [];
 const ProductContext = createContext(null);
 
+function normalizeProducts(productsData) {
+  const rawList = Array.isArray(productsData)
+    ? productsData
+    : (productsData?.items || productsData?.data || []);
+
+  return rawList.map(p => {
+    const mainImg = (p.imageUrls && p.imageUrls.length > 0)
+      ? p.imageUrls[0]
+      : (p.imageUrl || p.ImageUrl || p.image || p.Image || '');
+      
+    const priceVal = p.price ?? p.Price ?? 0;
+    const oldPriceVal = p.oldPrice ?? p.OldPrice ?? null;
+
+    return {
+      ...p,
+      id: p.id || p.Id || p.databaseId,
+      name: p.name || p.Name || '',
+      price: typeof priceVal === 'number' ? `₺${priceVal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` : String(priceVal),
+      oldPrice: oldPriceVal ? (typeof oldPriceVal === 'number' ? `₺${oldPriceVal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` : String(oldPriceVal)) : null,
+      rawPrice: priceVal,
+      rawOldPrice: oldPriceVal,
+      image: mainImg,
+      imageUrl: mainImg,
+      imageUrls: p.imageUrls || (mainImg ? [mainImg] : []),
+      isNew: Boolean(p.isNew ?? p.IsNew),
+      isSale: Boolean(p.isSale ?? p.IsSale),
+      isFeatured: Boolean(p.isFeatured ?? p.IsFeatured),
+      isActive: p.isActive ?? p.IsActive ?? true,
+    };
+  });
+}
+
 export function ProductProvider({ children }) {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -39,12 +71,12 @@ export function ProductProvider({ children }) {
       // Kategori ve Banner (Afiş) verileri her zaman public'tir
       const [categoriesData, bannersData, productsData] = await Promise.all([
         getCategoryTree().catch(() => getCategories().catch(() => [])),
-        getBanners(),
-        getProducts({ pageSize: 100 }).catch(() => ({ items: [] }))
+        getBanners().catch(() => []),
+        getProducts({ pageSize: 100 }).catch(() => [])
       ]);
 
       setCategories(categoriesData || []);
-      setProducts(productsData?.items || []);
+      setProducts(normalizeProducts(productsData));
       
       // Slaytları/Bannerları map edelim (backend formatı -> frontend formatı)
       const mappedSlides = (bannersData || [])
@@ -201,7 +233,7 @@ export function ProductProvider({ children }) {
 
       // Yenile
       const productsData = await getProducts({ pageSize: 100 });
-      setProducts(productsData?.items || []);
+      setProducts(normalizeProducts(productsData));
     } catch (err) {
       console.error("Ürün eklenemedi:", err);
       throw err;
@@ -219,7 +251,7 @@ export function ProductProvider({ children }) {
       await deleteAdminProduct(targetId);
       
       const productsData = await getProducts({ pageSize: 100 });
-      setProducts(productsData?.items || []);
+      setProducts(normalizeProducts(productsData));
     } catch (err) {
       console.error("Ürün silinemedi:", err);
       throw err;
@@ -235,7 +267,7 @@ export function ProductProvider({ children }) {
       await updateAdminProductPrice(targetId, parseFloat(newPrice));
       
       const productsData = await getProducts({ pageSize: 100 });
-      setProducts(productsData?.items || []);
+      setProducts(normalizeProducts(productsData));
     } catch (err) {
       console.error("Ürün fiyatı güncellenemedi:", err);
       throw err;
