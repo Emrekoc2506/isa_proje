@@ -30,6 +30,20 @@ export default function VideoBannerItem({
   const [hasError, setHasError] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  const mediaType = slide?.mediaType || (slide?.videoUrl ? 'video' : 'image');
+  const isVideo = Boolean(slide) && (mediaType === 'video' || Boolean(slide?.videoUrl));
+
+  // Mobil öncelik sıralaması:
+  // mobileVideoUrl -> videoUrl -> mobilePosterImageUrl -> posterImageUrl
+  const videoSrc = isMobile && slide?.mobileVideoUrl ? slide.mobileVideoUrl : (slide?.videoUrl || '');
+  const posterSrc = isMobile
+    ? (slide?.mobilePosterImageUrl || slide?.mobileImageUrl || slide?.posterImageUrl || slide?.imageUrl || '')
+    : (slide?.posterImageUrl || slide?.imageUrl || slide?.mobilePosterImageUrl || slide?.mobileImageUrl || '');
+
+  const isExternalVideo = Boolean(
+    videoSrc && (videoSrc.includes('youtube') || videoSrc.includes('youtu.be') || videoSrc.includes('vimeo'))
+  );
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(typeof window !== 'undefined' && window.innerWidth <= 768);
@@ -39,25 +53,9 @@ export default function VideoBannerItem({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  if (!slide) return null;
-
-  const mediaType = slide.mediaType || (slide.videoUrl ? 'video' : 'image');
-  const isVideo = mediaType === 'video' || Boolean(slide.videoUrl);
-
-  // Mobil öncelik sıralaması:
-  // mobileVideoUrl -> videoUrl -> mobilePosterImageUrl -> posterImageUrl
-  const videoSrc = isMobile && slide.mobileVideoUrl ? slide.mobileVideoUrl : (slide.videoUrl || '');
-  const posterSrc = isMobile
-    ? (slide.mobilePosterImageUrl || slide.mobileImageUrl || slide.posterImageUrl || slide.imageUrl || '')
-    : (slide.posterImageUrl || slide.imageUrl || slide.mobilePosterImageUrl || slide.mobileImageUrl || '');
-
-  const isExternalVideo = Boolean(
-    videoSrc && (videoSrc.includes('youtube') || videoSrc.includes('youtu.be') || videoSrc.includes('vimeo'))
-  );
-
   // IntersectionObserver ile ekrandan çıkınca pause, ekrana girince play
   useEffect(() => {
-    if (!isVideo || isExternalVideo || hasError || !containerRef.current) return;
+    if (!slide || !isVideo || isExternalVideo || hasError || !containerRef.current) return;
 
     const element = containerRef.current;
     let observer;
@@ -83,7 +81,9 @@ export default function VideoBannerItem({
     return () => {
       if (observer) observer.disconnect();
     };
-  }, [isVideo, isExternalVideo, hasError, videoSrc]);
+  }, [slide, isVideo, isExternalVideo, hasError, videoSrc]);
+
+  if (!slide) return null;
 
   // Görsel banner veya video hatası durumunda poster render et
   if (!isVideo || hasError || !videoSrc) {
