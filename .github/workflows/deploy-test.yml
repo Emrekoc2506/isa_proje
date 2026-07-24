@@ -37,6 +37,7 @@ jobs:
         env:
           VITE_API_BASE_URL: http://api-test.ozeldersvip.xyz/api
           VITE_SIGNALR_BASE_URL: http://api-test.ozeldersvip.xyz/hubs
+          VITE_TINYMCE_API_KEY: b4xcb8cubeuhfg2tbgy7mim1z40ywe4so43g6jjt3v0it1af
 
       - name: Natro test klasörüne yükle
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
