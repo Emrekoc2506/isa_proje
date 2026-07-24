@@ -47,3 +47,5 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
           server-dir: ${{ vars.FTP_TEST_DIR }}
+          port: 21
+          timeout: 120000
