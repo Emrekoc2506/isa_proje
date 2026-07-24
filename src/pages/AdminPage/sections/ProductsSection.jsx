@@ -97,6 +97,73 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setFieldErrors(prev => ({ ...prev, categoryId: '' }));
   };
 
+  // Otomatik Fiyat & İndirim Yüzdesi Hesaplama Lojikleri
+  const handlePriceChange = (val) => {
+    setPrice(val);
+    setFieldErrors(prev => ({ ...prev, price: '' }));
+
+    const newVal = parseFloat(val);
+    const oldVal = parseFloat(oldPrice);
+    if (!isNaN(newVal) && !isNaN(oldVal) && oldVal > 0 && newVal > 0 && oldVal > newVal) {
+      const pct = Math.round(((oldVal - newVal) / oldVal) * 100);
+      if (pct > 0) {
+        setDiscount(`%${pct} İndirim`);
+      }
+    } else if (!isNaN(newVal) && !isNaN(oldVal) && newVal >= oldVal) {
+      setDiscount('');
+    }
+  };
+
+  const handleOldPriceChange = (val) => {
+    setOldPrice(val);
+    setFieldErrors(prev => ({ ...prev, oldPrice: '' }));
+
+    const oldVal = parseFloat(val);
+    const priceVal = parseFloat(price);
+
+    if (!isNaN(oldVal) && oldVal > 0) {
+      if (!isNaN(priceVal) && priceVal > 0 && oldVal > priceVal) {
+        const pct = Math.round(((oldVal - priceVal) / oldVal) * 100);
+        if (pct > 0) {
+          setDiscount(`%${pct} İndirim`);
+        }
+      } else if (discount) {
+        const match = discount.match(/(\d+(?:[.,]\d+)?)/);
+        if (match) {
+          const pct = parseFloat(match[1].replace(',', '.'));
+          if (pct > 0 && pct < 100) {
+            const computedPrice = (oldVal * (1 - pct / 100)).toFixed(2);
+            setPrice(String(parseFloat(computedPrice)));
+            setFieldErrors(prev => ({ ...prev, price: '' }));
+          }
+        }
+      }
+    }
+  };
+
+  const handleDiscountChange = (val) => {
+    setDiscount(val);
+
+    const match = val.match(/(\d+(?:[.,]\d+)?)/);
+    if (match) {
+      const pct = parseFloat(match[1].replace(',', '.'));
+      if (pct > 0 && pct < 100) {
+        const oldVal = parseFloat(oldPrice);
+        const priceVal = parseFloat(price);
+
+        if (!isNaN(oldVal) && oldVal > 0) {
+          const computedPrice = (oldVal * (1 - pct / 100)).toFixed(2);
+          setPrice(String(parseFloat(computedPrice)));
+          setFieldErrors(prev => ({ ...prev, price: '' }));
+        } else if (!isNaN(priceVal) && priceVal > 0) {
+          const computedOldPrice = (priceVal / (1 - pct / 100)).toFixed(2);
+          setOldPrice(String(parseFloat(computedOldPrice)));
+          setFieldErrors(prev => ({ ...prev, oldPrice: '' }));
+        }
+      }
+    }
+  };
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -681,17 +748,17 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                         <div className={styles.formGrid} style={{ gap: 12 }}>
                           <div className={styles.formField}>
                             <label className={styles.fieldLabel}>Fiyat (₺) *</label>
-                            <input type="number" step="0.01" required value={price} onChange={e => { setPrice(e.target.value); setFieldErrors(prev => ({ ...prev, price: '' })); }} className={styles.fieldInput} placeholder="0.00" />
+                            <input type="number" step="0.01" required value={price} onChange={e => handlePriceChange(e.target.value)} className={styles.fieldInput} placeholder="0.00" />
                             {fieldErrors.price && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.price}</span>}
                           </div>
                           <div className={styles.formField}>
                             <label className={styles.fieldLabel}>Eski Fiyat (₺)</label>
-                            <input type="number" step="0.01" value={oldPrice} onChange={e => { setOldPrice(e.target.value); setFieldErrors(prev => ({ ...prev, oldPrice: '' })); }} className={styles.fieldInput} placeholder="0.00" />
+                            <input type="number" step="0.01" value={oldPrice} onChange={e => handleOldPriceChange(e.target.value)} className={styles.fieldInput} placeholder="0.00" />
                             {fieldErrors.oldPrice && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.oldPrice}</span>}
                           </div>
                           <div className={styles.formField} style={{ gridColumn: 'span 2' }}>
                             <label className={styles.fieldLabel}>İndirim Notu (Örn: %20 İndirim)</label>
-                            <input type="text" value={discount} onChange={e => setDiscount(e.target.value)} className={styles.fieldInput} placeholder="Sadece İndirim seçeneğinde görünür" />
+                            <input type="text" value={discount} onChange={e => handleDiscountChange(e.target.value)} className={styles.fieldInput} placeholder="Sadece İndirim seçeneğinde görünür (Örn: %20 İndirim)" />
                           </div>
                         </div>
                       </div>
