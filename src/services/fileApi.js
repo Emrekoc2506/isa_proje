@@ -1,12 +1,11 @@
-import { request } from "./apiClient";
+import { apiBaseUrl, request } from "./apiClient";
+import { getGuestSessionId } from "../utils/guestSession";
 
-export function uploadFile(file, purpose = "Product", ownerId = null) {
-  const formData = new FormData();
-  formData.append("file", file);
-  
-  // Map friendly names to FileUploadPurpose enum values (or strings)
+export function uploadFile(file, purpose = "Product", ownerId = null, onProgress = null) {
   let purposeValue = "Product";
-  if (purpose === "banner" || purpose === "Banner" || purpose === 2) {
+  if (purpose === "bannerVideo" || purpose === "BannerVideo" || purpose === "bannervideo") {
+    purposeValue = "BannerVideo";
+  } else if (purpose === "banner" || purpose === "Banner" || purpose === 2) {
     purposeValue = "Banner";
   } else if (purpose === "product" || purpose === "Product" || purpose === 1) {
     purposeValue = "Product";
@@ -16,9 +15,59 @@ export function uploadFile(file, purpose = "Product", ownerId = null) {
     purposeValue = "Chat";
   }
 
+  const formData = new FormData();
+  formData.append("file", file);
   formData.append("purpose", purposeValue);
   if (ownerId) {
     formData.append("ownerId", ownerId);
+  }
+
+  if (onProgress && typeof XMLHttpRequest !== "undefined") {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${apiBaseUrl}/admin/files/upload`);
+
+      const token = typeof localStorage !== "undefined" ? localStorage.getItem("accessToken") : null;
+      if (token) {
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      }
+
+      const guestSessionId = getGuestSessionId();
+      if (guestSessionId) {
+        xhr.setRequestHeader("X-Guest-Session-Id", guestSessionId);
+        xhr.setRequestHeader("X-Guest-SessionId", guestSessionId);
+      }
+
+      if (xhr.upload) {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable && e.total > 0) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            onProgress(percent);
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            resolve(data);
+          } catch {
+            resolve({ url: xhr.responseText });
+          }
+        } else {
+          try {
+            const errData = JSON.parse(xhr.responseText);
+            reject(new Error(errData.message || `Yükleme başarısız (${xhr.status})`));
+          } catch {
+            reject(new Error(`Yükleme başarısız (${xhr.status})`));
+          }
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Ağ hatası oluştu."));
+      xhr.send(formData);
+    });
   }
 
   return request("/admin/files/upload", {
@@ -26,3 +75,4 @@ export function uploadFile(file, purpose = "Product", ownerId = null) {
     body: formData
   });
 }
+

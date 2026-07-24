@@ -1144,6 +1144,29 @@
   box-sizing: border-box;
 }
 
+.fieldInput {
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.fieldInput:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.12);
+}
+
+.fieldInput::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
 .pFormInput:focus {
   outline: none;
   border-color: var(--gold);

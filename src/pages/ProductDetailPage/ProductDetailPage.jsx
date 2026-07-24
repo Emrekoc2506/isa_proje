@@ -1,6 +1,7 @@
 import styles from './ProductDetailPage.module.css';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiShoppingCart, FiHeart, FiCheck, FiStar,
@@ -609,9 +610,24 @@ export default function ProductDetailPage() {
             {/* Açıklama */}
             {activeTab === 'description' && (
               <div className={styles.descWrap}>
-                {(productDetail.description || 'Bu mistik ürün hakkında açıklama bulunmamaktadır.').split('\n\n').map((para, i) => (
-                  <p key={i} className={styles.descPara}>{para}</p>
-                ))}
+                {productDetail.description && productDetail.description.trim().startsWith('<') ? (
+                  // HTML içeriği (TinyMCE çıktısı) — XSS korumalı render
+                  <div
+                    className={styles.richContent}
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(productDetail.description || '', {
+                        ADD_TAGS: ['iframe'],
+                        ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'src', 'width', 'height', 'title'],
+                        FORCE_BODY: true,
+                      })
+                    }}
+                  />
+                ) : (
+                  // Eski düz metin formatı (geriye dönük uyumluluk)
+                  (productDetail.description || 'Bu mistik ürün hakkında açıklama bulunmamaktadır.').split('\n\n').map((para, i) => (
+                    <p key={i} className={styles.descPara}>{para}</p>
+                  ))
+                )}
               </div>
             )}
 

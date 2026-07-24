@@ -18,6 +18,7 @@ import {
   deleteAdminBanner, 
   updateAdminBannerStatus 
 } from '../services/bannerApi';
+import { parseBannerContent } from '../utils/bannerContent';
 
 const INITIAL_SLIDES = [];
 const ProductContext = createContext(null);
@@ -47,18 +48,33 @@ export function ProductProvider({ children }) {
       
       // Slaytları/Bannerları map edelim (backend formatı -> frontend formatı)
       const mappedSlides = (bannersData || [])
-        .map(b => ({
-          id: b.id,
-          title: b.title ?? "",
-          subtitle: b.subtitle ?? "",
-          imageUrl: b.imageUrl ?? b.image ?? "",
-          mobileImageUrl: b.imageMobile ?? b.imageMobileUrl ?? "",
-          href: b.href ?? b.linkUrl ?? "",
-          cta: b.cta ?? "",
-          sortOrder: Number(b.sortOrder ?? 0),
-          isActive: b.isActive ?? true
-        }))
-        .filter(item => item.imageUrl)
+        .map(b => {
+          const parsedContent = parseBannerContent(b.contentJson);
+          const videoUrl = b.videoUrl || parsedContent.videoUrl || "";
+          const mediaType = b.mediaType || parsedContent.mediaType || (videoUrl ? "video" : "image");
+          return {
+            id: b.id,
+            title: b.title ?? "",
+            subtitle: b.subtitle ?? "",
+            imageUrl: b.imageUrl ?? b.image ?? parsedContent.posterImageUrl ?? "",
+            mobileImageUrl: b.imageMobile ?? b.imageMobileUrl ?? parsedContent.mobilePosterImageUrl ?? b.image ?? "",
+            href: b.href ?? b.linkUrl ?? "",
+            cta: b.cta ?? "",
+            sortOrder: Number(b.sortOrder ?? 0),
+            isActive: b.isActive ?? true,
+            mediaType,
+            mediaSource: parsedContent.mediaSource || "file",
+            videoUrl,
+            mobileVideoUrl: b.mobileVideoUrl || parsedContent.mobileVideoUrl || "",
+            posterImageUrl: b.posterImageUrl || b.image || parsedContent.posterImageUrl || "",
+            mobilePosterImageUrl: b.mobilePosterImageUrl || b.imageMobile || parsedContent.mobilePosterImageUrl || "",
+            autoplay: Boolean(parsedContent.autoplay),
+            loop: Boolean(parsedContent.loop),
+            muted: Boolean(parsedContent.muted || parsedContent.autoplay),
+            contentJson: b.contentJson
+          };
+        })
+        .filter(item => item.imageUrl || item.videoUrl)
         .sort((a, b) => a.sortOrder - b.sortOrder);
 
       setSlides(mappedSlides);

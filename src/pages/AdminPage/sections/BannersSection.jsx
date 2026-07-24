@@ -9,7 +9,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import * as bannerApi from '../../../services/bannerApi';
 import { uploadFile } from '../../../services/fileApi';
 import { parseBannerContent } from '../../../utils/bannerContent';
-import styles from '../AdminPage.module.css';
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 const STEPS = [
@@ -21,8 +20,13 @@ const STEPS = [
 ];
 
 const EMPTY_FORM = {
+  mediaType: 'image',     // 'image' | 'video'
+  mediaSource: 'file',    // 'file' | 'external'
   title: '', subtitle: '', image: '', imageMobile: '', cta: '',
-  href: '', sortOrder: '0', price: '', videoUrl: '',
+  href: '', sortOrder: '0', price: '',
+  videoUrl: '', mobileVideoUrl: '',
+  posterImageUrl: '', mobilePosterImageUrl: '',
+  autoplay: false, loop: false, muted: false,
   description: '', quote: '',
   sections: [],           // [{title, body}]
   features: [],           // [{title, desc}]
@@ -36,7 +40,6 @@ const card = {
   borderRadius: 12,
   padding: 20,
 };
-const sectionHead = (icon, title, sub) => ({ icon, title, sub });
 
 const inputStyle = {
   width: '100%',
@@ -84,20 +87,22 @@ function SectionBlock({ icon: Icon, title, sub, children }) {
   );
 }
 
-function FieldInput({ label, value, onChange, type = 'text', placeholder = '', prefix, style = {}, rows }) {
+function FieldInput({ label, value, onChange, type = 'text', placeholder = '', prefix, style = {}, rows, id }) {
   const [focused, setFocused] = useState(false);
   const commonStyle = {
     ...inputStyle,
     borderColor: focused ? 'rgba(201,162,39,0.4)' : 'rgba(255,255,255,0.08)',
     ...style,
   };
+  const inputId = id || (label ? `input-${label.toLowerCase().replace(/[^a-z0-9]/g, '')}` : undefined);
   return (
     <div style={{ marginBottom: 14 }}>
-      {label && <label style={labelStyle}>{label}</label>}
+      {label && <label htmlFor={inputId} style={labelStyle}>{label}</label>}
       {prefix ? (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ ...commonStyle, width: 'auto', borderRight: 'none', borderRadius: '8px 0 0 8px', color: 'var(--gold-light)', padding: '10px 10px', minWidth: 32 }}>{prefix}</span>
           <input
+            id={inputId}
             type={type} value={value} onChange={onChange} placeholder={placeholder}
             style={{ ...commonStyle, borderRadius: '0 8px 8px 0', flex: 1 }}
             onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
@@ -105,12 +110,14 @@ function FieldInput({ label, value, onChange, type = 'text', placeholder = '', p
         </div>
       ) : rows ? (
         <textarea
+          id={inputId}
           value={value} onChange={onChange} placeholder={placeholder} rows={rows}
           style={{ ...commonStyle, resize: 'vertical', lineHeight: 1.5 }}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
         />
       ) : (
         <input
+          id={inputId}
           type={type} value={value} onChange={onChange} placeholder={placeholder}
           style={commonStyle}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
@@ -126,18 +133,18 @@ function UploadDropzone({ label, value, onFile, onClear, uploading, id }) {
       {label && <label style={labelStyle}>{label}</label>}
       {!value ? (
         <div
-          onClick={() => document.getElementById(id)?.click()}
+          onClick={() => !uploading && document.getElementById(id)?.click()}
           style={{
             border: '2px dashed rgba(201,162,39,0.25)', borderRadius: 10,
             padding: '24px 16px', textAlign: 'center',
-            background: 'rgba(0,0,0,0.2)', cursor: 'pointer',
+            background: 'rgba(0,0,0,0.2)', cursor: uploading ? 'not-allowed' : 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
             position: 'relative', transition: 'border-color 0.2s',
           }}
-          onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(201,162,39,0.5)'}
-          onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(201,162,39,0.25)'}
+          onMouseEnter={e => !uploading && (e.currentTarget.style.borderColor = 'rgba(201,162,39,0.5)')}
+          onMouseLeave={e => !uploading && (e.currentTarget.style.borderColor = 'rgba(201,162,39,0.25)')}
         >
-          <input id={id} type="file" accept="image/*" onChange={onFile} style={{ display: 'none' }} />
+          <input id={id} type="file" accept="image/*" onChange={onFile} style={{ display: 'none' }} disabled={uploading} />
           <FiUploadCloud size={24} style={{ color: 'var(--gold-light)' }} />
           <span style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: '600' }}>
             Tıkla ve görsel yükle
@@ -154,7 +161,86 @@ function UploadDropzone({ label, value, onFile, onClear, uploading, id }) {
           <img src={value} alt="" style={{ height: 56, borderRadius: 6, maxWidth: 180, objectFit: 'cover' }} />
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{ color: '#2ecc71', fontSize: 11 }}>✓ Yüklendi</span>
-            <button type="button" onClick={onClear} style={{ background: 'rgba(224,85,148,0.15)', border: '1px solid rgba(224,85,148,0.3)', color: '#e05594', padding: '4px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}>Kaldır</button>
+            <button type="button" onClick={onClear} disabled={uploading} style={{ background: 'rgba(224,85,148,0.15)', border: '1px solid rgba(224,85,148,0.3)', color: '#e05594', padding: '4px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}>Kaldır</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VideoUploadDropzone({ label, value, onFile, onClear, uploading, progress, id, accept = ".mp4,.webm,video/mp4,video/webm" }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      {label && <label style={labelStyle}>{label}</label>}
+      {!value ? (
+        <div
+          onClick={() => !uploading && document.getElementById(id)?.click()}
+          style={{
+            border: '2px dashed rgba(201,162,39,0.3)', borderRadius: 10,
+            padding: '24px 16px', textAlign: 'center',
+            background: 'rgba(0,0,0,0.2)', cursor: uploading ? 'not-allowed' : 'pointer',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+            position: 'relative', transition: 'border-color 0.2s',
+          }}
+          onMouseEnter={e => !uploading && (e.currentTarget.style.borderColor = 'rgba(201,162,39,0.6)')}
+          onMouseLeave={e => !uploading && (e.currentTarget.style.borderColor = 'rgba(201,162,39,0.3)')}
+        >
+          <input
+            id={id}
+            type="file"
+            accept={accept}
+            onChange={onFile}
+            style={{ display: 'none' }}
+            disabled={uploading}
+          />
+          <FiVideo size={28} style={{ color: 'var(--gold-light)' }} />
+          <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: '600' }}>
+            Tıkla ve video yükle
+          </span>
+          <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>MP4, WebM — Maks. 100 MB</span>
+          {uploading && (
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(18,9,31,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 10, padding: 16 }}>
+              <span style={{ color: 'var(--gold-light)', fontSize: 13, fontWeight: 'bold', marginBottom: 8 }}>
+                Yükleniyor... {progress != null ? `%${progress}` : ''}
+              </span>
+              <div style={{ width: '80%', height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ width: `${progress || 0}%`, height: '100%', background: 'linear-gradient(90deg, #c9a227, #f39c12)', transition: 'width 0.2s' }} />
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ border: '1px solid rgba(201,162,39,0.3)', borderRadius: 10, padding: '12px 14px', background: 'rgba(0,0,0,0.35)' }}>
+          <video src={value} controls style={{ width: '100%', maxHeight: 180, borderRadius: 8, background: '#000', display: 'block', marginBottom: 10 }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#2ecc71', fontSize: 12, fontWeight: '600' }}>✓ Video Yüklendi</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => document.getElementById(id)?.click()}
+                disabled={uploading}
+                style={{ background: 'rgba(201,162,39,0.15)', border: '1px solid rgba(201,162,39,0.3)', color: 'var(--gold-light)', padding: '5px 12px', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}
+              >
+                Değiştir
+              </button>
+              <input
+                id={id}
+                type="file"
+                accept={accept}
+                onChange={onFile}
+                style={{ display: 'none' }}
+                disabled={uploading}
+              />
+              <button
+                type="button"
+                onClick={onClear}
+                disabled={uploading}
+                style={{ background: 'rgba(224,85,148,0.15)', border: '1px solid rgba(224,85,148,0.3)', color: '#e05594', padding: '5px 12px', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}
+              >
+                Kaldır
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -176,6 +262,9 @@ export default function BannersSection() {
   const [modalStep, setModalStep] = useState(1);
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [uploadingImg, setUploadingImg] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
   const [saving, setSaving] = useState(false);
 
   // Preview banner
@@ -203,6 +292,9 @@ export default function BannersSection() {
   const openModal = () => {
     setForm({ ...EMPTY_FORM });
     setModalStep(1);
+    setUploadError(null);
+    setUploadProgress(null);
+    setUploadingVideo(false);
     setShowModal(true);
   };
 
@@ -219,9 +311,67 @@ export default function BannersSection() {
     try {
       setUploadingImg(type);
       const resp = await uploadFile(file, 'banner');
-      if (resp?.url) setVal(type === 'desktop' ? 'image' : 'imageMobile', resp.url);
+      if (resp?.url) {
+        if (type === 'desktop') setVal('image', resp.url);
+        else if (type === 'mobile') setVal('imageMobile', resp.url);
+        else if (type === 'poster') { setVal('posterImageUrl', resp.url); setVal('image', resp.url); }
+        else if (type === 'mobilePoster') { setVal('mobilePosterImageUrl', resp.url); setVal('imageMobile', resp.url); }
+      }
     } catch (err) { alert('Görsel yüklenemedi: ' + err.message); }
     finally { setUploadingImg(false); }
+  };
+
+  // ── Video upload ─────────────────────────────────────────────────────────────
+  const handleVideoUpload = async (e, targetField = 'videoUrl') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const fileName = file.name.toLowerCase();
+    const isMp4 = fileName.endsWith('.mp4') || file.type === 'video/mp4';
+    const isWebm = fileName.endsWith('.webm') || file.type === 'video/webm';
+
+    if (!isMp4 && !isWebm) {
+      const errorMsg = "Yalnızca MP4 veya WebM video yükleyebilirsiniz.";
+      setUploadError(errorMsg);
+      alert(errorMsg);
+      e.target.value = '';
+      return;
+    }
+
+    const MAX_SIZE = 100 * 1024 * 1024; // 100 MB
+    if (file.size > MAX_SIZE) {
+      const errorMsg = "Video boyutu en fazla 100 MB olabilir.";
+      setUploadError(errorMsg);
+      alert(errorMsg);
+      e.target.value = '';
+      return;
+    }
+
+    setUploadError(null);
+    setUploadingVideo(targetField);
+    setUploadProgress(0);
+
+    try {
+      const resp = await uploadFile(file, 'BannerVideo', null, (percent) => {
+        setUploadProgress(percent);
+      });
+
+      if (resp?.url) {
+        setVal(targetField, resp.url);
+        setUploadError(null);
+      } else {
+        throw new Error("Video adresi alınamadı.");
+      }
+    } catch (err) {
+      const msg = err.message || "Video yükleme başarısız.";
+      setUploadError(msg);
+      alert("Video yüklenemedi: " + msg);
+      setVal(targetField, '');
+    } finally {
+      setUploadingVideo(false);
+      setUploadProgress(null);
+      if (e.target) e.target.value = '';
+    }
   };
 
   // ── Feature list ──────────────────────────────────────────────────────────────
@@ -254,11 +404,38 @@ export default function BannersSection() {
   // ── Submit ────────────────────────────────────────────────────────────────────
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!form.image) { alert('Lütfen masaüstü görseli yükleyin.'); return; }
+    if (uploadingVideo || uploadingImg) {
+      alert('Lütfen dosya yüklemesinin tamamlanmasını bekleyin.');
+      return;
+    }
+    if (uploadError) {
+      alert('Video yükleme başarısız olduğu için banner kaydedilemez.');
+      return;
+    }
+    if (form.mediaType === 'video' && !form.videoUrl) {
+      alert('Lütfen video dosyası yükleyin veya video URL girin.');
+      return;
+    }
+    if (form.mediaType === 'image' && !form.image) {
+      alert('Lütfen masaüstü görseli yükleyin.');
+      return;
+    }
 
     setSaving(true);
     try {
+      const posterImg = form.posterImageUrl || form.image || form.mobilePosterImageUrl || form.imageMobile || "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1200&q=80";
+      const mobPosterImg = form.mobilePosterImageUrl || form.imageMobile || posterImg;
+
       const content = {
+        mediaType: form.mediaType,
+        mediaSource: form.mediaSource,
+        videoUrl: form.videoUrl ? form.videoUrl.trim() : "",
+        mobileVideoUrl: form.mobileVideoUrl ? form.mobileVideoUrl.trim() : "",
+        posterImageUrl: posterImg,
+        mobilePosterImageUrl: mobPosterImg,
+        autoplay: Boolean(form.autoplay),
+        loop: Boolean(form.loop),
+        muted: Boolean(form.muted || form.autoplay),
         quote: form.quote ? form.quote.trim() : "",
         description: form.description ? form.description.trim() : "",
         features: form.features.map(item => ({
@@ -278,8 +455,8 @@ export default function BannersSection() {
       const created = await bannerApi.createAdminBanner({
         title: form.title.trim(),
         subtitle: form.subtitle ? form.subtitle.trim() : null,
-        image: form.image,
-        imageMobile: form.imageMobile || form.image,
+        image: posterImg,
+        imageMobile: mobPosterImg,
         cta: form.cta ? form.cta.trim() : 'Keşfet',
         href: form.href ? form.href.trim() : '/urunler',
         sortOrder: Number(form.sortOrder) || 0,
@@ -293,7 +470,14 @@ export default function BannersSection() {
       const id = created?.id || `local_${Date.now()}`;
       saveRich(id, {
         price: form.price,
+        mediaType: form.mediaType,
         videoUrl: form.videoUrl,
+        mobileVideoUrl: form.mobileVideoUrl,
+        posterImageUrl: posterImg,
+        mobilePosterImageUrl: mobPosterImg,
+        autoplay: form.autoplay,
+        loop: form.loop,
+        muted: form.muted,
         description: form.description,
         quote: form.quote,
         sections: form.sections,
@@ -313,7 +497,20 @@ export default function BannersSection() {
   // ── Step validation ───────────────────────────────────────────────────────────
   const validateStep = (step) => {
     if (step === 1 && !form.title.trim()) { alert('Lütfen ilan başlığını yazın.'); return false; }
-    if (step === 2 && !form.image) { alert('Lütfen masaüstü görseli yükleyin.'); return false; }
+    if (step === 2) {
+      if (uploadingVideo || uploadingImg) {
+        alert('Lütfen dosya yüklemesinin tamamlanmasını bekleyin.');
+        return false;
+      }
+      if (form.mediaType === 'video' && !form.videoUrl) {
+        alert('Lütfen video dosyası yükleyin veya video URL girin.');
+        return false;
+      }
+      if (form.mediaType === 'image' && !form.image) {
+        alert('Lütfen masaüstü görseli yükleyin.');
+        return false;
+      }
+    }
     return true;
   };
 
@@ -496,7 +693,7 @@ export default function BannersSection() {
                     {modalStep === 1 && (
                       <motion.div key="s1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
                         <SectionBlock icon={FiTag} title="Başlık & Tanıtım" sub="İlanın ana başlığı ve kısa açıklaması">
-                          <FieldInput label="Başlık *" value={form.title} onChange={set('title')} placeholder="Örn: Şahmeran Prime Bakır Bilezik" />
+                          <FieldInput id="bannerTitle" label="Başlık *" value={form.title} onChange={set('title')} placeholder="Örn: Şahmeran Prime Bakır Bilezik" />
                           <FieldInput label="Alt Başlık / Slogan" value={form.subtitle} onChange={set('subtitle')} placeholder="Örn: Şahmeran'ın kadim sırrı, bileğinizde hayat buluyor..." rows={2} />
                         </SectionBlock>
 
@@ -519,39 +716,183 @@ export default function BannersSection() {
                     {/* ── STEP 2: GÖRSELLER & VİDEO ── */}
                     {modalStep === 2 && (
                       <motion.div key="s2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
-                        <SectionBlock icon={FiImage} title="Afiş Görselleri" sub="Masaüstü ve mobil ekranlar için görsel">
-                          <UploadDropzone
-                            label="Masaüstü Görseli (Geniş) *"
-                            value={form.image}
-                            onFile={(e) => handleImageUpload(e, 'desktop')}
-                            onClear={() => setVal('image', '')}
-                            uploading={uploadingImg === 'desktop'}
-                            id="desktopImg"
-                          />
-                          <UploadDropzone
-                            label="Mobil Görseli (İsteğe Bağlı)"
-                            value={form.imageMobile}
-                            onFile={(e) => handleImageUpload(e, 'mobile')}
-                            onClear={() => setVal('imageMobile', '')}
-                            uploading={uploadingImg === 'mobile'}
-                            id="mobileImg"
-                          />
+                        
+                        {/* Medya Türü Seçimi */}
+                        <SectionBlock icon={FiSliders} title="Medya Türü" sub="Bannerda gösterilecek medya tipini seçin">
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                            <button
+                              type="button"
+                              aria-label="Görsel"
+                              onClick={() => setVal('mediaType', 'image')}
+                              style={{
+                                padding: '12px',
+                                borderRadius: 8,
+                                border: form.mediaType === 'image' ? '2px solid var(--gold-light)' : '1px solid rgba(255,255,255,0.1)',
+                                background: form.mediaType === 'image' ? 'rgba(201,162,39,0.15)' : 'rgba(0,0,0,0.2)',
+                                color: form.mediaType === 'image' ? '#fff' : 'var(--text-muted)',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                              }}
+                            >
+                              <FiImage size={18} /> Görsel
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Video"
+                              onClick={() => setVal('mediaType', 'video')}
+                              style={{
+                                padding: '12px',
+                                borderRadius: 8,
+                                border: form.mediaType === 'video' ? '2px solid var(--gold-light)' : '1px solid rgba(255,255,255,0.1)',
+                                background: form.mediaType === 'video' ? 'rgba(201,162,39,0.15)' : 'rgba(0,0,0,0.2)',
+                                color: form.mediaType === 'video' ? '#fff' : 'var(--text-muted)',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                              }}
+                            >
+                              <FiVideo size={18} /> Video
+                            </button>
+                          </div>
                         </SectionBlock>
 
-                        <SectionBlock icon={FiVideo} title="Ürün Videosu" sub="YouTube, Vimeo veya direkt video URL'si">
-                          <FieldInput
-                            label="Video URL (İsteğe Bağlı)"
-                            value={form.videoUrl}
-                            onChange={set('videoUrl')}
-                            placeholder="https://youtube.com/embed/... veya .mp4 linki"
-                          />
-                          {form.videoUrl && (
-                            <div style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <FiVideo size={14} style={{ color: '#f87171' }} />
-                              <span style={{ color: '#f87171', fontSize: 12 }}>Video eklendi</span>
-                            </div>
-                          )}
-                        </SectionBlock>
+                        {form.mediaType === 'image' ? (
+                          <SectionBlock icon={FiImage} title="Afiş Görselleri" sub="Masaüstü ve mobil ekranlar için görsel">
+                            <UploadDropzone
+                              label="Masaüstü Görseli (Geniş) *"
+                              value={form.image}
+                              onFile={(e) => handleImageUpload(e, 'desktop')}
+                              onClear={() => setVal('image', '')}
+                              uploading={uploadingImg === 'desktop'}
+                              id="desktopImg"
+                            />
+                            <UploadDropzone
+                              label="Mobil Görseli (İsteğe Bağlı)"
+                              value={form.imageMobile}
+                              onFile={(e) => handleImageUpload(e, 'mobile')}
+                              onClear={() => setVal('imageMobile', '')}
+                              uploading={uploadingImg === 'mobile'}
+                              id="mobileImg"
+                            />
+                          </SectionBlock>
+                        ) : (
+                          <>
+                            <SectionBlock icon={FiVideo} title="Video Seçimi & Yükleme" sub="Banner videosunu yükleyin veya harici URL verin">
+                              <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 13, cursor: 'pointer' }}>
+                                  <input
+                                    type="radio"
+                                    name="mediaSource"
+                                    checked={form.mediaSource === 'file'}
+                                    onChange={() => setVal('mediaSource', 'file')}
+                                  />
+                                  Dosya Yükle (.mp4, .webm)
+                                </label>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 13, cursor: 'pointer' }}>
+                                  <input
+                                    type="radio"
+                                    name="mediaSource"
+                                    checked={form.mediaSource === 'external'}
+                                    onChange={() => setVal('mediaSource', 'external')}
+                                  />
+                                  Harici Video URL
+                                </label>
+                              </div>
+
+                              {form.mediaSource === 'file' ? (
+                                <>
+                                  <VideoUploadDropzone
+                                    label="Video Dosyası (MP4 / WebM — Max 100 MB) *"
+                                    value={form.videoUrl}
+                                    onFile={(e) => handleVideoUpload(e, 'videoUrl')}
+                                    onClear={() => setVal('videoUrl', '')}
+                                    uploading={uploadingVideo === 'videoUrl'}
+                                    progress={uploadProgress}
+                                    id="videoFile"
+                                    accept=".mp4,.webm,video/mp4,video/webm"
+                                  />
+                                  <VideoUploadDropzone
+                                    label="Mobil Video Dosyası (İsteğe Bağlı)"
+                                    value={form.mobileVideoUrl}
+                                    onFile={(e) => handleVideoUpload(e, 'mobileVideoUrl')}
+                                    onClear={() => setVal('mobileVideoUrl', '')}
+                                    uploading={uploadingVideo === 'mobileVideoUrl'}
+                                    progress={uploadProgress}
+                                    id="mobileVideoFile"
+                                    accept=".mp4,.webm,video/mp4,video/webm"
+                                  />
+                                </>
+                              ) : (
+                                <FieldInput
+                                  label="Harici Video URL *"
+                                  value={form.videoUrl}
+                                  onChange={set('videoUrl')}
+                                  placeholder="https://youtube.com/embed/... veya direct .mp4 linki"
+                                />
+                              )}
+                            </SectionBlock>
+
+                            <SectionBlock icon={FiImage} title="Kapak Görselleri (Poster)" sub="Video yüklenirken veya desteklenmediğinde gösterilecek poster">
+                              <UploadDropzone
+                                label="Kapak Görseli (Poster) *"
+                                value={form.posterImageUrl || form.image}
+                                onFile={(e) => handleImageUpload(e, 'poster')}
+                                onClear={() => { setVal('posterImageUrl', ''); setVal('image', ''); }}
+                                uploading={uploadingImg === 'poster'}
+                                id="posterImg"
+                              />
+                              <UploadDropzone
+                                label="Mobil Kapak Görseli (İsteğe Bağlı)"
+                                value={form.mobilePosterImageUrl || form.imageMobile}
+                                onFile={(e) => handleImageUpload(e, 'mobilePoster')}
+                                onClear={() => { setVal('mobilePosterImageUrl', ''); setVal('imageMobile', ''); }}
+                                uploading={uploadingImg === 'mobilePoster'}
+                                id="mobilePosterImg"
+                              />
+                            </SectionBlock>
+
+                            <SectionBlock icon={FiSliders} title="Oynatma Ayarları" sub="Video autoplay, sessiz ve döngü tercihleri">
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff', fontSize: 13, cursor: 'pointer', background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={form.autoplay}
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      setForm(f => ({
+                                        ...f,
+                                        autoplay: isChecked,
+                                        muted: isChecked ? true : f.muted
+                                      }));
+                                    }}
+                                  />
+                                  Otomatik Oynat
+                                </label>
+
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff', fontSize: 13, cursor: 'pointer', background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={form.loop}
+                                    onChange={(e) => setVal('loop', e.target.checked)}
+                                  />
+                                  Döngü (Loop)
+                                </label>
+
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff', fontSize: 13, cursor: 'pointer', background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={form.muted || form.autoplay}
+                                    disabled={form.autoplay}
+                                    onChange={(e) => setVal('muted', e.target.checked)}
+                                  />
+                                  Sessiz (Muted)
+                                </label>
+                              </div>
+                            </SectionBlock>
+                          </>
+                        )}
+
                       </motion.div>
                     )}
 
