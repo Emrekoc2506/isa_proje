@@ -934,7 +934,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                           </div>
                           <div className={styles.formField}>
                             <label className={styles.fieldLabel}>Detaylı Açıklama *</label>
-                            <textarea required value={description} onChange={e => { setDescription(e.target.value); setFieldErrors(prev => ({ ...prev, description: '' })); }} className={styles.fieldInput} rows={3} style={{ resize: 'vertical' }} placeholder="Ürün detay sayfasındaki tam açıklama" />
+                            <textarea required value={description} onChange={e => { setDescription(e.target.value); setFieldErrors(prev => ({ ...prev, description: '' })); }} className={styles.fieldInput} rows={3} style={{ resize: 'vertical', background: 'rgba(0,0,0,0.3)', color: '#fff' }} placeholder="Ürün detay sayfasındaki tam açıklama" />
                             {fieldErrors.description && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.description}</span>}
                           </div>
                         </div>
