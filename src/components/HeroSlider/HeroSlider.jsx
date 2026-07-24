@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useProducts } from '../../context/ProductContext';
+import VideoBannerItem from './VideoBannerItem';
 
 const AUTOPLAY_INTERVAL = 5000;
 
@@ -76,16 +77,13 @@ export default function HeroSlider() {
             animate="center"
             exit="exit"
           >
-            {/* Arka Plan Görseli */}
-            <picture>
-              <source media="(max-width: 768px)" srcSet={slide.mobileImageUrl || slide.imageMobile || slide.imageUrl || slide.image} />
-              <img
-                src={slide.imageUrl || slide.image}
-                alt={slide.title}
-                className={styles.slideImg}
-                loading={current === 0 ? 'eager' : 'lazy'}
-              />
-            </picture>
+            {/* Medya Render (Video veya Görsel) */}
+            <VideoBannerItem
+              slide={slide}
+              className={styles.slideImg}
+              isFirst={current === 0}
+              onVideoEnd={next}
+            />
 
             {/* Overlay gradient */}
             <div className={styles.slideOverlay} />

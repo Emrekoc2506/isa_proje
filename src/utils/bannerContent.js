@@ -3,7 +3,16 @@ export const DEFAULT_CONTENT = {
   description: "",
   features: [],
   specs: [],
-  sections: []
+  sections: [],
+  mediaType: "image",
+  mediaSource: "file",
+  videoUrl: "",
+  mobileVideoUrl: "",
+  posterImageUrl: "",
+  mobilePosterImageUrl: "",
+  autoplay: false,
+  loop: false,
+  muted: false
 };
 
 export function parseBannerContent(value) {
@@ -34,9 +43,19 @@ export function parseBannerContent(value) {
             title: sec.title ? String(sec.title).trim() : "",
             body: sec.body ? String(sec.body).trim() : ""
           }))
-        : []
+        : [],
+      mediaType: parsed.mediaType || (parsed.videoUrl ? "video" : "image"),
+      mediaSource: parsed.mediaSource || "file",
+      videoUrl: parsed.videoUrl || "",
+      mobileVideoUrl: parsed.mobileVideoUrl || "",
+      posterImageUrl: parsed.posterImageUrl || parsed.image || "",
+      mobilePosterImageUrl: parsed.mobilePosterImageUrl || parsed.imageMobile || "",
+      autoplay: Boolean(parsed.autoplay ?? parsed.autoPlay),
+      loop: Boolean(parsed.loop),
+      muted: Boolean(parsed.muted || (parsed.autoplay ?? parsed.autoPlay))
     };
   } catch {
     return DEFAULT_CONTENT;
   }
 }
+
