@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import * as productApi from '../../../services/productApi';
 import * as categoryApi from '../../../services/categoryApi';
 import { uploadFile } from '../../../services/fileApi';
+import RichTextEditor from '../../../components/RichTextEditor/RichTextEditor';
 import styles from '../AdminPage.module.css';
 
 const STEPS = [
@@ -934,7 +935,11 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                           </div>
                           <div className={styles.formField}>
                             <label className={styles.fieldLabel}>Detaylı Açıklama *</label>
-                            <textarea required value={description} onChange={e => { setDescription(e.target.value); setFieldErrors(prev => ({ ...prev, description: '' })); }} className={styles.fieldInput} rows={3} style={{ resize: 'vertical', background: 'rgba(0,0,0,0.3)', color: '#fff' }} placeholder="Ürün detay sayfasındaki tam açıklama" />
+                            <RichTextEditor
+                              value={description}
+                              onChange={(html) => { setDescription(html); setFieldErrors(prev => ({ ...prev, description: '' })); }}
+                              placeholder="Ürün detay sayfasındaki tam açıklama — fotoğraf, video ve zengin metin ekleyebilirsiniz"
+                            />
                             {fieldErrors.description && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.description}</span>}
                           </div>
                         </div>
