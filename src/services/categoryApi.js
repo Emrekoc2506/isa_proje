@@ -30,15 +30,16 @@ export function createAdminCategory(payload) {
 }
 
 export function updateAdminCategory(id, payload) {
-  return request(`/admin/categories/${id}`, {
-    method: "PUT",
+  return request(`/admin/categories/${id}/update`, {
+    method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
 export function deleteAdminCategory(id) {
-  return request(`/admin/categories/${id}`, {
-    method: "DELETE"
+  return request(`/admin/categories/${id}/hard-delete`, {
+    method: "POST",
+    body: JSON.stringify({ confirm: true })
   });
 }
 

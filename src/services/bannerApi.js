@@ -18,8 +18,8 @@ export function createAdminBanner(payload) {
 }
 
 export function updateAdminBanner(id, payload) {
-  return request(`/admin/banners/${id}`, {
-    method: "PUT",
+  return request(`/admin/banners/${id}/update`, {
+    method: "POST",
     body: JSON.stringify(payload)
   });
 }
@@ -32,7 +32,8 @@ export function updateAdminBannerStatus(id, isActive) {
 }
 
 export function deleteAdminBanner(id) {
-  return request(`/admin/banners/${id}`, {
-    method: "DELETE"
+  return request(`/admin/banners/${id}/hard-delete`, {
+    method: "POST",
+    body: JSON.stringify({ confirm: true })
   });
 }

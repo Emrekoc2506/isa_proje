@@ -57,15 +57,16 @@ export function createAdminProduct(payload) {
 }
 
 export function updateAdminProduct(id, payload) {
-  return request(`/admin/products/${id}`, {
-    method: "PUT",
+  return request(`/admin/products/${id}/update`, {
+    method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
 export function deleteAdminProduct(id) {
-  return request(`/admin/products/${id}`, {
-    method: "DELETE"
+  return request(`/admin/products/${id}/hard-delete`, {
+    method: "POST",
+    body: JSON.stringify({ confirm: true })
   });
 }
 

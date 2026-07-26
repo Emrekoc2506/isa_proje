@@ -8,6 +8,7 @@ import * as productApi from '../../../services/productApi';
 import * as categoryApi from '../../../services/categoryApi';
 import { uploadFile } from '../../../services/fileApi';
 import RichTextEditor from '../../../components/RichTextEditor/RichTextEditor';
+import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
 import styles from '../AdminPage.module.css';
 
 const STEPS = [
@@ -23,6 +24,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [deletingId, setDeletingId] = useState(null);
 
   // Edit / Create Modal States
   const [showModal, setShowModal] = useState(false);
@@ -372,13 +374,24 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Bu ürünü silmek istediğinize emin misiniz?')) {
-      try {
-        await productApi.deleteAdminProduct(id);
+    if (!window.confirm("Bu ürün kalıcı olarak silinecektir. Bu işlem geri alınamaz. Devam etmek istediğinize emin misiniz?")) {
+      return;
+    }
+    if (deletingId) return;
+
+    setDeletingId(id);
+    try {
+      await productApi.deleteAdminProduct(id);
+      if (products.length === 1 && page > 1) {
+        setPage(prev => prev - 1);
+      } else {
         fetchProducts();
-      } catch (err) {
-        alert(err.message || 'Ürün silinemedi.');
       }
+      alert("Ürün başarıyla silindi.");
+    } catch (err) {
+      alert(getHardDeleteErrorMessage(err, "Ürün"));
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -487,8 +500,13 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                         <button onClick={() => onSelectProductForVariants(p)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: 'var(--gold-light)', display: 'flex', alignItems: 'center', gap: 4 }}>
                           <FiGrid /> Varyantlar
                         </button>
-                        <button onClick={() => handleDelete(p.id)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: '#e05594', display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <FiTrash2 /> Sil
+                        <button
+                          onClick={() => handleDelete(p.id)}
+                          disabled={deletingId === p.id}
+                          className={styles.seeAllBtn}
+                          style={{ padding: '4px 8px', fontSize: 11, color: '#e05594', display: 'flex', alignItems: 'center', gap: 4, opacity: deletingId === p.id ? 0.5 : 1 }}
+                        >
+                          <FiTrash2 /> {deletingId === p.id ? 'Siliniyor...' : 'Sil'}
                         </button>
                       </div>
                     </td>
