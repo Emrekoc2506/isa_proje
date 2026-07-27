@@ -81,6 +81,7 @@
 
 .list {
   display: flex;
+  align-items: stretch;
   gap: var(--space-md);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -97,6 +98,9 @@
 
 .cardWrapper {
   flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
   scroll-snap-align: start;
 }
 
