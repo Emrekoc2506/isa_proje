@@ -86,11 +86,7 @@ export function ProductProvider({ children }) {
       setCategories(categoriesData || []);
 
       const normalized = normalizeProducts(productsData);
-      if (normalized && normalized.length > 0) {
-        setProducts(normalized);
-      } else {
-        setProducts(normalizeProducts(MOCK_PRODUCTS));
-      }
+      setProducts(normalized || []);
       
       // Slaytları/Bannerları map edelim (backend formatı -> frontend formatı)
       const mappedSlides = (bannersData || [])
