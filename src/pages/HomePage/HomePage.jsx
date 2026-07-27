@@ -14,10 +14,15 @@ export default function HomePage() {
 
   useEffect(() => {
     getBlogArticles()
-      .then(data => {
-        if (Array.isArray(data)) setArticles(data);
+      .then(res => {
+        const list = Array.isArray(res) ? res : (res?.items || []);
+        if (list.length > 0) {
+          setArticles(list);
+        } else {
+          setArticles(mockArticles);
+        }
       })
-      .catch(() => setArticles([]));
+      .catch(() => setArticles(mockArticles));
   }, []);
 
   const newsProducts = products.filter(p => p.isNew);

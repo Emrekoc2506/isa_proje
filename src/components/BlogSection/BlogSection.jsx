@@ -19,7 +19,7 @@ export default function BlogSection({ articles = [] }) {
             <h2 className={styles.title}>Blog</h2>
             <div className={styles.titleDecor} aria-hidden="true" />
           </div>
-          <a href="#blog" className={styles.viewAll}>
+          <a href="/blog" className={styles.viewAll}>
             Tüm Makaleleri Gör
             <span>›</span>
           </a>
