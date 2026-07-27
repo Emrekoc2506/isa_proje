@@ -14,6 +14,7 @@ export function translateErrorCode(code) {
     case "validation_error":             return "Lütfen form alanlarını kontrol edin.";
     case "confirmation_required":        return "Bu işlemi onaylamanız gerekiyor.";
     case "slug_conflict":                return "Bu slug zaten kullanılıyor. Lütfen farklı bir slug girin.";
+    case "too_many_requests":            return "Çok fazla istek gönderildi. Lütfen birkaç saniye bekleyip tekrar deneyin.";
     case "network_error":                return "Sunucuya bağlanılamadı. Lütfen sunucunun açık olduğundan emin olun.";
     default:                             return null;
   }
@@ -88,6 +89,15 @@ export async function parseResponseError(response) {
   }
 
   const traceId = responseData?.traceId || response.headers.get("X-Correlation-ID");
+
+  if (status === 429) {
+    return new ApiError({
+      message: "Sunucu çok fazla istek algıladı (429 Rate Limit). Lütfen 5 saniye bekleyip tekrar deneyin.",
+      code: "too_many_requests",
+      status: 429,
+      traceId
+    });
+  }
 
   if (!responseData) {
     return new ApiError({

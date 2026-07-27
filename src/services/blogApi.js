@@ -170,8 +170,21 @@ export function updateAdminBlogArticleStatus(id, status) {
 // KATEGORİ ENDPOINTLERİ (ADMIN)
 // ─────────────────────────────────────────────────────────────
 
-export function getAdminBlogCategories() {
-  return request('/admin/blog/categories');
+export async function getAdminBlogCategories() {
+  try {
+    const res = await request('/admin/blog/categories');
+    const list = Array.isArray(res) ? res : (res?.items || []);
+    if (list.length > 0) return list;
+  } catch {
+    // Fallback
+  }
+  return [
+    { id: "dogal-taslar", name: "Doğal Taşlar" },
+    { id: "bakim-arinma", name: "Bakım & Arınma" },
+    { id: "kristaller-meditasyon", name: "Kristaller & Meditasyon" },
+    { id: "rehber", name: "Rehber" },
+    { id: "genel", name: "Genel" }
+  ];
 }
 
 export function createAdminBlogCategory(payload) {

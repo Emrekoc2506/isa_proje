@@ -17,12 +17,16 @@ import RichTextEditor from '../../../components/RichTextEditor/RichTextEditor';
 // ── Hata kodu → Türkçe mesaj ──────────────────────────────
 function resolveErrorMsg(err) {
   if (!err) return 'Bilinmeyen hata.';
+  if (err.status === 429 || err.code === 'too_many_requests') {
+    return 'Sunucu çok fazla istek algıladı (429 Rate Limit). Lütfen 5-10 saniye bekleyip tekrar deneyin.';
+  }
   switch (err.code) {
     case 'confirmation_required': return 'İşlem onayı gerekiyor.';
     case 'validation_error':      return err.message || 'Form alanlarını kontrol edin.';
     case 'not_found':             return 'Kayıt bulunamadı.';
     case 'unauthorized':          return 'Bu işlem için yetkiniz yok.';
     case 'forbidden':             return 'Bu işlem yasak.';
+    case 'too_many_requests':     return 'Sunucu çok fazla istek algıladı (429 Rate Limit). Lütfen 5 saniye bekleyin.';
     default:                      return err.message || 'Bir hata oluştu.';
   }
 }
@@ -67,6 +71,7 @@ export default function BlogAdminSection() {
   const [articles, setArticles]         = useState([]);
   const [totalCount, setTotalCount]     = useState(0);
   const [loading, setLoading]           = useState(true);
+  const [togglingId, setTogglingId]     = useState(null);
   const [showModal, setShowModal]       = useState(false);
   const [editingId, setEditingId]       = useState(null);
   const [form, setForm]                 = useState(EMPTY_FORM);
@@ -206,12 +211,17 @@ export default function BlogAdminSection() {
 
   // ── Durum toggle (Published ↔ Draft) ──────────────────
   const handleToggleStatus = async (art) => {
+    if (togglingId) return;
     const newStatus = art.status === 'Published' ? 'Draft' : 'Published';
+    setTogglingId(art.id);
+    setError('');
     try {
       await updateAdminBlogArticleStatus(art.id, newStatus);
       await loadArticles();
     } catch (err) {
-      alert('Durum değiştirilemedi: ' + resolveErrorMsg(err));
+      setError(resolveErrorMsg(err));
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -334,17 +344,22 @@ export default function BlogAdminSection() {
                   <button
                     id={`btn-status-blog-${art.id}`}
                     onClick={() => handleToggleStatus(art)}
+                    disabled={togglingId === art.id}
                     style={{
                       background: art.status === 'Published' ? 'rgba(127,140,141,0.1)' : 'rgba(39,174,96,0.1)',
                       color: art.status === 'Published' ? '#7f8c8d' : '#27ae60',
                       border: `1px solid ${art.status === 'Published' ? 'rgba(127,140,141,0.3)' : 'rgba(39,174,96,0.3)'}`,
-                      padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px',
-                      display: 'flex', alignItems: 'center', gap: '5px',
+                      padding: '6px 12px', borderRadius: '6px', cursor: togglingId === art.id ? 'not-allowed' : 'pointer', fontSize: '13px',
+                      display: 'flex', alignItems: 'center', gap: '5px', opacity: togglingId === art.id ? 0.7 : 1,
                     }}
                     title={art.status === 'Published' ? 'Taslağa al' : 'Yayınla'}
                   >
-                    {art.status === 'Published' ? <FiEyeOff size={13} /> : <FiEye size={13} />}
-                    {art.status === 'Published' ? 'Gizle' : 'Yayınla'}
+                    {togglingId === art.id ? (
+                      <FiLoader size={13} style={{ animation: 'spin 1s linear infinite' }} />
+                    ) : (
+                      art.status === 'Published' ? <FiEyeOff size={13} /> : <FiEye size={13} />
+                    )}
+                    {togglingId === art.id ? 'İşleniyor...' : (art.status === 'Published' ? 'Gizle' : 'Yayınla')}
                   </button>
 
                   {/* Sil */}
