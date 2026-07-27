@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiGrid, FiPackage, FiFolder, FiMessageSquare, FiLogOut, FiMenu, FiX,
-  FiShoppingCart, FiImage, FiTag, FiBox, FiUser, FiTrendingUp, FiBookOpen
+  FiShoppingCart, FiImage, FiTag, FiBox, FiUser, FiTrendingUp, FiBookOpen, FiStar
 } from 'react-icons/fi';
 import logoImage from '../../assets/images/logo.png';
 import ChatUI from '../../components/ChatUI/ChatUI';
@@ -22,6 +22,7 @@ import InventorySection from './sections/InventorySection';
 import CustomersSection from './sections/CustomersSection';
 import ReportsSection from './sections/ReportsSection';
 import BlogAdminSection from './sections/BlogAdminSection';
+import ReviewsSection from './sections/ReviewsSection';
 
 const NAV_ITEMS = [
   { id: 'overview',   label: 'Yönetim Özeti',    icon: FiGrid },
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { id: 'categories', label: 'Kategori Yönetimi', icon: FiFolder },
   { id: 'slides',     label: 'Afiş/İlan Yönetimi', icon: FiImage },
   { id: 'blog',       label: 'Blog Yönetimi',     icon: FiBookOpen },
+  { id: 'reviews',    label: 'Yorum Yönetimi',    icon: FiStar },
   { id: 'orders',     label: 'Sipariş Takibi',   icon: FiShoppingCart },
   { id: 'messages',   label: 'Destek Mesajları',  icon: FiMessageSquare },
   { id: 'coupons',    label: 'Kupon Yönetimi',   icon: FiTag },
@@ -151,6 +153,8 @@ export default function AdminPage() {
               {active === 'slides' && <BannersSection />}
               
               {active === 'blog' && <BlogAdminSection />}
+              
+              {active === 'reviews' && <ReviewsSection />}
               
               {active === 'orders' && <OrdersSection />}
               

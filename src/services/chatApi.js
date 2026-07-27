@@ -40,14 +40,14 @@ export function sendMessage(id, payload) {
 }
 
 export function deleteConversation(id) {
-  return request(`/chat/conversations/${id}`, {
-    method: "DELETE"
+  return request(`/chat/conversations/${id}/delete`, {
+    method: "POST"
   });
 }
 
 export function deleteMessages(messageIds) {
-  return request("/chat/messages", {
-    method: "DELETE",
+  return request("/chat/messages/delete", {
+    method: "POST",
     body: JSON.stringify({
       messageIds,
       guestSessionId: getGuestSessionId() || null
@@ -77,25 +77,25 @@ export function sendAdminMessage(id, payload) {
 
 export function closeAdminConversation(id) {
   return request(`/admin/chat/conversations/${id}/close`, {
-    method: "PUT"
+    method: "POST"
   });
 }
 
 export function reopenAdminConversation(id) {
   return request(`/admin/chat/conversations/${id}/reopen`, {
-    method: "PUT"
+    method: "POST"
   });
 }
 
 export function deleteAdminConversation(id) {
-  return request(`/admin/chat/conversations/${id}`, {
-    method: "DELETE"
+  return request(`/admin/chat/conversations/${id}/delete`, {
+    method: "POST"
   });
 }
 
 export function deleteAdminMessages(messageIds) {
-  return request("/admin/chat/messages", {
-    method: "DELETE",
+  return request("/admin/chat/messages/delete", {
+    method: "POST",
     body: JSON.stringify({
       messageIds
     })

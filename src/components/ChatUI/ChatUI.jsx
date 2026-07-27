@@ -788,10 +788,13 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
 
                 {isAdmin && !selectedConv.isClosed && (
                   <button onClick={async () => {
-                    if (window.confirm('Bu sohbeti kapatmak istiyor musunuz?')) {
+                    if (!window.confirm('Bu sohbeti kapatmak istiyor musunuz?')) return;
+                    try {
                       await closeAdminConversation(selectedConv.id);
                       setSelectedConv(prev => prev ? { ...prev, isClosed: true } : null);
                       fetchConversations();
+                    } catch (err) {
+                      alert('Sohbet kapatılamadı: ' + err.message);
                     }
                   }} style={{
                     background: 'rgba(224,85,148,0.1)', border: '1px solid rgba(224,85,148,0.3)',
@@ -803,10 +806,13 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
 
                 {isAdmin && selectedConv.isClosed && (
                   <button onClick={async () => {
-                    if (window.confirm('Bu sohbeti yeniden açmak istiyor musunuz?')) {
+                    if (!window.confirm('Bu sohbeti yeniden açmak istiyor musunuz?')) return;
+                    try {
                       await reopenAdminConversation(selectedConv.id);
                       setSelectedConv(prev => prev ? { ...prev, isClosed: false } : null);
                       fetchConversations();
+                    } catch (err) {
+                      alert('Sohbet yeniden açılamadı: ' + err.message);
                     }
                   }} style={{
                     background: 'rgba(46,204,113,0.1)', border: '1px solid rgba(46,204,113,0.3)',

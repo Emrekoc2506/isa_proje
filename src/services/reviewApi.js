@@ -80,3 +80,21 @@ export async function addReview(productId, reviewData) {
 
   return newReview;
 }
+
+/* ── Admin Review Moderation ──────────────────────────── */
+
+export function getPendingReviews() {
+  return request("/admin/reviews/pending");
+}
+
+export function approveReview(id) {
+  return request(`/admin/reviews/${id}/approve`, { method: "PUT" });
+}
+
+export function rejectReview(id) {
+  return request(`/admin/reviews/${id}/reject`, { method: "PUT" });
+}
+
+export function deleteAdminReview(id) {
+  return request(`/admin/reviews/${id}`, { method: "DELETE" });
+}
