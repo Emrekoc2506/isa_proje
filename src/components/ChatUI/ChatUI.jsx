@@ -45,6 +45,8 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
   const { user }       = useAuth();
   const selectedConvRef = useRef(null);
   selectedConvRef.current = selectedConv;
+  const lastSelfTypingTimeRef = useRef(0);
+  const typingTimeoutRef = useRef(null);
 
   // ── Dedup Helper: Mesaj listesinden duplikeleri temizle ─────────
   const deduplicateMessages = useCallback((msgList) => {
@@ -153,6 +155,19 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
     });
   };
 
+  // ── UTC Tarih Dönüştürücü ──────────────────────────────────────────
+  const parseUtcDate = useCallback((val) => {
+    if (!val) return null;
+    let str = String(val).trim();
+    if (!str) return null;
+    // ISO formatında (T içeren) ama UTC eki 'Z' veya offset (+03:00) içermiyorsa 'Z' ekle
+    if (str.includes('T') && !str.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(str)) {
+      str += 'Z';
+    }
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }, []);
+
   // ── Konuşmaları çek ───────────────────────────────────────────────
   const fetchConversations = useCallback(async () => {
     try {
@@ -162,7 +177,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
         id:             c.id,
         name:           c.customerName || c.subject || 'Destek Sohbeti',
         initials:       (c.customerName || c.subject || 'D')[0].toUpperCase(),
-        time:           c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '',
+        time:           c.lastMessageAt ? (parseUtcDate(c.lastMessageAt)?.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) || '') : '',
         isOnline:       c.isOnline ?? false,
         lastSeenAt:     c.lastSeenAt ?? null,
         customerId:     c.customerId ?? null,
@@ -339,10 +354,22 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
       conn.on('NewMessage', handleNew);
       conn.on('NotifyNewMessage', handleNew);
       conn.on('ReceiveMessage', handleNew);
-      conn.on('Typing', (cid) => {
+      conn.on('Typing', (cid, senderUserId) => {
+        // Kendi tetiklediğimiz yazma bildirimiyse yoksay (son 3sn içinde yazdıysak)
+        if (Date.now() - lastSelfTypingTimeRef.current < 3000) {
+          return;
+        }
+
+        // Gönderen kullanıcı ID'miz ile aynıysa yoksay
+        const myId = user?.userId || user?.id;
+        if (senderUserId && myId && String(senderUserId) === String(myId)) {
+          return;
+        }
+
         if (String(selectedConvRef.current?.id) === String(cid)) {
           setIsTyping(true);
-          setTimeout(() => setIsTyping(false), 3000);
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 3000);
         }
       });
       conn.on('UserStatusChanged', handleUserStatusChanged);
@@ -519,17 +546,19 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
   };
 
   const formatTime = (iso) => {
-    const d = new Date(iso);
-    return isNaN(d) ? '' : d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    const d = parseUtcDate(iso);
+    return d ? d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
   };
 
   const getPresenceText = (conv) => {
     if (conv.isClosed) return 'SOHBET KAPATILDI';
     if (conv.isOnline) return '🟢 Çevrimiçi';
     if (conv.lastSeenAt) {
-      const dt = new Date(conv.lastSeenAt);
-      const timeStr = !isNaN(dt) ? dt.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
-      return `⚪ Son görülme: ${timeStr}`;
+      const dt = parseUtcDate(conv.lastSeenAt);
+      if (dt) {
+        const timeStr = dt.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+        return `⚪ Son görülme: ${timeStr}`;
+      }
     }
     return '⚪ Çevrimdışı';
   };
@@ -899,6 +928,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
                     value={newMessage}
                     onChange={e => {
                       setNewMessage(e.target.value);
+                      lastSelfTypingTimeRef.current = Date.now();
                       if (selectedConv) sendTypingLive(selectedConv.id).catch(() => null);
                     }}
                   />
