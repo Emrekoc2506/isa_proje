@@ -1,7 +1,7 @@
 import { Editor } from '@tinymce/tinymce-react';
+import { uploadFile } from '../../services/fileApi';
 
 const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY || 'no-api-key';
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 /**
  * Admin paneli için TinyMCE Rich Text Editor bileşeni.
@@ -11,35 +11,20 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
  *  - onChange: (html: string) => void
  *  - placeholder: string (opsiyonel)
  */
-export default function RichTextEditor({ value, onChange, placeholder = 'Ürün açıklamasını buraya yazın...' }) {
+export default function RichTextEditor({ value, onChange, placeholder = 'Açıklamayı buraya yazın...' }) {
 
   /**
    * TinyMCE görsel yükleme handler'ı.
-   * Editörden gelen dosyayı doğrudan /api/admin/files/upload endpoint'ine gönderir.
-   * Token localStorage'dan okunur — mevcut apiClient.js mantığı ile aynı.
+   * Editörden gelen dosyayı uploadFile servisi üzerinden /admin/files/upload endpoint'ine gönderir.
    */
   const handleImageUpload = async (blobInfo) => {
-    const formData = new FormData();
-    formData.append('File', blobInfo.blob(), blobInfo.filename());
-    formData.append('Purpose', 'Product');
-
-    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('accessToken') : null;
-
-    const response = await fetch(`${API_BASE}/admin/files/upload`, {
-      method: 'POST',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
+    try {
+      const file = new File([blobInfo.blob()], blobInfo.filename(), { type: blobInfo.blob().type });
+      const res = await uploadFile(file, 'Blog');
+      return res.url || res.fileUrl || res.imageUrl || res.location || '';
+    } catch (err) {
       throw new Error(err.message || 'Görsel yüklenemedi');
     }
-
-    const data = await response.json();
-    return data.url; // FileUploadResponse.url
   };
 
   return (
