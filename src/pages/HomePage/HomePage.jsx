@@ -53,7 +53,7 @@ export default function HomePage() {
                 {s.subtitle && <span style={{ color: 'var(--gold-light)', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>{s.subtitle}</span>}
                 {s.title && <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 800, margin: '6px 0 12px 0' }}>{s.title}</h2>}
                 {s.href && (
-                  <a href={s.href} style={{ pointerEvents: 'auto', display: 'inline-block', width: 'fit-content', background: 'linear-gradient(135deg, var(--gold-light, #c9a227), #d4891a)', color: '#000', padding: '10px 24px', borderRadius: 8, fontWeight: 700, fontSize: 13, textDecoration: 'none', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}>
+                  <a href={s.href} style={{ pointerEvents: 'auto', display: 'inline-block', width: 'fit-content', background: 'linear-gradient(135deg, var(--gold-light, #c9a227), #d4891a)', color: 'rgb(56, 189, 248)', padding: '10px 24px', borderRadius: 8, fontWeight: 700, fontSize: 13, textDecoration: 'none', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}>
                     {s.cta || 'Keşfet'} →
                   </a>
                 )}

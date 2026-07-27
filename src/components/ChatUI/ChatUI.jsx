@@ -650,7 +650,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
                 {/* Okunmamış badge */}
                 {conv.unreadCount > 0 && (
                   <span style={{
-                    background: 'var(--gold)', color: '#000', fontSize: 10, fontWeight: 900,
+                    background: 'var(--gold)', color: 'rgb(56, 189, 248)', fontSize: 10, fontWeight: 900,
                     minWidth: 18, height: 18, padding: '0 4px', borderRadius: 9,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                   }}>{conv.unreadCount}</span>
@@ -843,7 +843,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
                           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                           order: mine ? 1 : -1
                         }}>
-                          {isSelected && <FiCheck size={11} color="#000" strokeWidth={3} />}
+                          {isSelected && <FiCheck size={11} color="rgb(56, 189, 248)" strokeWidth={3} />}
                         </button>
                       )}
 

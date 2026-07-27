@@ -66,7 +66,7 @@ export default function BlogAdminSection() {
           onClick={() => setShowModal(true)}
           style={{
             background: 'linear-gradient(135deg, var(--gold-dark), var(--gold))',
-            color: '#000',
+            color: 'rgb(56, 189, 248)',
             border: 'none',
             padding: '10px 18px',
             borderRadius: '8px',
@@ -145,7 +145,7 @@ export default function BlogAdminSection() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                 <button type="button" onClick={() => setShowModal(false)} style={{ padding: '10px 16px', borderRadius: '8px', background: 'transparent', border: '1px solid var(--border-mid)', color: '#fff', cursor: 'pointer' }}>Vazgeç</button>
-                <button type="submit" style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--gold)', border: 'none', color: '#000', fontWeight: 700, cursor: 'pointer' }}>Kaydet</button>
+                <button type="submit" style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--gold)', border: 'none', color: 'rgb(56, 189, 248)', fontWeight: 700, cursor: 'pointer' }}>Kaydet</button>
               </div>
             </form>
           </div>
