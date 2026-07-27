@@ -12,6 +12,7 @@ import DashboardPage from './pages/DashboardPage/DashboardPage';
 import AdminPage from './pages/AdminPage/AdminPage';
 import ProductsPage from './pages/ProductsPage/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage';
+import BlogPage from './pages/BlogPage/BlogPage';
 
 // Guards
 import ProtectedRoute from './routes/ProtectedRoute';
@@ -54,6 +55,7 @@ function AppRoutes() {
       <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
       <Route path="/urunler" element={<MainLayout><ProductsPage /></MainLayout>} />
       <Route path="/urun/:id" element={<ProductDetailPage />} />
+      <Route path="/blog" element={<MainLayout><BlogPage /></MainLayout>} />
 
       {/* Guest Rotaları (Giriş yapanlar giremez) */}
       <Route path="/giris" element={<GuestRoute><AuthPage /></GuestRoute>} />
