@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { getBlogArticles } from '../../services/blogApi';
+import { getBlogArticles, getBlogArticleBySlug } from '../../services/blogApi';
 import styles from './BlogPage.module.css';
 import {
   FiSearch, FiClock, FiCalendar, FiArrowRight, FiX, FiBookOpen, FiGrid, FiList
@@ -38,6 +38,9 @@ function ArticleSkeleton() {
 }
 
 function ArticleModal({ article, onClose }) {
+  const [data, setData] = useState(article);
+  const [loadingContent, setLoadingContent] = useState(false);
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -48,7 +51,28 @@ function ArticleModal({ article, onClose }) {
     };
   }, [onClose]);
 
+  useEffect(() => {
+    setData(article);
+    const slugOrId = article?.slug || article?.id;
+    if (slugOrId) {
+      setLoadingContent(!article?.content || article.content.trim() === '');
+      getBlogArticleBySlug(slugOrId)
+        .then((detail) => {
+          if (detail) {
+            setData((prev) => ({
+              ...prev,
+              ...detail,
+              content: detail.content || prev?.content,
+            }));
+          }
+        })
+        .finally(() => setLoadingContent(false));
+    }
+  }, [article]);
+
   if (!article) return null;
+
+  const current = data || article;
 
   return (
     <AnimatePresence>
@@ -71,41 +95,52 @@ function ArticleModal({ article, onClose }) {
             <FiX />
           </button>
 
-          {article.image && (
+          {current.image && (
             <div className={styles.modalHero}>
-              <img src={article.image} alt={article.title} className={styles.modalHeroImg} />
+              <img src={current.image} alt={current.title} className={styles.modalHeroImg} />
               <div className={styles.modalHeroOverlay} />
-              {article.category && (
-                <span className={styles.modalCategoryBadge}>{article.category}</span>
+              {current.category && (
+                <span className={styles.modalCategoryBadge}>{current.category}</span>
               )}
             </div>
           )}
 
           <div className={styles.modalContent}>
             <div className={styles.modalMeta}>
-              {article.date && (
+              {current.date && (
                 <span className={styles.modalMetaItem}>
-                  <FiCalendar size={13} /> {article.date}
+                  <FiCalendar size={13} /> {current.date}
                 </span>
               )}
-              {article.readTime && (
+              {current.readTime && (
                 <span className={styles.modalMetaItem}>
-                  <FiClock size={13} /> {article.readTime}
+                  <FiClock size={13} /> {current.readTime}
                 </span>
               )}
             </div>
 
-            <h1 className={styles.modalTitle}>{article.title}</h1>
+            <h1 className={styles.modalTitle}>{current.title}</h1>
 
-            {article.summary && (
-              <p className={styles.modalSummary}>{article.summary}</p>
+            {current.summary && (
+              <p className={styles.modalSummary}>{current.summary}</p>
             )}
 
-            {article.content && (
+            {loadingContent ? (
+              <div style={{ padding: '24px 0' }}>
+                <div className={styles.skeletonLine} style={{ marginBottom: 14 }} />
+                <div className={styles.skeletonLine} style={{ marginBottom: 14, width: '92%' }} />
+                <div className={styles.skeletonLine} style={{ marginBottom: 14, width: '84%' }} />
+                <div className={styles.skeletonLine} style={{ width: '60%' }} />
+              </div>
+            ) : current.content ? (
               <div
                 className={styles.modalBody}
-                dangerouslySetInnerHTML={{ __html: article.content }}
+                dangerouslySetInnerHTML={{ __html: current.content }}
               />
+            ) : (
+              <div className={styles.modalBody}>
+                <p>{current.summary || current.description || 'Makale içeriği hazırlanıyor...'}</p>
+              </div>
             )}
           </div>
         </motion.div>

@@ -67,12 +67,21 @@ export async function getBlogArticles(params = {}) {
  * Tekil blog makalesi — slug veya id ile
  */
 export async function getBlogArticleBySlug(slugOrId) {
+  if (!slugOrId) return null;
   try {
     const res = await request(`/blog/${slugOrId}`, { method: 'GET' });
-    return res ? normalizeDates(res) : null;
+    if (res && (res.content || res.summary)) return normalizeDates(res);
   } catch {
-    return null;
+    // Ignore and try admin endpoint
   }
+
+  try {
+    const adminRes = await request(`/admin/blog/${slugOrId}`, { method: 'GET' });
+    if (adminRes) return normalizeDates(adminRes);
+  } catch {
+    // Both failed
+  }
+  return null;
 }
 
 /**
