@@ -48,33 +48,81 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
 
   // ── Dedup Helper: Mesaj listesinden duplikeleri temizle ─────────
   const deduplicateMessages = useCallback((msgList) => {
-    const seen = new Map();
-    for (const msg of msgList) {
-      // Öncelikli anahtar: clientMessageId (optimistic + server eşleşmesi)
-      const key = msg.clientMessageId || msg.id;
-      const tempKey = msg.clientMessageId ? `temp-${msg.clientMessageId}` : null;
+    if (!Array.isArray(msgList)) return [];
 
-      // temp-xxx id ile aynı clientMessageId'li sunucu mesajı varsa, sunucu versiyonunu tut
-      if (tempKey && seen.has(tempKey)) {
-        seen.delete(tempKey);
+    const result = [];
+    const seenById = new Map();          // id -> index
+    const seenByClientMsgId = new Map();  // clientMessageId -> index
+
+    for (const msg of msgList) {
+      if (!msg) continue;
+
+      const msgIdStr = msg.id != null ? String(msg.id) : null;
+      const clientMsgIdStr = msg.clientMessageId != null ? String(msg.clientMessageId) : null;
+      const isTemp = msgIdStr ? msgIdStr.startsWith('temp-') : false;
+
+      let existingIndex = -1;
+
+      // 1. Gerçek / Temp ID ile kontrol et
+      if (msgIdStr && seenById.has(msgIdStr)) {
+        existingIndex = seenById.get(msgIdStr);
+      }
+      // 2. ClientMessageId ile kontrol et
+      else if (clientMsgIdStr && seenByClientMsgId.has(clientMsgIdStr)) {
+        existingIndex = seenByClientMsgId.get(clientMsgIdStr);
+      }
+      // 3. temp-${clientMessageId} ile ID eşleşiyor mu kontrol et
+      else if (clientMsgIdStr && seenById.has(`temp-${clientMsgIdStr}`)) {
+        existingIndex = seenById.get(`temp-${clientMsgIdStr}`);
+      }
+      // 4. msgIdStr (temp-xxx) iken clientMessageId olarak kayıtlı mı
+      else if (isTemp && seenByClientMsgId.has(msgIdStr.replace('temp-', ''))) {
+        existingIndex = seenByClientMsgId.get(msgIdStr.replace('temp-', ''));
+      }
+      // 5. İçerik ve durum bazlı optimistic eşleştirme (aynı içerik ve gönderilen temp mesaj)
+      else if (!isTemp && msgIdStr) {
+        const optIndex = result.findIndex(m =>
+          m && String(m.id).startsWith('temp-') &&
+          m.content === msg.content &&
+          (m.status === 'sending' || m.status === 'sent')
+        );
+        if (optIndex !== -1) {
+          existingIndex = optIndex;
+        }
       }
 
-      if (seen.has(key)) {
-        // Zaten var: sunucu id'li olanı tercih et (temp olmayan)
-        const existing = seen.get(key);
-        if (String(existing.id).startsWith('temp-') && !String(msg.id).startsWith('temp-')) {
-          seen.set(key, { ...existing, ...msg, status: msg.status || 'sent' });
-        } else if (!String(existing.id).startsWith('temp-') && String(msg.id).startsWith('temp-')) {
-          // Mevcut sunucu versiyonu zaten var, atla
-        } else {
-          // Her ikisi de aynı tip, son gelen bilgiyle güncelle
-          seen.set(key, { ...existing, ...msg, status: msg.status || existing.status });
-        }
+      if (existingIndex !== -1) {
+        const existing = result[existingIndex];
+        const realId = (msgIdStr && !isTemp)
+          ? msgIdStr
+          : ((existing.id && !String(existing.id).startsWith('temp-')) ? existing.id : (msg.id || existing.id));
+        const realClientMsgId = clientMsgIdStr || existing.clientMessageId || null;
+        const realStatus = (msg.status === 'sent' || existing.status === 'sent') ? 'sent' : (msg.status || existing.status);
+
+        const merged = {
+          ...existing,
+          ...msg,
+          id: realId,
+          clientMessageId: realClientMsgId,
+          status: realStatus
+        };
+
+        result[existingIndex] = merged;
+
+        // Haritaları güncelle
+        if (merged.id) seenById.set(String(merged.id), existingIndex);
+        if (msgIdStr) seenById.set(msgIdStr, existingIndex);
+        if (merged.clientMessageId) seenByClientMsgId.set(String(merged.clientMessageId), existingIndex);
       } else {
-        seen.set(key, msg);
+        const newIndex = result.length;
+        result.push(msg);
+
+        if (msgIdStr) seenById.set(msgIdStr, newIndex);
+        if (clientMsgIdStr) seenByClientMsgId.set(clientMsgIdStr, newIndex);
       }
     }
-    return Array.from(seen.values());
+
+    return result;
   }, []);
 
   // setMessages her çağrıldığında dedup uygula
@@ -188,50 +236,55 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
   // ── SignalR Event Dinleyicileri ──────────────────────────────────
   useEffect(() => {
     let conn = null;
+    let isSubscribed = true;
+
     const init = async () => {
       conn = await startChatConnection();
-      if (!conn) return;
+      if (!conn || !isSubscribed) return;
+
       setIsConnected(true);
       if (isAdmin) await adminJoinSupportPanelLive().catch(console.error);
 
+      // Çift kayıt olmasını engellemek için mevcut dinleyicileri temizle
+      conn.off('NewMessage');
+      conn.off('NotifyNewMessage');
+      conn.off('ReceiveMessage');
+      conn.off('Typing');
+      conn.off('UserStatusChanged');
+      conn.off('ConversationDeleted');
+      conn.off('MessagesDeleted');
+      conn.off('ConversationClosed');
+      conn.off('MarkAsRead');
+
       const handleNew = (conversationId, msgObj) => {
+        if (!msgObj) return;
         setIsTyping(false);
+
+        // SignalR C# (PascalCase) veya JS (camelCase) veri tiplerini normalize et
+        const id = msgObj.id || msgObj.Id || msgObj.ID;
+        const clientMessageId = msgObj.clientMessageId || msgObj.ClientMessageId;
+        const senderId = msgObj.senderId || msgObj.SenderId;
+        const content = msgObj.content || msgObj.Content || msgObj.message || msgObj.Message || (typeof msgObj === 'string' ? msgObj : '');
+        const sentAt = msgObj.sentAt || msgObj.SentAt || msgObj.createdAt || msgObj.CreatedAt || new Date().toISOString();
+
         const mapped = {
-          id:              msgObj.id || Date.now().toString(),
-          clientMessageId: msgObj.clientMessageId,
-          senderId:        msgObj.senderId,
-          content:         msgObj.content || msgObj.Message || msgObj,
-          sentAt:          msgObj.sentAt || new Date().toISOString(),
-          status:          'sent'
+          id: id || Date.now().toString(),
+          clientMessageId: clientMessageId || null,
+          senderId: senderId || null,
+          content: content,
+          sentAt: sentAt,
+          status: 'sent'
         };
+
         if (String(selectedConvRef.current?.id) === String(conversationId)) {
-          setMessages(prev => {
-            // Dedup: server id, clientMessageId, veya optimistic temp-id ile eşleştir
-            const existsIdx = prev.findIndex(m =>
-              // Sunucu id eşleşmesi
-              (mapped.id && m.id && String(m.id) === String(mapped.id)) ||
-              // clientMessageId eşleşmesi (optimistic update ile)
-              (m.clientMessageId && mapped.clientMessageId && m.clientMessageId === mapped.clientMessageId) ||
-              // temp-id içeren optimistic mesajla clientMessageId eşleşmesi
-              (mapped.clientMessageId && String(m.id) === `temp-${mapped.clientMessageId}`)
-            );
-            if (existsIdx !== -1) {
-              const copy = [...prev];
-              copy[existsIdx] = { ...copy[existsIdx], ...mapped, status: 'sent' };
-              return copy;
-            }
-            return [...prev, mapped];
-          });
+          setMessages(prev => [...prev, mapped]);
         } else {
           fetchConversations();
         }
       };
 
-      // NotifyNewMessage, NewMessage ile aynı payload'u taşıyabilir.
-      // setMessages artık her çağrıda dedup uyguladığı için ikisi de aynı handleNew'e bağlanabilir.
-      // Dedup, mesajın tekrar eklenmesini otomatik olarak engeller.
-
       const handleUserStatusChanged = (status) => {
+        if (!status) return;
         setConversations(previous =>
           previous.map(conversation => {
             const userMatches = status.customerId && String(conversation.customerId) === String(status.customerId);
@@ -257,6 +310,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
       };
 
       const handleConversationDeleted = (payload) => {
+        if (!payload) return;
         const deletedId = String(payload.conversationId);
         setConversations(previous => previous.filter(item => String(item.id) !== deletedId));
         if (String(selectedConvRef.current?.id) === deletedId) {
@@ -266,7 +320,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
       };
 
       const handleMessagesDeleted = (payload) => {
-        if (String(selectedConvRef.current?.id) !== String(payload.conversationId)) return;
+        if (!payload || String(selectedConvRef.current?.id) !== String(payload.conversationId)) return;
         const ids = new Set((payload.messageIds || []).map(String));
         setMessages(previous => previous.filter(message => !ids.has(String(message.id))));
       };
@@ -284,6 +338,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
 
       conn.on('NewMessage', handleNew);
       conn.on('NotifyNewMessage', handleNew);
+      conn.on('ReceiveMessage', handleNew);
       conn.on('Typing', (cid) => {
         if (String(selectedConvRef.current?.id) === String(cid)) {
           setIsTyping(true);
@@ -298,11 +353,14 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
     };
 
     init();
+
     return () => {
+      isSubscribed = false;
       const activeConn = getChatConnection() || conn;
       if (activeConn) {
         activeConn.off('NewMessage');
         activeConn.off('NotifyNewMessage');
+        activeConn.off('ReceiveMessage');
         activeConn.off('Typing');
         activeConn.off('UserStatusChanged');
         activeConn.off('ConversationDeleted');
@@ -351,9 +409,10 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
 
       if (res) {
         setMessages(prev => prev.map(m =>
-          m.id === tempId ? {
+          (m.id === tempId || m.clientMessageId === clientMessageId) ? {
+            ...m,
             ...res,
-            id: res.id || tempId,
+            id: res.id || m.id,
             clientMessageId: res.clientMessageId || clientMessageId,
             senderId: res.senderId || m.senderId,
             content: res.content || content,
@@ -365,7 +424,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
     } catch (err) {
       console.warn('Mesaj gönderimi başarısız oldu:', err);
       setMessages(prev => prev.map(m =>
-        m.id === tempId ? { ...m, status: 'failed' } : m
+        (m.id === tempId || m.clientMessageId === clientMessageId) ? { ...m, status: 'failed' } : m
       ));
     }
   };
