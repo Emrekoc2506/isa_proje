@@ -37,6 +37,8 @@ function rejectRefreshQueue(error) {
   queue.forEach((item) => item.reject(error));
 }
 
+import { safeGetItem, safeSetItem, safeRemoveItem } from "../utils/storage";
+
 function dispatchSessionExpired() {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("auth:session-expired"));
@@ -44,7 +46,7 @@ function dispatchSessionExpired() {
 }
 
 async function request(path, options = {}) {
-  const token = typeof localStorage !== "undefined" ? localStorage.getItem("accessToken") : null;
+  const token = safeGetItem("accessToken");
   const headers = new Headers(options.headers || {});
 
   if (!(options.body instanceof FormData)) {
@@ -91,7 +93,7 @@ async function request(path, options = {}) {
       path.includes("/auth/register");
 
     if (response.status === 401 && !isAuthPath && !isRetry) {
-      const refreshTokenVal = typeof localStorage !== "undefined" ? localStorage.getItem("refreshToken") : null;
+      const refreshTokenVal = safeGetItem("refreshToken");
 
       if (!refreshTokenVal) {
         dispatchSessionExpired();
@@ -104,7 +106,7 @@ async function request(path, options = {}) {
       }
 
       // If token in localStorage changed while this request was in flight, retry with new token
-      const currentToken = typeof localStorage !== "undefined" ? localStorage.getItem("accessToken") : null;
+      const currentToken = safeGetItem("accessToken");
       if (currentToken && currentToken !== token) {
         const retryOptions = { ...options, _isRetry: true };
         const retryHeaders = new Headers(options.headers || {});
@@ -210,10 +212,8 @@ function refreshAccessToken(refreshTokenVal) {
 
     const data = await response.json();
     if (data.accessToken && data.refreshToken) {
-      if (typeof localStorage !== "undefined") {
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
-      }
+      safeSetItem("accessToken", data.accessToken);
+      safeSetItem("refreshToken", data.refreshToken);
       return data.accessToken;
     }
     throw new Error("Invalid token response");
@@ -225,11 +225,9 @@ function refreshAccessToken(refreshTokenVal) {
 }
 
 function handleLogoutRedirect() {
-  if (typeof localStorage === "undefined") return;
-  const hadToken =
-    localStorage.getItem("accessToken") || localStorage.getItem("refreshToken");
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
+  const hadToken = safeGetItem("accessToken") || safeGetItem("refreshToken");
+  safeRemoveItem("accessToken");
+  safeRemoveItem("refreshToken");
 
   // Only force redirect to login if the user was actually authenticated before
   if (

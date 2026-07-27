@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { useAuth } from './AuthContext';
 import * as wishlistApi from '../services/wishlistApi';
 import { getProducts } from '../services/productApi';
+import { safeGetJson, safeSetJson, safeRemoveItem } from '../utils/storage';
 import { isValidGuid, prepareWishlistProductIds } from '../utils/wishlist';
 
 const WishlistContext = createContext(null);
@@ -30,33 +31,22 @@ export function WishlistProvider({ children }) {
         }));
         setItems(mapped);
       } else {
-        const raw = localStorage.getItem("isa_guest_wishlist");
-        let localIds = [];
-        try {
-          localIds = raw ? JSON.parse(raw) : [];
-        } catch {
-          localIds = [];
-        }
-        localIds = prepareWishlistProductIds(localIds);
+        let localIds = prepareWishlistProductIds(safeGetJson("isa_guest_wishlist", []));
 
         if (localIds.length > 0) {
           const productsData = await getProducts({ pageSize: 100 }).catch(() => ({ items: [] }));
           const catalog = productsData?.items || [];
-          
-          const mapped = localIds.map(id => {
-            const prod = catalog.find(p => p.id === id);
-            if (!prod) return null;
-            return {
-              id: prod.id,
-              productId: prod.id,
-              productName: prod.name,
-              slug: prod.slug,
-              imageUrl: prod.image || (prod.images && prod.images[0]?.url) || "",
-              price: typeof prod.price === 'number' ? `${prod.price} ₺` : prod.price,
-              oldPrice: prod.oldPrice == null ? null : (typeof prod.oldPrice === 'number' ? `${prod.oldPrice} ₺` : prod.oldPrice),
-              addedAt: new Date().toISOString()
-            };
-          }).filter(Boolean);
+          const matched = catalog.filter(p => localIds.includes(p.id));
+          const mapped = matched.map(p => ({
+            id: p.id,
+            productId: p.id,
+            productName: p.name,
+            slug: p.slug || "",
+            imageUrl: p.image || p.imageUrl || "",
+            price: typeof p.price === 'number' ? `${p.price} ₺` : p.price || "0 ₺",
+            oldPrice: p.oldPrice == null ? null : (typeof p.oldPrice === 'number' ? `${p.oldPrice} ₺` : p.oldPrice),
+            addedAt: new Date().toISOString()
+          }));
           setItems(mapped);
         } else {
           setItems([]);
@@ -86,17 +76,10 @@ export function WishlistProvider({ children }) {
         await wishlistApi.addWishlistItem(productId);
         await reloadWishlist();
       } else {
-        const raw = localStorage.getItem("isa_guest_wishlist");
-        let localIds = [];
-        try {
-          localIds = raw ? JSON.parse(raw) : [];
-        } catch {
-          localIds = [];
-        }
-        localIds = prepareWishlistProductIds(localIds);
+        let localIds = prepareWishlistProductIds(safeGetJson("isa_guest_wishlist", []));
         if (!localIds.includes(productId)) {
           localIds.push(productId);
-          localStorage.setItem("isa_guest_wishlist", JSON.stringify(localIds));
+          safeSetJson("isa_guest_wishlist", localIds);
         }
         await reloadWishlist();
       }
@@ -115,16 +98,9 @@ export function WishlistProvider({ children }) {
         await wishlistApi.removeWishlistItem(productId);
         await reloadWishlist();
       } else {
-        const raw = localStorage.getItem("isa_guest_wishlist");
-        let localIds = [];
-        try {
-          localIds = raw ? JSON.parse(raw) : [];
-        } catch {
-          localIds = [];
-        }
-        localIds = prepareWishlistProductIds(localIds);
+        let localIds = prepareWishlistProductIds(safeGetJson("isa_guest_wishlist", []));
         const filtered = localIds.filter(id => id !== productId);
-        localStorage.setItem("isa_guest_wishlist", JSON.stringify(filtered));
+        safeSetJson("isa_guest_wishlist", filtered);
         await reloadWishlist();
       }
     } catch (err) {
@@ -135,8 +111,7 @@ export function WishlistProvider({ children }) {
     }
   }, [isAuthenticated, reloadWishlist]);
 
-  const toggleFavorite = useCallback(async (product) => {
-    const productId = product.databaseId ?? product.productId ?? product.id;
+  const toggleFavorite = useCallback(async (productId) => {
     const exists = items.some(i => i.productId === productId || i.id === productId);
     if (exists) {
       await removeFavorite(productId);
@@ -149,13 +124,14 @@ export function WishlistProvider({ children }) {
     return items.some(i => i.productId === productId || i.id === productId);
   }, [items]);
 
-  const mergeGuestWishlist = useCallback(async (productIds) => {
+  const mergeGuestWishlist = useCallback(async (guestItemsInput = []) => {
     try {
       setLoading(true);
-      const cleanIds = prepareWishlistProductIds(productIds);
-      const data = await wishlistApi.mergeWishlist(cleanIds);
-      const mapped = (data || []).map(item => ({
-        id: item.productId || item.id,
+      const cleanIds = prepareWishlistProductIds(guestItemsInput);
+      const res = await wishlistApi.mergeGuestWishlist(cleanIds);
+      const rawList = Array.isArray(res) ? res : (res?.items || []);
+      const mapped = rawList.map(item => ({
+        id: item.id || item.productId,
         productId: item.productId || item.id,
         productName: item.productName || item.name || "",
         slug: item.slug || "",
@@ -165,7 +141,7 @@ export function WishlistProvider({ children }) {
         addedAt: item.addedAt || item.createdAt || null
       }));
       setItems(mapped);
-      localStorage.removeItem("isa_guest_wishlist");
+      safeRemoveItem("isa_guest_wishlist");
       return mapped;
     } catch (err) {
       console.error("Failed to merge guest wishlist:", err);

@@ -34,6 +34,8 @@ export default function ForgotPasswordPage() {
       // But if there's a validation error (like empty email), we show it.
       if (err.code === "validation_error") {
         setErrorMsg("Lütfen geçerli bir e-posta adresi girin.");
+      } else if (err.code === "network_error" || (err.status && err.status >= 500)) {
+        setErrorMsg(err.message || "Sunucu veya bağlantı hatası oluştu. Lütfen tekrar deneyin.");
       } else {
         let errorMessage = err.message || "";
         if (err.errors) {
@@ -42,7 +44,7 @@ export default function ForgotPasswordPage() {
             .join(' | ');
           setErrorMsg(errorMessage);
         } else {
-          setSubmitted(true); // Treat as success to keep secure
+          setSubmitted(true); // E-posta varlık gizliliği için güvenlik amacıyla başarılı ekranı göster
         }
       }
     } finally {

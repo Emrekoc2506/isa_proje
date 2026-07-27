@@ -26,3 +26,7 @@ export function mergeWishlist(productIds) {
     })
   });
 }
+
+export function mergeGuestWishlist(productIds) {
+  return mergeWishlist(productIds);
+}

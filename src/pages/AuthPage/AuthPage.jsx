@@ -138,9 +138,10 @@ export default function AuthPage() {
         alert(errMsg);
       }
       
-      const roles = res.user?.roles || [];
-      const from = location.state?.from?.pathname || (roles.includes("SuperAdmin") || roles.includes("Admin") ? '/admin' : '/panel');
-      navigate(from, { replace: true });
+      const fromObj = location.state?.from;
+      const targetFrom = fromObj ? `${fromObj.pathname || ''}${fromObj.search || ''}${fromObj.hash || ''}` : null;
+      const destination = targetFrom || (roles.includes("SuperAdmin") || roles.includes("Admin") ? '/admin' : '/panel');
+      navigate(destination, { replace: true });
     } catch (err) {
       if (err.requiresVerification === true && err.userId) {
         setLoginError("E-posta adresiniz henüz doğrulanmamış. Yönlendiriliyorsunuz...");

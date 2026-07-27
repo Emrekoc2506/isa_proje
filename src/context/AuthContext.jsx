@@ -6,6 +6,7 @@ import {
   useCallback,
 } from "react";
 import * as authApi from "../services/authApi";
+import { safeGetItem, safeSetItem, safeRemoveItem } from "../utils/storage";
 
 const AuthContext = createContext(null);
 
@@ -28,7 +29,7 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const reloadUser = useCallback(async () => {
-    const token = typeof localStorage !== "undefined" ? localStorage.getItem("accessToken") : null;
+    const token = safeGetItem("accessToken");
     if (!token) {
       setUser(null);
       setRoles([]);
@@ -39,7 +40,7 @@ export function AuthProvider({ children }) {
     try {
       setIsLoading(true);
       const res = await authApi.me();
-      if (res && (typeof localStorage === "undefined" || localStorage.getItem("accessToken"))) {
+      if (res && safeGetItem("accessToken")) {
         setUser(res);
         setRoles(res.roles || []);
         return res;
@@ -58,10 +59,8 @@ export function AuthProvider({ children }) {
 
     if (typeof window === "undefined") return;
     const handleSessionExpired = () => {
-      if (typeof localStorage !== "undefined") {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-      }
+      safeRemoveItem("accessToken");
+      safeRemoveItem("refreshToken");
       setUser(null);
       setRoles([]);
     };
@@ -92,7 +91,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
-    const refreshTokenVal = typeof localStorage !== "undefined" ? localStorage.getItem("refreshToken") : null;
+    const refreshTokenVal = safeGetItem("refreshToken");
     try {
       if (refreshTokenVal) {
         await authApi.logout(refreshTokenVal);
@@ -100,10 +99,8 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.warn("Backend logout request error:", err);
     } finally {
-      if (typeof localStorage !== "undefined") {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-      }
+      safeRemoveItem("accessToken");
+      safeRemoveItem("refreshToken");
       setUser(null);
       setRoles([]);
     }
@@ -115,17 +112,15 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.warn("Backend logoutAll request error:", err);
     } finally {
-      if (typeof localStorage !== "undefined") {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-      }
+      safeRemoveItem("accessToken");
+      safeRemoveItem("refreshToken");
       setUser(null);
       setRoles([]);
     }
   }, []);
 
   const refreshSession = useCallback(async () => {
-    const rToken = localStorage.getItem("refreshToken");
+    const rToken = safeGetItem("refreshToken");
     if (!rToken) {
       setUser(null);
       setRoles([]);
@@ -134,9 +129,9 @@ export function AuthProvider({ children }) {
     try {
       const res = await authApi.refreshToken(rToken);
       if (res.accessToken) {
-        localStorage.setItem("accessToken", res.accessToken);
+        safeSetItem("accessToken", res.accessToken);
         if (res.refreshToken) {
-          localStorage.setItem("refreshToken", res.refreshToken);
+          safeSetItem("refreshToken", res.refreshToken);
         }
         return await reloadUser();
       }

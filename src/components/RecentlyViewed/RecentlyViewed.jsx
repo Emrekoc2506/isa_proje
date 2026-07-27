@@ -42,7 +42,9 @@ export default function RecentlyViewed({ currentProductId }) {
             <div className={styles.content}>
               <h4 className={styles.title}>{prod.name}</h4>
               <div className={styles.priceRow}>
-                <span className={styles.price}>{prod.price} ₺</span>
+                <span className={styles.price}>
+                  {typeof prod.price === 'string' && prod.price.includes('₺') ? prod.price : `${prod.price} ₺`}
+                </span>
                 <button
                   type="button"
                   className={styles.quickAddBtn}
