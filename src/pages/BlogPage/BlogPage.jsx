@@ -170,6 +170,7 @@ function ArticleCard({ article, index, view, onClick }) {
 
 export default function BlogPage() {
   const [articles, setArticles] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('Tümü');
@@ -181,10 +182,14 @@ export default function BlogPage() {
     async function load() {
       setLoading(true);
       try {
-        const data = await getBlogArticles();
-        setArticles(Array.isArray(data) ? data : []);
+        const res = await getBlogArticles({ page: 1, pageSize: 50 });
+        // getBlogArticles artık { items, totalCount, page, pageSize } döndürüyor
+        const list = Array.isArray(res) ? res : (res?.items || []);
+        setArticles(list);
+        setTotalCount(res?.totalCount || list.length);
       } catch {
         setArticles([]);
+        setTotalCount(0);
       } finally {
         setLoading(false);
       }

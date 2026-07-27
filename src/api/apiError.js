@@ -1,4 +1,3 @@
-// Hata CODE'una göre doğrudan Türkçe mesaj döndür
 export function translateErrorCode(code) {
   if (!code) return null;
   switch (code) {
@@ -10,8 +9,11 @@ export function translateErrorCode(code) {
     case "registration_failed":          return "Kayıt işlemi başarısız oldu. Lütfen bilgilerinizi kontrol edin.";
     case "invalid_refresh_token":        return "Oturum süresi doldu. Lütfen tekrar giriş yapın.";
     case "unauthorized":                 return "Bu işlem için giriş yapmanız gerekmektedir.";
+    case "forbidden":                    return "Bu işlemi yapmaya yetkiniz bulunmuyor.";
     case "not_found":                    return "İstenilen kaynak bulunamadı.";
     case "validation_error":             return "Lütfen form alanlarını kontrol edin.";
+    case "confirmation_required":        return "Bu işlemi onaylamanız gerekiyor.";
+    case "slug_conflict":                return "Bu slug zaten kullanılıyor. Lütfen farklı bir slug girin.";
     case "network_error":                return "Sunucuya bağlanılamadı. Lütfen sunucunun açık olduğundan emin olun.";
     default:                             return null;
   }

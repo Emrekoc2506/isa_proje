@@ -1,186 +1,279 @@
+/**
+ * blogApi.js — Blog Modülü Servis Katmanı
+ * Backend spec: http://api-test.ozeldersvip.xyz/api
+ * NOT: Natro, PUT/PATCH/DELETE metotlarını engeller.
+ *      Bunların yerine POST /{id}/update, /{id}/status, /{id}/delete kullanılır.
+ */
 import { request } from "./apiClient";
-import { safeGetJson, safeSetJson } from "../utils/storage";
 
-const LOCAL_BLOG_KEY = "isa_custom_blog_articles";
-
-function normalizeArticle(item) {
+// ─────────────────────────────────────────────────────────────
+// Response normalizasyonu (public + admin makaleler için ortak)
+// ─────────────────────────────────────────────────────────────
+function normalizeDates(item) {
   if (!item) return null;
-  const rawDesc = item.summary || item.description || (typeof item.content === 'string' ? item.content.replace(/<[^>]+>/g, '').slice(0, 150) : '');
+  const raw = item.publishedAt || item.createdAt || item.date;
+  let dateStr = '';
+  if (raw) {
+    try {
+      dateStr = new Date(raw).toLocaleDateString('tr-TR', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      });
+    } catch {
+      dateStr = raw;
+    }
+  }
   return {
-    id: item.id || `blog-${Date.now()}`,
-    title: item.title || item.name || '',
-    summary: rawDesc,
-    description: rawDesc,
-    content: item.content || rawDesc,
-    image: item.image || item.imageUrl || 'https://images.unsplash.com/photo-1567225557594-88d73e55f2cb?q=80&w=1200&auto=format&fit=crop',
-    category: item.category || 'Genel',
-    date: item.date || item.createdAt ? new Date(item.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }),
-    readTime: item.readTime || '5 dk okuma',
-    slug: item.slug || (item.title ? item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : `blog-${Date.now()}`),
-    isActive: item.isActive !== undefined ? item.isActive : true
+    ...item,
+    // Ortak alan isimlendirmeleri frontend'e normalize et
+    image:       item.coverImageUrl || item.image || null,
+    summary:     item.summary || item.description || '',
+    description: item.summary || item.description || '',
+    date:        dateStr,
+    readTime:    item.readTime || '5 dk okuma',
+    isActive:    item.status === 'Published' || item.isActive === true,
+    status:      item.status || (item.isActive ? 'Published' : 'Draft'),
+    slug:        item.slug || item.id,
   };
 }
 
-function getLocalArticles() {
-  return safeGetJson(LOCAL_BLOG_KEY, []);
+function extractItems(res) {
+  if (!res) return { items: [], totalCount: 0, page: 1, pageSize: 20 };
+  if (Array.isArray(res)) return { items: res.map(normalizeDates), totalCount: res.length, page: 1, pageSize: res.length };
+  if (Array.isArray(res.items)) return { ...res, items: res.items.map(normalizeDates) };
+  return { items: [], totalCount: 0, page: 1, pageSize: 20 };
 }
 
-function saveLocalArticle(article) {
-  const current = getLocalArticles();
-  const normalized = normalizeArticle(article);
-  const updated = [normalized, ...current.filter(a => a.id !== normalized.id)];
-  safeSetJson(LOCAL_BLOG_KEY, updated);
-  return normalized;
-}
+// ─────────────────────────────────────────────────────────────
+// PUBLIC ENDPOINTLERİ
+// ─────────────────────────────────────────────────────────────
 
-function deleteLocalArticle(id) {
-  const current = getLocalArticles();
-  const updated = current.filter(a => a.id !== id && a.slug !== id);
-  safeSetJson(LOCAL_BLOG_KEY, updated);
-}
-
+/**
+ * Public blog listesi (sadece yayınlanmış + yayın tarihi gelmiş)
+ * @param {{ page?: number, pageSize?: number }} params
+ * @returns {{ items: Array, totalCount: number, page: number, pageSize: number }}
+ */
 export async function getBlogArticles(params = {}) {
-  let apiArticles = [];
+  const { page = 1, pageSize = 20, ...rest } = params;
+  const query = new URLSearchParams({ page, pageSize, ...rest }).toString();
   try {
-    const query = new URLSearchParams(params).toString();
-    const res = await request(`/blog${query ? `?${query}` : ''}`, { method: "GET" });
-    if (res && Array.isArray(res)) apiArticles = res;
-    else if (res && Array.isArray(res.items)) apiArticles = res.items;
-  } catch (err) {
-    // API not reachable or endpoint empty
+    const res = await request(`/blog?${query}`, { method: 'GET' });
+    return extractItems(res);
+  } catch {
+    return { items: [], totalCount: 0, page, pageSize };
   }
-
-  const local = getLocalArticles();
-  const merged = [...local];
-  
-  apiArticles.forEach(apiItem => {
-    const norm = normalizeArticle(apiItem);
-    if (norm && !merged.some(m => m.id === norm.id || m.slug === norm.slug)) {
-      merged.push(norm);
-    }
-  });
-
-  return merged;
 }
 
-export async function getBlogArticleBySlug(slug) {
+/**
+ * Tekil blog makalesi — slug veya id ile
+ */
+export async function getBlogArticleBySlug(slugOrId) {
   try {
-    const res = await request(`/blog/${slug}`, { method: "GET" });
-    if (res) return normalizeArticle(res);
-  } catch (err) {
-    // Fallback to local
+    const res = await request(`/blog/${slugOrId}`, { method: 'GET' });
+    return res ? normalizeDates(res) : null;
+  } catch {
+    return null;
   }
-  const local = getLocalArticles();
-  const found = local.find(a => a.slug === slug || a.id === slug);
-  return found ? normalizeArticle(found) : null;
 }
 
+/**
+ * Public kategori listesi
+ */
 export async function getBlogCategories() {
   try {
-    const res = await request("/blog/categories", { method: "GET" });
+    const res = await request('/blog/categories', { method: 'GET' });
     if (res && Array.isArray(res)) return res;
-  } catch (err) {
-    // Fallback
+    if (res && Array.isArray(res.items)) return res.items;
+  } catch {
+    // Fallback statik kategoriler
   }
   return [
-    { id: "cat-1", name: "Doğal Taşlar", slug: "dogal-taslar" },
-    { id: "cat-2", name: "Bakım & Arınma", slug: "bakim-arinma" },
-    { id: "cat-3", name: "Rehber", slug: "rehber" }
+    { id: 'dogal-taslar',         name: 'Doğal Taşlar' },
+    { id: 'bakim-arinma',         name: 'Bakım & Arınma' },
+    { id: 'kristaller-meditasyon',name: 'Kristaller & Meditasyon' },
+    { id: 'rehber',               name: 'Rehber' },
   ];
 }
 
-// Admin Blog CRUD
+// ─────────────────────────────────────────────────────────────
+// ADMIN ENDPOINTLERİ
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Admin — Tüm makaleler (aktif + pasif)
+ */
 export async function getAdminBlogArticles(params = {}) {
-  let apiArticles = [];
+  const { page = 1, pageSize = 50, ...rest } = params;
+  const query = new URLSearchParams({ page, pageSize, ...rest }).toString();
   try {
-    const query = new URLSearchParams(params).toString();
-    const res = await request(`/admin/blog${query ? `?${query}` : ''}`);
-    if (res && Array.isArray(res)) apiArticles = res;
-    else if (res && Array.isArray(res.items)) apiArticles = res.items;
-  } catch (err) {
-    // API fallback
+    const res = await request(`/admin/blog?${query}`);
+    return extractItems(res);
+  } catch {
+    return { items: [], totalCount: 0, page, pageSize };
   }
-
-  const local = getLocalArticles();
-  const merged = [...local];
-  
-  apiArticles.forEach(apiItem => {
-    const norm = normalizeArticle(apiItem);
-    if (norm && !merged.some(m => m.id === norm.id || m.slug === norm.slug)) {
-      merged.push(norm);
-    }
-  });
-
-  return merged;
 }
 
+/**
+ * Admin — Tekil makale
+ */
 export function getAdminBlogArticleById(id) {
   return request(`/admin/blog/${id}`);
 }
 
-export async function createAdminBlogArticle(payload) {
-  const localSaved = saveLocalArticle(payload);
-  try {
-    await request("/admin/blog", {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
-  } catch (err) {
-    console.warn("Backend blog save endpoint unavailable, article saved locally:", err);
-  }
-  return localSaved;
-}
-
-export async function updateAdminBlogArticle(id, payload) {
-  saveLocalArticle({ ...payload, id });
-  try {
-    return await request(`/admin/blog/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(payload)
-    });
-  } catch (err) {
-    return payload;
-  }
-}
-
-export async function deleteAdminBlogArticle(id) {
-  deleteLocalArticle(id);
-  try {
-    return await request(`/admin/blog/${id}`, {
-      method: "DELETE"
-    });
-  } catch (err) {
-    return true;
-  }
-}
-
-export function updateAdminBlogArticleStatus(id, isActive) {
-  return request(`/admin/blog/${id}/status`, {
-    method: "PATCH",
-    body: JSON.stringify({ isActive })
+/**
+ * Admin — Yeni makale oluştur
+ * Body spec'e uygun olmalı: title, slug, summary, content, blogCategoryId,
+ * coverImageUrl, coverImageObjectKey, status ("Published"|"Draft"|"Archived")
+ */
+export function createAdminBlogArticle(payload) {
+  return request('/admin/blog', {
+    method: 'POST',
+    body: JSON.stringify(buildBlogPayload(payload)),
   });
 }
 
+/**
+ * Admin — Makale güncelle (POST /{id}/update — PUT/PATCH engelli)
+ */
+export function updateAdminBlogArticle(id, payload) {
+  return request(`/admin/blog/${id}/update`, {
+    method: 'POST',
+    body: JSON.stringify(buildBlogPayload(payload)),
+  });
+}
+
+/**
+ * Admin — Makale sil (POST /{id}/delete — DELETE engelli)
+ */
+export function deleteAdminBlogArticle(id) {
+  return request(`/admin/blog/${id}/delete`, {
+    method: 'POST',
+    body: JSON.stringify({ confirm: true }),
+  });
+}
+
+/**
+ * Admin — Makale durumu değiştir (POST /{id}/status)
+ * status: "Published" | "Draft" | "Archived"
+ */
+export function updateAdminBlogArticleStatus(id, status) {
+  // isActive boolean gelirse dönüştür
+  const statusValue = typeof status === 'boolean'
+    ? (status ? 'Published' : 'Draft')
+    : status;
+  return request(`/admin/blog/${id}/status`, {
+    method: 'POST',
+    body: JSON.stringify({ status: statusValue }),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// KATEGORİ ENDPOINTLERİ (ADMIN)
+// ─────────────────────────────────────────────────────────────
+
 export function getAdminBlogCategories() {
-  return request("/admin/blog/categories");
+  return request('/admin/blog/categories');
 }
 
 export function createAdminBlogCategory(payload) {
-  return request("/admin/blog/categories", {
-    method: "POST",
-    body: JSON.stringify(payload)
+  return request('/admin/blog/categories', {
+    method: 'POST',
+    body: JSON.stringify(payload),
   });
 }
 
 export function updateAdminBlogCategory(id, payload) {
-  return request(`/admin/blog/categories/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(payload)
+  return request(`/admin/blog/categories/${id}/update`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateAdminBlogCategoryStatus(id, status) {
+  return request(`/admin/blog/categories/${id}/status`, {
+    method: 'POST',
+    body: JSON.stringify({ status }),
   });
 }
 
 export function deleteAdminBlogCategory(id) {
-  return request(`/admin/blog/categories/${id}`, {
-    method: "DELETE"
+  return request(`/admin/blog/categories/${id}/delete`, {
+    method: 'POST',
+    body: JSON.stringify({ confirm: true }),
   });
+}
+
+// ─────────────────────────────────────────────────────────────
+// GÖRSEL ENDPOINTLERİ (ADMIN)
+// ─────────────────────────────────────────────────────────────
+
+/** Kapak görseli sil */
+export function deleteAdminBlogCoverImage(blogId) {
+  return request(`/admin/blog/${blogId}/cover-image/delete`, {
+    method: 'POST',
+    body: JSON.stringify({ confirm: true }),
+  });
+}
+
+/** İçerik görseli sil */
+export function deleteAdminBlogContentImage(blogId, imageId) {
+  return request(`/admin/blog/${blogId}/images/${imageId}/delete`, {
+    method: 'POST',
+    body: JSON.stringify({ confirm: true }),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// YARDIMCI: Blog payload normalize et
+// Frontend state → Backend body
+// ─────────────────────────────────────────────────────────────
+function buildBlogPayload(payload) {
+  const {
+    title,
+    slug,
+    summary,
+    content,
+    blogCategoryId,
+    category,          // legacy fallback
+    coverImageUrl,
+    coverImageObjectKey,
+    coverImageAltText,
+    status,
+    isActive,          // legacy → status dönüşümü
+    publishedAt,
+    seoTitle,
+    seoDescription,
+    seoKeywords,
+    contentImages,
+  } = payload;
+
+  // Durum belirleme: önce status, yoksa isActive
+  let resolvedStatus = status;
+  if (!resolvedStatus) {
+    resolvedStatus = (isActive === false) ? 'Draft' : 'Published';
+  }
+
+  // Slug üret (backend de üretir ama gönderiyoruz)
+  const resolvedSlug = slug ||
+    (title ? title.toLowerCase()
+      .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
+      .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+      .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+    : '');
+
+  return {
+    title:                  title || '',
+    slug:                   resolvedSlug,
+    summary:                summary || '',
+    content:                content || '',
+    blogCategoryId:         blogCategoryId || null,
+    coverImageUrl:          coverImageUrl || null,
+    coverImageObjectKey:    coverImageObjectKey || null,
+    coverImageAltText:      coverImageAltText || null,
+    status:                 resolvedStatus,
+    publishedAt:            publishedAt || null,
+    seoTitle:               seoTitle || null,
+    seoDescription:         seoDescription || null,
+    seoKeywords:            seoKeywords || null,
+    contentImages:          contentImages || [],
+  };
 }

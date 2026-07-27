@@ -14,6 +14,8 @@ export function uploadFile(file, purpose = "Product", ownerId = null, onProgress
     purposeValue = "User";
   } else if (purpose === "chat" || purpose === "Chat" || purpose === 3) {
     purposeValue = "Chat";
+  } else if (purpose === "blog" || purpose === "Blog") {
+    purposeValue = "Blog";
   }
 
   const formData = new FormData();
