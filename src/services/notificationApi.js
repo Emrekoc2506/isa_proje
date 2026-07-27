@@ -21,3 +21,9 @@ export function deleteNotification(id) {
     method: "DELETE"
   });
 }
+
+export function deleteAllNotifications() {
+  return request("/notifications", {
+    method: "DELETE"
+  });
+}

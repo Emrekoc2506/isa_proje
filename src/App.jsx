@@ -66,7 +66,7 @@ function AppRoutes() {
       <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
 
       {/* Sepet / Ödeme (Auth veya Guest) */}
-      <Route path="/sepet" element={<MainLayout><ProductsPage /></MainLayout>} /> {/* Sepet Drawer olarak açılır, yönlendirmede de ürünleri listeler */}
+      <Route path="/sepet" element={<Navigate to="/odeme" replace />} />
       <Route path="/odeme" element={<CheckoutPage />} />
       <Route path="/odeme/sonuc" element={<PaymentResultPage />} />
 

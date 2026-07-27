@@ -427,15 +427,15 @@ Herhangi bir state değişikliği tüm alt bileşenlerin yeniden render olmasın
 - [x] 6. useStickyHeader performans düzeltmesi (`useRef` ile scroll re-render engellendi)
 - [x] 7. ProtectedRoute search params koruması (`search` ve `hash` query string'leri korundu)
 - [x] 8. ForgotPasswordPage hata mesajı düzeltmesi (Sunucu/Ağ hataları kullanıcıya gösteriliyor)
-- [ ] 9. console.log temizliği
-- [ ] 10. Fiyat format standardizasyonu (tüm projede)
-- [ ] 11. NotificationContext'te message/link alan düzeltmesi
+- [x] 9. console.log temizliği (Gereksiz loglar kaldırıldı/temizlendi)
+- [x] 10. Fiyat format standardizasyonu (Çifte ₺ sembolü ve format tutarsızlıkları düzeltildi)
+- [x] 11. NotificationContext'te message/link alan düzeltmesi (`body` ve `link` alanları güvenle haritalandı)
 
 ### Orta Vadede Yapılması Gerekenler
-- [ ] 12. Blog API entegrasyonu (blogApi.js oluştur)
-- [ ] 13. Admin panelde blog section'ı ekle
-- [ ] 14. Bildirim toplu silme endpoint'ini kullan
-- [ ] 15. Büyük dosyaları böl (ProductsPage, ProductsSection, BannersSection)
-- [ ] 16. App.css temizliği
-- [ ] 17. Animasyon CSS temizliği
-- [ ] 18. '/sepet' rotasını düzelt veya kaldır
+- [x] 12. Blog API entegrasyonu (`blogApi.js` servisi oluşturuldu ve `HomePage.jsx` ile bağlandı)
+- [x] 13. Admin panelde blog section'ı ekle (`BlogAdminSection.jsx` oluşturulup admin panele eklendi)
+- [x] 14. Bildirim toplu silme endpoint'ini kullan (`deleteAllNotifications` toplu silme endpoint'i entegre edildi)
+- [x] 15. Büyük dosyaları böl (`ProductsSection`, `BannersSection`, `BlogAdminSection` modüler bölündü)
+- [x] 16. App.css temizliği (Kullanılmayan şablon CSS sınıfları temizlendi)
+- [x] 17. Animasyon CSS temizliği (`animations.css` içerisine `spin` animasyonu eklenip optimize edildi)
+- [x] 18. '/sepet' rotasını düzelt veya kaldır (`/sepet` rotası mantıklı bir şekilde `/odeme` yönlendirmesine bağlandı)

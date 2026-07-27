@@ -1,13 +1,24 @@
+import { useState, useEffect } from 'react';
 import styles from './HomePage.module.css';
 import HeroSlider from '../../components/HeroSlider/HeroSlider';
 import ProductSection from '../../components/ProductSection/ProductSection';
 import BlogSection from '../../components/BlogSection/BlogSection';
 import VideoBannerItem from '../../components/HeroSlider/VideoBannerItem';
 import { useProducts } from '../../context/ProductContext';
-import { blogArticles } from '../../data/index';
+import { getBlogArticles } from '../../services/blogApi';
+import { blogArticles as mockArticles } from '../../data/index';
 
 export default function HomePage() {
   const { products, slides } = useProducts();
+  const [articles, setArticles] = useState(mockArticles);
+
+  useEffect(() => {
+    getBlogArticles()
+      .then(data => {
+        if (data && data.length > 0) setArticles(data);
+      })
+      .catch(() => null);
+  }, []);
 
   const newsProducts = products.filter(p => p.isNew);
   const saleProducts = products.filter(p => p.isSale);
@@ -69,7 +80,7 @@ export default function HomePage() {
       />
 
       {/* ── Blog ─────────────────────────────────────────── */}
-      <BlogSection articles={blogArticles} />
+      <BlogSection articles={articles} />
     </main>
   );
 }
