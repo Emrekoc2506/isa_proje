@@ -422,7 +422,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
         </div>
         <button
           onClick={handleOpenCreate}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: 'rgb(56, 189, 248)', border: 'none', borderRadius: 10, padding: '12px 22px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)', transition: 'transform 0.15s ease' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', border: 'none', borderRadius: 10, padding: '12px 22px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)', transition: 'transform 0.15s ease' }}
         >
           <FiPlus size={18} /> Yeni Ürün Ekle
         </button>
@@ -439,7 +439,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
           <p style={{ color: 'var(--text-muted)', margin: '0 0 24px 0', fontSize: 14 }}>Mağazanızda satılacak ilk ürününüzü hemen oluşturun.</p>
           <button
             onClick={handleOpenCreate}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: 'rgb(56, 189, 248)', border: 'none', borderRadius: 10, padding: '14px 28px', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', border: 'none', borderRadius: 10, padding: '14px 28px', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)' }}
           >
             <FiPlus size={18} /> İlk Ürünü Ekleyin
           </button>
@@ -1072,7 +1072,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                           setModalStep(s => s + 1);
                         }} 
                         className={styles.seeAllBtn}
-                        style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: 'rgb(56, 189, 248)', fontWeight: 'bold', border: 'none', borderRadius: 8, cursor: 'pointer' }}
+                        style={{ padding: '10px 18px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: 8, cursor: 'pointer' }}
                       >
                         İleri <FiChevronRight size={16} />
                       </button>
@@ -1080,7 +1080,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                       <button 
                         type="submit" 
                         className={styles.shopBtn}
-                        style={{ padding: '10px 24px', fontSize: 13, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: 'rgb(56, 189, 248)', borderRadius: 8, cursor: 'pointer', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}
+                        style={{ padding: '10px 24px', fontSize: 13, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', borderRadius: 8, cursor: 'pointer', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}
                       >
                         <FiCheck size={16} /> {modalMode === 'create' ? 'Ürünü Kaydet' : 'Değişiklikleri Kaydet'}
                       </button>

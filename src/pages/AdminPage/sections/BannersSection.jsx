@@ -579,7 +579,7 @@ export default function BannersSection() {
         </div>
         <button
           onClick={openModal}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: 'rgb(56, 189, 248)', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}
         >
           <FiPlus size={16} /> Yeni İlan Ekle
         </button>
@@ -614,7 +614,7 @@ export default function BannersSection() {
                   </div>
                   {rich.price && (
                     <div style={{ position: 'absolute', bottom: 10, left: 10 }}>
-                      <span style={{ background: 'rgba(201,162,39,0.9)', color: 'rgb(56, 189, 248)', fontSize: 13, padding: '4px 10px', borderRadius: 8, fontWeight: 700 }}>
+                      <span style={{ background: 'rgba(201,162,39,0.9)', color: '#000', fontSize: 13, padding: '4px 10px', borderRadius: 8, fontWeight: 700 }}>
                         ₺{rich.price}
                       </span>
                     </div>
@@ -1053,7 +1053,7 @@ export default function BannersSection() {
                     </button>
                   ) : (
                     <button type="submit" disabled={saving}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light,#c9a227), #d4891a)', color: 'rgb(56, 189, 248)', border: 'none', borderRadius: 9, padding: '10px 24px', fontSize: 13, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, boxShadow: '0 4px 15px rgba(201,162,39,0.35)' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light,#c9a227), #d4891a)', color: '#000', border: 'none', borderRadius: 9, padding: '10px 24px', fontSize: 13, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, boxShadow: '0 4px 15px rgba(201,162,39,0.35)' }}>
                       <FiCheck size={16} /> {saving ? 'Kaydediliyor...' : 'İlanı Yayınla'}
                     </button>
                   )}
@@ -1095,7 +1095,7 @@ export default function BannersSection() {
                   {/* Price */}
                   {previewBanner.rich?.price && (
                     <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                      <span style={{ background: 'linear-gradient(135deg, #c9a227, #a07820)', color: 'rgb(56, 189, 248)', fontSize: 22, fontWeight: 800, padding: '8px 24px', borderRadius: 12, display: 'inline-block', boxShadow: '0 4px 20px rgba(201,162,39,0.3)' }}>
+                      <span style={{ background: 'linear-gradient(135deg, #c9a227, #a07820)', color: '#000', fontSize: 22, fontWeight: 800, padding: '8px 24px', borderRadius: 12, display: 'inline-block', boxShadow: '0 4px 20px rgba(201,162,39,0.3)' }}>
                         ₺{previewBanner.rich.price}
                       </span>
                     </div>
@@ -1179,7 +1179,7 @@ export default function BannersSection() {
                   {/* CTA Button */}
                   {previewBanner.cta && (
                     <div style={{ textAlign: 'center', marginTop: 32 }}>
-                      <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: 'rgb(56, 189, 248)', fontSize: 15, fontWeight: 800, padding: '14px 40px', borderRadius: 12, boxShadow: '0 6px 20px rgba(201,162,39,0.3)' }}>
+                      <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', fontSize: 15, fontWeight: 800, padding: '14px 40px', borderRadius: 12, boxShadow: '0 6px 20px rgba(201,162,39,0.3)' }}>
                         {previewBanner.cta}
                       </span>
                     </div>
