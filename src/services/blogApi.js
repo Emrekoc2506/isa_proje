@@ -126,11 +126,15 @@ export async function getAdminBlogArticles(params = {}) {
   }
 }
 
-/**
- * Admin — Tekil makale
- */
-export function getAdminBlogArticleById(id) {
-  return request(`/admin/blog/${id}`);
+export async function getAdminBlogArticleById(id) {
+  if (!id) return null;
+  try {
+    const res = await request(`/admin/blog/${id}`);
+    if (res) return normalizeDates(res);
+  } catch {
+    // Fallback to public getBlogArticleBySlug
+  }
+  return getBlogArticleBySlug(id);
 }
 
 /**

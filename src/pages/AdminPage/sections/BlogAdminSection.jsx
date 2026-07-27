@@ -5,6 +5,7 @@ import {
 } from 'react-icons/fi';
 import {
   getAdminBlogArticles,
+  getAdminBlogArticleById,
   createAdminBlogArticle,
   updateAdminBlogArticle,
   deleteAdminBlogArticle,
@@ -74,6 +75,7 @@ export default function BlogAdminSection() {
   const [articles, setArticles]         = useState([]);
   const [totalCount, setTotalCount]     = useState(0);
   const [loading, setLoading]           = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [togglingId, setTogglingId]     = useState(null);
   const [showModal, setShowModal]       = useState(false);
   const [editingId, setEditingId]       = useState(null);
@@ -127,7 +129,7 @@ export default function BlogAdminSection() {
     setShowModal(true);
   };
 
-  const openEdit = (art) => {
+  const openEdit = async (art) => {
     setEditingId(art.id);
     setForm({
       title:               art.title || '',
@@ -145,6 +147,34 @@ export default function BlogAdminSection() {
     });
     setError('');
     setShowModal(true);
+
+    if (!art.content || art.content.trim() === '') {
+      setLoadingDetail(true);
+      try {
+        const detail = await getAdminBlogArticleById(art.id || art.slug);
+        if (detail) {
+          setForm((f) => ({
+            ...f,
+            title:               detail.title || f.title,
+            slug:                detail.slug || f.slug,
+            summary:             detail.summary || f.summary,
+            content:             detail.content || f.content,
+            blogCategoryId:      detail.blogCategoryId || f.blogCategoryId,
+            coverImageUrl:       detail.coverImageUrl || detail.image || f.coverImageUrl,
+            coverImageObjectKey: detail.coverImageObjectKey || f.coverImageObjectKey,
+            coverImageAltText:   detail.coverImageAltText || f.coverImageAltText,
+            status:              detail.status || f.status,
+            seoTitle:            detail.seoTitle || f.seoTitle,
+            seoDescription:      detail.seoDescription || f.seoDescription,
+            seoKeywords:         detail.seoKeywords || f.seoKeywords,
+          }));
+        }
+      } catch (err) {
+        console.error("Makale detayı çekilemedi:", err);
+      } finally {
+        setLoadingDetail(false);
+      }
+    }
   };
 
   // ── Kapak görseli yükle ────────────────────────────────
@@ -567,7 +597,14 @@ export default function BlogAdminSection() {
 
               {/* TinyMCE İçerik */}
               <div style={{ marginBottom: '24px' }}>
-                <label style={labelStyle}>Detaylı İçerik (TinyMCE) *</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label style={labelStyle}>Detaylı İçerik (TinyMCE) *</label>
+                  {loadingDetail && (
+                    <span style={{ color: 'var(--gold)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FiLoader className="spin" /> İçerik sunucudan çekiliyor...
+                    </span>
+                  )}
+                </div>
                 <RichTextEditor
                   value={form.content}
                   onChange={val => setField('content', val)}
