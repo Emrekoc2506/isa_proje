@@ -18,8 +18,16 @@ import {
   deleteAdminBanner, 
   updateAdminBannerStatus 
 } from '../services/bannerApi';
-import { parseBannerContent } from '../utils/bannerContent';
+import { 
+  parseBannerContent 
+} from '../utils/bannerContent';
+import { 
+  newsProducts as mockNews, 
+  saleProducts as mockSale, 
+  featuredProducts as mockFeatured 
+} from '../data/index';
 
+const MOCK_PRODUCTS = [...mockNews, ...mockSale, ...mockFeatured];
 const INITIAL_SLIDES = [];
 const ProductContext = createContext(null);
 
@@ -76,7 +84,13 @@ export function ProductProvider({ children }) {
       ]);
 
       setCategories(categoriesData || []);
-      setProducts(normalizeProducts(productsData));
+
+      const normalized = normalizeProducts(productsData);
+      if (normalized && normalized.length > 0) {
+        setProducts(normalized);
+      } else {
+        setProducts(normalizeProducts(MOCK_PRODUCTS));
+      }
       
       // Slaytları/Bannerları map edelim (backend formatı -> frontend formatı)
       const mappedSlides = (bannersData || [])

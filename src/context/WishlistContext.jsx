@@ -206,7 +206,23 @@ export function WishlistProvider({ children }) {
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
   if (!context) {
-    throw new Error("useWishlist must be used within a WishlistProvider");
+    return {
+      items: [],
+      wishlistItems: [],
+      favorites: [],
+      loading: false,
+      isFavorite: () => false,
+      isInWishlist: () => false,
+      addFavorite: async () => {},
+      removeFavorite: async () => {},
+      removeFromWishlist: async () => {},
+      toggleFavorite: async () => {},
+      toggleWishlist: async () => {},
+      reloadWishlist: async () => {},
+      refreshWishlist: async () => {},
+      mergeGuestWishlist: async () => {},
+      clearWishlistState: () => {}
+    };
   }
   return context;
 };

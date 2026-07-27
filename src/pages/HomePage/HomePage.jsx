@@ -13,6 +13,10 @@ export default function HomePage() {
   const saleProducts = products.filter(p => p.isSale);
   const featuredProducts = products.filter(p => p.isFeatured);
 
+  const displayNews = newsProducts.length > 0 ? newsProducts : products.slice(0, 8);
+  const displaySale = saleProducts.length > 0 ? saleProducts : (products.length > 4 ? products.slice(4, 12) : products.slice(0, 8));
+  const displayFeatured = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8);
+
   // 1. banner HeroSlider'da gösterilir. Sonraki bannerlar SortOrder sırasıyla sayfa altında gösterilir.
   const secondaryBanners = slides.slice(1);
 
@@ -25,7 +29,7 @@ export default function HomePage() {
       <ProductSection
         title="Yeni Gelenler"
         viewAllHref="/urunler"
-        products={newsProducts.length > 0 ? newsProducts : products.slice(0, 4)}
+        products={displayNews}
       />
 
       {/* ── 2. Banner (Aşağıdaki İkinci Geniş Video/Görsel Alanı) ── */}
@@ -53,7 +57,7 @@ export default function HomePage() {
         <ProductSection
           title="İndirimdekiler"
           viewAllHref="/urunler"
-          products={saleProducts.length > 0 ? saleProducts : products.slice(4, 8)}
+          products={displaySale}
         />
       </section>
 
@@ -61,7 +65,7 @@ export default function HomePage() {
       <ProductSection
         title="Öne Çıkan Ürünler"
         viewAllHref="/urunler"
-        products={featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8)}
+        products={displayFeatured}
       />
 
       {/* ── Blog ─────────────────────────────────────────── */}
