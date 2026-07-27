@@ -8,9 +8,9 @@ export async function getBlogArticles(params = {}) {
     if (res && Array.isArray(res)) return res;
     if (res && Array.isArray(res.items)) return res.items;
   } catch (err) {
-    // Fallback to static mock articles
+    // API failure fallback
   }
-  return mockArticles;
+  return [];
 }
 
 export async function getBlogArticleBySlug(slug) {
@@ -20,7 +20,7 @@ export async function getBlogArticleBySlug(slug) {
   } catch (err) {
     // Fallback
   }
-  return mockArticles.find(a => a.slug === slug || a.id === slug) || mockArticles[0];
+  return null;
 }
 
 export async function getBlogCategories() {

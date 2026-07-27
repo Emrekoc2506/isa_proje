@@ -7,6 +7,8 @@ import { useScrollReveal } from '../../hooks/useScrollReveal';
 export default function BlogSection({ articles = [] }) {
   const sectionRef = useScrollReveal();
 
+  if (!articles || articles.length === 0) return null;
+
   return (
     <section className={styles.section} ref={sectionRef}>
       <div className={styles.inner}>

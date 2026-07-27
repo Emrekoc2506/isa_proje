@@ -10,14 +10,14 @@ import { blogArticles as mockArticles } from '../../data/index';
 
 export default function HomePage() {
   const { products, slides } = useProducts();
-  const [articles, setArticles] = useState(mockArticles);
+  const [articles, setArticles] = useState([]);
 
   useEffect(() => {
     getBlogArticles()
       .then(data => {
-        if (data && data.length > 0) setArticles(data);
+        if (Array.isArray(data)) setArticles(data);
       })
-      .catch(() => null);
+      .catch(() => setArticles([]));
   }, []);
 
   const newsProducts = products.filter(p => p.isNew);
