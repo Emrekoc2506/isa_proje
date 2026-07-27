@@ -20,6 +20,9 @@ function resolveErrorMsg(err) {
   if (err.status === 429 || err.code === 'too_many_requests') {
     return 'Sunucu çok fazla istek algıladı (429 Rate Limit). Lütfen 5-10 saniye bekleyip tekrar deneyin.';
   }
+  if (err.status === 500) {
+    return 'Sunucuda bir hata oluştu (500 Internal Server Error). Lütfen backend C# servisini ve veritabanı bağlantısını kontrol edin.';
+  }
   switch (err.code) {
     case 'confirmation_required': return 'İşlem onayı gerekiyor.';
     case 'validation_error':      return err.message || 'Form alanlarını kontrol edin.';

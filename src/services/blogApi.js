@@ -107,8 +107,13 @@ export async function getAdminBlogArticles(params = {}) {
   try {
     const res = await request(`/admin/blog?${query}`);
     return extractItems(res);
-  } catch {
-    return { items: [], totalCount: 0, page, pageSize };
+  } catch (err) {
+    try {
+      const fallbackRes = await request(`/blog?${query}`);
+      return extractItems(fallbackRes);
+    } catch {
+      return { items: [], totalCount: 0, page, pageSize };
+    }
   }
 }
 
@@ -273,20 +278,27 @@ function buildBlogPayload(payload) {
       .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
     : '');
 
+  // GUID Doğrulaması — Eğer blogCategoryId geçerli bir GUID değilse null gönder
+  const isGuid = typeof blogCategoryId === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(blogCategoryId);
+  const resolvedCategoryId = isGuid ? blogCategoryId : null;
+
+  // Yayın tarihi — Yayında ise ve tarih yoksa şu anki ISO tarihini ver
+  const resolvedPublishedAt = publishedAt || (resolvedStatus === 'Published' ? new Date().toISOString() : null);
+
   return {
     title:                  title || '',
     slug:                   resolvedSlug,
     summary:                summary || '',
     content:                content || '',
-    blogCategoryId:         blogCategoryId || null,
+    blogCategoryId:         resolvedCategoryId,
     coverImageUrl:          coverImageUrl || null,
     coverImageObjectKey:    coverImageObjectKey || null,
     coverImageAltText:      coverImageAltText || null,
     status:                 resolvedStatus,
-    publishedAt:            publishedAt || null,
+    publishedAt:            resolvedPublishedAt,
     seoTitle:               seoTitle || null,
     seoDescription:         seoDescription || null,
     seoKeywords:            seoKeywords || null,
-    contentImages:          contentImages || [],
+    contentImages:          Array.isArray(contentImages) ? contentImages : [],
   };
 }
