@@ -14,7 +14,7 @@ export default function ProtectedRoute({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/giris" state={{ from: location }} replace />;
+    return <Navigate to="/giris" state={{ from: { pathname: location.pathname, search: location.search, hash: location.hash } }} replace />;
   }
 
   return children;

@@ -6,6 +6,7 @@ import { FiUser, FiLock, FiMail, FiEye, FiEyeOff, FiAlertCircle } from 'react-ic
 import logoImage from '../../assets/images/logo.png';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { safeGetItem, safeSetItem, safeRemoveItem, safeGetJson } from '../../utils/storage';
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login');
@@ -36,7 +37,7 @@ export default function AuthPage() {
 
   // Beni Hatırla: Kaydedilen emaili yükle
   useEffect(() => {
-    const savedEmail = localStorage.getItem("rememberedEmail");
+    const savedEmail = safeGetItem("rememberedEmail");
     if (savedEmail) {
       setLoginEmail(savedEmail);
       setRememberMe(true);
@@ -106,20 +107,14 @@ export default function AuthPage() {
 
       // Beni hatırla kaydı
       if (rememberMe) {
-        localStorage.setItem("rememberedEmail", loginEmail);
+        safeSetItem("rememberedEmail", loginEmail);
       } else {
-        localStorage.removeItem("rememberedEmail");
+        safeRemoveItem("rememberedEmail");
       }
 
       // Merge guest wishlist after login
       try {
-        const raw = localStorage.getItem("isa_guest_wishlist");
-        let guestItems = [];
-        try {
-          guestItems = raw ? JSON.parse(raw) : [];
-        } catch {
-          guestItems = [];
-        }
+        const guestItems = safeGetJson("isa_guest_wishlist", []);
         if (guestItems.length > 0) {
           await mergeGuestWishlist(guestItems);
         }

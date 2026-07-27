@@ -1,5 +1,6 @@
 import { apiBaseUrl, request } from "./apiClient";
 import { getGuestSessionId } from "../utils/guestSession";
+import { safeGetItem } from "../utils/storage";
 
 export function uploadFile(file, purpose = "Product", ownerId = null, onProgress = null) {
   let purposeValue = "Product";
@@ -27,7 +28,7 @@ export function uploadFile(file, purpose = "Product", ownerId = null, onProgress
       const xhr = new XMLHttpRequest();
       xhr.open("POST", `${apiBaseUrl}/admin/files/upload`);
 
-      const token = typeof localStorage !== "undefined" ? localStorage.getItem("accessToken") : null;
+      const token = safeGetItem("accessToken");
       if (token) {
         xhr.setRequestHeader("Authorization", `Bearer ${token}`);
       }

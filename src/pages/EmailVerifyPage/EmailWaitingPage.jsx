@@ -16,11 +16,6 @@ export default function EmailWaitingPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [cooldown, setCooldown] = useState(0);
 
-  // Cooldown timer efekti
-  useState(() => {
-    // initialize cooldown if needed
-  });
-
   // Cooldown geri sayım logic
   useEffect(() => {
     if (cooldown > 0) {
