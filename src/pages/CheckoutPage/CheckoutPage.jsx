@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiMapPin, FiTruck, FiTag, FiShoppingBag, FiCheck, FiChevronRight, FiLoader, FiAlertTriangle } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { getCities, getDistricts } from '../../data/turkiyeLocations';
 import * as accountApi from '../../services/accountApi';
 import * as checkoutApi from '../../services/checkoutApi';
 import * as couponApi from '../../services/couponApi';
@@ -14,6 +15,10 @@ export default function CheckoutPage() {
   const { isAuthenticated, user } = useAuth();
   const { items: cartItems, clearCart } = useCart();
   const navigate = useNavigate();
+
+  const cityList = getCities();
+  const guestShippingDistricts = getDistricts(guestShipping?.city);
+  const guestBillingDistricts = getDistricts(guestBilling?.city);
 
   // Loading states
   const [addresses, setAddresses] = useState([]);
@@ -311,8 +316,40 @@ export default function CheckoutPage() {
                   <input type="text" placeholder="Ad Soyad *" required value={guestShipping.fullName} onChange={e => handleGuestShippingChange('fullName', e.target.value)} className={styles.input} />
                   <input type="email" placeholder="E-posta *" required value={guestShipping.email} onChange={e => handleGuestShippingChange('email', e.target.value)} className={styles.input} />
                   <input type="tel" placeholder="Telefon *" required value={guestShipping.phoneNumber} onChange={e => handleGuestShippingChange('phoneNumber', e.target.value)} className={styles.input} />
-                  <input type="text" placeholder="Şehir *" required value={guestShipping.city} onChange={e => handleGuestShippingChange('city', e.target.value)} className={styles.input} />
-                  <input type="text" placeholder="İlçe *" required value={guestShipping.district} onChange={e => handleGuestShippingChange('district', e.target.value)} className={styles.input} />
+                  <select
+                    required
+                    value={guestShipping.city}
+                    onChange={e => {
+                      handleGuestShippingChange('city', e.target.value);
+                      handleGuestShippingChange('district', '');
+                    }}
+                    className={styles.input}
+                    style={{ background: 'rgba(0,0,0,0.3)', color: guestShipping.city ? 'var(--text-light)' : '#999' }}
+                  >
+                    <option value="" style={{ background: 'var(--bg-dark)', color: '#999' }}>Şehir Seçin *</option>
+                    {cityList.map(c => (
+                      <option key={c} value={c} style={{ background: 'var(--bg-dark)', color: '#fff' }}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    required
+                    disabled={!guestShipping.city}
+                    value={guestShipping.district}
+                    onChange={e => handleGuestShippingChange('district', e.target.value)}
+                    className={styles.input}
+                    style={{ background: 'rgba(0,0,0,0.3)', color: guestShipping.district ? 'var(--text-light)' : '#999', opacity: !guestShipping.city ? 0.6 : 1 }}
+                  >
+                    <option value="" style={{ background: 'var(--bg-dark)', color: '#999' }}>
+                      {guestShipping.city ? 'İlçe Seçin *' : '-- Önce Şehir Seçin --'}
+                    </option>
+                    {guestShippingDistricts.map(d => (
+                      <option key={d} value={d} style={{ background: 'var(--bg-dark)', color: '#fff' }}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
                   <input type="text" placeholder="Posta Kodu *" required value={guestShipping.postalCode} onChange={e => handleGuestShippingChange('postalCode', e.target.value)} className={styles.input} />
                   <input type="text" placeholder="Açık Adres *" required value={guestShipping.addressLine} onChange={e => handleGuestShippingChange('addressLine', e.target.value)} className={styles.input} style={{ gridColumn: 'span 2' }} />
                 </div>
@@ -352,8 +389,40 @@ export default function CheckoutPage() {
                     <div className={styles.formGrid}>
                       <input type="text" placeholder="Ad Soyad *" required value={guestBilling.fullName} onChange={e => handleGuestBillingChange('fullName', e.target.value)} className={styles.input} />
                       <input type="tel" placeholder="Telefon *" required value={guestBilling.phoneNumber} onChange={e => handleGuestBillingChange('phoneNumber', e.target.value)} className={styles.input} />
-                      <input type="text" placeholder="Şehir *" required value={guestBilling.city} onChange={e => handleGuestBillingChange('city', e.target.value)} className={styles.input} />
-                      <input type="text" placeholder="İlçe *" required value={guestBilling.district} onChange={e => handleGuestBillingChange('district', e.target.value)} className={styles.input} />
+                  <select
+                    required
+                    value={guestBilling.city}
+                    onChange={e => {
+                      handleGuestBillingChange('city', e.target.value);
+                      handleGuestBillingChange('district', '');
+                    }}
+                    className={styles.input}
+                    style={{ background: 'rgba(0,0,0,0.3)', color: guestBilling.city ? 'var(--text-light)' : '#999' }}
+                  >
+                    <option value="" style={{ background: 'var(--bg-dark)', color: '#999' }}>Şehir Seçin *</option>
+                    {cityList.map(c => (
+                      <option key={c} value={c} style={{ background: 'var(--bg-dark)', color: '#fff' }}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    required
+                    disabled={!guestBilling.city}
+                    value={guestBilling.district}
+                    onChange={e => handleGuestBillingChange('district', e.target.value)}
+                    className={styles.input}
+                    style={{ background: 'rgba(0,0,0,0.3)', color: guestBilling.district ? 'var(--text-light)' : '#999', opacity: !guestBilling.city ? 0.6 : 1 }}
+                  >
+                    <option value="" style={{ background: 'var(--bg-dark)', color: '#999' }}>
+                      {guestBilling.city ? 'İlçe Seçin *' : '-- Önce Şehir Seçin --'}
+                    </option>
+                    {guestBillingDistricts.map(d => (
+                      <option key={d} value={d} style={{ background: 'var(--bg-dark)', color: '#fff' }}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
                       <input type="text" placeholder="Posta Kodu *" required value={guestBilling.postalCode} onChange={e => handleGuestBillingChange('postalCode', e.target.value)} className={styles.input} />
                       <input type="text" placeholder="Açık Adres *" required value={guestBilling.addressLine} onChange={e => handleGuestBillingChange('addressLine', e.target.value)} className={styles.input} style={{ gridColumn: 'span 2' }} />
                     </div>
