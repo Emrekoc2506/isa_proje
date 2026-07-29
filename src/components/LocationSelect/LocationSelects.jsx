@@ -31,6 +31,8 @@ export default function LocationSelects({
     if (onNeighborhoodChange) onNeighborhoodChange('');
   };
 
+  const optionStyle = { background: '#1b0e2b', color: '#ffffff' };
+
   return (
     <>
       {/* Şehir (İl) */}
@@ -41,14 +43,14 @@ export default function LocationSelects({
           value={city || ''}
           onChange={handleCitySelect}
           className={fieldInputClass}
-          style={selectStyle}
+          style={{ ...selectStyle, cursor: 'pointer' }}
         >
-          <option value="">İl Seçin *</option>
+          <option value="" style={optionStyle}>İl Seçin *</option>
           {cities.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c} style={optionStyle}>{c}</option>
           ))}
           {city && !cities.includes(city) && (
-            <option value={city}>{city}</option>
+            <option value={city} style={optionStyle}>{city}</option>
           )}
         </select>
       </div>
@@ -62,14 +64,14 @@ export default function LocationSelects({
           onChange={handleDistrictSelect}
           disabled={!city}
           className={fieldInputClass}
-          style={selectStyle}
+          style={{ ...selectStyle, cursor: city ? 'pointer' : 'not-allowed', opacity: city ? 1 : 0.6 }}
         >
-          <option value="">{city ? 'İlçe Seçin *' : 'Önce İl Seçin'}</option>
+          <option value="" style={optionStyle}>{city ? 'İlçe Seçin *' : 'Önce İl Seçin'}</option>
           {districts.map((d) => (
-            <option key={d} value={d}>{d}</option>
+            <option key={d} value={d} style={optionStyle}>{d}</option>
           ))}
           {district && !districts.includes(district) && (
-            <option value={district}>{district}</option>
+            <option value={district} style={optionStyle}>{district}</option>
           )}
         </select>
       </div>
@@ -84,14 +86,14 @@ export default function LocationSelects({
             onChange={(e) => onNeighborhoodChange(e.target.value)}
             disabled={!district}
             className={fieldInputClass}
-            style={selectStyle}
+            style={{ ...selectStyle, cursor: district ? 'pointer' : 'not-allowed', opacity: district ? 1 : 0.6 }}
           >
-            <option value="">{district ? 'Mahalle Seçin *' : 'Önce İlçe Seçin'}</option>
+            <option value="" style={optionStyle}>{district ? 'Mahalle Seçin *' : 'Önce İlçe Seçin'}</option>
             {neighborhoods.map((m) => (
-              <option key={m} value={m}>{m}</option>
+              <option key={m} value={m} style={optionStyle}>{m}</option>
             ))}
             {neighborhood && !neighborhoods.includes(neighborhood) && (
-              <option value={neighborhood}>{neighborhood}</option>
+              <option value={neighborhood} style={optionStyle}>{neighborhood}</option>
             )}
           </select>
         </div>
