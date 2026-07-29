@@ -141,7 +141,7 @@ export default function Header() {
 
             {/* Favoriler */}
             <div className={styles.wishlistWrapper}>
-              <a href="/panel" className={styles.actionBtn} aria-label={`Favoriler - ${wishlistCount} ürün`}>
+              <a href="/favorilerim" className={styles.actionBtn} aria-label={`Favoriler - ${wishlistCount} ürün`}>
                 <FiHeart />
                 {wishlistCount > 0 && (
                   <span className={styles.wishlistBadge}>{wishlistCount}</span>

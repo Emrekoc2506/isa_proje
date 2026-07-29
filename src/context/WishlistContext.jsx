@@ -65,9 +65,12 @@ export function WishlistProvider({ children }) {
     reloadWishlist();
   }, [isAuthenticated, reloadWishlist]);
 
-  const addFavorite = useCallback(async (productId) => {
-    if (!isValidGuid(productId)) {
-      console.warn("Invalid product ID format.");
+  const addFavorite = useCallback(async (input) => {
+    const productId = typeof input === 'object' ? (input?.id || input?.productId) : input;
+    if (!productId) return;
+    
+    if (!isValidGuid(productId) && import.meta.env.PROD) {
+      console.warn("Invalid product ID format.", productId);
       return;
     }
     try {
@@ -91,7 +94,10 @@ export function WishlistProvider({ children }) {
     }
   }, [isAuthenticated, reloadWishlist]);
 
-  const removeFavorite = useCallback(async (productId) => {
+  const removeFavorite = useCallback(async (input) => {
+    const productId = typeof input === 'object' ? (input?.id || input?.productId) : input;
+    if (!productId) return;
+
     try {
       setLoading(true);
       if (isAuthenticated) {
@@ -111,7 +117,10 @@ export function WishlistProvider({ children }) {
     }
   }, [isAuthenticated, reloadWishlist]);
 
-  const toggleFavorite = useCallback(async (productId) => {
+  const toggleFavorite = useCallback(async (input) => {
+    const productId = typeof input === 'object' ? (input?.id || input?.productId) : input;
+    if (!productId) return;
+
     const exists = items.some(i => i.productId === productId || i.id === productId);
     if (exists) {
       await removeFavorite(productId);
@@ -120,7 +129,9 @@ export function WishlistProvider({ children }) {
     }
   }, [items, addFavorite, removeFavorite]);
 
-  const isFavorite = useCallback((productId) => {
+  const isFavorite = useCallback((input) => {
+    const productId = typeof input === 'object' ? (input?.id || input?.productId) : input;
+    if (!productId) return false;
     return items.some(i => i.productId === productId || i.id === productId);
   }, [items]);
 
@@ -160,6 +171,8 @@ export function WishlistProvider({ children }) {
 
   const value = {
     items,
+    totalCount: items.length,
+    wishlistCount: items.length,
     isLoading: loading,
     loading,
     error,
