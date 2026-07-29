@@ -94,7 +94,7 @@ function AppRoutes() {
       <Route path="/siparislerim/:id" element={<ProtectedRoute><DashboardPage activeTab="orders" /></ProtectedRoute>} />
       <Route path="/favorilerim" element={<ProtectedRoute><DashboardPage activeTab="wishlist" /></ProtectedRoute>} />
       <Route path="/adreslerim" element={<ProtectedRoute><DashboardPage activeTab="addresses" /></ProtectedRoute>} />
-      <Route path="/profilim" element={<ProtectedRoute><DashboardPage activeTab="profile" /></ProtectedRoute>} />
+      <Route path="/profilim" element={<Navigate to="/ayarlar" replace />} />
       <Route path="/ayarlar" element={<ProtectedRoute><DashboardPage activeTab="settings" /></ProtectedRoute>} />
 
       {/* Yönetici Rotaları (Yalnızca Admin/SuperAdmin) */}
