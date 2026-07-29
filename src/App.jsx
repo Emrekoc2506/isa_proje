@@ -108,11 +108,13 @@ function AppRoutes() {
 }
 
 import { HelmetProvider } from 'react-helmet-async';
+import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 
 function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <AuthProvider>
           <ProductProvider>
             <WishlistProvider>

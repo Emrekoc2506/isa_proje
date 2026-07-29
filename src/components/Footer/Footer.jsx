@@ -73,7 +73,7 @@ export default function Footer() {
             <ul className={styles.linkList}>
               {footerLinks.info.map(l => (
                 <li key={l.label}>
-                  <Link to={l.href} className={styles.link}>{l.label}</Link>
+                  <Link to={l.href} className={styles.link} onClick={() => window.scrollTo(0, 0)}>{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -84,7 +84,7 @@ export default function Footer() {
             <ul className={styles.linkList}>
               {footerLinks.customer.map(l => (
                 <li key={l.label}>
-                  <Link to={l.href} className={styles.link}>{l.label}</Link>
+                  <Link to={l.href} className={styles.link} onClick={() => window.scrollTo(0, 0)}>{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -95,7 +95,7 @@ export default function Footer() {
             <ul className={styles.linkList}>
               {footerLinks.categories.map(l => (
                 <li key={l.label}>
-                  <Link to={l.href} className={styles.link}>{l.label}</Link>
+                  <Link to={l.href} className={styles.link} onClick={() => window.scrollTo(0, 0)}>{l.label}</Link>
                 </li>
               ))}
             </ul>
