@@ -220,10 +220,10 @@ export default function Header() {
             </motion.div>
           )}
         </AnimatePresence>
-      </header>
 
-      {/* ── Kategori Navigasyonu ────────────────────────────── */}
-      <CategoryNav mobileOpen={mobileMenuOpen} onMobileClose={() => setMobileMenuOpen(false)} />
+        {/* ── Kategori Navigasyonu (Header ile tam birleşmiş) ── */}
+        <CategoryNav mobileOpen={mobileMenuOpen} onMobileClose={() => setMobileMenuOpen(false)} />
+      </header>
 
       {/* ── Sepet Çekmecesi ─────────────────────────────────── */}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
