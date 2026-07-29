@@ -27,6 +27,14 @@ import ResetPasswordPage from './pages/ForgotPasswordPage/ResetPasswordPage';
 import CheckoutPage from './pages/CheckoutPage/CheckoutPage';
 import PaymentResultPage from './pages/CheckoutPage/PaymentResultPage';
 
+// Statik Sayfalar
+import HakkimizdaPage from './pages/StaticPages/HakkimizdaPage';
+import IletisimPage from './pages/StaticPages/IletisimPage';
+import KargoTeslimatPage from './pages/StaticPages/KargoTeslimatPage';
+import IadeSikayetPage from './pages/StaticPages/IadeSikayetPage';
+import GizlilikPage from './pages/StaticPages/GizlilikPage';
+import KullanimKosullariPage from './pages/StaticPages/KullanimKosullariPage';
+
 function UnauthorizedPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'var(--bg-dark)', color: 'var(--text-light)', fontFamily: 'var(--font-body)' }}>
@@ -56,6 +64,14 @@ function AppRoutes() {
       <Route path="/urunler" element={<MainLayout><ProductsPage /></MainLayout>} />
       <Route path="/urun/:id" element={<ProductDetailPage />} />
       <Route path="/blog" element={<MainLayout><BlogPage /></MainLayout>} />
+
+      {/* Statik Sayfalar */}
+      <Route path="/hakkimizda" element={<MainLayout><HakkimizdaPage /></MainLayout>} />
+      <Route path="/iletisim" element={<MainLayout><IletisimPage /></MainLayout>} />
+      <Route path="/kargo-teslimat" element={<MainLayout><KargoTeslimatPage /></MainLayout>} />
+      <Route path="/iade-sikayet" element={<MainLayout><IadeSikayetPage /></MainLayout>} />
+      <Route path="/gizlilik-politikasi" element={<MainLayout><GizlilikPage /></MainLayout>} />
+      <Route path="/kullanim-kosullari" element={<MainLayout><KullanimKosullariPage /></MainLayout>} />
 
       {/* Guest Rotaları (Giriş yapanlar giremez) */}
       <Route path="/giris" element={<GuestRoute><AuthPage /></GuestRoute>} />

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import styles from './Footer.module.css';
 import { FiFacebook, FiInstagram, FiYoutube, FiTwitter, FiMail } from 'react-icons/fi';
 import { footerLinks } from '../../data/index';
@@ -72,7 +73,7 @@ export default function Footer() {
             <ul className={styles.linkList}>
               {footerLinks.info.map(l => (
                 <li key={l.label}>
-                  <a href={l.href} className={styles.link}>{l.label}</a>
+                  <Link to={l.href} className={styles.link}>{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -83,7 +84,7 @@ export default function Footer() {
             <ul className={styles.linkList}>
               {footerLinks.customer.map(l => (
                 <li key={l.label}>
-                  <a href={l.href} className={styles.link}>{l.label}</a>
+                  <Link to={l.href} className={styles.link}>{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -94,7 +95,7 @@ export default function Footer() {
             <ul className={styles.linkList}>
               {footerLinks.categories.map(l => (
                 <li key={l.label}>
-                  <a href={l.href} className={styles.link}>{l.label}</a>
+                  <Link to={l.href} className={styles.link}>{l.label}</Link>
                 </li>
               ))}
             </ul>

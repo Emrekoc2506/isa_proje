@@ -248,26 +248,26 @@ export const navCategories = [
 
 export const footerLinks = {
   info: [
-    { label: 'Hakkımızda', href: '#' },
-    { label: 'İletişim', href: '#' },
-    { label: 'Kargo & Teslimat', href: '#' },
-    { label: 'İade & Şikayetler', href: '#' },
-    { label: 'Gizlilik Politikası', href: '#' },
-    { label: 'Kullanım Koşulları', href: '#' },
+    { label: 'Hakkımızda', href: '/hakkimizda' },
+    { label: 'İletişim', href: '/iletisim' },
+    { label: 'Kargo & Teslimat', href: '/kargo-teslimat' },
+    { label: 'İade & Şikayetler', href: '/iade-sikayet' },
+    { label: 'Gizlilik Politikası', href: '/gizlilik-politikasi' },
+    { label: 'Kullanım Koşulları', href: '/kullanim-kosullari' },
   ],
   customer: [
-    { label: 'Hesabım', href: '#' },
-    { label: 'Sipariş Geçmişim', href: '#' },
-    { label: 'Favoriler', href: '#' },
-    { label: 'Sipariş Takibi', href: '#' },
+    { label: 'Hesabım', href: '/panel' },
+    { label: 'Sipariş Geçmişim', href: '/siparislerim' },
+    { label: 'Favoriler', href: '/favorilerim' },
+    { label: 'Sipariş Takibi', href: '/siparislerim' },
   ],
   categories: [
-    { label: 'Uçucu Yağlar', href: '#' },
-    { label: 'Kristaller & Taşlar', href: '#' },
-    { label: 'Tütsüler', href: '#' },
-    { label: 'Tarot & Kehanet', href: '#' },
-    { label: 'Takı', href: '#' },
-    { label: 'Blog', href: '#' },
+    { label: 'Uçucu Yağlar', href: '/urunler' },
+    { label: 'Kristaller & Taşlar', href: '/urunler' },
+    { label: 'Tütsüler', href: '/urunler' },
+    { label: 'Tarot & Kehanet', href: '/urunler' },
+    { label: 'Takı', href: '/urunler' },
+    { label: 'Blog', href: '/blog' },
   ],
 };
 
