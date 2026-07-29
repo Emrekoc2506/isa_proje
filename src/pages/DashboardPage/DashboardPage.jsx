@@ -24,6 +24,7 @@ const NAV_ITEMS = [
   { id: 'orders',    label: 'Siparişlerim',  icon: FiPackage },
   { id: 'wishlist',  label: 'Favorilerim',   icon: FiHeart },
   { id: 'addresses', label: 'Adreslerim',    icon: FiMapPin },
+  { id: 'profile',   label: 'Profilim',      icon: FiUser },
   { id: 'settings',  label: 'Ayarlar',       icon: FiSettings },
 ];
 
@@ -57,13 +58,6 @@ export default function DashboardPage({ activeTab = 'overview' }) {
   const [passLoading, setPassLoading] = useState(false);
   const [passSuccess, setPassSuccess] = useState(false);
   const [passError, setPassError] = useState('');
-
-  // Email Değiştirme State'leri
-  const [newEmail, setNewEmail] = useState('');
-  const [emailConfirmPassword, setEmailConfirmPassword] = useState('');
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [emailSuccess, setEmailSuccess] = useState(false);
-  const [emailError, setEmailError] = useState('');
 
   // Telefon formatı maskesi (ozel_hoca projesinden esinlenilmiştir)
   const handlePhoneChange = (value) => {
@@ -206,50 +200,6 @@ export default function DashboardPage({ activeTab = 'overview' }) {
       setPassError(errorMessage);
     } finally {
       setPassLoading(false);
-    }
-  };
-
-  const handleEmailChange = async (e) => {
-    e.preventDefault();
-    setEmailError('');
-    setEmailSuccess(false);
-
-    if (!newEmail || !newEmail.includes('@')) {
-      setEmailError('Geçerli bir yeni e-posta adresi giriniz.');
-      return;
-    }
-
-    if (newEmail.toLowerCase() === (user?.email || '').toLowerCase()) {
-      setEmailError('Yeni e-posta adresi mevcut e-posta adresinizle aynı olamaz.');
-      return;
-    }
-
-    if (!emailConfirmPassword) {
-      setEmailError('Güvenlik doğrulaması için mevcut şifrenizi giriniz.');
-      return;
-    }
-
-    setEmailLoading(true);
-
-    try {
-      await accountApi.changeEmail({
-        newEmail,
-        currentPassword: emailConfirmPassword
-      });
-      await reloadUser();
-      setEmailSuccess(true);
-      setNewEmail('');
-      setEmailConfirmPassword('');
-    } catch (err) {
-      let errorMessage = err.message || 'E-posta adresi güncellenemedi.';
-      if (err.errors) {
-        errorMessage = Object.entries(err.errors)
-          .map(([key, value]) => `${key}: ${value.join(', ')}`)
-          .join(' | ');
-      }
-      setEmailError(errorMessage);
-    } finally {
-      setEmailLoading(false);
     }
   };
 
@@ -535,10 +485,46 @@ export default function DashboardPage({ activeTab = 'overview' }) {
               </motion.div>
             )}
 
+            {/* ── PROFİL ─────────────────────────────────────── */}
+            {active === 'profile' && (
+              <motion.div key="profile" variants={contentVariants} initial="hidden" animate="visible" exit="exit">
+                <div className={styles.sectionCard}>
+                  <div className={styles.sectionHeader}>
+                    <h3 className={styles.sectionTitle}>Profil Bilgilerim</h3>
+                  </div>
+                  <div className={styles.profileForm}>
+                    <div className={styles.profileAvatarBig}>
+                      <div className={styles.avatarBig}>
+                        <span>{initials}</span>
+                      </div>
+                    </div>
+                    <div className={styles.formGrid}>
+                      {[
+                        { label: 'Ad Soyad', value: displayName, type: 'text', readOnly: true },
+                        { label: 'E-posta', value: displayEmail, type: 'email', readOnly: true },
+                        { label: 'Telefon', value: user?.phoneNumber || 'Telefon eklenmemiş', type: 'tel', readOnly: true },
+                        { label: 'Kullanıcı Rolleri', value: roles.join(', ') || "Müşteri", type: 'text', readOnly: true },
+                      ].map(field => (
+                        <div key={field.label} className={styles.formField}>
+                          <label className={styles.fieldLabel}>{field.label}</label>
+                          <input
+                            type={field.type}
+                            defaultValue={field.value}
+                            readOnly={field.readOnly}
+                            className={styles.fieldInput}
+                            style={{ opacity: field.readOnly ? 0.7 : 1 }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* ── AYARLAR ────────────────────────────────────── */}
-            {(active === 'settings' || active === 'profile') && (
+            {active === 'settings' && (
               <motion.div key="settings" variants={contentVariants} initial="hidden" animate="visible" exit="exit">
-                {/* Profil Bilgilerini Güncelle */}
                 <div className={styles.sectionCard} style={{ marginBottom: 20 }}>
                   <div className={styles.sectionHeader}>
                     <h3 className={styles.sectionTitle}>Profilimi Güncelle</h3>
@@ -576,64 +562,6 @@ export default function DashboardPage({ activeTab = 'overview' }) {
                     <button type="submit" disabled={profileLoading} className={styles.shopBtn} style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                       {profileLoading && <FiLoader className={styles.spinner} style={{ animation: 'spin 1.5s linear infinite', fontSize: 14, margin: 0 }} />}
                       Değişiklikleri Kaydet
-                    </button>
-                  </form>
-                </div>
-
-                {/* E-posta Adresi Değiştir */}
-                <div className={styles.sectionCard} style={{ marginBottom: 20 }}>
-                  <div className={styles.sectionHeader}>
-                    <h3 className={styles.sectionTitle}>E-posta Adresi Değiştir</h3>
-                  </div>
-                  <form onSubmit={handleEmailChange} className={styles.profileForm}>
-                    {emailSuccess && <div style={{ color: '#2ecc71', fontSize: 13, marginBottom: 16 }}>✔ E-posta adresiniz başarıyla güncellendi.</div>}
-                    {emailError && <div style={{ color: '#e05594', fontSize: 13, marginBottom: 16 }}>{emailError}</div>}
-                    
-                    <div className={styles.formGrid}>
-                      <div className={styles.formField}>
-                        <label className={styles.fieldLabel}>Mevcut E-posta</label>
-                        <input 
-                          type="email" 
-                          value={user?.email || ''} 
-                          readOnly 
-                          className={styles.fieldInput} 
-                          style={{ opacity: 0.7, cursor: 'not-allowed' }}
-                        />
-                      </div>
-                      <div className={styles.formField}>
-                        <label className={styles.fieldLabel}>Yeni E-posta Adresi</label>
-                        <input 
-                          type="email" 
-                          required 
-                          value={newEmail} 
-                          onChange={e => {
-                            setNewEmail(e.target.value);
-                            if (emailError) setEmailError('');
-                            if (emailSuccess) setEmailSuccess(false);
-                          }} 
-                          className={styles.fieldInput} 
-                          placeholder="yeni@eposta.com"
-                        />
-                      </div>
-                      <div className={styles.formField} style={{ gridColumn: '1 / -1' }}>
-                        <label className={styles.fieldLabel}>Mevcut Şifreniz (Güvenlik Doğrulaması)</label>
-                        <input 
-                          type="password" 
-                          required 
-                          value={emailConfirmPassword} 
-                          onChange={e => {
-                            setEmailConfirmPassword(e.target.value);
-                            if (emailError) setEmailError('');
-                            if (emailSuccess) setEmailSuccess(false);
-                          }} 
-                          className={styles.fieldInput} 
-                          placeholder="Mevcut şifreniz"
-                        />
-                      </div>
-                    </div>
-                    <button type="submit" disabled={emailLoading} className={styles.shopBtn} style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {emailLoading && <FiLoader className={styles.spinner} style={{ animation: 'spin 1.5s linear infinite', fontSize: 14, margin: 0 }} />}
-                      E-posta Adresini Güncelle
                     </button>
                   </form>
                 </div>

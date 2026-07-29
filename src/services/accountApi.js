@@ -25,16 +25,6 @@ export function changePassword(payload) {
   });
 }
 
-export function changeEmail(payload) {
-  return request("/account/email", {
-    method: "PUT",
-    body: JSON.stringify({
-      newEmail: payload.newEmail,
-      currentPassword: payload.currentPassword
-    })
-  });
-}
-
 export function getAddresses() {
   return request("/account/addresses");
 }
