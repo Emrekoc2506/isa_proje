@@ -41,29 +41,21 @@
 /* ── Header Ana (Billboard ile Birleşik Üst Durum & Floating Sticky) ── */
 
 .header {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
   z-index: var(--z-sticky);
-  background: linear-gradient(180deg, rgba(14, 7, 26, 0.88) 0%, rgba(14, 7, 26, 0.65) 60%, rgba(14, 7, 26, 0.35) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border-gold);
   transition:
-    background 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    backdrop-filter 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    border-color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .header.sticky {
-  background: rgba(14, 7, 26, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(201, 162, 39, 0.3);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  background: rgba(14, 7, 26, 0.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-header);
 }
 
 .inner {
