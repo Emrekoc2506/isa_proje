@@ -431,6 +431,9 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
 
     test('21. Merge failure does NOT logout user', async () => {
       server.use(
+        http.get('*/api/auth/me', () => {
+          return HttpResponse.json({ id: 'user-1', email: 'test@user.com', fullName: 'Test User' });
+        }),
         http.post('*/api/cart/merge', () => {
           return HttpResponse.json({ message: 'Merge failed' }, { status: 500 });
         })
@@ -476,6 +479,9 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
     test('23. Controlled single retry on merge 409 cart_concurrency_conflict', async () => {
       let mergeAttempts = 0;
       server.use(
+        http.get('*/api/auth/me', () => {
+          return HttpResponse.json({ id: 'user-1', email: 'test@user.com', fullName: 'Test User' });
+        }),
         http.post('*/api/cart/merge', () => {
           mergeAttempts++;
           if (mergeAttempts === 1) {
