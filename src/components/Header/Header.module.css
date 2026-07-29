@@ -14,6 +14,18 @@
   justify-content: center;
   gap: var(--space-sm);
   letter-spacing: 0.05em;
+  max-height: 40px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.3s ease;
+}
+
+.announcement.announcementScrolled {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .announcement strong {
@@ -26,33 +38,44 @@
   flex-shrink: 0;
 }
 
-/* ── Header Ana ─────────────────────────────────────────────── */
+/* ── Header Ana (Billboard ile Birleşik Üst Durum & Floating Sticky) ── */
 
 .header {
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  background: var(--bg-dark);
-  border-bottom: 1px solid var(--border-gold);
+  background: rgba(18, 9, 31, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   transition:
-    background var(--transition-base),
-    box-shadow var(--transition-base);
+    background 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    backdrop-filter 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    border-color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    padding 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .header.sticky {
-  background: rgba(18, 9, 31, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-header);
+  background: rgba(14, 7, 26, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(201, 162, 39, 0.28);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .inner {
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: var(--space-md) var(--space-md);
+  padding: 16px var(--space-md);
   display: flex;
   align-items: center;
   gap: var(--space-lg);
+  transition: padding 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.header.sticky .inner {
+  padding: 9px var(--space-md);
 }
 
 /* ── Logo ──────────────────────────────────────────────────── */
@@ -73,6 +96,11 @@
   font-weight: 700;
   color: var(--gold-light);
   letter-spacing: 0.05em;
+  transition: font-size 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.header.sticky .brandName {
+  font-size: 22px;
 }
 
 .logo:hover {
@@ -83,6 +111,11 @@
   height: 52px;
   width: auto;
   object-fit: contain;
+  transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.header.sticky .logo img {
+  height: 38px;
 }
 
 /* ── Bildirim Sarmalayıcı ───────────────────────────────────── */

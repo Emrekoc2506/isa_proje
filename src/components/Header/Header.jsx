@@ -42,7 +42,7 @@ export default function Header() {
   return (
     <>
       {/* ── Ücretsiz Teslimat Bandı ─────────────────────────── */}
-      <div className={styles.announcement}>
+      <div className={`${styles.announcement} ${isSticky ? styles.announcementScrolled : ''}`}>
         <MdOutlineLocalShipping className={styles.announcementIcon} />
         <span><strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat</span>
       </div>
