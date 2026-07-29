@@ -1,10 +1,25 @@
 import styles from './ArticleCard.module.css';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { cardHover } from '../../animations/variants';
 
-export default function ArticleCard({ article }) {
-  const { title, date, description, image, readTime, category, slug } = article;
-  const href = `#${slug}`;
+export default function ArticleCard({ article, onClick }) {
+  const navigate = useNavigate();
+  if (!article) return null;
+
+  const { title, date, description, summary, image, readTime, category, slug, id } = article;
+  const targetSlug = slug || id;
+
+  const handleClick = (e) => {
+    e.preventDefault();
+    if (onClick) {
+      onClick(article);
+    } else if (targetSlug) {
+      navigate(`/blog?article=${encodeURIComponent(targetSlug)}`, { state: { article } });
+    } else {
+      navigate('/blog');
+    }
+  };
 
   return (
     <motion.article
@@ -12,39 +27,39 @@ export default function ArticleCard({ article }) {
       variants={cardHover}
       initial="rest"
       whileHover="hover"
+      onClick={handleClick}
+      style={{ cursor: 'pointer' }}
     >
       {/* ── Görsel ─────────────────────────────────────────── */}
-      <a href={href} className={styles.imgWrapper} tabIndex={-1} aria-hidden="true">
+      <div className={styles.imgWrapper}>
         <img
-          src={image}
-          alt={title}
+          src={image || `https://picsum.photos/seed/${targetSlug || 'blog'}/600/400`}
+          alt={title || 'Blog görseli'}
           className={styles.img}
           loading="lazy"
           onError={(e) => {
-            e.target.src = `https://picsum.photos/seed/${slug}/600/400`;
+            e.target.src = `https://picsum.photos/seed/${targetSlug || 'blog'}/600/400`;
           }}
         />
         <div className={styles.imgOverlay} />
         {category && <span className={styles.category}>{category}</span>}
-      </a>
+      </div>
 
       {/* ── İçerik ─────────────────────────────────────────── */}
       <div className={styles.content}>
         <div className={styles.meta}>
-          <time className={styles.date} dateTime={date}>{date}</time>
+          {date && <time className={styles.date} dateTime={date}>{date}</time>}
           {readTime && <span className={styles.readTime}>· {readTime}</span>}
         </div>
 
-        <a href={href} className={styles.titleLink}>
-          <h3 className={styles.title}>{title}</h3>
-        </a>
+        <h3 className={styles.title}>{title}</h3>
 
-        <p className={styles.description}>{description}</p>
+        <p className={styles.description}>{description || summary}</p>
 
-        <a href={href} className={styles.readMore}>
+        <span className={styles.readMore}>
           Devamını oku
           <span className={styles.readMoreArrow}>→</span>
-        </a>
+        </span>
       </div>
     </motion.article>
   );

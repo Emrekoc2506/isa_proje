@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { getBlogArticles, getBlogArticleBySlug } from '../../services/blogApi';
 import styles from './BlogPage.module.css';
 import {
@@ -212,16 +213,31 @@ export default function BlogPage() {
   const [view, setView] = useState('grid');
   const [selectedArticle, setSelectedArticle] = useState(null);
   const searchRef = useRef(null);
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
         const res = await getBlogArticles({ page: 1, pageSize: 50 });
-        // getBlogArticles artık { items, totalCount, page, pageSize } döndürüyor
         const list = Array.isArray(res) ? res : (res?.items || []);
         setArticles(list);
         setTotalCount(res?.totalCount || list.length);
+
+        const targetSlug = searchParams.get('article') || searchParams.get('slug');
+        if (location.state?.article) {
+          setSelectedArticle(location.state.article);
+        } else if (targetSlug) {
+          const found = list.find((a) => a.slug === targetSlug || a.id === targetSlug);
+          if (found) {
+            setSelectedArticle(found);
+          } else {
+            getBlogArticleBySlug(targetSlug).then((detail) => {
+              if (detail) setSelectedArticle(detail);
+            });
+          }
+        }
       } catch {
         setArticles([]);
         setTotalCount(0);
@@ -230,7 +246,7 @@ export default function BlogPage() {
       }
     }
     load();
-  }, []);
+  }, [searchParams, location.state]);
 
   const filtered = articles.filter((a) => {
     const matchCat = activeCategory === 'Tümü' || a.category === activeCategory;
