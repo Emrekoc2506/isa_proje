@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiPlus, FiMapPin, FiPhone, FiTrash2, FiEdit3, FiCheck, FiBriefcase, FiUser } from 'react-icons/fi';
 import * as accountApi from '../../services/accountApi';
-import { getCities, getDistricts } from '../../data/turkiyeLocations';
+import LocationSelects from '../../components/LocationSelect/LocationSelects';
 import styles from './DashboardPage.module.css';
 
 export default function AddressesSection() {
@@ -27,9 +27,6 @@ export default function AddressesSection() {
   const [taxOffice, setTaxOffice] = useState('');
   const [taxNumber, setTaxNumber] = useState('');
   const [tcIdentificationNumber, setTcIdentificationNumber] = useState('');
-
-  const cityList = getCities();
-  const districtList = getDistricts(city);
 
   const loadAddresses = async () => {
     try {
@@ -200,51 +197,19 @@ export default function AddressesSection() {
               <input type="text" required value={country} onChange={e => setCountry(e.target.value)} placeholder="Örn: TR" className={styles.fieldInput} />
             </div>
 
-            <div className={styles.formField}>
-              <label className={styles.fieldLabel}>Şehir *</label>
-              <select
-                required
-                value={city}
-                onChange={e => {
-                  setCity(e.target.value);
-                  setDistrict('');
-                  setNeighborhood('');
-                }}
-                className={styles.fieldInput}
-                style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-light)' }}
-              >
-                <option value="" style={{ background: 'var(--bg-dark)', color: '#999' }}>Lütfen Şehir Seçin</option>
-                {cityList.map(c => (
-                  <option key={c} value={c} style={{ background: 'var(--bg-dark)', color: '#fff' }}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className={styles.formField}>
-              <label className={styles.fieldLabel}>İlçe *</label>
-              <select
-                required
-                disabled={!city}
-                value={district}
-                onChange={e => {
-                  setDistrict(e.target.value);
-                  setNeighborhood('');
-                }}
-                className={styles.fieldInput}
-                style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-light)', opacity: !city ? 0.6 : 1 }}
-              >
-                <option value="" style={{ background: 'var(--bg-dark)', color: '#999' }}>
-                  {city ? 'Lütfen İlçe Seçin' : '-- Önce Şehir Seçin --'}
-                </option>
-                {districtList.map(d => (
-                  <option key={d} value={d} style={{ background: 'var(--bg-dark)', color: '#fff' }}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <LocationSelects
+              city={city}
+              district={district}
+              neighborhood={neighborhood}
+              onCityChange={setCity}
+              onDistrictChange={setDistrict}
+              onNeighborhoodChange={setNeighborhood}
+              fieldInputClass={styles.fieldInput}
+              labelClass={styles.fieldLabel}
+              showLabels={true}
+              wrapperClass={styles.formField}
+              selectStyle={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-light)' }}
+            />
 
             <div className={styles.formField}>
               <label className={styles.fieldLabel}>Posta Kodu *</label>
