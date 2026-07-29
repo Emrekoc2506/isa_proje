@@ -135,7 +135,7 @@ export default function AuthPage() {
       
       const fromObj = location.state?.from;
       const targetFrom = fromObj ? `${fromObj.pathname || ''}${fromObj.search || ''}${fromObj.hash || ''}` : null;
-      const destination = targetFrom || (roles.includes("SuperAdmin") || roles.includes("Admin") ? '/admin' : '/panel');
+      const destination = targetFrom || (roles.includes("SuperAdmin") || roles.includes("Admin") ? '/admin' : '/');
       navigate(destination, { replace: true });
     } catch (err) {
       if (err.requiresVerification === true && err.userId) {
