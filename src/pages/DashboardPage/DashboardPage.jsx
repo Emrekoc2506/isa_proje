@@ -257,7 +257,14 @@ export default function DashboardPage({ activeTab = 'overview' }) {
             <button
               key={id}
               className={`${styles.navItem} ${active === id ? styles.navActive : ''}`}
-              onClick={() => { setActive(id); navigate(`/${id === 'overview' ? 'panel' : id === 'wishlist' ? 'favorilerim' : id === 'profile' ? 'profilim' : id === 'orders' ? 'siparislerim' : id === 'addresses' ? 'adreslerim' : id === 'messages' ? 'panel' : 'ayarlar'}`); setSidebarOpen(false); }}
+              onClick={() => {
+                setActive(id);
+                navigate(`/${id === 'overview' ? 'panel' : id === 'wishlist' ? 'favorilerim' : id === 'profile' ? 'profilim' : id === 'orders' ? 'siparislerim' : id === 'addresses' ? 'adreslerim' : id === 'messages' ? 'panel' : 'ayarlar'}`);
+                setSidebarOpen(false);
+                window.scrollTo(0, 0);
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+              }}
             >
               <Icon className={styles.navIcon} />
               <span>{label}</span>
