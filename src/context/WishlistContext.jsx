@@ -5,6 +5,8 @@ import { getProducts } from '../services/productApi';
 import { safeGetJson, safeSetJson, safeRemoveItem } from '../utils/storage';
 import { isValidGuid, prepareWishlistProductIds } from '../utils/wishlist';
 
+import { newsProducts, saleProducts } from '../data/index';
+
 const WishlistContext = createContext(null);
 
 export function WishlistProvider({ children }) {
@@ -31,22 +33,32 @@ export function WishlistProvider({ children }) {
         }));
         setItems(mapped);
       } else {
-        let localIds = prepareWishlistProductIds(safeGetJson("isa_guest_wishlist", []));
+        const localStored = safeGetJson("isa_guest_wishlist", []);
+        let localIds = prepareWishlistProductIds(localStored);
 
         if (localIds.length > 0) {
           const productsData = await getProducts({ pageSize: 100 }).catch(() => ({ items: [] }));
-          const catalog = productsData?.items || [];
-          const matched = catalog.filter(p => localIds.includes(p.id));
-          const mapped = matched.map(p => ({
-            id: p.id,
-            productId: p.id,
-            productName: p.name,
-            slug: p.slug || "",
-            imageUrl: p.image || p.imageUrl || "",
-            price: typeof p.price === 'number' ? `${p.price} ₺` : p.price || "0 ₺",
-            oldPrice: p.oldPrice == null ? null : (typeof p.oldPrice === 'number' ? `${p.oldPrice} ₺` : p.oldPrice),
-            addedAt: new Date().toISOString()
-          }));
+          const catalogData = productsData?.items || [];
+          const allCatalog = [...catalogData, ...newsProducts, ...saleProducts];
+
+          const mapped = localIds.map(id => {
+            const foundInCatalog = allCatalog.find(p => String(p.id) === String(id) || String(p.productId) === String(id));
+            const foundInLocalObj = Array.isArray(localStored) 
+              ? localStored.find(item => typeof item === 'object' && String(item?.id || item?.productId) === String(id)) 
+              : null;
+
+            const p = foundInCatalog || foundInLocalObj || { id };
+            return {
+              id: p.id || id,
+              productId: p.id || p.productId || id,
+              productName: p.name || p.productName || "Favori Ürün",
+              slug: p.slug || "",
+              imageUrl: p.image || p.imageUrl || "",
+              price: typeof p.price === 'number' ? `${p.price} ₺` : p.price || "0 ₺",
+              oldPrice: p.oldPrice == null ? null : (typeof p.oldPrice === 'number' ? `${p.oldPrice} ₺` : p.oldPrice),
+              addedAt: new Date().toISOString()
+            };
+          });
           setItems(mapped);
         } else {
           setItems([]);
@@ -69,20 +81,24 @@ export function WishlistProvider({ children }) {
     const productId = typeof input === 'object' ? (input?.id || input?.productId) : input;
     if (!productId) return;
     
-    if (!isValidGuid(productId) && import.meta.env.PROD) {
-      console.warn("Invalid product ID format.", productId);
-      return;
-    }
     try {
       setLoading(true);
       if (isAuthenticated) {
-        await wishlistApi.addWishlistItem(productId);
+        if (isValidGuid(productId)) {
+          await wishlistApi.addWishlistItem(productId);
+        }
         await reloadWishlist();
       } else {
-        let localIds = prepareWishlistProductIds(safeGetJson("isa_guest_wishlist", []));
-        if (!localIds.includes(productId)) {
-          localIds.push(productId);
-          safeSetJson("isa_guest_wishlist", localIds);
+        let localStored = safeGetJson("isa_guest_wishlist", []);
+        if (!Array.isArray(localStored)) localStored = [];
+        const exists = localStored.some(item => {
+          const itemID = typeof item === 'object' ? (item?.id || item?.productId) : item;
+          return String(itemID) === String(productId);
+        });
+
+        if (!exists) {
+          localStored.push(input);
+          safeSetJson("isa_guest_wishlist", localStored);
         }
         await reloadWishlist();
       }
@@ -101,12 +117,19 @@ export function WishlistProvider({ children }) {
     try {
       setLoading(true);
       if (isAuthenticated) {
-        await wishlistApi.removeWishlistItem(productId);
+        if (isValidGuid(productId)) {
+          await wishlistApi.removeWishlistItem(productId);
+        }
         await reloadWishlist();
       } else {
-        let localIds = prepareWishlistProductIds(safeGetJson("isa_guest_wishlist", []));
-        const filtered = localIds.filter(id => id !== productId);
-        safeSetJson("isa_guest_wishlist", filtered);
+        let localStored = safeGetJson("isa_guest_wishlist", []);
+        if (Array.isArray(localStored)) {
+          const filtered = localStored.filter(item => {
+            const itemID = typeof item === 'object' ? (item?.id || item?.productId) : item;
+            return String(itemID) !== String(productId);
+          });
+          safeSetJson("isa_guest_wishlist", filtered);
+        }
         await reloadWishlist();
       }
     } catch (err) {
@@ -121,18 +144,18 @@ export function WishlistProvider({ children }) {
     const productId = typeof input === 'object' ? (input?.id || input?.productId) : input;
     if (!productId) return;
 
-    const exists = items.some(i => i.productId === productId || i.id === productId);
+    const exists = items.some(i => String(i.productId) === String(productId) || String(i.id) === String(productId));
     if (exists) {
-      await removeFavorite(productId);
+      await removeFavorite(input);
     } else {
-      await addFavorite(productId);
+      await addFavorite(input);
     }
   }, [items, addFavorite, removeFavorite]);
 
   const isFavorite = useCallback((input) => {
     const productId = typeof input === 'object' ? (input?.id || input?.productId) : input;
     if (!productId) return false;
-    return items.some(i => i.productId === productId || i.id === productId);
+    return items.some(i => String(i.productId) === String(productId) || String(i.id) === String(productId));
   }, [items]);
 
   const mergeGuestWishlist = useCallback(async (guestItemsInput = []) => {
