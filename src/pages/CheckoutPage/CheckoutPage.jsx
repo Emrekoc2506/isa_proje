@@ -321,7 +321,7 @@ export default function CheckoutPage() {
                     onNeighborhoodChange={val => handleGuestShippingChange('neighborhood', val)}
                     fieldInputClass={styles.input}
                     showLabels={false}
-                    selectStyle={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-light)' }}
+                    selectStyle={{ background: 'var(--bg-dark)', color: 'var(--text-primary)' }}
                   />
                   <input type="text" placeholder="Posta Kodu *" required value={guestShipping.postalCode} onChange={e => handleGuestShippingChange('postalCode', e.target.value)} className={styles.input} />
                   <input type="text" placeholder="Açık Adres *" required value={guestShipping.addressLine} onChange={e => handleGuestShippingChange('addressLine', e.target.value)} className={styles.input} style={{ gridColumn: 'span 2' }} />
@@ -371,7 +371,7 @@ export default function CheckoutPage() {
                         onNeighborhoodChange={val => handleGuestBillingChange('neighborhood', val)}
                         fieldInputClass={styles.input}
                         showLabels={false}
-                        selectStyle={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-light)' }}
+                        selectStyle={{ background: 'var(--bg-dark)', color: 'var(--text-primary)' }}
                       />
                       <input type="text" placeholder="Posta Kodu *" required value={guestBilling.postalCode} onChange={e => handleGuestBillingChange('postalCode', e.target.value)} className={styles.input} />
                       <input type="text" placeholder="Açık Adres *" required value={guestBilling.addressLine} onChange={e => handleGuestBillingChange('addressLine', e.target.value)} className={styles.input} style={{ gridColumn: 'span 2' }} />
