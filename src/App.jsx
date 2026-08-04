@@ -5,6 +5,7 @@ import { CartProvider } from './context/CartContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { ProductProvider } from './context/ProductContext';
+import { ThemeProvider } from './context/ThemeContext';
 import MainLayout from './layouts/MainLayout/MainLayout';
 import HomePage from './pages/HomePage/HomePage';
 import AuthPage from './pages/AuthPage/AuthPage';
@@ -113,20 +114,22 @@ import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 function App() {
   return (
     <HelmetProvider>
-      <BrowserRouter>
-        <ScrollToTop />
-        <AuthProvider>
-          <ProductProvider>
-            <WishlistProvider>
-              <CartProvider>
-                <NotificationProvider>
-                  <AppRoutes />
-                </NotificationProvider>
-              </CartProvider>
-            </WishlistProvider>
-          </ProductProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <AuthProvider>
+            <ProductProvider>
+              <WishlistProvider>
+                <CartProvider>
+                  <NotificationProvider>
+                    <AppRoutes />
+                  </NotificationProvider>
+                </CartProvider>
+              </WishlistProvider>
+            </ProductProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
     </HelmetProvider>
   );
 }

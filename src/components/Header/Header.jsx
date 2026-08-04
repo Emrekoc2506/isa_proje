@@ -7,6 +7,7 @@ import { useStickyHeader } from '../../hooks/useStickyHeader';
 import CategoryNav from '../CategoryNav/CategoryNav';
 import CartDrawer from '../CartDrawer/CartDrawer';
 import NotificationDropdown from '../NotificationDropdown/NotificationDropdown';
+import ThemeToggle from '../ThemeToggle';
 import logoImage from '../../assets/images/logo.png';
 import { useCart } from '../../context/CartContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -105,6 +106,9 @@ export default function Header() {
 
           {/* Üst Aksiyonlar */}
           <div className={styles.actions}>
+            {/* Gece / Gündüz Modu Butonu */}
+            <ThemeToggle />
+
             {/* Mobil arama */}
             <button
               className={`${styles.actionBtn} ${styles.mobileSearch}`}

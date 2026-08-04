@@ -94,3 +94,50 @@
   --z-modal:    400;
   --z-toast:    500;
 }
+
+/* ============================================================
+   GÜNDÜZ MODU (LIGHT TEMA) — Krem & Saf Beyaz Mistik Palet
+   ============================================================ */
+
+[data-theme="light"] {
+  /* ── Arka Plan Renkleri ─────────────────────────────────── */
+  --bg-deep:        #FAF7F2;   /* Sıcak Krem zemin             */
+  --bg-dark:        #F4EFE6;   /* Section arkaplanı (Yumuşak Krem) */
+  --bg-mid:         #FFFFFF;   /* Kart arka planı (Saf Beyaz)  */
+  --bg-light:       #EFE7DA;   /* Hover, vurgu alanı           */
+  --bg-overlay:     rgba(28, 15, 53, 0.4);
+
+  /* ── Altın Tonları (Gold) ───────────────────────────────── */
+  --gold:           #B8860B;   /* Koyu Şampanya Altını         */
+  --gold-light:     #8B6508;   /* Başlıklar için Okunur Koyu Altın */
+  --gold-pale:      #F0E2B6;   /* Soluk Krem Altın             */
+  --gold-dark:      #7A5210;   /* Derin Altın Tonu             */
+  --gold-glow:      rgba(184, 134, 11, 0.15);
+  --gold-border:    rgba(184, 134, 11, 0.3);
+
+  /* ── Metin Renkleri ─────────────────────────────────────── */
+  --text-primary:   #2C1A4D;   /* Derin Mistik Mor             */
+  --text-secondary: #63527D;   /* Yumuşak Mürdüm Mor           */
+  --text-muted:     #8E7E9E;   /* Soluk Mürdüm                 */
+  --text-light:     #2C1A4D;   /* Derin Mor Metin              */
+  --text-gold:      #A87C11;   /* Krem zeminde net okunan Koyu Altın */
+  --text-white:     #1C0F35;   /* Gündüz modunda zeminler açık olduğu için koyu mor */
+
+  /* ── Vurgu / Aksan Renkleri ─────────────────────────────── */
+  --accent-purple:  #7B4EA6;   /* Mor vurgu                   */
+  --nebula-red:     #C43B6E;   /* İndirim/Rozet kırmızısı      */
+  --nebula-blue:    #3B5BB8;   /* Mavi vurgu                  */
+  --star-pink:      #D86B91;   /* Pembemsi vurgu              */
+
+  /* ── Kenarlık ───────────────────────────────────────────── */
+  --border-dark:    rgba(44, 26, 77, 0.15);
+  --border-gold:    rgba(184, 134, 11, 0.3);
+  --border-mid:     rgba(44, 26, 77, 0.1);
+
+  /* ── Gölgeler ───────────────────────────────────────────── */
+  --shadow-card:    0 4px 20px rgba(44, 26, 77, 0.08);
+  --shadow-gold:    0 0 15px rgba(184, 134, 11, 0.2);
+  --shadow-hover:   0 8px 30px rgba(44, 26, 77, 0.12);
+  --shadow-header:  0 2px 15px rgba(44, 26, 77, 0.08);
+}
+

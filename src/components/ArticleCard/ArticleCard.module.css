@@ -99,7 +99,7 @@
   font-family: var(--font-heading);
   font-size: var(--text-md);
   font-weight: 700;
-  color: var(--gold-pale);
+  color: var(--text-primary);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
