@@ -20,7 +20,7 @@
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #0d0520 0%, #1C0F35 50%, #0d0520 100%);
+  background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-mid) 50%, var(--bg-dark) 100%);
   padding: 100px var(--space-lg) 80px;
   text-align: center;
   border-bottom: 1px solid var(--border-gold);
@@ -31,9 +31,9 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201, 162, 39, 0.12) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(123, 78, 166, 0.15) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(123, 78, 166, 0.10) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 50% 0%, var(--gold-glow) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(123, 78, 166, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(123, 78, 166, 0.08) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -74,8 +74,8 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  border: 1px solid var(--gold-border);
-  background: rgba(201, 162, 39, 0.08);
+  border: 1px solid var(--border-gold);
+  background: var(--bg-mid);
   margin-bottom: var(--space-lg);
   backdrop-filter: blur(8px);
 }
@@ -98,7 +98,7 @@
 
 .heroTitleGold {
   color: var(--gold-light);
-  text-shadow: 0 0 30px rgba(232, 197, 71, 0.5);
+  text-shadow: 0 0 20px var(--gold-glow);
 }
 
 .heroSubtitle {
@@ -128,7 +128,7 @@
 .searchInput {
   width: 100%;
   padding: 16px 48px 16px 52px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-mid);
   border: 1px solid var(--border-gold);
   border-radius: var(--radius-pill);
   color: var(--text-primary);
@@ -669,7 +669,7 @@
 .modalBackdrop {
   position: fixed;
   inset: 0;
-  background: rgba(12, 6, 25, 0.88);
+  background: var(--bg-overlay);
   backdrop-filter: blur(12px);
   z-index: var(--z-modal);
   display: flex;
@@ -687,7 +687,7 @@
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 60px rgba(201, 162, 39, 0.15);
+  box-shadow: var(--shadow-hover);
   scrollbar-width: thin;
   scrollbar-color: var(--gold-dark) transparent;
 }
@@ -713,8 +713,8 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid var(--border-mid);
+  background: var(--bg-mid);
+  border: 1px solid var(--border-gold);
   color: var(--text-secondary);
   font-size: 18px;
   cursor: pointer;
@@ -727,9 +727,9 @@
 }
 
 .modalClose:hover {
-  background: rgba(201, 162, 39, 0.15);
+  background: var(--gold-glow);
   color: var(--gold-light);
-  border-color: var(--gold-border);
+  border-color: var(--gold);
 }
 
 .modalHero {
@@ -761,7 +761,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-  color: #000;
+  color: #12091f;
   padding: 6px 14px;
   border-radius: var(--radius-pill);
 }
@@ -855,7 +855,7 @@
 }
 
 .modalBody strong {
-  color: var(--gold-pale);
+  color: var(--text-primary);
 }
 
 .modalBody em {
