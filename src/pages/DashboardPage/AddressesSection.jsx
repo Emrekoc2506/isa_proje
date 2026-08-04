@@ -208,7 +208,7 @@ export default function AddressesSection() {
               labelClass={styles.fieldLabel}
               showLabels={true}
               wrapperClass={styles.formField}
-              selectStyle={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-light)' }}
+              selectStyle={{ background: 'var(--bg-mid)', color: 'var(--text-primary)' }}
             />
 
             <div className={styles.formField}>
@@ -223,7 +223,7 @@ export default function AddressesSection() {
 
             <div className={styles.formField}>
               <label className={styles.fieldLabel}>Adres Tipi *</label>
-              <select value={addressType} onChange={e => setAddressType(e.target.value)} className={styles.fieldInput} style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-light)' }}>
+              <select value={addressType} onChange={e => setAddressType(e.target.value)} className={styles.fieldInput} style={{ background: 'var(--bg-mid)', color: 'var(--text-primary)' }}>
                 <option value="Both">Hem Teslimat Hem Fatura</option>
                 <option value="Shipping">Sadece Teslimat</option>
                 <option value="Billing">Sadece Fatura</option>
