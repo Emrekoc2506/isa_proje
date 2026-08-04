@@ -211,7 +211,7 @@ export default function ProductsPage() {
                         transform: 'translateY(-50%)',
                         background: 'transparent',
                         border: 'none',
-                        color: 'rgba(255, 255, 255, 0.4)',
+                        color: 'var(--text-muted)',
                         cursor: 'pointer',
                         fontSize: '12px',
                         padding: '4px',
