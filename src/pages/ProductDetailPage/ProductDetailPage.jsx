@@ -460,8 +460,8 @@ export default function ProductDetailPage() {
                           fontSize: '13px',
                           fontWeight: 500,
                           cursor: 'pointer',
-                          background: selectedVariantId === v.id ? 'rgba(201, 162, 39, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-                          border: selectedVariantId === v.id ? '1px solid var(--gold)' : '1px solid rgba(255, 255, 255, 0.1)',
+                          background: selectedVariantId === v.id ? 'var(--gold-glow)' : 'var(--bg-dark)',
+                          border: selectedVariantId === v.id ? '1px solid var(--gold)' : '1px solid var(--border-gold)',
                           color: selectedVariantId === v.id ? 'var(--gold-light)' : 'var(--text-secondary)',
                           transition: 'all 0.2s'
                         }}
@@ -687,9 +687,9 @@ export default function ProductDetailPage() {
                           height: '80px',
                           padding: '12px',
                           borderRadius: '8px',
-                          background: 'rgba(255,255,255,0.05)',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          color: '#fff',
+                          background: 'var(--bg-dark)',
+                          border: '1px solid var(--border-gold)',
+                          color: 'var(--text-primary)',
                           marginBottom: '12px',
                           resize: 'none'
                         }}

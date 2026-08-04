@@ -1,14 +1,14 @@
 .container {
   margin-top: 3.5rem;
   padding-top: 2.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-gold);
 }
 
 .heading {
   font-family: var(--font-heading);
   font-size: 1.5rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
@@ -16,7 +16,7 @@
 }
 
 .headerIcon {
-  color: #d4af37;
+  color: var(--gold);
 }
 
 /* Summary Grid */
@@ -24,13 +24,13 @@
   display: grid;
   grid-template-columns: 240px 1fr;
   gap: 2rem;
-  background: rgba(20, 10, 35, 0.75);
+  background: var(--bg-dark);
   backdrop-filter: blur(12px);
   padding: 2rem;
   border-radius: 16px;
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  border: 1px solid var(--border-gold);
   margin-bottom: 2rem;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-card);
 }
 
 @media (max-width: 768px) {
@@ -47,7 +47,7 @@
   justify-content: center;
   text-align: center;
   padding-right: 1.5rem;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid var(--border-dark);
 }
 
 @media (max-width: 768px) {
@@ -55,36 +55,36 @@
     padding-right: 0;
     padding-bottom: 1.5rem;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-dark);
   }
 }
 
 .averageScore {
   font-size: 3.25rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--gold-light);
   line-height: 1;
 }
 
 .starsRow {
   display: flex;
   gap: 4px;
-  color: #d4af37;
+  color: var(--gold);
   margin: 0.5rem 0;
 }
 
 .starFilled {
-  color: #d4af37;
-  fill: #d4af37;
+  color: var(--gold);
+  fill: var(--gold);
 }
 
 .starEmpty {
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
 }
 
 .reviewCountText {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -101,7 +101,7 @@
   align-items: center;
   gap: 0.75rem;
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
 }
 
 .starLabel {
@@ -112,14 +112,14 @@
 .progressBarBg {
   flex: 1;
   height: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-dark);
   border-radius: 999px;
   overflow: hidden;
 }
 
 .progressBarFill {
   height: 100%;
-  background: linear-gradient(90deg, #d4af37 0%, #fce072 100%);
+  background: linear-gradient(90deg, var(--gold-dark) 0%, var(--gold) 100%);
   border-radius: 999px;
   transition: width 0.3s ease;
 }
@@ -128,7 +128,7 @@
   width: 35px;
   text-align: right;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
 
 /* Action Header */
@@ -143,8 +143,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #d4af37, #aa7c11);
-  color: #0d0614;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+  color: #12091f;
   padding: 0.75rem 1.25rem;
   border-radius: 10px;
   font-weight: 700;
@@ -160,18 +160,18 @@
 
 /* Form Container */
 .formContainer {
-  background: rgba(20, 10, 35, 0.9);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-gold);
   border-radius: 14px;
   padding: 1.75rem;
   margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-card);
 }
 
 .formTitle {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
   margin-bottom: 1rem;
 }
 
@@ -203,26 +203,26 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #d4af37;
+  color: var(--gold);
   margin-bottom: 0.35rem;
 }
 
 .input, .textarea {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-mid);
+  border: 1px solid var(--border-gold);
   border-radius: 8px;
   font-size: 0.95rem;
-  color: #ffffff;
+  color: var(--text-primary);
   outline: none;
   transition: border-color 0.2s ease;
 }
 
 .input:focus, .textarea:focus {
-  border-color: #d4af37;
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+  border-color: var(--gold);
+  background: var(--bg-light);
+  box-shadow: 0 0 10px var(--gold-glow);
 }
 
 .textarea {
@@ -239,17 +239,17 @@
 
 .cancelBtn {
   background: transparent;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
   padding: 0.6rem 1.25rem;
   border-radius: 8px;
   font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-mid);
   cursor: pointer;
 }
 
 .submitBtn {
-  background: linear-gradient(135deg, #d4af37, #aa7c11);
-  color: #0d0614;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+  color: #12091f;
   padding: 0.6rem 1.5rem;
   border-radius: 8px;
   font-weight: 700;
@@ -270,16 +270,16 @@
 }
 
 .reviewCard {
-  background: rgba(20, 10, 35, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-gold);
   border-radius: 12px;
   padding: 1.5rem;
   transition: all 0.2s ease;
 }
 
 .reviewCard:hover {
-  border-color: rgba(212, 175, 55, 0.3);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border-color: var(--gold);
+  box-shadow: var(--shadow-hover);
 }
 
 .reviewHeader {
@@ -299,8 +299,8 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
-  color: #0d0614;
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-dark) 100%);
+  color: #12091f;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -316,7 +316,7 @@
 
 .userName {
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .verifiedBadge {
@@ -334,18 +334,18 @@
 
 .date {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
 
 .reviewTitle {
   font-weight: 700;
   font-size: 1rem;
-  color: #ffffff;
+  color: var(--text-primary);
   margin: 0.4rem 0;
 }
 
 .commentBody {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -356,15 +356,15 @@
   gap: 0.5rem;
   margin-top: 1rem;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
 
 .helpfulBtn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-mid);
+  border: 1px solid var(--border-gold);
   border-radius: 6px;
   padding: 4px 10px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -374,16 +374,16 @@
 }
 
 .helpfulBtn:hover {
-  background: rgba(212, 175, 55, 0.15);
-  color: #fce072;
-  border-color: #d4af37;
+  background: var(--bg-light);
+  color: var(--gold-light);
+  border-color: var(--gold);
 }
 
 .emptyState {
   text-align: center;
   padding: 3rem;
-  background: rgba(20, 10, 35, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-gold);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
 }
