@@ -211,7 +211,7 @@ export default function AuthPage() {
     left: 0,
     right: 0,
     zIndex: 50,
-    backgroundColor: 'rgba(30, 18, 50, 0.98)',
+    backgroundColor: 'var(--bg-mid)',
     border: '1px solid var(--border-gold)',
     borderRadius: '8px',
     marginTop: '4px',
@@ -220,15 +220,15 @@ export default function AuthPage() {
     listStyle: 'none',
     padding: 0,
     margin: 0,
-    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
+    boxShadow: 'var(--shadow-hover)'
   };
 
   const suggestionItemStyle = {
     padding: '10px 14px',
     cursor: 'pointer',
     fontSize: '13px',
-    color: 'var(--text-light)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+    color: 'var(--text-primary)',
+    borderBottom: '1px solid var(--border-mid)',
     textAlign: 'left',
     transition: 'background-color 0.2s'
   };
