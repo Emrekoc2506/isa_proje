@@ -50,8 +50,8 @@ jobs:
       - name: Canlı frontend build
         run: npm run build
         env:
-          VITE_API_BASE_URL: https://api.ozeldersvip.xyz/api
-          VITE_SIGNALR_BASE_URL: https://api.ozeldersvip.xyz/hubs
+          VITE_API_BASE_URL: https://api.muhristan.com/api
+          VITE_SIGNALR_BASE_URL: https://api.muhristan.com/hubs
           VITE_TINYMCE_API_KEY: b4xcb8cubeuhfg2tbgy7mim1z40ywe4so43g6jjt3v0it1af
 
       - name: Natro canlı frontend klasörüne yükle
