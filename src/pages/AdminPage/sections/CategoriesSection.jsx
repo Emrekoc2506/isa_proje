@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FiPlus, FiTrash2, FiCornerDownRight, FiChevronDown, FiChevronRight, FiLock, FiUnlock, FiSearch, FiEdit3, FiX, FiFolder, FiSave, FiRefreshCw } from 'react-icons/fi';
 import * as categoryApi from '../../../services/categoryApi';
 import { collectDescendantIds } from '../../../utils/categoryTree';
+import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
 
 /* ── İnline Stil Tanımları ────────────────────────────────── */
 const S = {
@@ -326,6 +327,7 @@ export default function CategoriesSection() {
   const [expandedCats, setExpandedCats] = useState({});
   const [parentError, setParentError] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -442,16 +444,23 @@ export default function CategoriesSection() {
   };
 
   const handleDelete = async (id) => {
-    if (confirm("Bu kategoriyi (ve varsa alt kategorilerini) silmek istediğinize emin misiniz?")) {
-      try {
-        await categoryApi.deleteAdminCategory(id);
-        if (editingCategory && (editingCategory.databaseId === id || editingCategory.id === id)) {
-          handleCancelEdit();
-        }
-        fetchCategories();
-      } catch (err) {
-        alert("Kategori silinemedi: " + err.message);
+    if (!window.confirm("Bu kategori kalıcı olarak silinecektir. Kategoriye bağlı ürün veya alt kategori varsa işlem engellenir. Devam etmek istediğinize emin misiniz?")) {
+      return;
+    }
+    if (deletingId) return;
+
+    setDeletingId(id);
+    try {
+      await categoryApi.deleteAdminCategory(id);
+      if (editingCategory && (editingCategory.databaseId === id || editingCategory.id === id)) {
+        handleCancelEdit();
       }
+      fetchCategories();
+      alert("Kategori başarıyla silindi.");
+    } catch (err) {
+      alert(getHardDeleteErrorMessage(err, "Kategori"));
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -549,9 +558,13 @@ export default function CategoriesSection() {
             <button
               type="button"
               onClick={() => handleDelete(catId)}
-              style={S.iconBtn('#e05594')}
+              disabled={deletingId === catId}
+              style={{
+                ...S.iconBtn('#e05594'),
+                opacity: deletingId === catId ? 0.4 : 1,
+              }}
             >
-              <FiTrash2 size={10} /> Sil
+              <FiTrash2 size={10} /> {deletingId === catId ? 'Siliniyor...' : 'Sil'}
             </button>
           </div>
         </div>

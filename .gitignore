@@ -25,7 +25,11 @@ dist-ssr
 
 # Environment variables
 .env
+.env.*
+!.env.example
+opencode.json
 
 # Binary files
 *.zip
 
+.aider*

@@ -7,6 +7,7 @@ import { useStickyHeader } from '../../hooks/useStickyHeader';
 import CategoryNav from '../CategoryNav/CategoryNav';
 import CartDrawer from '../CartDrawer/CartDrawer';
 import NotificationDropdown from '../NotificationDropdown/NotificationDropdown';
+import ThemeToggle from '../ThemeToggle';
 import logoImage from '../../assets/images/logo.png';
 import { useCart } from '../../context/CartContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -42,7 +43,7 @@ export default function Header() {
   return (
     <>
       {/* ── Ücretsiz Teslimat Bandı ─────────────────────────── */}
-      <div className={styles.announcement}>
+      <div className={`${styles.announcement} ${isSticky ? styles.announcementScrolled : ''}`}>
         <MdOutlineLocalShipping className={styles.announcementIcon} />
         <span><strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat</span>
       </div>
@@ -105,6 +106,9 @@ export default function Header() {
 
           {/* Üst Aksiyonlar */}
           <div className={styles.actions}>
+            {/* Gece / Gündüz Modu Butonu */}
+            <ThemeToggle />
+
             {/* Mobil arama */}
             <button
               className={`${styles.actionBtn} ${styles.mobileSearch}`}
@@ -141,7 +145,7 @@ export default function Header() {
 
             {/* Favoriler */}
             <div className={styles.wishlistWrapper}>
-              <a href="/panel" className={styles.actionBtn} aria-label={`Favoriler - ${wishlistCount} ürün`}>
+              <a href="/favorilerim" className={styles.actionBtn} aria-label={`Favoriler - ${wishlistCount} ürün`}>
                 <FiHeart />
                 {wishlistCount > 0 && (
                   <span className={styles.wishlistBadge}>{wishlistCount}</span>
@@ -220,10 +224,10 @@ export default function Header() {
             </motion.div>
           )}
         </AnimatePresence>
-      </header>
 
-      {/* ── Kategori Navigasyonu ────────────────────────────── */}
-      <CategoryNav mobileOpen={mobileMenuOpen} onMobileClose={() => setMobileMenuOpen(false)} />
+        {/* ── Kategori Navigasyonu (Header ile tam birleşmiş) ── */}
+        <CategoryNav mobileOpen={mobileMenuOpen} onMobileClose={() => setMobileMenuOpen(false)} />
+      </header>
 
       {/* ── Sepet Çekmecesi ─────────────────────────────────── */}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />

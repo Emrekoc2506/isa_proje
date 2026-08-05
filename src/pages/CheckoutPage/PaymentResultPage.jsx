@@ -129,7 +129,7 @@ export default function PaymentResultPage() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          style={{ width: '100%', background: 'rgba(20, 10, 35, 0.75)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-lg)', padding: 32 }}
+          style={{ width: '100%', background: 'var(--bg-mid)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-lg)', padding: 32 }}
         >
           {loading ? (
             <div className={styles.content}>
@@ -152,9 +152,9 @@ export default function PaymentResultPage() {
               <h2 className={styles.title}>Ödeme Başarılı!</h2>
               <p className={styles.sub}>Siparişiniz başarıyla alındı ve ödemeniz onaylandı.</p>
               
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-mid)', borderRadius: 'var(--radius-md)', padding: 16, width: '100%', marginBottom: 24, textAlign: 'left' }}>
+              <div style={{ background: 'var(--bg-dark)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', padding: 16, width: '100%', marginBottom: 24, textAlign: 'left' }}>
                 <p style={{ margin: '0 0 6px 0', color: 'var(--text-secondary)', fontSize: 13 }}>Sipariş Numarası: <strong style={{ color: 'var(--gold-light)' }}>#{order.orderNumber}</strong></p>
-                <p style={{ margin: '0 0 6px 0', color: 'var(--text-secondary)', fontSize: 13 }}>Toplam Tutar: <strong style={{ color: 'var(--text-light)' }}>{order.totalAmount || order.grandTotal} {order.currency || 'TRY'}</strong></p>
+                <p style={{ margin: '0 0 6px 0', color: 'var(--text-secondary)', fontSize: 13 }}>Toplam Tutar: <strong style={{ color: 'var(--text-primary)' }}>{order.totalAmount || order.grandTotal} {order.currency || 'TRY'}</strong></p>
                 <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 13 }}>Durum: <span style={{ color: '#2ecc71', fontWeight: 600 }}>{order.statusText || 'Sipariş Verildi'}</span></p>
               </div>
 

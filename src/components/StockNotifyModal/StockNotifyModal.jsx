@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { FiBell, FiX, FiCheckCircle } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
+import { request } from "../../services/apiClient";
+import { safeSetJson } from "../../utils/storage";
 import styles from "./StockNotifyModal.module.css";
 
 export default function StockNotifyModal({ isOpen, onClose, product }) {
@@ -17,18 +19,24 @@ export default function StockNotifyModal({ isOpen, onClose, product }) {
 
   if (!isOpen || !product) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email) return;
 
     setSubmitting(true);
-    setTimeout(() => {
-      // Store notification request in localStorage
-      const key = `isa_stock_notify_${product.id}`;
-      localStorage.setItem(key, JSON.stringify({ email, requestedAt: new Date().toISOString() }));
-      setSubmitting(false);
-      setSubmitted(true);
-    }, 600);
+    try {
+      await request(`/products/${product.id}/stock-notify`, {
+        method: "POST",
+        body: JSON.stringify({ email })
+      }).catch(() => null);
+    } catch {
+      // Ignore network errors and fall back to local store
+    }
+
+    const key = `isa_stock_notify_${product.id}`;
+    safeSetJson(key, { email, requestedAt: new Date().toISOString() });
+    setSubmitting(false);
+    setSubmitted(true);
   };
 
   const handleClose = () => {

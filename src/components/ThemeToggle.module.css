@@ -1,0 +1,283 @@
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.72);
+  transform-origin: center center;
+  margin: -6px -10px;
+  user-select: none;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 90px;
+  height: 40px;
+  border: 1px solid rgba(201, 162, 39, 0.4);
+  border-radius: 22px;
+  cursor: pointer;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #12091f;
+  border-radius: 20px;
+  transition: 0.4s ease;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 30px;
+  width: 30px;
+  left: 4px;
+  bottom: 4px;
+  background-color: #ede0c8;
+  transition: 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.moonsHole {
+  position: absolute;
+  opacity: 1;
+  transition: 0.6s;
+}
+
+.moonHole {
+  position: absolute;
+  border-radius: 50%;
+  transform: translateX(0px);
+}
+
+.moonHole:nth-child(1) {
+  background-color: #8b79a5;
+  height: 5px;
+  width: 5px;
+  top: 24px;
+  left: 18px;
+}
+
+.moonHole:nth-child(2) {
+  background-color: #8b79a5;
+  height: 9px;
+  width: 9px;
+  top: 14px;
+  left: 7px;
+}
+
+.moonHole:nth-child(3) {
+  background-color: #8b79a5;
+  height: 4px;
+  width: 4px;
+  top: 10px;
+  left: 20px;
+}
+
+.switch input:checked + .slider {
+  background-color: #62cff0;
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(52px);
+  background-color: #ff9f1c;
+  box-shadow: 0 0 10px rgba(255, 159, 28, 0.6);
+}
+
+.switch input:checked + .slider .moonsHole {
+  transform: translateX(52px);
+  opacity: 0;
+}
+
+.stars {
+  position: absolute;
+  right: 6px;
+  top: 0;
+  bottom: 0;
+  width: 50px;
+  transition: 0.6s;
+  transform: translateY(0px);
+}
+
+.star {
+  position: absolute;
+  fill: #f5dfa0;
+  animation: starTwinkle 2s infinite;
+  opacity: 1;
+}
+
+.star:nth-child(1) {
+  top: 5px;
+  right: 29px;
+  width: 16px;
+  animation-delay: 0.3s;
+}
+
+.star:nth-child(2) {
+  top: 18px;
+  right: 9px;
+  width: 13px;
+}
+
+.star:nth-child(3) {
+  top: 5px;
+  right: 15px;
+  width: 9px;
+  animation-delay: 0.6s;
+}
+
+.star:nth-child(4) {
+  top: 24px;
+  right: 28px;
+  width: 10px;
+  animation-delay: 0.9s;
+}
+
+.star:nth-child(5) {
+  top: 2px;
+  right: 44px;
+  width: 7px;
+  animation-delay: 1.2s;
+}
+
+.switch input:checked + .slider .stars {
+  transform: translateY(-32px);
+  opacity: 0;
+}
+
+@keyframes starTwinkle {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2); }
+  80% { transform: scale(0.8); }
+  100% { transform: scale(1); }
+}
+
+.clouds {
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  transition: 0.6s;
+  transform: translateX(-55px);
+}
+
+.blackClouds {
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  transition: 0.6s;
+  transform: translateX(-55px);
+  opacity: 0;
+  z-index: 0;
+}
+
+.blackCloud {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: #4a5568;
+  opacity: 0.6;
+  border-radius: 50%;
+  animation: cloudMove 6s infinite;
+  animation-delay: 1s;
+}
+
+.blackCloud:nth-child(1) {
+  top: 1px;
+  right: 3px;
+}
+
+.blackCloud:nth-child(2) {
+  top: 15px;
+  left: 9px;
+}
+
+.blackCloud:nth-child(3) {
+  top: 20px;
+  left: 27px;
+}
+
+.switch input:checked + .slider .blackClouds {
+  transform: translateX(32px);
+  opacity: 1;
+}
+
+.cloud {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  z-index: 1;
+  animation: cloudMove 6s infinite;
+}
+
+.cloud:nth-child(1) {
+  top: 0;
+  height: 21px;
+  width: 21px;
+  right: 14px;
+}
+
+.cloud:nth-child(2) {
+  height: 25px;
+  width: 25px;
+  border-radius: 50%;
+  top: 14px;
+  right: 6px;
+}
+
+.cloud:nth-child(3) {
+  height: 23px;
+  width: 23px;
+  top: 28px;
+  left: 4px;
+}
+
+.cloud:nth-child(4) {
+  top: 26px;
+  left: 20px;
+}
+
+.cloud:nth-child(5) {
+  top: 30px;
+  left: 30px;
+}
+
+.cloud:nth-child(6) {
+  top: 27px;
+  left: 46px;
+}
+
+.cloud:nth-child(7) {
+  top: 31px;
+  left: 58px;
+}
+
+.switch input:checked + .slider .clouds {
+  transform: translateX(32px);
+  opacity: 1;
+}
+
+@keyframes cloudMove {
+  0% { transform: translateX(-32px); }
+  40% { transform: translateX(-36px); }
+  80% { transform: translateX(-28px); }
+  100% { transform: translateX(-32px); }
+}

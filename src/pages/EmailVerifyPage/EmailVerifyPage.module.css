@@ -68,12 +68,12 @@
 
 .card {
   width: 100%;
-  background: rgba(20, 10, 35, 0.65);
+  background: var(--bg-mid);
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-gold);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 40px rgba(201, 162, 39, 0.05);
+  box-shadow: var(--shadow-hover);
   box-sizing: border-box;
 }
 
@@ -106,7 +106,7 @@
 }
 
 .title {
-  color: var(--text-light);
+  color: var(--text-primary);
   font-family: var(--font-heading);
   font-size: 24px;
   font-weight: 700;
@@ -134,7 +134,7 @@
 
 .btn {
   background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
-  color: var(--bg-dark);
+  color: #12091f;
   border: none;
   box-shadow: 0 4px 15px rgba(201, 162, 39, 0.25);
 }

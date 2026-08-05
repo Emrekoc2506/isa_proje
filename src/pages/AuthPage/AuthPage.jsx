@@ -6,6 +6,7 @@ import { FiUser, FiLock, FiMail, FiEye, FiEyeOff, FiAlertCircle } from 'react-ic
 import logoImage from '../../assets/images/logo.png';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { safeGetItem, safeSetItem, safeRemoveItem, safeGetJson } from '../../utils/storage';
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login');
@@ -36,7 +37,7 @@ export default function AuthPage() {
 
   // Beni Hatırla: Kaydedilen emaili yükle
   useEffect(() => {
-    const savedEmail = localStorage.getItem("rememberedEmail");
+    const savedEmail = safeGetItem("rememberedEmail");
     if (savedEmail) {
       setLoginEmail(savedEmail);
       setRememberMe(true);
@@ -106,20 +107,14 @@ export default function AuthPage() {
 
       // Beni hatırla kaydı
       if (rememberMe) {
-        localStorage.setItem("rememberedEmail", loginEmail);
+        safeSetItem("rememberedEmail", loginEmail);
       } else {
-        localStorage.removeItem("rememberedEmail");
+        safeRemoveItem("rememberedEmail");
       }
 
       // Merge guest wishlist after login
       try {
-        const raw = localStorage.getItem("isa_guest_wishlist");
-        let guestItems = [];
-        try {
-          guestItems = raw ? JSON.parse(raw) : [];
-        } catch {
-          guestItems = [];
-        }
+        const guestItems = safeGetJson("isa_guest_wishlist", []);
         if (guestItems.length > 0) {
           await mergeGuestWishlist(guestItems);
         }
@@ -138,9 +133,10 @@ export default function AuthPage() {
         alert(errMsg);
       }
       
-      const roles = res.user?.roles || [];
-      const from = location.state?.from?.pathname || (roles.includes("SuperAdmin") || roles.includes("Admin") ? '/admin' : '/panel');
-      navigate(from, { replace: true });
+      const fromObj = location.state?.from;
+      const targetFrom = fromObj ? `${fromObj.pathname || ''}${fromObj.search || ''}${fromObj.hash || ''}` : null;
+      const destination = targetFrom || (roles.includes("SuperAdmin") || roles.includes("Admin") ? '/admin' : '/');
+      navigate(destination, { replace: true });
     } catch (err) {
       if (err.requiresVerification === true && err.userId) {
         setLoginError("E-posta adresiniz henüz doğrulanmamış. Yönlendiriliyorsunuz...");
@@ -215,7 +211,7 @@ export default function AuthPage() {
     left: 0,
     right: 0,
     zIndex: 50,
-    backgroundColor: 'rgba(30, 18, 50, 0.98)',
+    backgroundColor: 'var(--bg-mid)',
     border: '1px solid var(--border-gold)',
     borderRadius: '8px',
     marginTop: '4px',
@@ -224,15 +220,15 @@ export default function AuthPage() {
     listStyle: 'none',
     padding: 0,
     margin: 0,
-    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
+    boxShadow: 'var(--shadow-hover)'
   };
 
   const suggestionItemStyle = {
     padding: '10px 14px',
     cursor: 'pointer',
     fontSize: '13px',
-    color: 'var(--text-light)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+    color: 'var(--text-primary)',
+    borderBottom: '1px solid var(--border-mid)',
     textAlign: 'left',
     transition: 'background-color 0.2s'
   };

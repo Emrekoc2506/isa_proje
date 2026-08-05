@@ -176,6 +176,12 @@ export default function CategoryNav({ mobileOpen, onMobileClose }) {
                 </li>
               );
             })}
+            {/* Blog Linki */}
+            <li className={styles.item}>
+              <a href="/blog" className={styles.link} style={{ color: 'var(--gold-light)', fontWeight: 600 }}>
+                ✦ Blog
+              </a>
+            </li>
           </ul>
         </div>
       </nav>

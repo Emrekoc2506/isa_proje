@@ -7,6 +7,8 @@ import { useScrollReveal } from '../../hooks/useScrollReveal';
 export default function BlogSection({ articles = [] }) {
   const sectionRef = useScrollReveal();
 
+  if (!articles || articles.length === 0) return null;
+
   return (
     <section className={styles.section} ref={sectionRef}>
       <div className={styles.inner}>
@@ -17,7 +19,7 @@ export default function BlogSection({ articles = [] }) {
             <h2 className={styles.title}>Blog</h2>
             <div className={styles.titleDecor} aria-hidden="true" />
           </div>
-          <a href="#blog" className={styles.viewAll}>
+          <a href="/blog" className={styles.viewAll}>
             Tüm Makaleleri Gör
             <span>›</span>
           </a>

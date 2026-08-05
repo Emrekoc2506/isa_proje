@@ -3,11 +3,12 @@
    ============================================================ */
 
 .nav {
-  background: linear-gradient(180deg, var(--bg-mid), var(--bg-dark));
-  border-bottom: 1px solid var(--border-gold);
-  position: sticky;
-  top: 85px;
-  z-index: calc(var(--z-sticky) - 1);
+  background: transparent;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: none;
+  position: relative;
+  top: auto;
+  z-index: 1;
 }
 
 /* ── Scroll Wrapper ─────────────────────────────────────── */

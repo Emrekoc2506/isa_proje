@@ -138,7 +138,7 @@ export default function VariantsSection({ product, onBack }) {
                 <td style={{ padding: 8, color: v.stockQuantity <= 3 ? '#e05594' : '#2ecc71' }}>{v.stockQuantity} Adet</td>
                 <td style={{ padding: 8 }}>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => handleOpenEdit(v)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <button onClick={() => handleOpenEdit(v)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 4 }}>
                       <FiEdit3 /> Düzenle
                     </button>
                     <button onClick={() => handleDelete(v.id)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: '#e05594', display: 'flex', alignItems: 'center', gap: 4 }}>

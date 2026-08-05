@@ -44,6 +44,11 @@
   50%       { opacity: 0.4; transform: scale(0.8); }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 @keyframes rotate-slow {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }

@@ -68,47 +68,55 @@ describe('Complete Backend Integration Specification Tests', () => {
       vi.restoreAllMocks();
     });
 
-    it('14. closeAdminConversation uses PUT method', async () => {
+    it('14. closeAdminConversation uses POST method', async () => {
       await chatApi.closeAdminConversation('conv-123');
       expect(globalThis.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/admin/chat/conversations/conv-123/close'),
-        expect.objectContaining({ method: 'PUT' })
+        expect.objectContaining({ method: 'POST' })
       );
     });
 
-    it('15. deleteConversation calls DELETE /chat/conversations/{id}', async () => {
+    it('14b. reopenAdminConversation uses POST method', async () => {
+      await chatApi.reopenAdminConversation('conv-456');
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/admin/chat/conversations/conv-456/reopen'),
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+
+    it('15. deleteConversation calls POST /chat/conversations/{id}/delete', async () => {
       await chatApi.deleteConversation('conv-99');
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/chat/conversations/conv-99'),
-        expect.objectContaining({ method: 'DELETE' })
+        expect.stringContaining('/chat/conversations/conv-99/delete'),
+        expect.objectContaining({ method: 'POST' })
       );
     });
 
-    it('16. deleteAdminConversation calls DELETE /admin/chat/conversations/{id}', async () => {
+    it('16. deleteAdminConversation calls POST /admin/chat/conversations/{id}/delete', async () => {
       await chatApi.deleteAdminConversation('conv-admin-99');
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/admin/chat/conversations/conv-admin-99'),
-        expect.objectContaining({ method: 'DELETE' })
+        expect.stringContaining('/admin/chat/conversations/conv-admin-99/delete'),
+        expect.objectContaining({ method: 'POST' })
       );
     });
 
-    it('17. deleteMessages sends DELETE /chat/messages with messageIds payload', async () => {
+    it('17. deleteMessages sends POST /chat/messages/delete with messageIds payload', async () => {
       await chatApi.deleteMessages(['msg-1', 'msg-2']);
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/chat/messages'),
+        expect.stringContaining('/chat/messages/delete'),
         expect.objectContaining({
-          method: 'DELETE',
+          method: 'POST',
           body: expect.stringContaining('"messageIds":["msg-1","msg-2"]')
         })
       );
     });
 
-    it('18. deleteAdminMessages sends DELETE /admin/chat/messages with messageIds payload', async () => {
+    it('18. deleteAdminMessages sends POST /admin/chat/messages/delete with messageIds payload', async () => {
       await chatApi.deleteAdminMessages(['msg-a', 'msg-b']);
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/admin/chat/messages'),
+        expect.stringContaining('/admin/chat/messages/delete'),
         expect.objectContaining({
-          method: 'DELETE',
+          method: 'POST',
           body: expect.stringContaining('"messageIds":["msg-a","msg-b"]')
         })
       );

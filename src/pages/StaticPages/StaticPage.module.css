@@ -1,0 +1,305 @@
+.page {
+  min-height: 100vh;
+  background: var(--bg-dark);
+}
+
+.hero {
+  position: relative;
+  padding: 100px var(--container-pad) 60px;
+  text-align: center;
+  background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at center, var(--gold-glow) 0%, transparent 60%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+.heroTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  color: var(--gold-light);
+  margin-bottom: 12px;
+  letter-spacing: 0.04em;
+}
+
+.heroSubtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-3xl) var(--container-pad);
+}
+
+.section {
+  background: var(--bg-mid);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl);
+  margin-bottom: var(--space-xl);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition-base);
+}
+
+.section:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--gold-light);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-gold);
+  letter-spacing: 0.03em;
+}
+
+.sectionSubtitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--gold);
+  margin: var(--space-lg) 0 var(--space-sm);
+  letter-spacing: 0.02em;
+}
+
+.text {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  line-height: 1.8;
+  margin-bottom: var(--space-md);
+}
+
+.textSecondary {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: var(--space-md);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-md) 0;
+}
+
+.listItem {
+  position: relative;
+  padding-left: 24px;
+  margin-bottom: var(--space-sm);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  line-height: 1.7;
+}
+
+.listItem::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+  font-size: 12px;
+  top: 2px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-lg);
+  margin-top: var(--space-md);
+}
+
+.card {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  text-align: center;
+  transition: transform var(--transition-spring), box-shadow var(--transition-base);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-gold);
+}
+
+.cardIcon {
+  font-size: 36px;
+  color: var(--gold-light);
+  margin-bottom: var(--space-md);
+  display: block;
+}
+
+.cardTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  color: var(--gold);
+  margin-bottom: var(--space-sm);
+  letter-spacing: 0.03em;
+}
+
+.cardText {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.contactForm {
+  display: grid;
+  gap: var(--space-md);
+  max-width: 600px;
+  margin-top: var(--space-md);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.formLabel {
+  font-size: var(--text-sm);
+  color: var(--gold);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.formInput,
+.formTextarea {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  padding: 12px var(--space-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  outline: none;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  font-family: var(--font-body);
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+}
+
+.formTextarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.formBtn {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--bg-deep);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 12px var(--space-xl);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: background var(--transition-base), box-shadow var(--transition-base), transform var(--transition-spring);
+  width: fit-content;
+}
+
+.formBtn:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  box-shadow: 0 4px 16px rgba(201, 162, 39, 0.4);
+  transform: translateY(-1px);
+}
+
+.contactInfo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+.contactItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-base);
+}
+
+.contactItem:hover {
+  border-color: var(--border-gold);
+}
+
+.contactItemIcon {
+  font-size: 24px;
+  color: var(--gold-light);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.contactItemTitle {
+  font-size: var(--text-sm);
+  color: var(--gold);
+  font-weight: 600;
+  margin-bottom: 4px;
+  letter-spacing: 0.03em;
+}
+
+.contactItemText {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 80px var(--container-pad) 40px;
+  }
+
+  .heroTitle {
+    font-size: var(--text-2xl);
+  }
+
+  .section {
+    padding: var(--space-lg);
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contactInfo {
+    grid-template-columns: 1fr;
+  }
+}

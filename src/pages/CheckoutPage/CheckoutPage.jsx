@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiMapPin, FiTruck, FiTag, FiShoppingBag, FiCheck, FiChevronRight, FiLoader, FiAlertTriangle } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import LocationSelects from '../../components/LocationSelect/LocationSelects';
 import * as accountApi from '../../services/accountApi';
 import * as checkoutApi from '../../services/checkoutApi';
 import * as couponApi from '../../services/couponApi';
@@ -311,8 +312,17 @@ export default function CheckoutPage() {
                   <input type="text" placeholder="Ad Soyad *" required value={guestShipping.fullName} onChange={e => handleGuestShippingChange('fullName', e.target.value)} className={styles.input} />
                   <input type="email" placeholder="E-posta *" required value={guestShipping.email} onChange={e => handleGuestShippingChange('email', e.target.value)} className={styles.input} />
                   <input type="tel" placeholder="Telefon *" required value={guestShipping.phoneNumber} onChange={e => handleGuestShippingChange('phoneNumber', e.target.value)} className={styles.input} />
-                  <input type="text" placeholder="Şehir *" required value={guestShipping.city} onChange={e => handleGuestShippingChange('city', e.target.value)} className={styles.input} />
-                  <input type="text" placeholder="İlçe *" required value={guestShipping.district} onChange={e => handleGuestShippingChange('district', e.target.value)} className={styles.input} />
+                  <LocationSelects
+                    city={guestShipping.city}
+                    district={guestShipping.district}
+                    neighborhood={guestShipping.neighborhood}
+                    onCityChange={val => handleGuestShippingChange('city', val)}
+                    onDistrictChange={val => handleGuestShippingChange('district', val)}
+                    onNeighborhoodChange={val => handleGuestShippingChange('neighborhood', val)}
+                    fieldInputClass={styles.input}
+                    showLabels={false}
+                    selectStyle={{ background: 'var(--bg-dark)', color: 'var(--text-primary)' }}
+                  />
                   <input type="text" placeholder="Posta Kodu *" required value={guestShipping.postalCode} onChange={e => handleGuestShippingChange('postalCode', e.target.value)} className={styles.input} />
                   <input type="text" placeholder="Açık Adres *" required value={guestShipping.addressLine} onChange={e => handleGuestShippingChange('addressLine', e.target.value)} className={styles.input} style={{ gridColumn: 'span 2' }} />
                 </div>
@@ -352,8 +362,17 @@ export default function CheckoutPage() {
                     <div className={styles.formGrid}>
                       <input type="text" placeholder="Ad Soyad *" required value={guestBilling.fullName} onChange={e => handleGuestBillingChange('fullName', e.target.value)} className={styles.input} />
                       <input type="tel" placeholder="Telefon *" required value={guestBilling.phoneNumber} onChange={e => handleGuestBillingChange('phoneNumber', e.target.value)} className={styles.input} />
-                      <input type="text" placeholder="Şehir *" required value={guestBilling.city} onChange={e => handleGuestBillingChange('city', e.target.value)} className={styles.input} />
-                      <input type="text" placeholder="İlçe *" required value={guestBilling.district} onChange={e => handleGuestBillingChange('district', e.target.value)} className={styles.input} />
+                      <LocationSelects
+                        city={guestBilling.city}
+                        district={guestBilling.district}
+                        neighborhood={guestBilling.neighborhood}
+                        onCityChange={val => handleGuestBillingChange('city', val)}
+                        onDistrictChange={val => handleGuestBillingChange('district', val)}
+                        onNeighborhoodChange={val => handleGuestBillingChange('neighborhood', val)}
+                        fieldInputClass={styles.input}
+                        showLabels={false}
+                        selectStyle={{ background: 'var(--bg-dark)', color: 'var(--text-primary)' }}
+                      />
                       <input type="text" placeholder="Posta Kodu *" required value={guestBilling.postalCode} onChange={e => handleGuestBillingChange('postalCode', e.target.value)} className={styles.input} />
                       <input type="text" placeholder="Açık Adres *" required value={guestBilling.addressLine} onChange={e => handleGuestBillingChange('addressLine', e.target.value)} className={styles.input} style={{ gridColumn: 'span 2' }} />
                     </div>

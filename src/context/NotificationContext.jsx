@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import * as signalR from "@microsoft/signalr";
-import { getMyNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '../services/notificationApi';
+import { getMyNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, deleteAllNotifications } from '../services/notificationApi';
 import { useAuth } from './AuthContext';
+import { safeGetItem } from '../utils/storage';
 
 const NotificationContext = createContext(null);
 const signalrUrl = import.meta.env.VITE_SIGNALR_BASE_URL ?? "https://localhost:7148/hubs";
@@ -24,7 +25,7 @@ export function NotificationProvider({ children }) {
           id: n.id,
           type: n.type || 'system',
           title: n.title || 'Bildirim',
-          body: n.message || n.body || '',
+          body: n.body || n.message || '',
           time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : 'Şimdi',
           read: n.isRead ?? false,
           link: n.link || '/panel',
@@ -32,8 +33,8 @@ export function NotificationProvider({ children }) {
         }));
         setNotifications(mapped);
       }
-    } catch (err) {
-      console.error("Bildirimler yüklenemedi:", err);
+    } catch {
+      // Ignore network errors
     }
   }, [isAuthenticated]);
 
@@ -61,23 +62,20 @@ export function NotificationProvider({ children }) {
 
     let hubConn = new signalR.HubConnectionBuilder()
       .withUrl(`${signalrUrl}/notifications`, {
-        accessTokenFactory: () => localStorage.getItem("accessToken")
+        accessTokenFactory: () => safeGetItem("accessToken") || ""
       })
       .withAutomaticReconnect()
       .build();
 
     hubConn.start()
       .then(async () => {
-        console.log("Notification Hub bağlantısı kuruldu.");
         setConnection(hubConn);
 
         if (user && user.id) {
-          await hubConn.invoke("JoinMyNotifications", user.id).catch(console.error);
+          await hubConn.invoke("JoinMyNotifications", user.id).catch(() => null);
         }
       })
-      .catch(err => {
-        console.error("Notification Hub bağlantı hatası:", err);
-      });
+      .catch(() => null);
 
     // Real-time bildirim alıcısı
     hubConn.on("ReceiveNotification", (notif) => {
@@ -86,7 +84,7 @@ export function NotificationProvider({ children }) {
           id: notif.id,
           type: notif.type || 'system',
           title: notif.title || 'Yeni Bildirim',
-          body: notif.message || notif.body || '',
+          body: notif.body || notif.message || '',
           time: 'Şimdi',
           read: false,
           link: notif.link || '/panel',
@@ -109,8 +107,8 @@ export function NotificationProvider({ children }) {
     try {
       await markNotificationAsRead(id);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    } catch (err) {
-      console.error("Bildirim okundu olarak işaretlenemedi:", err);
+    } catch {
+      // Ignore error
     }
   }, []);
 
@@ -118,8 +116,8 @@ export function NotificationProvider({ children }) {
     try {
       await markAllNotificationsAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    } catch (err) {
-      console.error("Tümünü okundu işaretleme hatası:", err);
+    } catch {
+      // Ignore error
     }
   }, []);
 
@@ -127,18 +125,19 @@ export function NotificationProvider({ children }) {
     try {
       await deleteNotification(id);
       setNotifications(prev => prev.filter(n => n.id !== id));
-    } catch (err) {
-      console.error("Bildirim silinemedi:", err);
+    } catch {
+      // Ignore error
     }
   }, []);
 
   const clearAll = useCallback(async () => {
-    // Delete unread / read notifications from backend
     try {
-      await Promise.all(notifications.map(n => deleteNotification(n.id).catch(() => null)));
+      await deleteAllNotifications().catch(() => {
+        return Promise.all(notifications.map(n => deleteNotification(n.id).catch(() => null)));
+      });
       setNotifications([]);
-    } catch (err) {
-      console.error("Tüm bildirimleri silme hatası:", err);
+    } catch {
+      setNotifications([]);
     }
   }, [notifications]);
 

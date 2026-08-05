@@ -1,7 +1,7 @@
 import { Editor } from '@tinymce/tinymce-react';
+import { uploadFile } from '../../services/fileApi';
 
 const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY || 'no-api-key';
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 /**
  * Admin paneli için TinyMCE Rich Text Editor bileşeni.
@@ -11,35 +11,20 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
  *  - onChange: (html: string) => void
  *  - placeholder: string (opsiyonel)
  */
-export default function RichTextEditor({ value, onChange, placeholder = 'Ürün açıklamasını buraya yazın...' }) {
+export default function RichTextEditor({ value, onChange, placeholder = 'Açıklamayı buraya yazın...' }) {
 
   /**
    * TinyMCE görsel yükleme handler'ı.
-   * Editörden gelen dosyayı doğrudan /api/admin/files/upload endpoint'ine gönderir.
-   * Token localStorage'dan okunur — mevcut apiClient.js mantığı ile aynı.
+   * Editörden gelen dosyayı uploadFile servisi üzerinden /admin/files/upload endpoint'ine gönderir.
    */
   const handleImageUpload = async (blobInfo) => {
-    const formData = new FormData();
-    formData.append('File', blobInfo.blob(), blobInfo.filename());
-    formData.append('Purpose', 'Product');
-
-    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('accessToken') : null;
-
-    const response = await fetch(`${API_BASE}/admin/files/upload`, {
-      method: 'POST',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
+    try {
+      const file = new File([blobInfo.blob()], blobInfo.filename(), { type: blobInfo.blob().type });
+      const res = await uploadFile(file, 'Blog');
+      return res.url || res.fileUrl || res.imageUrl || res.location || '';
+    } catch (err) {
       throw new Error(err.message || 'Görsel yüklenemedi');
     }
-
-    const data = await response.json();
-    return data.url; // FileUploadResponse.url
   };
 
   return (
@@ -55,7 +40,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Ürün 
           content_css: 'dark',
           placeholder,
           plugins: [
-            'anchor', 'autolink', 'charmap', 'codesample', 'link', 'lists',
+            'anchor', 'autolink', 'charmap', 'codesample', 'code', 'link', 'lists',
             'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
             'image', 'quickbars', 'emoticons'
           ],
@@ -63,7 +48,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Ürün 
             'undo redo | styles | bold italic underline strikethrough | ' +
             'forecolor backcolor | alignleft aligncenter alignright alignjustify | ' +
             'bullist numlist outdent indent | link image media table | ' +
-            'emoticons charmap | removeformat | wordcount',
+            'code emoticons charmap | removeformat | wordcount',
           toolbar_mode: 'wrap',
 
           // Görsel yükleme
@@ -79,10 +64,24 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Ürün 
             { title: 'Sağa Hizalı', value: 'rte-right' },
           ],
 
-          // Video embed (YouTube, Vimeo, MP4 iframe)
+          // Video embed (YouTube, Vimeo, Google Drive)
           media_live_embeds: true,
           media_alt_source: false,
           media_poster: false,
+          media_url_resolver: (data, resolve) => {
+            if (data.url && data.url.includes('drive.google.com')) {
+              let driveId = '';
+              if (data.url.includes('/file/d/')) {
+                driveId = data.url.split('/file/d/')[1]?.split('/')[0]?.split('?')[0];
+              }
+              if (driveId) {
+                const embedHtml = `<iframe src="https://drive.google.com/file/d/${driveId}/preview" width="100%" height="360" frameborder="0" allow="autoplay" allowfullscreen></iframe>`;
+                resolve({ html: embedHtml });
+                return;
+              }
+            }
+            resolve({ html: '' });
+          },
 
           // Güvenlik — relative URL dönüşümü engelle
           convert_urls: false,

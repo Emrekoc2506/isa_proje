@@ -12,6 +12,8 @@
   position: relative;
   transition: border-color var(--transition-base);
   box-shadow: var(--shadow-card);
+  height: 100%;
+  width: 100%;
 }
 
 .card:hover {
@@ -58,9 +60,9 @@
   top: var(--space-sm);
   right: var(--space-sm);
   z-index: 2;
-  background: rgba(18, 9, 31, 0.7);
+  background: var(--bg-mid);
   color: var(--text-muted);
-  border: 1px solid var(--border-mid);
+  border: 1px solid var(--border-gold);
   border-radius: var(--radius-circle);
   width: 34px;
   height: 34px;
@@ -147,6 +149,7 @@
   font-size: var(--text-sm);
   font-weight: 500;
   line-height: 1.4;
+  height: 2.8em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -167,6 +170,7 @@
   gap: var(--space-xs);
   flex-wrap: wrap;
   margin-top: auto;
+  min-height: 28px;
 }
 
 .price {

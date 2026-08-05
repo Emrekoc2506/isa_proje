@@ -1,4 +1,5 @@
 import { request } from "./apiClient";
+import { safeGetJson, safeSetJson } from "../utils/storage";
 
 // Mock reviews fallback when backend does not return data yet
 const MOCK_REVIEWS = [
@@ -44,8 +45,7 @@ export async function getReviewsByProduct(productId) {
   }
 
   const storedKey = `isa_reviews_${productId}`;
-  const stored = localStorage.getItem(storedKey);
-  const localList = stored ? JSON.parse(stored) : [];
+  const localList = safeGetJson(storedKey, []);
   const defaultList = MOCK_REVIEWS.filter(r => r.productId === productId);
   
   return [...localList, ...defaultList];
@@ -74,10 +74,27 @@ export async function addReview(productId, reviewData) {
   };
 
   const storedKey = `isa_reviews_${productId}`;
-  const stored = localStorage.getItem(storedKey);
-  const localList = stored ? JSON.parse(stored) : [];
+  const localList = safeGetJson(storedKey, []);
   localList.unshift(newReview);
-  localStorage.setItem(storedKey, JSON.stringify(localList));
+  safeSetJson(storedKey, localList);
 
   return newReview;
+}
+
+/* ── Admin Review Moderation ──────────────────────────── */
+
+export function getPendingReviews() {
+  return request("/admin/reviews/pending");
+}
+
+export function approveReview(id) {
+  return request(`/admin/reviews/${id}/approve`, { method: "PUT" });
+}
+
+export function rejectReview(id) {
+  return request(`/admin/reviews/${id}/reject`, { method: "PUT" });
+}
+
+export function deleteAdminReview(id) {
+  return request(`/admin/reviews/${id}`, { method: "DELETE" });
 }

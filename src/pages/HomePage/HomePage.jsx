@@ -1,17 +1,37 @@
+import { useState, useEffect } from 'react';
 import styles from './HomePage.module.css';
 import HeroSlider from '../../components/HeroSlider/HeroSlider';
 import ProductSection from '../../components/ProductSection/ProductSection';
 import BlogSection from '../../components/BlogSection/BlogSection';
 import VideoBannerItem from '../../components/HeroSlider/VideoBannerItem';
 import { useProducts } from '../../context/ProductContext';
-import { blogArticles } from '../../data/index';
+import { getBlogArticles } from '../../services/blogApi';
+import { blogArticles as mockArticles } from '../../data/index';
 
 export default function HomePage() {
   const { products, slides } = useProducts();
+  const [articles, setArticles] = useState([]);
+
+  useEffect(() => {
+    getBlogArticles()
+      .then(res => {
+        const list = Array.isArray(res) ? res : (res?.items || []);
+        if (list.length > 0) {
+          setArticles(list);
+        } else {
+          setArticles(mockArticles);
+        }
+      })
+      .catch(() => setArticles(mockArticles));
+  }, []);
 
   const newsProducts = products.filter(p => p.isNew);
   const saleProducts = products.filter(p => p.isSale);
   const featuredProducts = products.filter(p => p.isFeatured);
+
+  const displayNews = newsProducts.length > 0 ? newsProducts : products.slice(0, 8);
+  const displaySale = saleProducts.length > 0 ? saleProducts : (products.length > 4 ? products.slice(4, 12) : products.slice(0, 8));
+  const displayFeatured = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8);
 
   // 1. banner HeroSlider'da gösterilir. Sonraki bannerlar SortOrder sırasıyla sayfa altında gösterilir.
   const secondaryBanners = slides.slice(1);
@@ -25,7 +45,7 @@ export default function HomePage() {
       <ProductSection
         title="Yeni Gelenler"
         viewAllHref="/urunler"
-        products={newsProducts.length > 0 ? newsProducts : products.slice(0, 4)}
+        products={displayNews}
       />
 
       {/* ── 2. Banner (Aşağıdaki İkinci Geniş Video/Görsel Alanı) ── */}
@@ -53,7 +73,7 @@ export default function HomePage() {
         <ProductSection
           title="İndirimdekiler"
           viewAllHref="/urunler"
-          products={saleProducts.length > 0 ? saleProducts : products.slice(4, 8)}
+          products={displaySale}
         />
       </section>
 
@@ -61,11 +81,11 @@ export default function HomePage() {
       <ProductSection
         title="Öne Çıkan Ürünler"
         viewAllHref="/urunler"
-        products={featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8)}
+        products={displayFeatured}
       />
 
       {/* ── Blog ─────────────────────────────────────────── */}
-      <BlogSection articles={blogArticles} />
+      <BlogSection articles={articles} />
     </main>
   );
 }

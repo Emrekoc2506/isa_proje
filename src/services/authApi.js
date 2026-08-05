@@ -1,4 +1,5 @@
 import { request } from "./apiClient";
+import { safeGetItem, safeSetItem } from "../utils/storage";
 
 export async function login(payload) {
   const result = await request("/auth/login", {
@@ -7,11 +8,11 @@ export async function login(payload) {
   });
 
   if (result?.accessToken) {
-    localStorage.setItem("accessToken", result.accessToken);
+    safeSetItem("accessToken", result.accessToken);
   }
 
   if (result?.refreshToken) {
-    localStorage.setItem("refreshToken", result.refreshToken);
+    safeSetItem("refreshToken", result.refreshToken);
   }
 
   return result;
@@ -30,7 +31,7 @@ export function me() {
 }
 
 export async function logout(refreshTokenVal) {
-  const tokenToUse = refreshTokenVal ?? (typeof localStorage !== "undefined" ? localStorage.getItem("refreshToken") : null);
+  const tokenToUse = refreshTokenVal ?? safeGetItem("refreshToken");
 
   try {
     return await request("/auth/logout", { 

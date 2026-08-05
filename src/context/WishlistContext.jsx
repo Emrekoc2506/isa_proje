@@ -2,7 +2,10 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { useAuth } from './AuthContext';
 import * as wishlistApi from '../services/wishlistApi';
 import { getProducts } from '../services/productApi';
+import { safeGetJson, safeSetJson, safeRemoveItem } from '../utils/storage';
 import { isValidGuid, prepareWishlistProductIds } from '../utils/wishlist';
+
+import { newsProducts, saleProducts } from '../data/index';
 
 const WishlistContext = createContext(null);
 
@@ -30,33 +33,32 @@ export function WishlistProvider({ children }) {
         }));
         setItems(mapped);
       } else {
-        const raw = localStorage.getItem("isa_guest_wishlist");
-        let localIds = [];
-        try {
-          localIds = raw ? JSON.parse(raw) : [];
-        } catch {
-          localIds = [];
-        }
-        localIds = prepareWishlistProductIds(localIds);
+        const localStored = safeGetJson("isa_guest_wishlist", []);
+        let localIds = prepareWishlistProductIds(localStored);
 
         if (localIds.length > 0) {
           const productsData = await getProducts({ pageSize: 100 }).catch(() => ({ items: [] }));
-          const catalog = productsData?.items || [];
-          
+          const catalogData = productsData?.items || [];
+          const allCatalog = [...catalogData, ...newsProducts, ...saleProducts];
+
           const mapped = localIds.map(id => {
-            const prod = catalog.find(p => p.id === id);
-            if (!prod) return null;
+            const foundInCatalog = allCatalog.find(p => String(p.id) === String(id) || String(p.productId) === String(id));
+            const foundInLocalObj = Array.isArray(localStored) 
+              ? localStored.find(item => typeof item === 'object' && String(item?.id || item?.productId) === String(id)) 
+              : null;
+
+            const p = foundInCatalog || foundInLocalObj || { id };
             return {
-              id: prod.id,
-              productId: prod.id,
-              productName: prod.name,
-              slug: prod.slug,
-              imageUrl: prod.image || (prod.images && prod.images[0]?.url) || "",
-              price: typeof prod.price === 'number' ? `${prod.price} ₺` : prod.price,
-              oldPrice: prod.oldPrice == null ? null : (typeof prod.oldPrice === 'number' ? `${prod.oldPrice} ₺` : prod.oldPrice),
+              id: p.id || id,
+              productId: p.id || p.productId || id,
+              productName: p.name || p.productName || "Favori Ürün",
+              slug: p.slug || "",
+              imageUrl: p.image || p.imageUrl || "",
+              price: typeof p.price === 'number' ? `${p.price} ₺` : p.price || "0 ₺",
+              oldPrice: p.oldPrice == null ? null : (typeof p.oldPrice === 'number' ? `${p.oldPrice} ₺` : p.oldPrice),
               addedAt: new Date().toISOString()
             };
-          }).filter(Boolean);
+          });
           setItems(mapped);
         } else {
           setItems([]);
@@ -75,28 +77,28 @@ export function WishlistProvider({ children }) {
     reloadWishlist();
   }, [isAuthenticated, reloadWishlist]);
 
-  const addFavorite = useCallback(async (productId) => {
-    if (!isValidGuid(productId)) {
-      console.warn("Invalid product ID format.");
-      return;
-    }
+  const addFavorite = useCallback(async (input) => {
+    const productId = typeof input === 'object' ? (input?.id || input?.productId) : input;
+    if (!productId) return;
+    
     try {
       setLoading(true);
       if (isAuthenticated) {
-        await wishlistApi.addWishlistItem(productId);
+        if (isValidGuid(productId)) {
+          await wishlistApi.addWishlistItem(productId);
+        }
         await reloadWishlist();
       } else {
-        const raw = localStorage.getItem("isa_guest_wishlist");
-        let localIds = [];
-        try {
-          localIds = raw ? JSON.parse(raw) : [];
-        } catch {
-          localIds = [];
-        }
-        localIds = prepareWishlistProductIds(localIds);
-        if (!localIds.includes(productId)) {
-          localIds.push(productId);
-          localStorage.setItem("isa_guest_wishlist", JSON.stringify(localIds));
+        let localStored = safeGetJson("isa_guest_wishlist", []);
+        if (!Array.isArray(localStored)) localStored = [];
+        const exists = localStored.some(item => {
+          const itemID = typeof item === 'object' ? (item?.id || item?.productId) : item;
+          return String(itemID) === String(productId);
+        });
+
+        if (!exists) {
+          localStored.push(input);
+          safeSetJson("isa_guest_wishlist", localStored);
         }
         await reloadWishlist();
       }
@@ -108,23 +110,26 @@ export function WishlistProvider({ children }) {
     }
   }, [isAuthenticated, reloadWishlist]);
 
-  const removeFavorite = useCallback(async (productId) => {
+  const removeFavorite = useCallback(async (input) => {
+    const productId = typeof input === 'object' ? (input?.id || input?.productId) : input;
+    if (!productId) return;
+
     try {
       setLoading(true);
       if (isAuthenticated) {
-        await wishlistApi.removeWishlistItem(productId);
+        if (isValidGuid(productId)) {
+          await wishlistApi.removeWishlistItem(productId);
+        }
         await reloadWishlist();
       } else {
-        const raw = localStorage.getItem("isa_guest_wishlist");
-        let localIds = [];
-        try {
-          localIds = raw ? JSON.parse(raw) : [];
-        } catch {
-          localIds = [];
+        let localStored = safeGetJson("isa_guest_wishlist", []);
+        if (Array.isArray(localStored)) {
+          const filtered = localStored.filter(item => {
+            const itemID = typeof item === 'object' ? (item?.id || item?.productId) : item;
+            return String(itemID) !== String(productId);
+          });
+          safeSetJson("isa_guest_wishlist", filtered);
         }
-        localIds = prepareWishlistProductIds(localIds);
-        const filtered = localIds.filter(id => id !== productId);
-        localStorage.setItem("isa_guest_wishlist", JSON.stringify(filtered));
         await reloadWishlist();
       }
     } catch (err) {
@@ -135,27 +140,32 @@ export function WishlistProvider({ children }) {
     }
   }, [isAuthenticated, reloadWishlist]);
 
-  const toggleFavorite = useCallback(async (product) => {
-    const productId = product.databaseId ?? product.productId ?? product.id;
-    const exists = items.some(i => i.productId === productId || i.id === productId);
+  const toggleFavorite = useCallback(async (input) => {
+    const productId = typeof input === 'object' ? (input?.id || input?.productId) : input;
+    if (!productId) return;
+
+    const exists = items.some(i => String(i.productId) === String(productId) || String(i.id) === String(productId));
     if (exists) {
-      await removeFavorite(productId);
+      await removeFavorite(input);
     } else {
-      await addFavorite(productId);
+      await addFavorite(input);
     }
   }, [items, addFavorite, removeFavorite]);
 
-  const isFavorite = useCallback((productId) => {
-    return items.some(i => i.productId === productId || i.id === productId);
+  const isFavorite = useCallback((input) => {
+    const productId = typeof input === 'object' ? (input?.id || input?.productId) : input;
+    if (!productId) return false;
+    return items.some(i => String(i.productId) === String(productId) || String(i.id) === String(productId));
   }, [items]);
 
-  const mergeGuestWishlist = useCallback(async (productIds) => {
+  const mergeGuestWishlist = useCallback(async (guestItemsInput = []) => {
     try {
       setLoading(true);
-      const cleanIds = prepareWishlistProductIds(productIds);
-      const data = await wishlistApi.mergeWishlist(cleanIds);
-      const mapped = (data || []).map(item => ({
-        id: item.productId || item.id,
+      const cleanIds = prepareWishlistProductIds(guestItemsInput);
+      const res = await wishlistApi.mergeGuestWishlist(cleanIds);
+      const rawList = Array.isArray(res) ? res : (res?.items || []);
+      const mapped = rawList.map(item => ({
+        id: item.id || item.productId,
         productId: item.productId || item.id,
         productName: item.productName || item.name || "",
         slug: item.slug || "",
@@ -165,7 +175,7 @@ export function WishlistProvider({ children }) {
         addedAt: item.addedAt || item.createdAt || null
       }));
       setItems(mapped);
-      localStorage.removeItem("isa_guest_wishlist");
+      safeRemoveItem("isa_guest_wishlist");
       return mapped;
     } catch (err) {
       console.error("Failed to merge guest wishlist:", err);
@@ -184,6 +194,8 @@ export function WishlistProvider({ children }) {
 
   const value = {
     items,
+    totalCount: items.length,
+    wishlistCount: items.length,
     isLoading: loading,
     loading,
     error,
@@ -206,7 +218,23 @@ export function WishlistProvider({ children }) {
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
   if (!context) {
-    throw new Error("useWishlist must be used within a WishlistProvider");
+    return {
+      items: [],
+      wishlistItems: [],
+      favorites: [],
+      loading: false,
+      isFavorite: () => false,
+      isInWishlist: () => false,
+      addFavorite: async () => {},
+      removeFavorite: async () => {},
+      removeFromWishlist: async () => {},
+      toggleFavorite: async () => {},
+      toggleWishlist: async () => {},
+      reloadWishlist: async () => {},
+      refreshWishlist: async () => {},
+      mergeGuestWishlist: async () => {},
+      clearWishlistState: () => {}
+    };
   }
   return context;
 };

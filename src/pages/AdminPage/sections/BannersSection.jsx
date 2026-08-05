@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import * as bannerApi from '../../../services/bannerApi';
 import { uploadFile } from '../../../services/fileApi';
 import { parseBannerContent } from '../../../utils/bannerContent';
+import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 const STEPS = [
@@ -266,6 +267,7 @@ export default function BannersSection() {
   const [uploadProgress, setUploadProgress] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   // Preview banner
   const [previewBanner, setPreviewBanner] = useState(null);
@@ -521,9 +523,27 @@ export default function BannersSection() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Bu ilanı silmek istediğinize emin misiniz?')) return;
-    try { await bannerApi.deleteAdminBanner(id); fetchBanners(); }
-    catch (err) { alert('İlan silinemedi: ' + err.message); }
+    if (!window.confirm("Bu ilan ve ona ait kullanılmayan yerel dosyalar kalıcı olarak silinecektir. Bu işlem geri alınamaz. Devam etmek istediğinize emin misiniz?")) {
+      return;
+    }
+    if (deletingId) return;
+
+    setDeletingId(id);
+    try {
+      await bannerApi.deleteAdminBanner(id);
+      
+      const copy = { ...richContent };
+      delete copy[id];
+      setRichContent(copy);
+      localStorage.setItem('bannerRichContent', JSON.stringify(copy));
+
+      fetchBanners();
+      alert("İlan başarıyla silindi.");
+    } catch (err) {
+      alert(getHardDeleteErrorMessage(err, "İlan"));
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   // ── Preview modal ─────────────────────────────────────────────────────────────
@@ -622,7 +642,25 @@ export default function BannersSection() {
                       {b.isActive ? <FiToggleRight size={13} /> : <FiToggleLeft size={13} />}
                       {b.isActive ? 'Aktif' : 'Pasif'}
                     </button>
-                    <button onClick={() => handleDelete(b.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: 'rgba(224,85,148,0.07)', border: '1px solid rgba(224,85,148,0.2)', color: '#e05594', borderRadius: 7, padding: '7px 12px', fontSize: 12, cursor: 'pointer' }}>
+                    <button
+                      onClick={() => handleDelete(b.id)}
+                      disabled={deletingId === b.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 5,
+                        background: 'rgba(224,85,148,0.07)',
+                        border: '1px solid rgba(224,85,148,0.2)',
+                        color: '#e05594',
+                        borderRadius: 7,
+                        padding: '7px 12px',
+                        fontSize: 12,
+                        cursor: deletingId === b.id ? 'not-allowed' : 'pointer',
+                        opacity: deletingId === b.id ? 0.5 : 1
+                      }}
+                      title={deletingId === b.id ? "Siliniyor..." : "Sil"}
+                    >
                       <FiTrash2 size={13} />
                     </button>
                   </div>

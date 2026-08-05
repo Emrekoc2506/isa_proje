@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiPlus, FiMapPin, FiPhone, FiTrash2, FiEdit3, FiCheck, FiBriefcase, FiUser } from 'react-icons/fi';
 import * as accountApi from '../../services/accountApi';
+import LocationSelects from '../../components/LocationSelect/LocationSelects';
 import styles from './DashboardPage.module.css';
 
 export default function AddressesSection() {
@@ -196,15 +197,19 @@ export default function AddressesSection() {
               <input type="text" required value={country} onChange={e => setCountry(e.target.value)} placeholder="Örn: TR" className={styles.fieldInput} />
             </div>
 
-            <div className={styles.formField}>
-              <label className={styles.fieldLabel}>Şehir *</label>
-              <input type="text" required value={city} onChange={e => setCity(e.target.value)} placeholder="İl girin" className={styles.fieldInput} />
-            </div>
-
-            <div className={styles.formField}>
-              <label className={styles.fieldLabel}>İlçe *</label>
-              <input type="text" required value={district} onChange={e => setDistrict(e.target.value)} placeholder="İlçe girin" className={styles.fieldInput} />
-            </div>
+            <LocationSelects
+              city={city}
+              district={district}
+              neighborhood={neighborhood}
+              onCityChange={setCity}
+              onDistrictChange={setDistrict}
+              onNeighborhoodChange={setNeighborhood}
+              fieldInputClass={styles.fieldInput}
+              labelClass={styles.fieldLabel}
+              showLabels={true}
+              wrapperClass={styles.formField}
+              selectStyle={{ background: 'var(--bg-mid)', color: 'var(--text-primary)' }}
+            />
 
             <div className={styles.formField}>
               <label className={styles.fieldLabel}>Posta Kodu *</label>
@@ -218,7 +223,7 @@ export default function AddressesSection() {
 
             <div className={styles.formField}>
               <label className={styles.fieldLabel}>Adres Tipi *</label>
-              <select value={addressType} onChange={e => setAddressType(e.target.value)} className={styles.fieldInput} style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--text-light)' }}>
+              <select value={addressType} onChange={e => setAddressType(e.target.value)} className={styles.fieldInput} style={{ background: 'var(--bg-mid)', color: 'var(--text-primary)' }}>
                 <option value="Both">Hem Teslimat Hem Fatura</option>
                 <option value="Shipping">Sadece Teslimat</option>
                 <option value="Billing">Sadece Fatura</option>

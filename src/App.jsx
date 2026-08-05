@@ -1,10 +1,11 @@
 import './index.css';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { ProductProvider } from './context/ProductContext';
+import { ThemeProvider } from './context/ThemeContext';
 import MainLayout from './layouts/MainLayout/MainLayout';
 import HomePage from './pages/HomePage/HomePage';
 import AuthPage from './pages/AuthPage/AuthPage';
@@ -12,6 +13,7 @@ import DashboardPage from './pages/DashboardPage/DashboardPage';
 import AdminPage from './pages/AdminPage/AdminPage';
 import ProductsPage from './pages/ProductsPage/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage';
+import BlogPage from './pages/BlogPage/BlogPage';
 
 // Guards
 import ProtectedRoute from './routes/ProtectedRoute';
@@ -25,6 +27,14 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ForgotPasswordPage/ResetPasswordPage';
 import CheckoutPage from './pages/CheckoutPage/CheckoutPage';
 import PaymentResultPage from './pages/CheckoutPage/PaymentResultPage';
+
+// Statik Sayfalar
+import HakkimizdaPage from './pages/StaticPages/HakkimizdaPage';
+import IletisimPage from './pages/StaticPages/IletisimPage';
+import KargoTeslimatPage from './pages/StaticPages/KargoTeslimatPage';
+import IadeSikayetPage from './pages/StaticPages/IadeSikayetPage';
+import GizlilikPage from './pages/StaticPages/GizlilikPage';
+import KullanimKosullariPage from './pages/StaticPages/KullanimKosullariPage';
 
 function UnauthorizedPage() {
   return (
@@ -54,6 +64,15 @@ function AppRoutes() {
       <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
       <Route path="/urunler" element={<MainLayout><ProductsPage /></MainLayout>} />
       <Route path="/urun/:id" element={<ProductDetailPage />} />
+      <Route path="/blog" element={<MainLayout><BlogPage /></MainLayout>} />
+
+      {/* Statik Sayfalar */}
+      <Route path="/hakkimizda" element={<MainLayout><HakkimizdaPage /></MainLayout>} />
+      <Route path="/iletisim" element={<MainLayout><IletisimPage /></MainLayout>} />
+      <Route path="/kargo-teslimat" element={<MainLayout><KargoTeslimatPage /></MainLayout>} />
+      <Route path="/iade-sikayet" element={<MainLayout><IadeSikayetPage /></MainLayout>} />
+      <Route path="/gizlilik-politikasi" element={<MainLayout><GizlilikPage /></MainLayout>} />
+      <Route path="/kullanim-kosullari" element={<MainLayout><KullanimKosullariPage /></MainLayout>} />
 
       {/* Guest Rotaları (Giriş yapanlar giremez) */}
       <Route path="/giris" element={<GuestRoute><AuthPage /></GuestRoute>} />
@@ -66,7 +85,7 @@ function AppRoutes() {
       <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
 
       {/* Sepet / Ödeme (Auth veya Guest) */}
-      <Route path="/sepet" element={<MainLayout><ProductsPage /></MainLayout>} /> {/* Sepet Drawer olarak açılır, yönlendirmede de ürünleri listeler */}
+      <Route path="/sepet" element={<Navigate to="/odeme" replace />} />
       <Route path="/odeme" element={<CheckoutPage />} />
       <Route path="/odeme/sonuc" element={<PaymentResultPage />} />
 
@@ -76,7 +95,7 @@ function AppRoutes() {
       <Route path="/siparislerim/:id" element={<ProtectedRoute><DashboardPage activeTab="orders" /></ProtectedRoute>} />
       <Route path="/favorilerim" element={<ProtectedRoute><DashboardPage activeTab="wishlist" /></ProtectedRoute>} />
       <Route path="/adreslerim" element={<ProtectedRoute><DashboardPage activeTab="addresses" /></ProtectedRoute>} />
-      <Route path="/profilim" element={<ProtectedRoute><DashboardPage activeTab="profile" /></ProtectedRoute>} />
+      <Route path="/profilim" element={<Navigate to="/ayarlar" replace />} />
       <Route path="/ayarlar" element={<ProtectedRoute><DashboardPage activeTab="settings" /></ProtectedRoute>} />
 
       {/* Yönetici Rotaları (Yalnızca Admin/SuperAdmin) */}
@@ -90,23 +109,27 @@ function AppRoutes() {
 }
 
 import { HelmetProvider } from 'react-helmet-async';
+import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 
 function App() {
   return (
     <HelmetProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <ProductProvider>
-            <WishlistProvider>
-              <CartProvider>
-                <NotificationProvider>
-                  <AppRoutes />
-                </NotificationProvider>
-              </CartProvider>
-            </WishlistProvider>
-          </ProductProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <AuthProvider>
+            <ProductProvider>
+              <WishlistProvider>
+                <CartProvider>
+                  <NotificationProvider>
+                    <AppRoutes />
+                  </NotificationProvider>
+                </CartProvider>
+              </WishlistProvider>
+            </ProductProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
     </HelmetProvider>
   );
 }

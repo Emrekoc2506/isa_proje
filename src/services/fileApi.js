@@ -1,5 +1,6 @@
 import { apiBaseUrl, request } from "./apiClient";
 import { getGuestSessionId } from "../utils/guestSession";
+import { safeGetItem } from "../utils/storage";
 
 export function uploadFile(file, purpose = "Product", ownerId = null, onProgress = null) {
   let purposeValue = "Product";
@@ -13,6 +14,8 @@ export function uploadFile(file, purpose = "Product", ownerId = null, onProgress
     purposeValue = "User";
   } else if (purpose === "chat" || purpose === "Chat" || purpose === 3) {
     purposeValue = "Chat";
+  } else if (purpose === "blog" || purpose === "Blog") {
+    purposeValue = "Blog";
   }
 
   const formData = new FormData();
@@ -27,7 +30,7 @@ export function uploadFile(file, purpose = "Product", ownerId = null, onProgress
       const xhr = new XMLHttpRequest();
       xhr.open("POST", `${apiBaseUrl}/admin/files/upload`);
 
-      const token = typeof localStorage !== "undefined" ? localStorage.getItem("accessToken") : null;
+      const token = safeGetItem("accessToken");
       if (token) {
         xhr.setRequestHeader("Authorization", `Bearer ${token}`);
       }

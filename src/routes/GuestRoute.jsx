@@ -13,7 +13,7 @@ export default function GuestRoute({ children }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to={isAdmin ? "/admin" : "/panel"} replace />;
+    return <Navigate to={isAdmin ? "/admin" : "/"} replace />;
   }
 
   return children;

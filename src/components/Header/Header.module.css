@@ -14,6 +14,18 @@
   justify-content: center;
   gap: var(--space-sm);
   letter-spacing: 0.05em;
+  max-height: 40px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.3s ease;
+}
+
+.announcement.announcementScrolled {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .announcement strong {
@@ -26,7 +38,7 @@
   flex-shrink: 0;
 }
 
-/* ── Header Ana ─────────────────────────────────────────────── */
+/* ── Header Ana (Billboard ile Birleşik Üst Durum & Floating Sticky) ── */
 
 .header {
   position: sticky;
@@ -40,7 +52,7 @@
 }
 
 .header.sticky {
-  background: rgba(18, 9, 31, 0.95);
+  background: var(--bg-dark);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--shadow-header);
@@ -49,10 +61,15 @@
 .inner {
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: var(--space-md) var(--space-md);
+  padding: 16px var(--space-md);
   display: flex;
   align-items: center;
   gap: var(--space-lg);
+  transition: padding 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.header.sticky .inner {
+  padding: 9px var(--space-md);
 }
 
 /* ── Logo ──────────────────────────────────────────────────── */
@@ -73,6 +90,11 @@
   font-weight: 700;
   color: var(--gold-light);
   letter-spacing: 0.05em;
+  transition: font-size 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.header.sticky .brandName {
+  font-size: 22px;
 }
 
 .logo:hover {
@@ -83,6 +105,11 @@
   height: 52px;
   width: auto;
   object-fit: contain;
+  transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.header.sticky .logo img {
+  height: 38px;
 }
 
 /* ── Bildirim Sarmalayıcı ───────────────────────────────────── */
@@ -150,10 +177,10 @@
   top: calc(100% + 8px);
   left: 0;
   right: 0;
-  background: #1a0f2e;
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: var(--bg-mid);
+  border: 1px solid var(--border-gold);
   border-radius: 14px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-hover);
   overflow: hidden;
   z-index: 100;
   animation: searchFadeIn 0.2s ease;
@@ -170,8 +197,8 @@
   gap: 12px;
   padding: 10px 14px;
   text-decoration: none;
-  color: #f8fafc;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-mid);
   transition: background 0.15s ease;
 }
 

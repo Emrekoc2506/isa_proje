@@ -159,68 +159,7 @@ export const featuredProducts = [
   },
 ];
 
-export const blogArticles = [
-  {
-    id: 1,
-    title: 'Koruyucu taşlar işe yaramaları için nasıl takılmalı?',
-    slug: 'koruyucu-taslar-nasil-takilmali',
-    date: '12 Haz 2025',
-    description: 'Koruyucu taşlar sadece güzel takılar değildir. Tam enerjilerinden ve korumalarından faydalanmak için onları nasıl düzgün bir şekilde takıp aktif hale getireceğinizi öğrenin.',
-    image: 'https://www.aromantra.com/data/articles/full/1749726782.jpg',
-    readTime: '5 dk okuma',
-    category: 'Kristaller',
-  },
-  {
-    id: 2,
-    title: 'Başak burcu için doğru taş hangisi? Burç taşı rehberi',
-    slug: 'basak-burcu-taslari',
-    date: '5 Haz 2025',
-    description: 'Başak burcu için mükemmel kristal ve değerli taşları keşfedin. Doğum taşlarınızı seçmek için kapsamlı bir rehber.',
-    image: 'https://www.aromantra.com/data/articles/full/1749206640.jpg',
-    readTime: '7 dk okuma',
-    category: 'Astroloji',
-  },
-  {
-    id: 3,
-    title: 'Yaz Gündönümü: Nedir, ne zaman gerçekleşir ve hangi ritüeller yapılmalı?',
-    slug: 'yaz-gundonumu-rituelleri',
-    date: '28 May 2025',
-    description: 'Yaz gündönümü yılın en güçlü zamanlarından biridir. Bu büyülü günü kutlamak için antik gelenekleri ve modern ritüelleri keşfedin.',
-    image: 'https://www.aromantra.com/data/articles/full/1748436800.jpg',
-    readTime: '8 dk okuma',
-    category: 'Ritüeller',
-  },
-  {
-    id: 4,
-    title: 'Aslan burcu taşları – gücünüzü uyandırmak için hangi kristalleri seçmelisiniz?',
-    slug: 'aslan-burcu-taslari',
-    date: '20 May 2025',
-    description: 'Aslan tutku ve liderlik dolu bir ateş burcudur. Hangi taşların Aslan enerjisiyle uyumlu olduğunu ve en parlak şekilde parlamanıza yardımcı olduğunu öğrenin.',
-    image: 'https://www.aromantra.com/data/articles/full/1747642112.jpg',
-    readTime: '6 dk okuma',
-    category: 'Astroloji',
-  },
-  {
-    id: 5,
-    title: 'Yengeç burcu taşı – Yengeç için hangi değerli taşları seçmelisiniz?',
-    slug: 'yengec-burcu-taslari',
-    date: '10 May 2025',
-    description: 'Yengeç derinlemesine sezgiseldir ve duygulara bağlıdır. Bu su burcuyla en çok rezonansa giren şifa kristallerini keşfedin.',
-    image: 'https://www.aromantra.com/data/articles/full/1746874496.jpg',
-    readTime: '6 dk okuma',
-    category: 'Astroloji',
-  },
-  {
-    id: 6,
-    title: 'Doğal taşlar nasıl kombinlenir? Hangilerinin birlikte uyumlu çalıştığını keşfedin!',
-    slug: 'dogal-taslari-kombinleme',
-    date: '1 May 2025',
-    description: 'Tüm kristaller birlikte uyumlu çalışmaz. Kristal kombinasyonlarının sanatını öğrenin ve güçlü sinerjik taş eşleşmeleri oluşturun.',
-    image: 'https://www.aromantra.com/data/articles/full/1746098304.jpg',
-    readTime: '9 dk okuma',
-    category: 'Kristaller',
-  },
-];
+export const blogArticles = [];
 
 export const navCategories = [
   {
@@ -309,26 +248,26 @@ export const navCategories = [
 
 export const footerLinks = {
   info: [
-    { label: 'Hakkımızda', href: '#' },
-    { label: 'İletişim', href: '#' },
-    { label: 'Kargo & Teslimat', href: '#' },
-    { label: 'İade & Şikayetler', href: '#' },
-    { label: 'Gizlilik Politikası', href: '#' },
-    { label: 'Kullanım Koşulları', href: '#' },
+    { label: 'Hakkımızda', href: '/hakkimizda' },
+    { label: 'İletişim', href: '/iletisim' },
+    { label: 'Kargo & Teslimat', href: '/kargo-teslimat' },
+    { label: 'İade & Şikayetler', href: '/iade-sikayet' },
+    { label: 'Gizlilik Politikası', href: '/gizlilik-politikasi' },
+    { label: 'Kullanım Koşulları', href: '/kullanim-kosullari' },
   ],
   customer: [
-    { label: 'Hesabım', href: '#' },
-    { label: 'Sipariş Geçmişim', href: '#' },
-    { label: 'Favoriler', href: '#' },
-    { label: 'Sipariş Takibi', href: '#' },
+    { label: 'Hesabım', href: '/panel' },
+    { label: 'Sipariş Geçmişim', href: '/siparislerim' },
+    { label: 'Favoriler', href: '/favorilerim' },
+    { label: 'Sipariş Takibi', href: '/siparislerim' },
   ],
   categories: [
-    { label: 'Uçucu Yağlar', href: '#' },
-    { label: 'Kristaller & Taşlar', href: '#' },
-    { label: 'Tütsüler', href: '#' },
-    { label: 'Tarot & Kehanet', href: '#' },
-    { label: 'Takı', href: '#' },
-    { label: 'Blog', href: '#' },
+    { label: 'Uçucu Yağlar', href: '/urunler' },
+    { label: 'Kristaller & Taşlar', href: '/urunler' },
+    { label: 'Tütsüler', href: '/urunler' },
+    { label: 'Tarot & Kehanet', href: '/urunler' },
+    { label: 'Takı', href: '/urunler' },
+    { label: 'Blog', href: '/blog' },
   ],
 };
 
