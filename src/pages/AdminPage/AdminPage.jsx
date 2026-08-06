@@ -10,6 +10,7 @@ import logoImage from '../../assets/images/logo.png';
 import ChatUI from '../../components/ChatUI/ChatUI';
 import ThemeToggle from '../../components/ThemeToggle';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 // Import modular sections
 import DashboardSection from './sections/DashboardSection';
@@ -47,6 +48,8 @@ export default function AdminPage() {
   const [selectedChatUser, setSelectedChatUser] = useState(null); // { id, name }
   
   const { logout } = useAuth();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const navigate = useNavigate();
 
   const handleLogoutClick = async () => {
@@ -76,7 +79,46 @@ export default function AdminPage() {
       </AnimatePresence>
 
       {/* SIDEBAR */}
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarMobileOpen : ''}`}>
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarMobileOpen : ''} ${isLight ? styles.sidebarLight : styles.sidebarDark}`}>
+
+        {/* ── Gece Modu: Parlayan Yıldızlar ── */}
+        {!isLight && (
+          <div className={styles.sidebarStarBg} aria-hidden="true">
+            {[...Array(18)].map((_, i) => (
+              <svg key={i} className={styles.sidebarStar} viewBox="0 0 20 20"
+                style={{
+                  top: `${Math.floor((i * 37 + 11) % 90)}%`,
+                  left: `${Math.floor((i * 53 + 7) % 88)}%`,
+                  width: `${8 + (i % 5) * 3}px`,
+                  animationDelay: `${(i * 0.37).toFixed(2)}s`,
+                  animationDuration: `${2 + (i % 4) * 0.5}s`,
+                }}
+              >
+                <path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z" />
+              </svg>
+            ))}
+          </div>
+        )}
+
+        {/* ── Gündüz Modu: Hareket Eden Bulutlar ── */}
+        {isLight && (
+          <div className={styles.sidebarCloudBg} aria-hidden="true">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className={styles.sidebarCloud}
+                style={{
+                  top: `${Math.floor((i * 41 + 5) % 88)}%`,
+                  left: `${Math.floor((i * 61 + 13) % 80)}%`,
+                  width: `${30 + (i % 4) * 18}px`,
+                  height: `${24 + (i % 3) * 12}px`,
+                  animationDelay: `${(i * 0.7).toFixed(2)}s`,
+                  animationDuration: `${6 + (i % 3) * 2}s`,
+                  opacity: 0.25 + (i % 3) * 0.08,
+                }}
+              />
+            ))}
+          </div>
+        )}
+
         <a href="/" className={styles.logoLink}>
           <img src={logoImage} alt="mysticvelora" className={styles.logoImg} />
           <span className={styles.brandName}>mysticvelora</span>
