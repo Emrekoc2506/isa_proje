@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { FiPlus, FiTrash2, FiEdit3, FiArrowLeft } from 'react-icons/fi';
 import * as productApi from '../../../services/productApi';
+import { useTheme } from '../../../context/ThemeContext';
 import styles from '../AdminPage.module.css';
 
 export default function VariantsSection({ product, onBack }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [variants, setVariants] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -160,33 +163,33 @@ export default function VariantsSection({ product, onBack }) {
       {/* CREATE / EDIT MODAL */}
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div className={styles.sectionCard} style={{ width: '90%', maxWidth: 450, background: 'var(--bg-dark)' }}>
-            <h4 style={{ color: 'var(--gold-light)', margin: '0 0 20px 0', fontSize: 16 }}>{modalMode === 'create' ? 'Yeni Varyant Ekle' : 'Varyantı Düzenle'}</h4>
+          <div className={styles.sectionCard} style={{ width: '90%', maxWidth: 460, background: isLight ? '#ffffff' : 'var(--bg-dark)', border: isLight ? '1px solid rgba(201,162,39,0.4)' : '1px solid var(--border-gold)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+            <h4 style={{ color: isLight ? '#0d3b66' : 'var(--gold-light)', margin: '0 0 20px 0', fontSize: 18, fontWeight: 700 }}>{modalMode === 'create' ? 'Yeni Varyant Ekle' : 'Varyantı Düzenle'}</h4>
             <form onSubmit={handleSave} className={styles.profileForm}>
-              <div className={styles.formGrid} style={{ gridTemplateColumns: '1fr' }}>
+              <div className={styles.formGrid} style={{ gridTemplateColumns: '1fr', gap: 14 }}>
                 <div className={styles.formField}>
-                  <label className={styles.fieldLabel}>Varyant Adı (Örn: Gümüş, Altın) *</label>
-                  <input type="text" required value={name} onChange={e => setName(e.target.value)} className={styles.fieldInput} />
+                  <label className={styles.fieldLabel} style={{ color: isLight ? '#1e1b4b' : 'var(--gold-light)', fontWeight: '700' }}>Varyant Adı (Örn: Gümüş, Altın) *</label>
+                  <input type="text" required value={name} onChange={e => setName(e.target.value)} className={styles.fieldInput} style={isLight ? { background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1' } : undefined} />
                 </div>
                 <div className={styles.formField}>
-                  <label className={styles.fieldLabel}>SKU *</label>
-                  <input type="text" required value={sku} onChange={e => setSku(e.target.value)} className={styles.fieldInput} />
+                  <label className={styles.fieldLabel} style={{ color: isLight ? '#1e1b4b' : 'var(--gold-light)', fontWeight: '700' }}>SKU *</label>
+                  <input type="text" required value={sku} onChange={e => setSku(e.target.value)} className={styles.fieldInput} style={isLight ? { background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1' } : undefined} />
                 </div>
                 <div className={styles.formField}>
-                  <label className={styles.fieldLabel}>Barkod (Opsiyonel)</label>
-                  <input type="text" value={barcode} onChange={e => setBarcode(e.target.value)} className={styles.fieldInput} />
+                  <label className={styles.fieldLabel} style={{ color: isLight ? '#1e1b4b' : 'var(--gold-light)', fontWeight: '700' }}>Barkod (Opsiyonel)</label>
+                  <input type="text" value={barcode} onChange={e => setBarcode(e.target.value)} className={styles.fieldInput} style={isLight ? { background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1' } : undefined} />
                 </div>
                 <div className={styles.formField}>
-                  <label className={styles.fieldLabel}>Varyant Fiyatı (₺ - Boş bırakılırsa ana ürün fiyatı geçerlidir)</label>
-                  <input type="number" step="0.01" value={priceOverride} onChange={e => setPriceOverride(e.target.value)} className={styles.fieldInput} />
+                  <label className={styles.fieldLabel} style={{ color: isLight ? '#1e1b4b' : 'var(--gold-light)', fontWeight: '700' }}>Varyant Fiyatı (₺ - Boş bırakılırsa ana ürün fiyatı geçerlidir)</label>
+                  <input type="number" step="0.01" value={priceOverride} onChange={e => setPriceOverride(e.target.value)} className={styles.fieldInput} style={isLight ? { background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1' } : undefined} />
                 </div>
                 <div className={styles.formField}>
-                  <label className={styles.fieldLabel}>Eski Varyant Fiyatı (₺ - İndirim göstermek için)</label>
-                  <input type="number" step="0.01" value={oldPriceOverride} onChange={e => setOldPriceOverride(e.target.value)} className={styles.fieldInput} />
+                  <label className={styles.fieldLabel} style={{ color: isLight ? '#1e1b4b' : 'var(--gold-light)', fontWeight: '700' }}>Eski Varyant Fiyatı (₺ - İndirim göstermek için)</label>
+                  <input type="number" step="0.01" value={oldPriceOverride} onChange={e => setOldPriceOverride(e.target.value)} className={styles.fieldInput} style={isLight ? { background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1' } : undefined} />
                 </div>
                 <div className={styles.formField}>
-                  <label className={styles.fieldLabel}>Stok Miktarı *</label>
-                  <input type="number" required value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} className={styles.fieldInput} />
+                  <label className={styles.fieldLabel} style={{ color: isLight ? '#1e1b4b' : 'var(--gold-light)', fontWeight: '700' }}>Stok Miktarı *</label>
+                  <input type="number" required value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} className={styles.fieldInput} style={isLight ? { background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1' } : undefined} />
                 </div>
               </div>
 
