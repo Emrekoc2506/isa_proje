@@ -1141,66 +1141,74 @@ export default function BannersSection() {
       <AnimatePresence>
         {previewBanner && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 3000, overflowY: 'auto', backdropFilter: 'blur(12px)' }} onClick={() => setPreviewBanner(null)}>
-            <div style={{ maxWidth: 720, margin: '24px auto', padding: '0 16px 40px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ maxWidth: 780, margin: '24px auto', padding: '0 16px 40px' }} onClick={e => e.stopPropagation()}>
               <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }} transition={{ duration: 0.3 }}
-                style={{ background: 'rgba(18, 9, 31, 0.95)', border: '1px solid var(--border-gold, rgba(201,162,39,0.25))', borderRadius: 20, overflow: 'hidden', boxShadow: '0 30px 80px rgba(0,0,0,0.9)' }}>
+                style={{ background: '#12091f', border: '1px solid rgba(201,162,39,0.4)', borderRadius: 20, overflow: 'hidden', boxShadow: '0 30px 80px rgba(0,0,0,0.95)' }}>
 
                 {/* Preview close */}
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span style={{ fontSize: 13, color: 'var(--gold-light, #c9a227)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>✦ İlan Önizleme</span>
-                  <button onClick={() => setPreviewBanner(null)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: '#fff', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(201,162,39,0.2)' }}>
+                  <span style={{ fontSize: 13, color: '#f5d680', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>✦ Billboard Önizleme</span>
+                  <button onClick={() => setPreviewBanner(null)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: '#fff', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                 </div>
 
                 {/* Preview content */}
-                <div style={{ padding: '36px 40px', color: 'var(--text-light, #f0ede6)' }}>
-                  {/* Title */}
-                  <h1 style={{ fontSize: 26, fontWeight: 800, textAlign: 'center', color: 'var(--gold-light, #c9a227)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8, lineHeight: 1.3 }}>
-                    {previewBanner.title}
-                  </h1>
-                  {previewBanner.subtitle && (
-                    <p style={{ textAlign: 'center', fontStyle: 'italic', fontSize: 15, color: 'var(--text-secondary, rgba(255,255,255,0.7))', marginBottom: 24, lineHeight: 1.6 }}>
-                      "{previewBanner.subtitle}"
-                    </p>
+                <div style={{ padding: '32px 36px', color: '#f3f4f6' }}>
+                  {/* Title & Subtitle (Yalnızca metin gizleme kapalıysa veya başlık varsa gösterilir) */}
+                  {!previewBanner.rich?.hideTextOverlay && (previewBanner.title || previewBanner.subtitle) && (
+                    <>
+                      {previewBanner.title && (
+                        <h1 style={{ fontSize: 24, fontWeight: 800, textAlign: 'center', color: '#ffd700', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8, lineHeight: 1.3, textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                          {previewBanner.title}
+                        </h1>
+                      )}
+                      {previewBanner.subtitle && (
+                        <p style={{ textAlign: 'center', fontStyle: 'italic', fontSize: 14, color: '#d1d5db', marginBottom: 20, lineHeight: 1.6 }}>
+                          "{previewBanner.subtitle}"
+                        </p>
+                      )}
+                    </>
                   )}
 
                   {/* Price */}
                   {previewBanner.rich?.price && (
-                    <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                      <span style={{ background: 'linear-gradient(135deg, #c9a227, #a07820)', color: '#000', fontSize: 22, fontWeight: 800, padding: '8px 24px', borderRadius: 12, display: 'inline-block', boxShadow: '0 4px 20px rgba(201,162,39,0.3)' }}>
+                    <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                      <span style={{ background: 'linear-gradient(135deg, #ffd700, #ff9f1c)', color: '#000000', fontSize: 20, fontWeight: 800, padding: '6px 22px', borderRadius: 10, display: 'inline-block', boxShadow: '0 4px 20px rgba(255,215,0,0.3)' }}>
                         ₺{previewBanner.rich.price}
                       </span>
                     </div>
                   )}
 
                   {/* Main image */}
-                  <img src={previewBanner.image} alt={previewBanner.title} style={{ width: '100%', borderRadius: 14, marginBottom: 28, maxHeight: 400, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
+                  <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(201,162,39,0.3)', marginBottom: 24, boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                    <img src={previewBanner.image} alt={previewBanner.title} style={{ width: '100%', display: 'block', maxHeight: 420, objectFit: 'cover' }} />
+                  </div>
 
                   {/* Description */}
                   {previewBanner.rich?.description && (
-                    <p style={{ fontSize: 15, lineHeight: 1.8, marginBottom: 24, color: 'var(--text-light, #e2ded4)' }}>
+                    <p style={{ fontSize: 14, lineHeight: 1.8, marginBottom: 24, color: '#e5e7eb' }}>
                       {previewBanner.rich.description}
                     </p>
                   )}
 
                   {/* Quote */}
                   {previewBanner.rich?.quote && (
-                    <blockquote style={{ borderLeft: '4px solid var(--gold-light, #c9a227)', margin: '28px 0', fontStyle: 'italic', fontSize: 15, color: 'var(--gold-light, #e5cf85)', lineHeight: 1.7, background: 'rgba(201,162,39,0.06)', padding: '18px 22px', borderRadius: '0 12px 12px 0', border: '1px solid rgba(201,162,39,0.12)' }}>
+                    <blockquote style={{ borderLeft: '4px solid #ffd700', margin: '24px 0', fontStyle: 'italic', fontSize: 14, color: '#fef08a', lineHeight: 1.7, background: 'rgba(255,215,0,0.06)', padding: '16px 20px', borderRadius: '0 12px 12px 0', border: '1px solid rgba(255,215,0,0.15)' }}>
                       "{previewBanner.rich.quote}"
                     </blockquote>
                   )}
 
                   {/* Features */}
                   {previewBanner.rich?.features?.length > 0 && (
-                    <div style={{ marginBottom: 28 }}>
-                      <h2 style={{ fontSize: 15, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid var(--gold-light, #c9a227)', paddingLeft: 14, marginBottom: 16, color: 'var(--gold-light, #c9a227)' }}>
+                    <div style={{ marginBottom: 24 }}>
+                      <h2 style={{ fontSize: 14, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid #ffd700', paddingLeft: 12, marginBottom: 14, color: '#ffd700' }}>
                         ÜRÜNÜN ÖNE ÇIKAN AYRICALIKLARI
                       </h2>
                       {previewBanner.rich.features.map((f, i) => (
-                        <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 12, background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.04)' }}>
-                          <span style={{ color: 'var(--gold-light, #c9a227)', fontSize: 16, marginTop: 1, flexShrink: 0 }}>✦</span>
-                          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7 }}>
-                            <strong style={{ color: '#fff' }}>{f.title}:</strong>{' '}
-                            <span style={{ color: 'var(--text-secondary, rgba(255,255,255,0.7))' }}>{f.desc}</span>
+                        <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10, background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                          <span style={{ color: '#ffd700', fontSize: 15, marginTop: 1, flexShrink: 0 }}>✦</span>
+                          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6 }}>
+                            <strong style={{ color: '#ffffff' }}>{f.title}:</strong>{' '}
+                            <span style={{ color: '#9ca3af' }}>{f.desc}</span>
                           </p>
                         </div>
                       ))}
@@ -1209,15 +1217,15 @@ export default function BannersSection() {
 
                   {/* Sections */}
                   {previewBanner.rich?.sections?.map((sec, i) => (
-                    <div key={i} style={{ marginBottom: 28 }}>
-                      {sec.title && <h2 style={{ fontSize: 15, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid var(--gold-light, #c9a227)', paddingLeft: 14, marginBottom: 14, color: 'var(--gold-light, #c9a227)' }}>{sec.title}</h2>}
-                      {sec.body && <p style={{ fontSize: 14, lineHeight: 1.8, color: 'var(--text-light, #e2ded4)' }}>{sec.body}</p>}
+                    <div key={i} style={{ marginBottom: 24 }}>
+                      {sec.title && <h2 style={{ fontSize: 14, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid #ffd700', paddingLeft: 12, marginBottom: 12, color: '#ffd700' }}>{sec.title}</h2>}
+                      {sec.body && <p style={{ fontSize: 14, lineHeight: 1.8, color: '#e5e7eb' }}>{sec.body}</p>}
                     </div>
                   ))}
 
                   {/* Video */}
                   {previewBanner.rich?.videoUrl && (
-                    <div style={{ marginBottom: 28 }}>
+                    <div style={{ marginBottom: 24 }}>
                       <div style={{ background: '#000', borderRadius: 12, overflow: 'hidden', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
                         {previewBanner.rich.videoUrl.includes('youtube') || previewBanner.rich.videoUrl.includes('vimeo') ? (
                           <iframe src={previewBanner.rich.videoUrl} style={{ width: '100%', height: '100%', border: 'none' }} allowFullScreen />
@@ -1231,15 +1239,15 @@ export default function BannersSection() {
                   {/* Specs table */}
                   {previewBanner.rich?.specs?.length > 0 && (
                     <div style={{ marginBottom: 24 }}>
-                      <h2 style={{ fontSize: 15, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid var(--gold-light, #c9a227)', paddingLeft: 14, marginBottom: 16, color: 'var(--gold-light, #c9a227)' }}>
+                      <h2 style={{ fontSize: 14, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderLeft: '4px solid #ffd700', paddingLeft: 12, marginBottom: 14, color: '#ffd700' }}>
                         TEKNİK KOLEKSİYON BİLGİLERİ
                       </h2>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                         <tbody>
                           {previewBanner.rich.specs.map((spec, i) => (
                             <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
-                              <td style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--gold-light, #c9a227)', width: '35%' }}>{spec.key}</td>
-                              <td style={{ padding: '12px 16px', color: 'var(--text-light, #e2ded4)' }}>{spec.value}</td>
+                              <td style={{ padding: '10px 14px', fontWeight: 600, color: '#ffd700', width: '35%' }}>{spec.key}</td>
+                              <td style={{ padding: '10px 14px', color: '#e5e7eb' }}>{spec.value}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -1248,10 +1256,10 @@ export default function BannersSection() {
                   )}
 
                   {/* CTA Button */}
-                  {previewBanner.cta && (
-                    <div style={{ textAlign: 'center', marginTop: 32 }}>
-                      <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', fontSize: 15, fontWeight: 800, padding: '14px 40px', borderRadius: 12, boxShadow: '0 6px 20px rgba(201,162,39,0.3)' }}>
-                        {previewBanner.cta}
+                  {previewBanner.cta && !previewBanner.rich?.hideTextOverlay && (
+                    <div style={{ textAlign: 'center', marginTop: 28 }}>
+                      <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, #ffd700, #ff9f1c)', color: '#000000', fontSize: 14, fontWeight: 800, padding: '12px 36px', borderRadius: 30, boxShadow: '0 6px 24px rgba(255, 159, 28, 0.4)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        {previewBanner.cta} →
                       </span>
                     </div>
                   )}
