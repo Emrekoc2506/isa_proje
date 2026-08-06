@@ -139,10 +139,9 @@
 /* ── Bulutlar (Gündüz Modu) ── */
 .sidebarCloud {
   position: absolute;
-  background: rgba(255, 255, 255, 0.88);
+  background-color: #4a5568;
   border-radius: 50%;
   animation: sidebarCloudDrift 6s infinite ease-in-out;
-  box-shadow: 0 4px 16px rgba(255,255,255,0.5), 0 2px 8px rgba(100,160,220,0.2);
 }
 
 @keyframes sidebarCloudDrift {
