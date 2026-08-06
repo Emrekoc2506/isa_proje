@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import * as orderApi from '../../services/orderApi';
 import * as paymentApi from '../../services/paymentApi';
-import logoImage from '../../assets/images/logo.png';
+import logoImage from '../../assets/images/Logo-2.png';
 
 export default function PaymentResultPage() {
   const [searchParams] = useSearchParams();

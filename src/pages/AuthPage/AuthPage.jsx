@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiUser, FiLock, FiMail, FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi';
-import logoImage from '../../assets/images/logo.png';
+import logoImage from '../../assets/images/Logo-2.png';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { safeGetItem, safeSetItem, safeRemoveItem, safeGetJson } from '../../utils/storage';
