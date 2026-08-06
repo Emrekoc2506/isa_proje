@@ -215,28 +215,45 @@
 }
 
 .sidebarLight .navItem {
-  color: #1e3a5f;
+  color: #0c2340;
+  font-weight: 700;
+}
+
+.sidebarLight .navIcon {
+  color: #0c2340;
+  stroke-width: 2.3px;
 }
 
 .sidebarLight .navItem:hover {
-  color: #0d2b45;
-  background: rgba(255, 255, 255, 0.45);
+  color: #041020;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.sidebarLight .navItem:hover .navIcon {
+  color: #041020;
 }
 
 .sidebarLight .navActive {
-  color: #0d2b45 !important;
-  background: rgba(255, 255, 255, 0.75) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  color: #020b18 !important;
+  font-weight: 750;
+  background: rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 4px 14px rgba(0, 40, 80, 0.18);
+}
+
+.sidebarLight .navActive .navIcon {
+  color: #020b18 !important;
+  stroke-width: 2.5px;
 }
 
 .sidebarLight .logoutBtn {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.45);
   color: #991b1b;
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.4);
+  font-weight: 700;
 }
 
 .sidebarLight .logoutBtn:hover {
-  background: rgba(254, 226, 226, 0.8);
+  background: rgba(254, 226, 226, 0.85);
 }
 
 /* ── Sidebar Logo ───────────────────────────────────────────── */
@@ -393,7 +410,7 @@
   border: none;
   color: var(--text-secondary);
   font-size: var(--text-sm);
-  font-weight: 500;
+  font-weight: 650;
   cursor: pointer;
   transition:
     color var(--transition-base),
