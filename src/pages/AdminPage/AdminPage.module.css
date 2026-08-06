@@ -33,7 +33,12 @@
 
 /* Gündüz modu sidebar arka planı — ThemeToggle ile aynı mavi */
 .sidebarLight {
-  background: linear-gradient(180deg, #4bbfe8 0%, #62cff0 30%, #7dd9f5 100%) !important;
+  background: linear-gradient(180deg, #4bbfe8 0%, #62cff0 40%, #7dd9f5 100%) !important;
+}
+
+/* data-theme="light" üzerinden ek güvence */
+:global([data-theme="light"]) .sidebar {
+  background: linear-gradient(180deg, #4bbfe8 0%, #62cff0 40%, #7dd9f5 100%) !important;
 }
 
 /* ── Animasyon katmanı (pointer-events yok, scroll etkilemez) ── */
