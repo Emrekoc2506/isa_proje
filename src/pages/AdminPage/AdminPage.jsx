@@ -8,6 +8,7 @@ import {
 } from 'react-icons/fi';
 import logoImage from '../../assets/images/logo.png';
 import ChatUI from '../../components/ChatUI/ChatUI';
+import ThemeToggle from '../../components/ThemeToggle';
 import { useAuth } from '../../context/AuthContext';
 
 // Import modular sections
@@ -80,8 +81,9 @@ export default function AdminPage() {
           <img src={logoImage} alt="mysticvelora" className={styles.logoImg} />
           <span className={styles.brandName}>mysticvelora</span>
         </a>
-        <div className={styles.badgeWrap}>
+        <div className={styles.badgeWrap} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
           <span className={styles.adminBadge}>Yönetici Paneli</span>
+          <ThemeToggle id="admin-sidebar-theme-toggle" />
         </div>
 
         <nav className={styles.nav} aria-label="Yönetici Menüsü">
@@ -118,6 +120,12 @@ export default function AdminPage() {
           <h2 className={styles.pageTitle}>
             {NAV_ITEMS.find(n => n.id === active)?.label || 'Varyant Yönetimi'}
           </h2>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-dark)', padding: '6px 14px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-gold)' }}>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--gold-light)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              Tema
+            </span>
+            <ThemeToggle id="admin-topbar-theme-toggle" />
+          </div>
         </header>
 
         <div className={styles.content}>

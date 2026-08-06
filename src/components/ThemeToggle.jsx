@@ -2,16 +2,16 @@ import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import styles from './ThemeToggle.module.css';
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ id = "theme-toggle" }) {
   const { theme, toggleTheme } = useTheme();
   const isLight = theme === 'light';
 
   return (
     <div className={styles.wrapper} title={isLight ? "Gece Moduna Geç" : "Gündüz Moduna Geç"}>
-      <label className={styles.switch} aria-label="Gece/Gündüz Modu Değiştir">
+      <label className={styles.switch} htmlFor={id} aria-label="Gece/Gündüz Modu Değiştir">
         <input 
           type="checkbox" 
-          id="theme-toggle" 
+          id={id} 
           checked={isLight} 
           onChange={toggleTheme} 
         />
