@@ -1794,37 +1794,37 @@
 }
 
 /* ============================================================
-   ADMIN PANEL — GÜNDÜZ MODU (LIGHT MODE) UYARLAMALARI
+   ADMIN PANEL — GÜNDÜZ MODU (LIGHT MODE) KUSURSUZ UYARLAMALARI
    ============================================================ */
 
 :global([data-theme="light"]) .page {
-  background: var(--bg-dark);
-  color: var(--text-primary);
+  background: var(--bg-dark) !important;
+  color: var(--text-primary) !important;
 }
 
 :global([data-theme="light"]) .sidebar {
-  background: var(--bg-mid);
-  border-right: 1px solid var(--border-gold);
-  box-shadow: 4px 0 20px rgba(44, 26, 77, 0.05);
+  background: var(--bg-mid) !important;
+  border-right: 1px solid var(--border-gold) !important;
+  box-shadow: 4px 0 20px rgba(44, 26, 77, 0.05) !important;
 }
 
 :global([data-theme="light"]) .topBar {
-  background: var(--bg-mid);
-  border-bottom: 1px solid var(--border-gold);
-  box-shadow: 0 2px 15px rgba(44, 26, 77, 0.05);
+  background: var(--bg-mid) !important;
+  border-bottom: 1px solid var(--border-gold) !important;
+  box-shadow: 0 2px 15px rgba(44, 26, 77, 0.05) !important;
 }
 
 :global([data-theme="light"]) .pageTitle {
-  color: var(--gold-light);
+  color: var(--text-primary) !important;
 }
 
 :global([data-theme="light"]) .navItem {
-  color: var(--text-secondary);
+  color: var(--text-secondary) !important;
 }
 
 :global([data-theme="light"]) .navItem:hover {
-  background: var(--bg-dark);
-  color: var(--text-primary);
+  background: var(--bg-dark) !important;
+  color: var(--text-primary) !important;
 }
 
 :global([data-theme="light"]) .navActive {
@@ -1834,19 +1834,26 @@
 }
 
 :global([data-theme="light"]) .profileName {
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
 }
 
+/* KARTLAR & PANELLER (Saf Beyaz zemin, Altın Çerçeve, Koyu Mor Yazı) */
 :global([data-theme="light"]) .statCard,
 :global([data-theme="light"]) .panelCard,
 :global([data-theme="light"]) .tableCard,
 :global([data-theme="light"]) .premiumProductCard,
 :global([data-theme="light"]) .productFormPanel,
 :global([data-theme="light"]) .previewCard,
-:global([data-theme="light"]) .modal {
+:global([data-theme="light"]) .modal,
+:global([data-theme="light"]) .blogCard,
+:global([data-theme="light"]) .bannerCard,
+:global([data-theme="light"]) .categoryCard,
+:global([data-theme="light"]) .couponCard,
+:global([data-theme="light"]) .orderCard {
   background: var(--bg-mid) !important;
   border: 1px solid var(--border-gold) !important;
   box-shadow: 0 4px 20px rgba(44, 26, 77, 0.08) !important;
+  color: var(--text-primary) !important;
 }
 
 :global([data-theme="light"]) .panelCard h3,
@@ -1854,25 +1861,54 @@
 :global([data-theme="light"]) .formPanelTitle,
 :global([data-theme="light"]) .premiumTitle,
 :global([data-theme="light"]) .previewName,
-:global([data-theme="light"]) .modalHeader h3 {
-  color: var(--text-primary);
+:global([data-theme="light"]) .modalHeader h3,
+:global([data-theme="light"]) .actionHeader h3,
+:global([data-theme="light"]) h1,
+:global([data-theme="light"]) h2,
+:global([data-theme="light"]) h3,
+:global([data-theme="light"]) h4 {
+  color: var(--text-primary) !important;
+}
+
+:global([data-theme="light"]) .statCard p,
+:global([data-theme="light"]) .formPanelSubtitle,
+:global([data-theme="light"]) .premiumSubtitle,
+:global([data-theme="light"]) .emptyText {
+  color: var(--text-secondary) !important;
+}
+
+/* TABLO METİNLERİ (Krem zemin üstünde KOYU MOR okuma) */
+:global([data-theme="light"]) .table {
+  background: var(--bg-mid) !important;
 }
 
 :global([data-theme="light"]) .table th {
-  background: var(--bg-dark);
-  color: var(--gold-light);
-  border-bottom: 1px solid var(--border-gold);
+  background: var(--bg-dark) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border-gold) !important;
+  font-weight: 700 !important;
 }
 
 :global([data-theme="light"]) .table td {
-  border-bottom: 1px solid var(--border-mid);
-  color: var(--text-primary);
+  background: var(--bg-mid) !important;
+  border-bottom: 1px solid var(--border-mid) !important;
+  color: var(--text-primary) !important;
 }
 
-:global([data-theme="light"]) .tableProdName {
-  color: var(--text-primary);
+:global([data-theme="light"]) .table tr:hover td {
+  background: var(--bg-dark) !important;
 }
 
+:global([data-theme="light"]) .tableProdName,
+:global([data-theme="light"]) .tableProdName span,
+:global([data-theme="light"]) .orderItemRow,
+:global([data-theme="light"]) .orderItemRow span,
+:global([data-theme="light"]) .tableSubDesc,
+:global([data-theme="light"]) td {
+  color: var(--text-primary) !important;
+}
+
+/* İNPUTLAR & SELECT'LER */
 :global([data-theme="light"]) .inputWrapper input,
 :global([data-theme="light"]) .inputWrapper select,
 :global([data-theme="light"]) .fieldInput,
@@ -1882,18 +1918,24 @@
 :global([data-theme="light"]) .inlineForm input,
 :global([data-theme="light"]) .formField input,
 :global([data-theme="light"]) .formField select,
+:global([data-theme="light"]) .formField textarea,
 :global([data-theme="light"]) .subCatInlineForm,
 :global([data-theme="light"]) .tablePriceWrapper,
-:global([data-theme="light"]) .fileUploadContainer {
+:global([data-theme="light"]) .fileUploadContainer,
+:global([data-theme="light"]) input[type="text"],
+:global([data-theme="light"]) input[type="number"],
+:global([data-theme="light"]) input[type="email"],
+:global([data-theme="light"]) select,
+:global([data-theme="light"]) textarea {
   background: var(--bg-dark) !important;
   border: 1px solid var(--border-gold) !important;
   color: var(--text-primary) !important;
 }
 
-:global([data-theme="light"]) .pFormSelect option,
-:global([data-theme="light"]) .formField select option {
-  background: #ffffff;
-  color: #2C1A4D;
+:global([data-theme="light"]) select option,
+:global([data-theme="light"]) option {
+  background: #ffffff !important;
+  color: #2C1A4D !important;
 }
 
 :global([data-theme="light"]) input::placeholder,
@@ -1901,6 +1943,7 @@
   color: var(--text-muted) !important;
 }
 
+/* ALTIN & BUTON YAZILARI (Koyu Mor Yazı) */
 :global([data-theme="light"]) .addBtn,
 :global([data-theme="light"]) .submitCardBtn,
 :global([data-theme="light"]) .shopBtn,
@@ -1908,9 +1951,10 @@
 :global([data-theme="light"]) .inlineAddBtn,
 :global([data-theme="light"]) .pFormSubmitBtn {
   color: #12091f !important;
-  font-weight: 700;
+  font-weight: 700 !important;
 }
 
+/* KATEGORİ LİSTESİ VE KART BAŞLIKLARI */
 :global([data-theme="light"]) .formPanelHeader,
 :global([data-theme="light"]) .previewHeader,
 :global([data-theme="light"]) .previewImgBox,
@@ -1918,30 +1962,35 @@
 :global([data-theme="light"]) .pFormUploadArea,
 :global([data-theme="light"]) .previewDescBox,
 :global([data-theme="light"]) .previewSlug {
-  background: var(--bg-dark);
-  border-color: var(--border-gold);
+  background: var(--bg-dark) !important;
+  border-color: var(--border-gold) !important;
 }
 
 :global([data-theme="light"]) .categoryTitle,
 :global([data-theme="light"]) .pFormLabel,
 :global([data-theme="light"]) .pFormTagItem span,
 :global([data-theme="light"]) .pFormUploadLabel span,
-:global([data-theme="light"]) .orderItemRow {
-  color: var(--text-primary);
+:global([data-theme="light"]) .orderItemRow,
+:global([data-theme="light"]) .subLabel,
+:global([data-theme="light"]) .checkboxCustom,
+:global([data-theme="light"]) p,
+:global([data-theme="light"]) span {
+  color: var(--text-primary) !important;
 }
 
 :global([data-theme="light"]) .seeAllBtn {
-  background: var(--bg-dark);
-  color: var(--text-primary);
-  border-color: var(--border-gold);
+  background: var(--bg-dark) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-gold) !important;
 }
 
 :global([data-theme="light"]) .seeAllBtn:hover {
-  background: var(--bg-light);
-  color: var(--gold-light);
+  background: var(--bg-light) !important;
+  color: var(--gold-light) !important;
 }
 
 :global([data-theme="light"]) .modalOverlay {
-  background: rgba(28, 15, 53, 0.4);
+  background: rgba(28, 15, 53, 0.4) !important;
 }
+
 

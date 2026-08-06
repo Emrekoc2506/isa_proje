@@ -589,3 +589,67 @@
     max-width: 85%;
   }
 }
+
+/* ============================================================
+   CHAT UI — GÜNDÜZ MODU (LIGHT MODE) UYARLAMALARI
+   ============================================================ */
+
+:global([data-theme="light"]) .chatContainer {
+  background: var(--bg-mid) !important;
+  border-color: var(--border-gold) !important;
+  box-shadow: 0 4px 20px rgba(44, 26, 77, 0.08) !important;
+}
+
+:global([data-theme="light"]) .sidebar {
+  background: var(--bg-dark) !important;
+  border-right-color: var(--border-gold) !important;
+}
+
+:global([data-theme="light"]) .sidebarHeader h3,
+:global([data-theme="light"]) .headerInfo h4,
+:global([data-theme="light"]) .convName {
+  color: var(--text-primary) !important;
+}
+
+:global([data-theme="light"]) .searchInput {
+  background: var(--bg-mid) !important;
+  border-color: var(--border-gold) !important;
+  color: var(--text-primary) !important;
+}
+
+:global([data-theme="light"]) .chatArea {
+  background: var(--bg-mid) !important;
+}
+
+:global([data-theme="light"]) .chatHeader {
+  background: var(--bg-dark) !important;
+  border-bottom-color: var(--border-gold) !important;
+}
+
+:global([data-theme="light"]) .messageBubbleReceived {
+  background: var(--bg-dark) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-gold) !important;
+}
+
+:global([data-theme="light"]) .messageBubbleSent {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold-dark)) !important;
+  color: #12091f !important;
+  font-weight: 600 !important;
+}
+
+:global([data-theme="light"]) .inputArea {
+  background: var(--bg-dark) !important;
+  border-top-color: var(--border-gold) !important;
+}
+
+:global([data-theme="light"]) .messageInput {
+  background: var(--bg-mid) !important;
+  border-color: var(--border-gold) !important;
+  color: var(--text-primary) !important;
+}
+
+:global([data-theme="light"]) .sendBtn {
+  color: #12091f !important;
+}
+
