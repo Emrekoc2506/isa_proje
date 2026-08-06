@@ -10,6 +10,7 @@ import { uploadFile } from '../../../services/fileApi';
 import RichTextEditor from '../../../components/RichTextEditor/RichTextEditor';
 import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
 import styles from '../AdminPage.module.css';
+import { useTheme } from '../../../context/ThemeContext';
 
 const STEPS = [
   { id: 1, label: "Genel", icon: FiTag, color: "#6366f1" },
@@ -19,6 +20,8 @@ const STEPS = [
 ];
 
 export default function ProductsSection({ onSelectProductForVariants }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -537,38 +540,142 @@ export default function ProductsSection({ onSelectProductForVariants }) {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className={styles.sectionCard} 
-              style={{ width: '90%', maxWidth: 650, margin: '40px auto', background: 'var(--bg-dark)', border: '1px solid rgba(201, 162, 39, 0.15)', boxShadow: '0 15px 40px rgba(0,0,0,0.6)', padding: 0, borderRadius: 16, overflow: 'hidden' }}
+              style={{
+                width: '94%',
+                maxWidth: 860,
+                maxHeight: '92vh',
+                overflowY: 'auto',
+                margin: '24px auto',
+                background: 'var(--bg-dark)',
+                border: '1px solid rgba(201, 162, 39, 0.25)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+                padding: 0,
+                borderRadius: 18,
+                overflow: 'hidden'
+              }}
             >
-              {/* Mesh Gradient Header */}
+              {/* ─── HEADER (GECE/GÜNDÜZ TEMALI HAREKETLİ ARKA PLAN) ─── */}
               <div style={{
-                background: 'linear-gradient(135deg, #059669 0%, #1d4ed8 50%, #4f46e5 100%)',
-                padding: '24px 24px',
-                color: '#fff',
+                background: isLight
+                  ? 'linear-gradient(180deg, #4bbfe8 0%, #62cff0 40%, #7dd9f5 100%)'
+                  : 'linear-gradient(180deg, rgba(18, 9, 31, 0.97), rgba(10, 5, 18, 0.97))',
+                padding: '28px 32px 24px',
                 position: 'relative',
                 overflow: 'hidden'
               }}>
-                <div style={{ position: 'absolute', top: -50, right: -50, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', filter: 'blur(25px)' }} />
-                <div style={{ position: 'absolute', bottom: -30, left: '15%', width: 110, height: 110, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', filter: 'blur(18px)' }} />
+                {/* GECE MODU ANİMASYONLARI (Ay + Yıldızlar) */}
+                {!isLight && (
+                  <>
+                    <div className={styles.sidebarMoon} style={{ top: 12, right: 65, transform: 'scale(0.8)' }}>
+                      <div className={styles.sidebarMoonHole} style={{ width: 8, height: 8, top: 12, left: 6 }} />
+                      <div className={styles.sidebarMoonHole} style={{ width: 5, height: 5, top: 22, left: 16 }} />
+                    </div>
+                    {[...Array(12)].map((_, i) => (
+                      <svg
+                        key={i}
+                        className={styles.sidebarStar}
+                        viewBox="0 0 20 20"
+                        style={{
+                          top: `${Math.floor((i * 37 + 11) % 85)}%`,
+                          left: `${Math.floor((i * 53 + 7) % 85)}%`,
+                          width: `${8 + (i % 4) * 3}px`,
+                          animationDelay: `${(i * 0.35).toFixed(2)}s`,
+                          animationDuration: `${2 + (i % 3) * 0.5}s`
+                        }}
+                      >
+                        <path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z" />
+                      </svg>
+                    ))}
+                  </>
+                )}
+
+                {/* GÜNDÜZ MODU ANİMASYONLARI (Güneş + Süzülen Bulutlar) */}
+                {isLight && (
+                  <>
+                    <div className={styles.sidebarSun} style={{ top: 10, right: 65, transform: 'scale(0.85)' }} />
+                    <div className={styles.sidebarCloudShape} style={{ top: '0%', left: '-15px', animationDuration: '8s', transform: 'scale(0.65)' }}>
+                      <div className={styles.sidebarCloudBase} />
+                      <div className={styles.sidebarCloudBump1} />
+                      <div className={styles.sidebarCloudBump2} />
+                      <div className={styles.sidebarCloudBump3} />
+                    </div>
+                    <div className={styles.sidebarCloudShape} style={{ top: '25%', left: '35%', animationDuration: '10s', animationDelay: '2s', transform: 'scale(0.5)' }}>
+                      <div className={styles.sidebarCloudBase} />
+                      <div className={styles.sidebarCloudBump1} />
+                      <div className={styles.sidebarCloudBump2} />
+                      <div className={styles.sidebarCloudBump3} />
+                    </div>
+                  </>
+                )}
                 
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: 20, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 11,
+                  background: isLight ? 'rgba(255, 255, 255, 0.25)' : 'rgba(201,162,39,0.2)',
+                  border: isLight ? '1px solid rgba(255, 255, 255, 0.45)' : '1px solid rgba(201,162,39,0.4)',
+                  color: '#ffffff',
+                  padding: '4px 12px',
+                  borderRadius: 20,
+                  fontWeight: '700',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  marginBottom: 12,
+                  position: 'relative',
+                  zIndex: 2
+                }}>
                   {modalMode === 'create' ? <FiPlus size={11} /> : <FiEdit3 size={11} />} {modalMode === 'create' ? 'Yeni Ürün Ekle' : 'Ürünü Düzenle'}
                 </div>
                 
-                <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-heading)' }}>
-                  Ürününüzü Oluşturalım
+                <h3 style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 700,
+                  fontFamily: 'var(--font-heading)',
+                  position: 'relative',
+                  zIndex: 2
+                }}>
+                  <span style={{ color: '#ffffff', textShadow: isLight ? '0 1px 3px rgba(0,70,130,0.35)' : '0 1px 4px rgba(0,0,0,0.5)' }}>
+                    {modalMode === 'create' ? 'Ürününüzü Oluşturalım' : 'Ürün Bilgilerini Düzenleyin'}
+                  </span>
                 </h3>
-                <p style={{ margin: '4px 0 0 0', fontSize: 12, opacity: 0.85, lineHeight: 1.4 }}>
+
+                <p style={{
+                  margin: '6px 0 0 0',
+                  fontSize: 13,
+                  color: isLight ? 'rgba(255,255,255,0.95)' : 'rgba(237,224,200,0.85)',
+                  lineHeight: 1.5,
+                  textShadow: isLight ? '0 1px 2px rgba(0,70,130,0.2)' : 'none',
+                  position: 'relative',
+                  zIndex: 2
+                }}>
                   Sadece birkaç adımda profesyonel bir ürün oluşturun ve mağazada listeleyin.
                 </p>
 
                 <button 
                   type="button" 
                   onClick={() => setShowModal(false)}
-                  style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(0,0,0,0.2)', border: 'none', width: 28, height: 28, borderRadius: '50%', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 'bold', transition: 'all 0.2s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.4)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
+                  style={{
+                    position: 'absolute',
+                    top: 18,
+                    right: 18,
+                    background: isLight ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)',
+                    border: isLight ? '1px solid rgba(255,255,255,0.5)' : '1px solid rgba(255,255,255,0.25)',
+                    width: 34,
+                    height: 34,
+                    borderRadius: '50%',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 16,
+                    zIndex: 10,
+                    transition: 'all 0.2s ease'
+                  }}
                 >
-                  ✕
+                  <FiX size={18} />
                 </button>
               </div>
 
