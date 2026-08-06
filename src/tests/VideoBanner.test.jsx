@@ -50,7 +50,7 @@ describe('Video Banner & Upload Functionality', () => {
   test('accepts MP4 video input and uploads with BannerVideo purpose', async () => {
     render(<BannersSection />);
 
-    const openBtn = await screen.findByText(/Yeni İlan Ekle/i);
+    const openBtn = await screen.findByText(/Yeni (İlan|Billboard) Ekle/i);
     fireEvent.click(openBtn);
 
     // Step 1 title
@@ -86,7 +86,7 @@ describe('Video Banner & Upload Functionality', () => {
   // 2. WebM input kabul edilir
   test('accepts WebM video input', async () => {
     render(<BannersSection />);
-    fireEvent.click(await screen.findByText(/Yeni İlan Ekle/i));
+    fireEvent.click(await screen.findByText(/Yeni (İlan|Billboard) Ekle/i));
     fireEvent.change(screen.getByLabelText(/Başlık \*/i), { target: { value: 'WebM Test' } });
     fireEvent.click(screen.getByText(/İleri/i));
     fireEvent.click(await screen.findByRole('button', { name: 'Video' }));
@@ -108,7 +108,7 @@ describe('Video Banner & Upload Functionality', () => {
   // 3. JPG video alanında reddedilir
   test('rejects JPG file when uploaded in video input', async () => {
     render(<BannersSection />);
-    fireEvent.click(await screen.findByText(/Yeni İlan Ekle/i));
+    fireEvent.click(await screen.findByText(/Yeni (İlan|Billboard) Ekle/i));
     fireEvent.change(screen.getByLabelText(/Başlık \*/i), { target: { value: 'JPG Test' } });
     fireEvent.click(screen.getByText(/İleri/i));
     fireEvent.click(await screen.findByRole('button', { name: 'Video' }));
@@ -124,7 +124,7 @@ describe('Video Banner & Upload Functionality', () => {
   // 4. 100 MB üstü reddedilir
   test('rejects video file exceeding 100 MB size limit', async () => {
     render(<BannersSection />);
-    fireEvent.click(await screen.findByText(/Yeni İlan Ekle/i));
+    fireEvent.click(await screen.findByText(/Yeni (İlan|Billboard) Ekle/i));
     fireEvent.change(screen.getByLabelText(/Başlık \*/i), { target: { value: 'Big File Test' } });
     fireEvent.click(screen.getByText(/İleri/i));
     fireEvent.click(await screen.findByRole('button', { name: 'Video' }));
@@ -144,7 +144,7 @@ describe('Video Banner & Upload Functionality', () => {
     uploadFile.mockRejectedValueOnce(new Error('Sunucu hatası'));
 
     render(<BannersSection />);
-    fireEvent.click(await screen.findByText(/Yeni İlan Ekle/i));
+    fireEvent.click(await screen.findByText(/Yeni (İlan|Billboard) Ekle/i));
     fireEvent.change(screen.getByLabelText(/Başlık \*/i), { target: { value: 'Failed Upload Test' } });
     fireEvent.click(screen.getByText(/İleri/i));
     fireEvent.click(await screen.findByRole('button', { name: 'Video' }));

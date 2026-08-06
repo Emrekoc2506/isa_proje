@@ -571,17 +571,17 @@ export default function BannersSection() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h3 style={{ color: 'var(--gold-light)', fontSize: 20, fontWeight: 700, margin: 0, fontFamily: 'var(--font-heading)' }}>
-            Afiş / İlan Yönetimi
+            Billboard Yönetimi
           </h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '4px 0 0 0' }}>
-            {banners.length} ilan • Sitede görünecek kampanya ve ürün afişleri
+            {banners.length} görsel • Ana sayfa billboard (slider) alanında yayınlanacak içerikler
           </p>
         </div>
         <button
           onClick={openModal}
           style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}
         >
-          <FiPlus size={16} /> Yeni İlan Ekle
+          <FiPlus size={16} /> Yeni Billboard Ekle
         </button>
       </div>
 
@@ -589,9 +589,9 @@ export default function BannersSection() {
       {banners.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', ...card }}>
           <FiImage size={40} style={{ color: 'var(--text-muted)', opacity: 0.4, marginBottom: 12 }} />
-          <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: 14 }}>Henüz ilan eklenmemiştir.</p>
+          <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: 14 }}>Henüz billboard görseli eklenmemiştir.</p>
           <button onClick={openModal} style={{ marginTop: 16, background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.3)', color: 'var(--gold-light)', borderRadius: 8, padding: '8px 18px', fontSize: 13, cursor: 'pointer' }}>
-            İlk İlanı Oluştur
+            İlk Billboard Görselini Oluştur
           </button>
         </div>
       ) : (
@@ -623,7 +623,7 @@ export default function BannersSection() {
 
                 {/* Banner Info */}
                 <div style={{ padding: 14, flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <h4 style={{ color: '#fff', margin: 0, fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}>{b.title || 'Başlıksız İlan'}</h4>
+                  <h4 style={{ color: 'var(--text-primary)', margin: 0, fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}>{b.title || 'Başlıksız Billboard'}</h4>
                   {b.subtitle && <p style={{ color: 'var(--text-secondary)', fontSize: 12, margin: 0, lineHeight: 1.4 }}>{b.subtitle}</p>}
 
                   {/* Rich content badges */}
@@ -690,11 +690,11 @@ export default function BannersSection() {
                 <div style={{ position: 'absolute', bottom: -40, left: '5%', width: 100, height: 100, borderRadius: '50%', background: 'rgba(201,162,39,0.08)', filter: 'blur(15px)' }} />
 
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, background: 'rgba(201,162,39,0.15)', border: '1px solid rgba(201,162,39,0.25)', color: 'var(--gold-light)', padding: '4px 12px', borderRadius: 20, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-                  <FiPlus size={10} /> Yeni İlan
+                  <FiPlus size={10} /> Yeni Billboard
                 </div>
-                <h3 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-heading)' }}>İlan Oluştur</h3>
+                <h3 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-heading)' }}>Billboard Görseli Ekle</h3>
                 <p style={{ margin: '6px 0 0 0', fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
-                  Ürününüzü showcase eden zengin bir ilan sayfası oluşturun
+                  Ana sayfa billboard slider alanında öne çıkacak görsel ve içerikleri oluşturun
                 </p>
                 <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', width: 32, height: 32, borderRadius: '50%', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
                   <FiX size={16} />

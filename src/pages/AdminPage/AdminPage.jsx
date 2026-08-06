@@ -29,7 +29,7 @@ const NAV_ITEMS = [
   { id: 'overview',   label: 'Yönetim Özeti',    icon: FiGrid },
   { id: 'products',   label: 'Ürün Yönetimi',    icon: FiPackage },
   { id: 'categories', label: 'Kategori Yönetimi', icon: FiFolder },
-  { id: 'slides',     label: 'Afiş/İlan Yönetimi', icon: FiImage },
+  { id: 'slides',     label: 'Billboard Yönetimi', icon: FiImage },
   { id: 'blog',       label: 'Blog Yönetimi',     icon: FiBookOpen },
   { id: 'reviews',    label: 'Yorum Yönetimi',    icon: FiStar },
   { id: 'orders',     label: 'Sipariş Takibi',   icon: FiShoppingCart },
