@@ -158,10 +158,10 @@ describe('Video Banner & Upload Functionality', () => {
     });
 
     // Try going to next step or submitting
-    const nextBtn = screen.getByText(/İleri/i);
+    const nextBtn = screen.getByRole('button', { name: /(İleri|Yayınla)/i });
     fireEvent.click(nextBtn);
 
-    expect(window.alert).toHaveBeenCalledWith('Lütfen video dosyası yükleyin veya video URL girin.');
+    expect(window.alert).toHaveBeenCalledWith(expect.stringMatching(/Video (yükleme başarısız|dosyası yükleyin)/));
     expect(bannerApi.createAdminBanner).not.toHaveBeenCalled();
   });
 

@@ -13,11 +13,8 @@ import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 1, label: 'Genel',      icon: FiTag       },
-  { id: 2, label: 'Görseller',  icon: FiImage     },
-  { id: 3, label: 'İçerik',     icon: FiAlignLeft },
-  { id: 4, label: 'Özellikler', icon: FiList      },
-  { id: 5, label: 'Teknik',     icon: FiGrid      },
+  { id: 1, label: 'Billboard Bilgileri & Link', icon: FiTag   },
+  { id: 2, label: 'Görsel & Medya Yükleme',     icon: FiImage },
 ];
 
 const EMPTY_FORM = {
@@ -29,25 +26,25 @@ const EMPTY_FORM = {
   posterImageUrl: '', mobilePosterImageUrl: '',
   autoplay: false, loop: false, muted: false,
   description: '', quote: '',
-  sections: [],           // [{title, body}]
-  features: [],           // [{title, desc}]
-  specs: [],              // [{key, value}]
+  sections: [],
+  features: [],
+  specs: [],
 };
 
 // ─── STYLE HELPERS ────────────────────────────────────────────────────────────
 const card = {
-  background: 'rgba(255,255,255,0.01)',
-  border: '1px solid rgba(255,255,255,0.06)',
+  background: 'var(--bg-dark)',
+  border: '1px solid var(--border-gold)',
   borderRadius: 12,
   padding: 20,
 };
 
 const inputStyle = {
   width: '100%',
-  background: 'rgba(0,0,0,0.35)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  background: 'var(--bg-mid)',
+  border: '1px solid var(--border-gold)',
   borderRadius: 8,
-  color: '#fff',
+  color: 'var(--text-primary)',
   fontSize: 13,
   padding: '10px 12px',
   outline: 'none',
@@ -55,21 +52,23 @@ const inputStyle = {
   fontFamily: 'var(--font-body, inherit)',
   transition: 'border-color 0.2s',
 };
+
 const labelStyle = {
   display: 'block',
   fontSize: 11,
   fontWeight: '600',
-  color: 'var(--text-secondary, #aaa)',
+  color: 'var(--text-secondary)',
   marginBottom: 6,
   textTransform: 'uppercase',
   letterSpacing: '0.05em',
 };
+
 const goldIconBox = {
   width: 32, height: 32, borderRadius: 8,
-  background: 'rgba(201,162,39,0.1)',
-  border: '1px solid rgba(201,162,39,0.25)',
+  background: 'rgba(201,162,39,0.15)',
+  border: '1px solid var(--border-gold)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  color: 'var(--gold-light, #c9a227)', flexShrink: 0,
+  color: 'var(--gold-light)', flexShrink: 0,
 };
 
 // ─── SUB-COMPONENTS ───────────────────────────────────────────────────────────
@@ -79,8 +78,8 @@ function SectionBlock({ icon: Icon, title, sub, children }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <div style={goldIconBox}><Icon size={16} /></div>
         <div>
-          <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>{title}</span>
-          {sub && <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted,#666)', marginTop: 2 }}>{sub}</span>}
+          <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{title}</span>
+          {sub && <span style={{ display: 'block', fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{sub}</span>}
         </div>
       </div>
       {children}
@@ -92,7 +91,7 @@ function FieldInput({ label, value, onChange, type = 'text', placeholder = '', p
   const [focused, setFocused] = useState(false);
   const commonStyle = {
     ...inputStyle,
-    borderColor: focused ? 'rgba(201,162,39,0.4)' : 'rgba(255,255,255,0.08)',
+    borderColor: focused ? 'var(--gold-light)' : 'var(--border-gold)',
     ...style,
   };
   const inputId = id || (label ? `input-${label.toLowerCase().replace(/[^a-z0-9]/g, '')}` : undefined);
@@ -136,34 +135,27 @@ function UploadDropzone({ label, value, onFile, onClear, uploading, id }) {
         <div
           onClick={() => !uploading && document.getElementById(id)?.click()}
           style={{
-            border: '2px dashed rgba(201,162,39,0.25)', borderRadius: 10,
+            border: '2px dashed var(--border-gold)', borderRadius: 10,
             padding: '24px 16px', textAlign: 'center',
-            background: 'rgba(0,0,0,0.2)', cursor: uploading ? 'not-allowed' : 'pointer',
+            background: 'var(--bg-mid)', cursor: uploading ? 'not-allowed' : 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
             position: 'relative', transition: 'border-color 0.2s',
           }}
-          onMouseEnter={e => !uploading && (e.currentTarget.style.borderColor = 'rgba(201,162,39,0.5)')}
-          onMouseLeave={e => !uploading && (e.currentTarget.style.borderColor = 'rgba(201,162,39,0.25)')}
+          onMouseEnter={e => !uploading && (e.currentTarget.style.borderColor = 'var(--gold-light)')}
+          onMouseLeave={e => !uploading && (e.currentTarget.style.borderColor = 'var(--border-gold)')}
         >
           <input id={id} type="file" accept="image/*" onChange={onFile} style={{ display: 'none' }} disabled={uploading} />
           <FiUploadCloud size={24} style={{ color: 'var(--gold-light)' }} />
           <span style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: '600' }}>
-            Tıkla ve görsel yükle
+            {uploading ? 'Yükleniyor...' : 'Görsel yüklemek için tıklayın'}
           </span>
-          <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>PNG, JPG, WEBP — Maks. 10 MB</span>
-          {uploading && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(18,9,31,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
-              <span style={{ color: 'var(--gold-light)', fontSize: 12, fontWeight: 'bold' }}>Yükleniyor...</span>
-            </div>
-          )}
+          <span style={{ color: 'var(--text-secondary)', fontSize: 11, opacity: 0.7 }}>PNG, JPG, WEBP — Maks. 10 MB</span>
         </div>
       ) : (
-        <div style={{ border: '1px solid rgba(201,162,39,0.2)', borderRadius: 10, padding: '10px 14px', background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <img src={value} alt="" style={{ height: 56, borderRadius: 6, maxWidth: 180, objectFit: 'cover' }} />
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ color: '#2ecc71', fontSize: 11 }}>✓ Yüklendi</span>
-            <button type="button" onClick={onClear} disabled={uploading} style={{ background: 'rgba(224,85,148,0.15)', border: '1px solid rgba(224,85,148,0.3)', color: '#e05594', padding: '4px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}>Kaldır</button>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg-mid)', border: '1px solid var(--border-gold)', borderRadius: 10, padding: 10 }}>
+          <img src={value} alt="Yüklenen" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6 }} />
+          <span style={{ fontSize: 12, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
+          <button type="button" onClick={onClear} style={{ background: 'rgba(224,85,148,0.15)', border: 'none', color: '#e05594', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Kaldır</button>
         </div>
       )}
     </div>
@@ -178,71 +170,26 @@ function VideoUploadDropzone({ label, value, onFile, onClear, uploading, progres
         <div
           onClick={() => !uploading && document.getElementById(id)?.click()}
           style={{
-            border: '2px dashed rgba(201,162,39,0.3)', borderRadius: 10,
+            border: '2px dashed var(--border-gold)', borderRadius: 10,
             padding: '24px 16px', textAlign: 'center',
-            background: 'rgba(0,0,0,0.2)', cursor: uploading ? 'not-allowed' : 'pointer',
+            background: 'var(--bg-mid)', cursor: uploading ? 'not-allowed' : 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
             position: 'relative', transition: 'border-color 0.2s',
           }}
-          onMouseEnter={e => !uploading && (e.currentTarget.style.borderColor = 'rgba(201,162,39,0.6)')}
-          onMouseLeave={e => !uploading && (e.currentTarget.style.borderColor = 'rgba(201,162,39,0.3)')}
+          onMouseEnter={e => !uploading && (e.currentTarget.style.borderColor = 'var(--gold-light)')}
+          onMouseLeave={e => !uploading && (e.currentTarget.style.borderColor = 'var(--border-gold)')}
         >
-          <input
-            id={id}
-            type="file"
-            accept={accept}
-            onChange={onFile}
-            style={{ display: 'none' }}
-            disabled={uploading}
-          />
-          <FiVideo size={28} style={{ color: 'var(--gold-light)' }} />
-          <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: '600' }}>
-            Tıkla ve video yükle
+          <input id={id} type="file" accept={accept} onChange={onFile} style={{ display: 'none' }} disabled={uploading} />
+          <FiVideo size={24} style={{ color: 'var(--gold-light)' }} />
+          <span style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: '600' }}>
+            {uploading ? `Video Yükleniyor (%${progress || 0})...` : 'Video yüklemek için tıklayın (MP4/WebM max 100MB)'}
           </span>
-          <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>MP4, WebM — Maks. 100 MB</span>
-          {uploading && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(18,9,31,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 10, padding: 16 }}>
-              <span style={{ color: 'var(--gold-light)', fontSize: 13, fontWeight: 'bold', marginBottom: 8 }}>
-                Yükleniyor... {progress != null ? `%${progress}` : ''}
-              </span>
-              <div style={{ width: '80%', height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ width: `${progress || 0}%`, height: '100%', background: 'linear-gradient(90deg, #c9a227, #f39c12)', transition: 'width 0.2s' }} />
-              </div>
-            </div>
-          )}
         </div>
       ) : (
-        <div style={{ border: '1px solid rgba(201,162,39,0.3)', borderRadius: 10, padding: '12px 14px', background: 'rgba(0,0,0,0.35)' }}>
-          <video src={value} controls style={{ width: '100%', maxHeight: 180, borderRadius: 8, background: '#000', display: 'block', marginBottom: 10 }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#2ecc71', fontSize: 12, fontWeight: '600' }}>✓ Video Yüklendi</span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                type="button"
-                onClick={() => document.getElementById(id)?.click()}
-                disabled={uploading}
-                style={{ background: 'rgba(201,162,39,0.15)', border: '1px solid rgba(201,162,39,0.3)', color: 'var(--gold-light)', padding: '5px 12px', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}
-              >
-                Değiştir
-              </button>
-              <input
-                id={id}
-                type="file"
-                accept={accept}
-                onChange={onFile}
-                style={{ display: 'none' }}
-                disabled={uploading}
-              />
-              <button
-                type="button"
-                onClick={onClear}
-                disabled={uploading}
-                style={{ background: 'rgba(224,85,148,0.15)', border: '1px solid rgba(224,85,148,0.3)', color: '#e05594', padding: '5px 12px', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}
-              >
-                Kaldır
-              </button>
-            </div>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg-mid)', border: '1px solid var(--border-gold)', borderRadius: 10, padding: 10 }}>
+          <FiVideo size={24} style={{ color: '#2ecc71' }} />
+          <span style={{ fontSize: 12, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>✓ Video Yüklendi ({value})</span>
+          <button type="button" onClick={onClear} style={{ background: 'rgba(224,85,148,0.15)', border: 'none', color: '#e05594', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Kaldır</button>
         </div>
       )}
     </div>
@@ -689,33 +636,33 @@ export default function BannersSection() {
                 <div style={{ position: 'absolute', top: -60, right: -60, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', filter: 'blur(20px)' }} />
                 <div style={{ position: 'absolute', bottom: -40, left: '5%', width: 100, height: 100, borderRadius: '50%', background: 'rgba(201,162,39,0.08)', filter: 'blur(15px)' }} />
 
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, background: 'rgba(201,162,39,0.15)', border: '1px solid rgba(201,162,39,0.25)', color: 'var(--gold-light)', padding: '4px 12px', borderRadius: 20, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, background: 'rgba(201,162,39,0.2)', border: '1px solid rgba(201,162,39,0.4)', color: '#f5d680', padding: '4px 12px', borderRadius: 20, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
                   <FiPlus size={10} /> Yeni Billboard
                 </div>
-                <h3 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-heading)' }}>Billboard Görseli Ekle</h3>
-                <p style={{ margin: '6px 0 0 0', fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
-                  Ana sayfa billboard slider alanında öne çıkacak görsel ve içerikleri oluşturun
+                <h3 style={{ margin: 0, fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-heading)' }}>
+                  <span style={{ color: '#ffffff' }}>Billboard Görseli Ekle</span>
+                </h3>
+                <p style={{ margin: '6px 0 0 0', fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>
+                  Ana sayfa billboard slider alanında öne çıkacak görsel ve yönlendirme bilgilerini oluşturun
                 </p>
-                <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', width: 32, height: 32, borderRadius: '50%', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+                <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', width: 32, height: 32, borderRadius: '50%', color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
                   <FiX size={16} />
                 </button>
               </div>
 
               {/* ─── STEP TRACKER ─── */}
-              <div style={{ padding: '16px 28px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative' }}>
-                  <div style={{ position: 'absolute', top: 16, left: 16, right: 16, height: 2, background: 'rgba(255,255,255,0.05)', zIndex: 1 }} />
-                  <div style={{ position: 'absolute', top: 16, left: 16, width: `${((modalStep - 1) / (STEPS.length - 1)) * 86}%`, height: 2, background: 'linear-gradient(90deg, #0284c7, #7c3aed)', zIndex: 2, transition: 'width 0.4s ease' }} />
+              <div style={{ padding: '16px 28px', borderBottom: '1px solid var(--border-gold)', background: 'var(--bg-dark)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', position: 'relative' }}>
                   {STEPS.map((s) => {
                     const Icon = s.icon;
                     const done = modalStep > s.id;
                     const active = modalStep === s.id;
                     return (
                       <div key={s.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3, cursor: done ? 'pointer' : 'default' }} onClick={() => done && setModalStep(s.id)}>
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: done ? 'linear-gradient(135deg,#0284c7,#7c3aed)' : active ? 'var(--bg-dark)' : 'rgba(255,255,255,0.04)', border: active ? '2px solid #7c3aed' : done ? 'none' : '2px solid rgba(255,255,255,0.06)', color: done ? '#fff' : active ? '#7c3aed' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: active ? '0 0 12px rgba(124,58,237,0.4)' : 'none', transition: 'all 0.3s' }}>
-                          {done ? <FiCheck size={15} /> : <Icon size={15} />}
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: done ? 'linear-gradient(135deg,#0284c7,#7c3aed)' : active ? 'var(--bg-mid)' : 'var(--bg-dark)', border: active ? '2px solid var(--gold-light)' : done ? 'none' : '1px solid var(--border-gold)', color: done ? '#fff' : active ? 'var(--gold-light)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: active ? '0 0 12px rgba(201,162,39,0.3)' : 'none', transition: 'all 0.3s' }}>
+                          {done ? <FiCheck size={16} /> : <Icon size={16} />}
                         </div>
-                        <span style={{ fontSize: 10, color: active ? '#fff' : 'var(--text-muted)', fontWeight: active ? '700' : 'normal', marginTop: 5, whiteSpace: 'nowrap' }}>{s.label}</span>
+                        <span style={{ fontSize: 11, color: active ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: active ? '700' : 'normal', marginTop: 6, whiteSpace: 'nowrap' }}>{s.label}</span>
                       </div>
                     );
                   })}
@@ -724,39 +671,36 @@ export default function BannersSection() {
 
               {/* ─── FORM BODY ─── */}
               <form onSubmit={handleAdd}>
-                <div style={{ padding: '24px 28px' }}>
+                <div style={{ padding: '24px 28px', background: 'var(--bg-dark)' }}>
                   <AnimatePresence mode="wait">
 
-                    {/* ── STEP 1: GENEL ── */}
+                    {/* ── STEP 1: GENEL BİLGİLER & LİNK ── */}
                     {modalStep === 1 && (
                       <motion.div key="s1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
-                        <SectionBlock icon={FiTag} title="Başlık & Tanıtım" sub="İlanın ana başlığı ve kısa açıklaması">
-                          <FieldInput id="bannerTitle" label="Başlık *" value={form.title} onChange={set('title')} placeholder="Örn: Şahmeran Prime Bakır Bilezik" />
-                          <FieldInput label="Alt Başlık / Slogan" value={form.subtitle} onChange={set('subtitle')} placeholder="Örn: Şahmeran'ın kadim sırrı, bileğinizde hayat buluyor..." rows={2} />
+                        <SectionBlock icon={FiTag} title="Başlık & Slogan" sub="Billboard üzerinde görünecek ana başlık ve metinler">
+                          <FieldInput id="bannerTitle" label="Başlık *" value={form.title} onChange={set('title')} placeholder="Örn: Şahmeran Prime Koleksiyonu" />
+                          <FieldInput label="Alt Başlık / Slogan" value={form.subtitle} onChange={set('subtitle')} placeholder="Örn: Kadim zarafet ve el işçiliğinin buluştuğu özel parçalar..." rows={2} />
                         </SectionBlock>
 
-                        <SectionBlock icon={FiDollarSign} title="Fiyat & Sıralama" sub="Gösterilecek fiyat ve listeleme sırası">
+                        <SectionBlock icon={FiEdit2} title="Buton & Yönlendirme" sub="Ziyaretçinin tıklayacağı buton ve hedef link">
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                            <FieldInput label="Fiyat (₺)" value={form.price} onChange={set('price')} type="number" placeholder="0.00" prefix="₺" />
-                            <FieldInput label="Sıralama" value={form.sortOrder} onChange={set('sortOrder')} type="number" placeholder="0" />
+                            <FieldInput label="Buton Metni (CTA)" value={form.cta} onChange={set('cta')} placeholder="Koleksiyonu Keşfet" />
+                            <FieldInput label="Yönlendirme URL" value={form.href} onChange={set('href')} placeholder="/kategori/gumus-kolyeler" />
                           </div>
                         </SectionBlock>
 
-                        <SectionBlock icon={FiEdit2} title="CTA & Link" sub="Ziyaretçinin tıklayacağı buton ve yönlendirme">
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                            <FieldInput label="Buton Metni" value={form.cta} onChange={set('cta')} placeholder="Keşfet" />
-                            <FieldInput label="Yönlendirme URL" value={form.href} onChange={set('href')} placeholder="/urunler" />
-                          </div>
+                        <SectionBlock icon={FiGrid} title="Görünüm Sıralaması" sub="Slider içindeki geçiş sırası">
+                          <FieldInput label="Sıralama (0, 1, 2...)" value={form.sortOrder} onChange={set('sortOrder')} type="number" placeholder="0" />
                         </SectionBlock>
                       </motion.div>
                     )}
 
-                    {/* ── STEP 2: GÖRSELLER & VİDEO ── */}
+                    {/* ── STEP 2: GÖRSEL & MEDYA YÜKLEME ── */}
                     {modalStep === 2 && (
                       <motion.div key="s2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
                         
                         {/* Medya Türü Seçimi */}
-                        <SectionBlock icon={FiSliders} title="Medya Türü" sub="Bannerda gösterilecek medya tipini seçin">
+                        <SectionBlock icon={FiSliders} title="Medya Türü" sub="Billboard alanında gösterilecek içerik tipi">
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                             <button
                               type="button"
@@ -765,9 +709,9 @@ export default function BannersSection() {
                               style={{
                                 padding: '12px',
                                 borderRadius: 8,
-                                border: form.mediaType === 'image' ? '2px solid var(--gold-light)' : '1px solid rgba(255,255,255,0.1)',
-                                background: form.mediaType === 'image' ? 'rgba(201,162,39,0.15)' : 'rgba(0,0,0,0.2)',
-                                color: form.mediaType === 'image' ? '#fff' : 'var(--text-muted)',
+                                border: form.mediaType === 'image' ? '2px solid var(--gold-light)' : '1px solid var(--border-gold)',
+                                background: form.mediaType === 'image' ? 'rgba(201,162,39,0.15)' : 'var(--bg-mid)',
+                                color: form.mediaType === 'image' ? 'var(--text-primary)' : 'var(--text-secondary)',
                                 fontWeight: 'bold',
                                 cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
@@ -782,9 +726,9 @@ export default function BannersSection() {
                               style={{
                                 padding: '12px',
                                 borderRadius: 8,
-                                border: form.mediaType === 'video' ? '2px solid var(--gold-light)' : '1px solid rgba(255,255,255,0.1)',
-                                background: form.mediaType === 'video' ? 'rgba(201,162,39,0.15)' : 'rgba(0,0,0,0.2)',
-                                color: form.mediaType === 'video' ? '#fff' : 'var(--text-muted)',
+                                border: form.mediaType === 'video' ? '2px solid var(--gold-light)' : '1px solid var(--border-gold)',
+                                background: form.mediaType === 'video' ? 'rgba(201,162,39,0.15)' : 'var(--bg-mid)',
+                                color: form.mediaType === 'video' ? 'var(--text-primary)' : 'var(--text-secondary)',
                                 fontWeight: 'bold',
                                 cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
@@ -796,9 +740,9 @@ export default function BannersSection() {
                         </SectionBlock>
 
                         {form.mediaType === 'image' ? (
-                          <SectionBlock icon={FiImage} title="Afiş Görselleri" sub="Masaüstü ve mobil ekranlar için görsel">
+                          <SectionBlock icon={FiImage} title="Billboard Görselleri" sub="Masaüstü ve mobil ekranlar için yüksek kaliteli görseller">
                             <UploadDropzone
-                              label="Masaüstü Görseli (Geniş) *"
+                              label="Masaüstü Görseli (1920x600 px Önerilir) *"
                               value={form.image}
                               onFile={(e) => handleImageUpload(e, 'desktop')}
                               onClear={() => setVal('image', '')}
@@ -806,7 +750,7 @@ export default function BannersSection() {
                               id="desktopImg"
                             />
                             <UploadDropzone
-                              label="Mobil Görseli (İsteğe Bağlı)"
+                              label="Mobil Görseli (İsteğe Bağlı - 800x600 px)"
                               value={form.imageMobile}
                               onFile={(e) => handleImageUpload(e, 'mobile')}
                               onClear={() => setVal('imageMobile', '')}
@@ -816,9 +760,9 @@ export default function BannersSection() {
                           </SectionBlock>
                         ) : (
                           <>
-                            <SectionBlock icon={FiVideo} title="Video Seçimi & Yükleme" sub="Banner videosunu yükleyin veya harici URL verin">
+                            <SectionBlock icon={FiVideo} title="Video Yükleme & Kaynak" sub="Slider arkasında oynatılacak video">
                               <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 13, cursor: 'pointer' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-primary)', fontSize: 13, cursor: 'pointer' }}>
                                   <input
                                     type="radio"
                                     name="mediaSource"
@@ -827,7 +771,7 @@ export default function BannersSection() {
                                   />
                                   Dosya Yükle (.mp4, .webm)
                                 </label>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 13, cursor: 'pointer' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-primary)', fontSize: 13, cursor: 'pointer' }}>
                                   <input
                                     type="radio"
                                     name="mediaSource"
@@ -871,7 +815,7 @@ export default function BannersSection() {
                               )}
                             </SectionBlock>
 
-                            <SectionBlock icon={FiImage} title="Kapak Görselleri (Poster)" sub="Video yüklenirken veya desteklenmediğinde gösterilecek poster">
+                            <SectionBlock icon={FiImage} title="Kapak Görseli (Poster)" sub="Video yüklenene kadar gösterilecek kapak">
                               <UploadDropzone
                                 label="Kapak Görseli (Poster) *"
                                 value={form.posterImageUrl || form.image}
@@ -880,53 +824,6 @@ export default function BannersSection() {
                                 uploading={uploadingImg === 'poster'}
                                 id="posterImg"
                               />
-                              <UploadDropzone
-                                label="Mobil Kapak Görseli (İsteğe Bağlı)"
-                                value={form.mobilePosterImageUrl || form.imageMobile}
-                                onFile={(e) => handleImageUpload(e, 'mobilePoster')}
-                                onClear={() => { setVal('mobilePosterImageUrl', ''); setVal('imageMobile', ''); }}
-                                uploading={uploadingImg === 'mobilePoster'}
-                                id="mobilePosterImg"
-                              />
-                            </SectionBlock>
-
-                            <SectionBlock icon={FiSliders} title="Oynatma Ayarları" sub="Video autoplay, sessiz ve döngü tercihleri">
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff', fontSize: 13, cursor: 'pointer', background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-                                  <input
-                                    type="checkbox"
-                                    checked={form.autoplay}
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
-                                      setForm(f => ({
-                                        ...f,
-                                        autoplay: isChecked,
-                                        muted: isChecked ? true : f.muted
-                                      }));
-                                    }}
-                                  />
-                                  Otomatik Oynat
-                                </label>
-
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff', fontSize: 13, cursor: 'pointer', background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-                                  <input
-                                    type="checkbox"
-                                    checked={form.loop}
-                                    onChange={(e) => setVal('loop', e.target.checked)}
-                                  />
-                                  Döngü (Loop)
-                                </label>
-
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff', fontSize: 13, cursor: 'pointer', background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-                                  <input
-                                    type="checkbox"
-                                    checked={form.muted || form.autoplay}
-                                    disabled={form.autoplay}
-                                    onChange={(e) => setVal('muted', e.target.checked)}
-                                  />
-                                  Sessiz (Muted)
-                                </label>
-                              </div>
                             </SectionBlock>
                           </>
                         )}
@@ -934,113 +831,19 @@ export default function BannersSection() {
                       </motion.div>
                     )}
 
-                    {/* ── STEP 3: İÇERİK ── */}
-                    {modalStep === 3 && (
-                      <motion.div key="s3" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
-                        <SectionBlock icon={FiAlignLeft} title="Ana Açıklama" sub="Ürün hakkında detaylı paragraf">
-                          <FieldInput
-                            label="Açıklama"
-                            value={form.description}
-                            onChange={set('description')}
-                            placeholder="Ürünün hikayesi, özellikleri ve neden özel olduğunu açıklayın..."
-                            rows={4}
-                          />
-                        </SectionBlock>
-
-                        <SectionBlock icon={FiEdit2} title="Alıntı Bloğu" sub="İtalik, öne çıkan alıntı metni (opsiyonel)">
-                          <FieldInput
-                            label="Alıntı"
-                            value={form.quote}
-                            onChange={set('quote')}
-                            placeholder="Şahmeran'in kadim bilgeliğinden ilham alarak tasarlandı..."
-                            rows={2}
-                          />
-                        </SectionBlock>
-
-                        <SectionBlock icon={FiFileText} title="Ek Bölümler" sub="Başlıklı metin bölümleri ekle">
-                          {form.sections.map((sec, i) => (
-                            <div key={i} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 14, marginBottom: 12 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                                <span style={{ color: 'var(--gold-light)', fontSize: 12, fontWeight: 600 }}>Bölüm {i + 1}</span>
-                                <button type="button" onClick={() => removeSection(i)} style={{ background: 'rgba(224,85,148,0.1)', border: 'none', color: '#e05594', cursor: 'pointer', borderRadius: 6, padding: '4px 8px', fontSize: 11 }}>Kaldır</button>
-                              </div>
-                              <FieldInput label="Bölüm Başlığı" value={sec.title} onChange={e => updateSection(i, 'title', e.target.value)} placeholder="Kristal Kuvarların Önemi" />
-                              <FieldInput label="Bölüm İçeriği" value={sec.body} onChange={e => updateSection(i, 'body', e.target.value)} placeholder="Açıklama metni..." rows={3} />
-                            </div>
-                          ))}
-                          <button type="button" onClick={addSection} style={{ width: '100%', background: 'rgba(201,162,39,0.06)', border: '1px dashed rgba(201,162,39,0.25)', color: 'var(--gold-light)', borderRadius: 8, padding: '10px', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                            <FiPlus size={14} /> Yeni Bölüm Ekle
-                          </button>
-                        </SectionBlock>
-                      </motion.div>
-                    )}
-
-                    {/* ── STEP 4: ÖZELLİKLER ── */}
-                    {modalStep === 4 && (
-                      <motion.div key="s4" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
-                        <SectionBlock icon={FiStar} title="Öne Çıkan Özellikler" sub="Fotoğraflardaki gibi madde madde özellik listesi">
-                          {form.features.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted)', fontSize: 13 }}>
-                              Henüz özellik eklenmedi. Aşağıdan ekleyin.
-                            </div>
-                          )}
-                          {form.features.map((feat, i) => (
-                            <div key={i} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 14, marginBottom: 12 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                                <span style={{ color: 'var(--gold-light)', fontSize: 12, fontWeight: 600 }}>✦ Özellik {i + 1}</span>
-                                <button type="button" onClick={() => removeFeature(i)} style={{ background: 'rgba(224,85,148,0.1)', border: 'none', color: '#e05594', cursor: 'pointer', borderRadius: 6, padding: '4px 8px', fontSize: 11 }}>Kaldır</button>
-                              </div>
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
-                                <FieldInput label="Özellik Adı" value={feat.title} onChange={e => updateFeature(i, 'title', e.target.value)} placeholder="Saf Bakır Gövde" />
-                                <FieldInput label="Açıklama" value={feat.desc} onChange={e => updateFeature(i, 'desc', e.target.value)} placeholder="Doğal sıcak tonu ve zamanla yaşayan dokusu..." />
-                              </div>
-                            </div>
-                          ))}
-                          <button type="button" onClick={addFeature} style={{ width: '100%', background: 'rgba(201,162,39,0.06)', border: '1px dashed rgba(201,162,39,0.25)', color: 'var(--gold-light)', borderRadius: 8, padding: '10px', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                            <FiPlus size={14} /> Yeni Özellik Ekle
-                          </button>
-                        </SectionBlock>
-                      </motion.div>
-                    )}
-
-                    {/* ── STEP 5: TEKNİK TABLO ── */}
-                    {modalStep === 5 && (
-                      <motion.div key="s5" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
-                        <SectionBlock icon={FiGrid} title="Teknik Koleksiyon Bilgileri" sub="Ürün adı, materyal, garanti gibi tablo satırları">
-                          {form.specs.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted)', fontSize: 13 }}>
-                              Henüz teknik bilgi eklenmedi.
-                            </div>
-                          )}
-                          {form.specs.map((spec, i) => (
-                            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, marginBottom: 10, alignItems: 'flex-end' }}>
-                              <FieldInput label={i === 0 ? 'Özellik' : undefined} value={spec.key} onChange={e => updateSpec(i, 'key', e.target.value)} placeholder="Materyal" />
-                              <FieldInput label={i === 0 ? 'Değer' : undefined} value={spec.value} onChange={e => updateSpec(i, 'value', e.target.value)} placeholder="Saf Bakır" />
-                              <button type="button" onClick={() => removeSpec(i)} style={{ background: 'rgba(224,85,148,0.1)', border: '1px solid rgba(224,85,148,0.2)', color: '#e05594', cursor: 'pointer', borderRadius: 8, padding: '10px 12px', fontSize: 14, marginBottom: 14 }}>
-                                <FiTrash2 size={14} />
-                              </button>
-                            </div>
-                          ))}
-                          <button type="button" onClick={addSpec} style={{ width: '100%', background: 'rgba(201,162,39,0.06)', border: '1px dashed rgba(201,162,39,0.25)', color: 'var(--gold-light)', borderRadius: 8, padding: '10px', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                            <FiPlus size={14} /> Satır Ekle
-                          </button>
-                        </SectionBlock>
-                      </motion.div>
-                    )}
-
                   </AnimatePresence>
                 </div>
 
                 {/* ─── NAVIGATION ─── */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '16px 28px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '16px 28px', borderTop: '1px solid var(--border-gold)', background: 'var(--bg-mid)' }}>
                   {modalStep > 1 ? (
                     <button type="button" onClick={() => setModalStep(s => s - 1)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-secondary)', borderRadius: 9, padding: '10px 18px', fontSize: 13, cursor: 'pointer' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-dark)', border: '1px solid var(--border-gold)', color: 'var(--text-primary)', borderRadius: 9, padding: '10px 18px', fontSize: 13, cursor: 'pointer' }}>
                       <FiChevronLeft size={16} /> Geri
                     </button>
                   ) : (
                     <button type="button" onClick={() => setShowModal(false)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-secondary)', borderRadius: 9, padding: '10px 18px', fontSize: 13, cursor: 'pointer' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-dark)', border: '1px solid var(--border-gold)', color: 'var(--text-secondary)', borderRadius: 9, padding: '10px 18px', fontSize: 13, cursor: 'pointer' }}>
                       İptal
                     </button>
                   )}
@@ -1054,7 +857,7 @@ export default function BannersSection() {
                   ) : (
                     <button type="submit" disabled={saving}
                       style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light,#c9a227), #d4891a)', color: '#000', border: 'none', borderRadius: 9, padding: '10px 24px', fontSize: 13, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, boxShadow: '0 4px 15px rgba(201,162,39,0.35)' }}>
-                      <FiCheck size={16} /> {saving ? 'Kaydediliyor...' : 'İlanı Yayınla'}
+                      <FiCheck size={16} /> {saving ? 'Kaydediliyor...' : 'Billboard Yayınla'}
                     </button>
                   )}
                 </div>
