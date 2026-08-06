@@ -43,10 +43,11 @@
   inset: 0;
   background: linear-gradient(
     to right,
-    rgba(18, 9, 31, 0.8) 0%,
-    rgba(18, 9, 31, 0.4) 50%,
-    rgba(18, 9, 31, 0.1) 100%
+    rgba(18, 9, 31, 0.6) 0%,
+    rgba(18, 9, 31, 0.2) 45%,
+    transparent 100%
   );
+  pointer-events: none;
 }
 
 /* ── Slide İçeriği ──────────────────────────────────────────── */
@@ -54,32 +55,54 @@
 .slideContent {
   position: absolute;
   top: 50%;
-  left: 8%;
+  left: 6%;
   transform: translateY(-50%);
-  max-width: 500px;
+  max-width: 440px;
+  padding: 24px 28px;
+  background: rgba(18, 9, 31, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(201, 162, 39, 0.25);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
   z-index: 2;
+}
+
+:global([data-theme='light']) .slideContent {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(201, 162, 39, 0.35);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
 }
 
 .slideSubtitle {
   display: block;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--gold);
-  letter-spacing: 0.2em;
+  font-size: var(--text-xs, 12px);
+  font-weight: 600;
+  color: var(--gold-light, #f5d680);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-bottom: var(--space-sm);
+  margin-bottom: 8px;
   font-family: var(--font-primary);
+}
+
+:global([data-theme='light']) .slideSubtitle {
+  color: #b48608;
 }
 
 .slideTitle {
   font-family: var(--font-heading);
-  font-size: clamp(24px, 4vw, 48px);
+  font-size: clamp(18px, 2.5vw, 32px);
   font-weight: 700;
-  color: var(--text-white);
-  line-height: 1.2;
-  margin-bottom: var(--space-lg);
-  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
-  letter-spacing: 0.03em;
+  color: #ffffff;
+  line-height: 1.25;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  letter-spacing: 0.02em;
+}
+
+:global([data-theme='light']) .slideTitle {
+  color: #1e1b4b;
+  text-shadow: 0 1px 3px rgba(255,255,255,0.8);
 }
 
 .slideCta {

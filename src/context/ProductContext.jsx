@@ -108,6 +108,7 @@ export function ProductProvider({ children }) {
             themeMode: parsedContent.themeMode || b.themeMode || "all",
             imageDark: b.imageDark || parsedContent.imageDark || "",
             imageMobileDark: b.imageMobileDark || parsedContent.imageMobileDark || "",
+            hideTextOverlay: Boolean(parsedContent.hideTextOverlay || b.hideTextOverlay),
             videoUrl,
             mobileVideoUrl: b.mobileVideoUrl || parsedContent.mobileVideoUrl || "",
             posterImageUrl: b.posterImageUrl || b.image || parsedContent.posterImageUrl || "",

@@ -104,23 +104,29 @@ export default function HeroSlider() {
               onVideoEnd={next}
             />
 
-            {/* Overlay gradient */}
-            <div className={styles.slideOverlay} />
+            {/* Overlay gradient (Yalnızca metin overlay açıkken uygulanır) */}
+            {!slide.hideTextOverlay && (slide.title || slide.subtitle) && (
+              <div className={styles.slideOverlay} />
+            )}
 
-            {/* Metin İçeriği */}
-            <motion.div
-              className={styles.slideContent}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <span className={styles.slideSubtitle}>{slide.subtitle}</span>
-              <h1 className={styles.slideTitle}>{slide.title}</h1>
-              <a href={slide.href || slide.linkUrl} className={styles.slideCta}>
-                {slide.cta}
-                <span className={styles.ctaArrow}>→</span>
-              </a>
-            </motion.div>
+            {/* Metin İçeriği (Yazısız afiş seçeneği işaretli değilse ve metin varsa gösterilir) */}
+            {!slide.hideTextOverlay && (slide.title || slide.subtitle || (slide.cta && slide.cta !== 'Keşfet')) && (
+              <motion.div
+                className={styles.slideContent}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                {slide.subtitle && <span className={styles.slideSubtitle}>{slide.subtitle}</span>}
+                {slide.title && <h1 className={styles.slideTitle}>{slide.title}</h1>}
+                {slide.cta && (
+                  <a href={slide.href || slide.linkUrl || '/urunler'} className={styles.slideCta}>
+                    {slide.cta}
+                    <span className={styles.ctaArrow}>→</span>
+                  </a>
+                )}
+              </motion.div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

@@ -23,6 +23,7 @@ const EMPTY_FORM = {
   mediaType: 'image',     // 'image' | 'video'
   mediaSource: 'file',    // 'file' | 'external'
   themeMode: 'all',       // 'all' | 'light' | 'dark'
+  hideTextOverlay: false,
   title: '', subtitle: '', image: '', imageDark: '', imageMobile: '', imageMobileDark: '', cta: '',
   href: '', sortOrder: '0', price: '',
   videoUrl: '', mobileVideoUrl: '',
@@ -386,6 +387,7 @@ export default function BannersSection() {
         themeMode: form.themeMode || "all",
         imageDark: form.imageDark ? form.imageDark.trim() : "",
         imageMobileDark: form.imageMobileDark ? form.imageMobileDark.trim() : "",
+        hideTextOverlay: Boolean(form.hideTextOverlay),
         mediaType: form.mediaType,
         mediaSource: form.mediaSource,
         videoUrl: form.videoUrl ? form.videoUrl.trim() : "",
@@ -814,6 +816,17 @@ export default function BannersSection() {
                         <SectionBlock icon={FiTag} title="Başlık & Slogan" sub="Billboard üzerinde görünecek ana başlık ve metinler">
                           <FieldInput id="bannerTitle" label="Başlık *" value={form.title} onChange={set('title')} placeholder="Örn: Şahmeran Prime Koleksiyonu" />
                           <FieldInput label="Alt Başlık / Slogan" value={form.subtitle} onChange={set('subtitle')} placeholder="Örn: Kadim zarafet ve el işçiliğinin buluştuğu özel parçalar..." rows={2} />
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, padding: '8px 12px', background: 'rgba(201,162,39,0.08)', borderRadius: 8, border: '1px solid rgba(201,162,39,0.2)', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={form.hideTextOverlay}
+                              onChange={(e) => setVal('hideTextOverlay', e.target.checked)}
+                              style={{ width: 16, height: 16, accentColor: 'var(--gold)' }}
+                            />
+                            <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: '600' }}>
+                              🖼️ Görselin üzerinde zaten yazı var (Afiş üzerine HTML metin yazılmasın)
+                            </span>
+                          </label>
                         </SectionBlock>
 
                         <SectionBlock icon={FiEdit2} title="Buton & Yönlendirme" sub="Ziyaretçinin tıklayacağı buton ve hedef link">
