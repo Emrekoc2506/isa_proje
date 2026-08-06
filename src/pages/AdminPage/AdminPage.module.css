@@ -1984,9 +1984,19 @@
 }
 
 :global([data-theme="light"]) .sidebar {
-  background: var(--bg-mid) !important;
-  border-right: 1px solid var(--border-gold) !important;
+  background: linear-gradient(180deg, #4bbfe8 0%, #62cff0 40%, #7dd9f5 100%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
   box-shadow: 4px 0 20px rgba(44, 26, 77, 0.05) !important;
+}
+
+:global([data-theme="light"]) .sidebarBrand {
+  color: #ffffff !important;
+}
+
+:global([data-theme="light"]) .adminBadge {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
 }
 
 :global([data-theme="light"]) .topBar {
@@ -2000,19 +2010,21 @@
 }
 
 :global([data-theme="light"]) .navItem {
-  color: var(--text-secondary) !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 70, 130, 0.3);
 }
 
 :global([data-theme="light"]) .navItem:hover {
-  background: var(--bg-dark) !important;
-  color: var(--text-primary) !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
 }
 
 :global([data-theme="light"]) .navActive {
-  background: rgba(184, 134, 11, 0.12) !important;
-  border-color: var(--border-gold) !important;
-  color: var(--gold-light) !important;
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #ffffff !important;
 }
+
 
 :global([data-theme="light"]) .profileName {
   color: var(--text-primary) !important;
