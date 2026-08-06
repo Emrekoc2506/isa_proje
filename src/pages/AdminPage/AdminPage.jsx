@@ -205,21 +205,7 @@ export default function AdminPage() {
             >
               {active === 'overview' && <DashboardSection />}
               
-              {active === 'products' && (
-                <ProductsSection 
-                  onSelectProductForVariants={(p) => {
-                    setSelectedProduct(p);
-                    setActive('variants');
-                  }} 
-                />
-              )}
-
-              {active === 'variants' && (
-                <VariantsSection 
-                  product={selectedProduct} 
-                  onBack={() => setActive('products')} 
-                />
-              )}
+              {active === 'products' && <ProductsSection />}
 
               {active === 'categories' && <CategoriesSection />}
               

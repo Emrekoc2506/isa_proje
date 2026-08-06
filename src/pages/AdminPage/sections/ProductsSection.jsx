@@ -500,9 +500,6 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                         <button onClick={() => handleOpenEdit(p)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 4 }}>
                           <FiEdit3 /> Düzenle
                         </button>
-                        <button onClick={() => onSelectProductForVariants(p)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: 'var(--gold-light)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <FiGrid /> Varyantlar
-                        </button>
                         <button
                           onClick={() => handleDelete(p.id)}
                           disabled={deletingId === p.id}
