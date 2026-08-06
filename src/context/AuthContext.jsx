@@ -143,13 +143,15 @@ export function AuthProvider({ children }) {
   }, [reloadUser, logout]);
 
   const isAuthenticated = !!user;
-  const isAdmin = roles.includes("Admin") || roles.includes("SuperAdmin");
+  const isAdmin = roles.some(r => ['Admin', 'SuperAdmin', 'admin', 'superadmin'].includes(r)) || user?.role === 'Admin' || user?.role === 'SuperAdmin';
+  const isSuperAdmin = roles.some(r => ['SuperAdmin', 'superadmin'].includes(r)) || user?.role === 'SuperAdmin' || user?.isSuperAdmin === true;
 
   const value = {
     user,
     roles,
     isAuthenticated,
     isAdmin,
+    isSuperAdmin,
     isLoading,
     login,
     register,

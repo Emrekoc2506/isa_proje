@@ -14,3 +14,10 @@ export function updateAdminCustomerStatus(id, isActive) {
     body: JSON.stringify({ isActive })
   });
 }
+
+export function updateAdminCustomerRole(id, role) {
+  return request(`/admin/customers/${id}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role })
+  });
+}
