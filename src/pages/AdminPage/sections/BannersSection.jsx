@@ -213,6 +213,8 @@ export default function BannersSection() {
   });
 
   const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
+  const [editingBannerId, setEditingBannerId] = useState(null);
   const [modalStep, setModalStep] = useState(1);
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [uploadingImg, setUploadingImg] = useState(false);
@@ -244,8 +246,49 @@ export default function BannersSection() {
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
   const setVal = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
-  const openModal = () => {
+  const openCreateModal = () => {
+    setModalMode('create');
+    setEditingBannerId(null);
     setForm({ ...EMPTY_FORM });
+    setModalStep(1);
+    setUploadError(null);
+    setUploadProgress(null);
+    setUploadingVideo(false);
+    setShowModal(true);
+  };
+
+  const openEditModal = (b) => {
+    const parsed = parseBannerContent(b.contentJson);
+    setModalMode('edit');
+    setEditingBannerId(b.id);
+    setForm({
+      mediaType: b.mediaType || parsed.mediaType || 'image',
+      mediaSource: parsed.mediaSource || 'file',
+      themeMode: parsed.themeMode || 'all',
+      hideTextOverlay: Boolean(parsed.hideTextOverlay),
+      title: b.title || '',
+      subtitle: b.subtitle || '',
+      image: b.image || b.imageUrl || '',
+      imageDark: parsed.imageDark || '',
+      imageMobile: b.imageMobile || parsed.mobilePosterImageUrl || '',
+      imageMobileDark: parsed.imageMobileDark || '',
+      cta: b.cta || '',
+      href: b.href || b.linkUrl || '',
+      sortOrder: String(b.sortOrder ?? 0),
+      price: b.price != null ? String(b.price) : '',
+      videoUrl: b.videoUrl || parsed.videoUrl || '',
+      mobileVideoUrl: b.mobileVideoUrl || parsed.mobileVideoUrl || '',
+      posterImageUrl: parsed.posterImageUrl || '',
+      mobilePosterImageUrl: parsed.mobilePosterImageUrl || '',
+      autoplay: Boolean(parsed.autoplay),
+      loop: Boolean(parsed.loop),
+      muted: Boolean(parsed.muted),
+      description: parsed.description || '',
+      quote: parsed.quote || '',
+      sections: parsed.sections || [],
+      features: parsed.features || [],
+      specs: parsed.specs || [],
+    });
     setModalStep(1);
     setUploadError(null);
     setUploadProgress(null);
@@ -413,7 +456,7 @@ export default function BannersSection() {
         }))
       };
 
-      const created = await bannerApi.createAdminBanner({
+      const bannerPayload = {
         title: form.title.trim(),
         subtitle: form.subtitle ? form.subtitle.trim() : null,
         image: posterImg,
@@ -425,7 +468,17 @@ export default function BannersSection() {
         price: form.price === "" || form.price == null ? null : Number(form.price),
         videoUrl: form.videoUrl ? form.videoUrl.trim() : null,
         contentJson: JSON.stringify(content)
-      });
+      };
+
+      let created;
+      if (modalMode === 'edit' && editingBannerId) {
+        created = await bannerApi.updateAdminBanner(editingBannerId, {
+          id: editingBannerId,
+          ...bannerPayload
+        });
+      } else {
+        created = await bannerApi.createAdminBanner(bannerPayload);
+      }
 
       // Save rich content locally as fallback
       const id = created?.id || `local_${Date.now()}`;
@@ -537,7 +590,7 @@ export default function BannersSection() {
           </p>
         </div>
         <button
-          onClick={openModal}
+          onClick={openCreateModal}
           style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, #c9a227, #967412)', color: '#ffffff', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer', boxShadow: '0 4px 15px rgba(201,162,39,0.35)' }}
         >
           <FiPlus size={16} style={{ color: '#ffffff' }} />
@@ -550,7 +603,7 @@ export default function BannersSection() {
         <div style={{ textAlign: 'center', padding: '60px 20px', ...card }}>
           <FiImage size={40} style={{ color: 'var(--text-muted)', opacity: 0.4, marginBottom: 12 }} />
           <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: 14 }}>Henüz billboard görseli eklenmemiştir.</p>
-          <button onClick={openModal} style={{ marginTop: 16, background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.3)', color: 'var(--gold-light)', borderRadius: 8, padding: '8px 18px', fontSize: 13, cursor: 'pointer' }}>
+          <button onClick={openCreateModal} style={{ marginTop: 16, background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.3)', color: 'var(--gold-light)', borderRadius: 8, padding: '8px 18px', fontSize: 13, cursor: 'pointer' }}>
             İlk Billboard Görselini Oluştur
           </button>
         </div>
@@ -594,11 +647,14 @@ export default function BannersSection() {
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: 'flex', gap: 8, marginTop: 'auto', paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    <button onClick={() => setPreviewBanner({ ...b, rich })} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: 'var(--text-secondary)', borderRadius: 7, padding: '7px 0', fontSize: 12, cursor: 'pointer' }}>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 'auto', paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <button onClick={() => openEditModal(b)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'rgba(201,162,39,0.12)', border: '1px solid rgba(201,162,39,0.3)', color: 'var(--gold-light)', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: '700', cursor: 'pointer' }}>
+                      <FiEdit2 size={13} /> Düzenle
+                    </button>
+                    <button onClick={() => setPreviewBanner({ ...b, rich })} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: 'var(--text-secondary)', borderRadius: 7, padding: '7px 0', fontSize: 11, cursor: 'pointer' }}>
                       <FiEye size={13} /> Önizle
                     </button>
-                    <button onClick={() => handleToggleStatus(b.id, b.isActive)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: b.isActive ? 'rgba(46,204,113,0.07)' : 'rgba(255,255,255,0.04)', border: `1px solid ${b.isActive ? 'rgba(46,204,113,0.2)' : 'rgba(255,255,255,0.06)'}`, color: b.isActive ? '#2ecc71' : 'var(--text-muted)', borderRadius: 7, padding: '7px 0', fontSize: 12, cursor: 'pointer' }}>
+                    <button onClick={() => handleToggleStatus(b.id, b.isActive)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, background: b.isActive ? 'rgba(46,204,113,0.07)' : 'rgba(255,255,255,0.04)', border: `1px solid ${b.isActive ? 'rgba(46,204,113,0.2)' : 'rgba(255,255,255,0.06)'}`, color: b.isActive ? '#2ecc71' : 'var(--text-muted)', borderRadius: 7, padding: '7px 0', fontSize: 11, cursor: 'pointer' }}>
                       {b.isActive ? <FiToggleRight size={13} /> : <FiToggleLeft size={13} />}
                       {b.isActive ? 'Aktif' : 'Pasif'}
                     </button>
@@ -728,7 +784,7 @@ export default function BannersSection() {
                     zIndex: 2
                   }}
                 >
-                  <FiPlus size={11} /> Yeni Billboard
+                  {modalMode === 'edit' ? <FiEdit2 size={11} /> : <FiPlus size={11} />} {modalMode === 'edit' ? 'Billboard Düzenle' : 'Yeni Billboard'}
                 </div>
 
                 <h3
@@ -742,7 +798,7 @@ export default function BannersSection() {
                   }}
                 >
                   <span style={{ color: '#ffffff', textShadow: isLight ? '0 1px 3px rgba(0,70,130,0.35)' : '0 1px 4px rgba(0,0,0,0.5)' }}>
-                    Billboard Görseli Ekle
+                    {modalMode === 'edit' ? 'Billboard İlanını Düzenle' : 'Billboard Görseli Ekle'}
                   </span>
                 </h3>
 
