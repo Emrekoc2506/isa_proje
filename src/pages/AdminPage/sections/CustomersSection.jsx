@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiToggleLeft, FiToggleRight, FiMail, FiPhone, FiCalendar, FiMessageCircle, FiShield, FiUser, FiShieldCheck, FiUserX } from 'react-icons/fi';
+import { FiToggleLeft, FiToggleRight, FiMail, FiPhone, FiCalendar, FiMessageCircle, FiShield, FiUser, FiCheckCircle, FiUserX } from 'react-icons/fi';
 import * as customerApi from '../../../services/customerApi';
 import { useAuth } from '../../../context/AuthContext';
 import styles from '../AdminPage.module.css';
@@ -187,7 +187,7 @@ export default function CustomersSection({ onMessageUser }) {
                             transition: 'all 0.2s',
                           }}
                         >
-                          <FiShieldCheck size={14} /> Admin Yap
+                          <FiCheckCircle size={14} /> Admin Yap
                         </button>
                       )
                     )}
