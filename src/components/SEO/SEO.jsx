@@ -1,13 +1,13 @@
 import { Helmet } from 'react-helmet-async';
 
 export default function SEO({
-  title = 'mysticvelora - Özel Takı & Aksesuar Koleksiyonu',
-  description = 'Zarif ve benzersiz gümüş kolyeler, yüzükler, bileklikler ve özel tasarım aksesuarlar mysticvelora güvencesiyle sizleri bekliyor.',
+  title = 'muhristan - Özel Takı & Aksesuar Koleksiyonu',
+  description = 'Zarif ve benzersiz gümüş kolyeler, yüzükler, bileklikler ve özel tasarım aksesuarlar muhristan güvencesiyle sizleri bekliyor.',
   image = '/logo.png',
   url = typeof window !== 'undefined' ? window.location.href : '',
   type = 'website'
 }) {
-  const siteTitle = title.includes('mysticvelora') ? title : `${title} | mysticvelora`;
+  const siteTitle = title.includes('muhristan') ? title : `${title} | muhristan`;
 
   return (
     <Helmet>
@@ -21,7 +21,7 @@ export default function SEO({
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
       <meta property="og:url" content={url} />
-      <meta property="og:site_name" content="mysticvelora" />
+      <meta property="og:site_name" content="muhristan" />
 
       {/* Twitter Cards */}
       <meta name="twitter:card" content="summary_large_image" />

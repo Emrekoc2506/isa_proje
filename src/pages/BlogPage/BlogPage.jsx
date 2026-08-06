@@ -263,7 +263,7 @@ export default function BlogPage() {
   return (
     <>
       <Helmet>
-        <title>Blog — MysticVelora</title>
+        <title>Blog — Muhristan</title>
         <meta name="description" content="Doğal taşlar, kristaller, meditasyon ve enerji ritüelleri hakkında uzman makaleler ve rehberler." />
       </Helmet>
 

@@ -246,7 +246,7 @@ export default function ProductDetailPage() {
   };
 
   const whatsappUrl = `https://wa.me/905551234567?text=${encodeURIComponent(`Merhaba! ${productDetail.name} hakkında bilgi almak istiyorum.`)}`;
-  const instagramUrl = `https://www.instagram.com/mysticvelora`;
+  const instagramUrl = `https://www.instagram.com/muhristan`;
 
   /* ─── Tabs ──────────────────────────────────────────── */
   const tabs = [
@@ -259,7 +259,7 @@ export default function ProductDetailPage() {
     return (
       <MainLayout>
         <div className={styles.page}>
-          <SEO title="Ürün Yükleniyor... | mysticvelora" />
+          <SEO title="Ürün Yükleniyor... | muhristan" />
           <ProductDetailSkeleton />
         </div>
       </MainLayout>
@@ -270,7 +270,7 @@ export default function ProductDetailPage() {
     return (
       <MainLayout>
         <div className={styles.page} style={{ textAlign: 'center', padding: '120px 20px', minHeight: '60vh' }}>
-          <SEO title="Ürün Bulunamadı | mysticvelora" />
+          <SEO title="Ürün Bulunamadı | muhristan" />
           <h2 style={{ color: 'var(--gold-light)', fontSize: '32px', marginBottom: '12px', fontFamily: 'var(--font-heading)' }}>Ürün Bulunamadı</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '28px', fontSize: '16px' }}>Aradığınız ilan veya ürün mevcut değil ya da kaldırılmış olabilir.</p>
           <Link to="/urunler" style={{ background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: 'var(--bg-dark)', padding: '14px 28px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '15px' }}>

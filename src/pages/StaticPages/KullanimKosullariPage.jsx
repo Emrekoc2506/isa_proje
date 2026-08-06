@@ -17,12 +17,12 @@ export default function KullanimKosullariPage() {
         <div className={s.section}>
           <h2 className={s.sectionTitle}><FiFileText style={{ marginRight: 8 }} /> Genel Hükümler</h2>
           <p className={s.text}>
-            Bu kullanım koşulları, Mysticvelora web sitesini ziyaret eden tüm kullanıcılar için geçerlidir. 
+            Bu kullanım koşulları, Muhristan web sitesini ziyaret eden tüm kullanıcılar için geçerlidir. 
             Siteyi kullanarak aşağıda belirtilen koşulları kabul etmiş sayılırsınız. Koşulları kabul etmiyorsanız, 
             lütfen sitemizi kullanmayınız.
           </p>
           <p className={s.textSecondary}>
-            Mysticvelora, bu kullanım koşullarını önceden bildirim yapmaksızın değiştirme hakkını saklı tutar. 
+            Muhristan, bu kullanım koşullarını önceden bildirim yapmaksızın değiştirme hakkını saklı tutar. 
             Değişiklikler sitede yayınlandığı anda yürürlüğe girer. Sitemizi düzenli olarak ziyaret ederek 
             güncel koşulları kontrol etmeniz önerilir.
           </p>
@@ -32,7 +32,7 @@ export default function KullanimKosullariPage() {
           <h2 className={s.sectionTitle}><FiShoppingCart style={{ marginRight: 8 }} /> Sipariş ve Sözleşme</h2>
           <p className={s.text}>
             Sipariş verdiğinizde, ürün açıklamaları, fiyatlar ve teslimat bilgilerini doğrulamanız gerekmektedir. 
-            Siparişinizin onaylanması, bir bağlayıcı sözleşme niteliği taşır. Mysticvelora, siparişinizi onaylama 
+            Siparişinizin onaylanması, bir bağlayıcı sözleşme niteliği taşır. Muhristan, siparişinizi onaylama 
             veya reddetme hakkını saklı tutar.
           </p>
           <ul className={s.list}>
@@ -52,14 +52,14 @@ export default function KullanimKosullariPage() {
           </p>
           <p className={s.textSecondary}>
             Hesabınızda yetkisiz kullanım fark ederseniz, derhal müşteri hizmetlerimizi bilgilendirmelisiniz. 
-            Mysticvelora, yetkisiz kullanımdan kaynaklanan kayıplardan sorumlu değildir.
+            Muhristan, yetkisiz kullanımdan kaynaklanan kayıplardan sorumlu değildir.
           </p>
         </div>
 
         <div className={s.section}>
           <h2 className={s.sectionTitle}><FiAlertTriangle style={{ marginRight: 8 }} /> Sorumluluk Reddi</h2>
           <p className={s.text}>
-            Mysticvelora, ürünlerimizin ezoterik ve spiritüel amaçlı olduğunu, tıbbi tedavi veya teşhis 
+            Muhristan, ürünlerimizin ezoterik ve spiritüel amaçlı olduğunu, tıbbi tedavi veya teşhis 
             amacı taşımadığını belirtir. Ürünlerimiz hakkında yapılan açıklamalar, kişisel deneyimlere 
             dayanmaktadır ve herhangi bir tıbbi iddia olarak değerlendirilmemelidir.
           </p>
@@ -74,7 +74,7 @@ export default function KullanimKosullariPage() {
         <div className={s.section}>
           <h2 className={s.sectionTitle}>Fikri Mülkiyet Hakları</h2>
           <p className={s.text}>
-            Sitede yer alan tüm içerik (metin, görsel, logo, grafik, yazılım) Mysticvelora'ya aittir ve 
+            Sitede yer alan tüm içerik (metin, görsel, logo, grafik, yazılım) Muhristan'ya aittir ve 
             telif hakkı yasaları ile korunmaktadır. İçeriklerin izinsiz kopyalanması, dağıtılması veya 
             ticari amaçla kullanılması yasaktır.
           </p>
@@ -94,7 +94,7 @@ export default function KullanimKosullariPage() {
 
         <div className={s.section}>
           <p className={s.textSecondary} style={{ textAlign: 'center' }}>
-            Son güncelleme: 2026 &bull; Mysticvelora &bull; Tüm hakları saklıdır.
+            Son güncelleme: 2026 &bull; Muhristan &bull; Tüm hakları saklıdır.
           </p>
         </div>
       </div>

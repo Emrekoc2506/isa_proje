@@ -22,7 +22,7 @@ export default function HakkimizdaPage() {
         <div className={s.heroContent}>
           <h1 className={s.heroTitle}>Hakkımızda</h1>
           <p className={s.heroSubtitle}>
-            Ezoterizmin büyülü dünyasını keşfe çıkın. Mysticvelora olarak, ruhsal yolculuğunuzda size eşlik etmekten gurur duyuyoruz.
+            Ezoterizmin büyülü dünyasını keşfe çıkın. Muhristan olarak, ruhsal yolculuğunuzda size eşlik etmekten gurur duyuyoruz.
           </p>
         </div>
       </section>
@@ -31,7 +31,7 @@ export default function HakkimizdaPage() {
         <div className={s.section}>
           <h2 className={s.sectionTitle}>Biz Kimiz?</h2>
           <p className={s.text}>
-            Mysticvelora, 2020 yılında ezoterik bilgiye ve doğal ürünlere olan tutkuyla kuruldu. Amacımız, binlerce yıllık kadim bilgelikleri 
+            Muhristan, 2020 yılında ezoterik bilgiye ve doğal ürünlere olan tutkuyla kuruldu. Amacımız, binlerce yıllık kadim bilgelikleri 
             modern yaşamla buluşturarak, ruhsal farkındalık ve içsel dönüşüm yolculuğunda size rehberlik etmek.
           </p>
           <p className={s.textSecondary}>

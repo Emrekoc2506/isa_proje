@@ -83,7 +83,7 @@ export default function IadeSikayetPage() {
             değerlendirilir ve tarafınıza dönüş yapılır.
           </p>
           <p className={s.textSecondary}>
-            Şikayetlerinizi <strong style={{ color: 'var(--gold-light)' }}>destek@mysticvelora.com</strong> adresine e-posta göndererek veya 
+            Şikayetlerinizi <strong style={{ color: 'var(--gold-light)' }}>destek@muhristan.com</strong> adresine e-posta göndererek veya 
             İletişim sayfamızdaki formu kullanarak iletebilirsiniz.
           </p>
         </div>

@@ -1,6 +1,6 @@
-# Mysticvelora — Şifa & Ritüel Ürünleri E-Ticaret Arayüzü
+# Muhristan — Şifa & Ritüel Ürünleri E-Ticaret Arayüzü
 
-Bu proje, Mysticvelora e-ticaret platformunun React + Vite tabanlı ön uç (frontend) uygulamasıdır. Canlı .NET Web API ve SignalR Hub servisleri ile tam entegre çalışmaktadır.
+Bu proje, Muhristan e-ticaret platformunun React + Vite tabanlı ön uç (frontend) uygulamasıdır. Canlı .NET Web API ve SignalR Hub servisleri ile tam entegre çalışmaktadır.
 
 ## 🚀 Yerel Kurulum & Çalıştırma
 

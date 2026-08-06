@@ -142,8 +142,8 @@ export default function AdminPage() {
         {/* ── İÇERİK (scroll edilebilir) ── */}
         <div className={styles.sidebarInner}>
           <a href="/" className={styles.logoLink}>
-            <img src={logoImage} alt="mysticvelora" className={styles.logoImg} />
-            <span className={styles.brandName}>mysticvelora</span>
+            <img src={logoImage} alt="muhristan" className={styles.logoImg} />
+            <span className={styles.brandName}>muhristan</span>
           </a>
           <div className={styles.badgeWrap} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
             <span className={styles.adminBadge}>Yönetici Paneli</span>

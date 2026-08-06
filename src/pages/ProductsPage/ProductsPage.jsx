@@ -404,8 +404,8 @@ export default function ProductsPage() {
           </aside>
 
       <SEO
-        title={selectedCategory !== 'hepsi' ? `${selectedCategory} | mysticvelora` : 'Tüm Ürünler | mysticvelora'}
-        description="Özel tasarım gümüş kolyeler, yüzükler, bileklikler ve şık aksesuarlar mysticvelora'da."
+        title={selectedCategory !== 'hepsi' ? `${selectedCategory} | muhristan` : 'Tüm Ürünler | muhristan'}
+        description="Özel tasarım gümüş kolyeler, yüzükler, bileklikler ve şık aksesuarlar muhristan'da."
       />
 
       {/* ── SAĞ TARAF: ÜRÜN GRİDİ ──────────────────────────────── */}

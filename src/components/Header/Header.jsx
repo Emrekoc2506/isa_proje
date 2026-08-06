@@ -53,9 +53,9 @@ export default function Header() {
         <div className={styles.inner}>
 
           {/* Logo */}
-          <a href="/" className={styles.logo} aria-label="mysticvelora – Ana Sayfa">
-            <img src={logoImage} alt="mysticvelora" width={180} height={72} />
-            <span className={styles.brandName}>mysticvelora</span>
+          <a href="/" className={styles.logo} aria-label="muhristan – Ana Sayfa">
+            <img src={logoImage} alt="muhristan" width={180} height={72} />
+            <span className={styles.brandName}>muhristan</span>
           </a>
 
           {/* Arama Kutusu & Live Autocomplete */}

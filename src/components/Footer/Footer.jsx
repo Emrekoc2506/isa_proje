@@ -15,10 +15,10 @@ export default function Footer() {
             <a href="/" className={styles.logoLink}>
               <img
                 src={logoImage}
-                alt="mysticvelora"
+                alt="muhristan"
                 className={styles.logo}
               />
-              <span className={styles.brandName}>mysticvelora</span>
+              <span className={styles.brandName}>muhristan</span>
             </a>
             <p className={styles.tagline}>
               Ezoterizmin gizemli dünyasını keşfedin. Yüksek kaliteli ezoterik ürünler,
@@ -108,7 +108,7 @@ export default function Footer() {
         {/* ── Alt: Copyright ────────────────────────────────── */}
         <div className={styles.bottom}>
           <p className={styles.copyright}>
-            © {new Date().getFullYear()} mysticvelora — Tüm hakları saklıdır.
+            © {new Date().getFullYear()} muhristan — Tüm hakları saklıdır.
           </p>
           <p className={styles.poweredBy}>
             Powered by <span className={styles.highlight}>IdoSell</span>

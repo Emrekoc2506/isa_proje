@@ -284,8 +284,8 @@ export default function DashboardPage({ activeTab = 'overview' }) {
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarMobileOpen : ''}`}>
         {/* Logo */}
         <a href="/" className={styles.sidebarLogo}>
-          <img src={logoImage} alt="mysticvelora" className={styles.sidebarLogoImg} />
-          <span className={styles.sidebarBrand}>mysticvelora</span>
+          <img src={logoImage} alt="muhristan" className={styles.sidebarLogoImg} />
+          <span className={styles.sidebarBrand}>muhristan</span>
         </a>
 
         {/* Profil Özeti */}

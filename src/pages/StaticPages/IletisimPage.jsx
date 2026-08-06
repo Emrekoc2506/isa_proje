@@ -5,7 +5,7 @@ import s from './StaticPage.module.css';
 const contactDetails = [
   { Icon: FiMapPin, title: 'Adresimiz', text: ['İnönü Mahallesi, Çiçek Sokak No:42', 'Kadıköy / İstanbul'] },
   { Icon: FiPhone, title: 'Telefon', text: ['+90 (216) 555 11 22', '+90 (532) 111 22 33'] },
-  { Icon: FiMail, title: 'E-posta', text: ['info@mysticvelora.com', 'destek@mysticvelora.com'] },
+  { Icon: FiMail, title: 'E-posta', text: ['info@muhristan.com', 'destek@muhristan.com'] },
   { Icon: FiClock, title: 'Çalışma Saatleri', text: ['Hafta içi: 09:00 - 18:00', 'Cumartesi: 10:00 - 16:00'] },
 ];
 

@@ -1,6 +1,6 @@
 # Frontend Bug ve Eksiklik Raporu
 
-**Proje:** Mysticvelora (React + Vite)
+**Proje:** Muhristan (React + Vite)
 **Tarih:** 27.07.2026
 **Kapsam:** Tüm `src/` altındaki JSX, JS, CSS dosyaları
 

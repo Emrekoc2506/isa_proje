@@ -120,8 +120,8 @@ export default function PaymentResultPage() {
     <div className={styles.emptyContainer} style={{ minHeight: '100vh', padding: '120px 20px' }}>
       <div className={styles.wrapper} style={{ maxWidth: 500, width: '100%' }}>
         <a href="/" className={styles.logoLink} style={{ marginBottom: 20 }}>
-          <img src={logoImage} alt="mysticvelora" className={styles.logoImg} />
-          <span className={styles.brandName}>mysticvelora</span>
+          <img src={logoImage} alt="muhristan" className={styles.logoImg} />
+          <span className={styles.brandName}>muhristan</span>
         </a>
 
         <motion.div 

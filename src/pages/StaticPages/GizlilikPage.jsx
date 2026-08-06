@@ -17,7 +17,7 @@ export default function GizlilikPage() {
         <div className={s.section}>
           <h2 className={s.sectionTitle}><FiLock style={{ marginRight: 8 }} /> Veri Güvenliği</h2>
           <p className={s.text}>
-            Mysticvelora olarak, kişisel verilerinizin güvenliğine büyük önem veriyoruz. 6698 sayılı Kişisel Verilerin Korunması 
+            Muhristan olarak, kişisel verilerinizin güvenliğine büyük önem veriyoruz. 6698 sayılı Kişisel Verilerin Korunması 
             Kanunu'na (KVKK) tam uyumlulukla hareket ediyor, verilerinizi en üst düzeyde koruyoruz.
           </p>
           <p className={s.textSecondary}>
@@ -81,7 +81,7 @@ export default function GizlilikPage() {
             <li className={s.listItem}>Kişisel verilerinizin üçüncü kişilere aktarılmamasını isteme</li>
           </ul>
           <p className={s.textSecondary}>
-            Haklarınızı kullanmak için <strong style={{ color: 'var(--gold-light)' }}>info@mysticvelora.com</strong> adresine e-posta gönderebilirsiniz.
+            Haklarınızı kullanmak için <strong style={{ color: 'var(--gold-light)' }}>info@muhristan.com</strong> adresine e-posta gönderebilirsiniz.
           </p>
         </div>
 
