@@ -635,15 +635,14 @@ export default function BannersSection() {
               exit={{ opacity: 0, scale: 0.96, y: 20 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
               style={{
-                width: '94%',
+                width: '100%',
                 maxWidth: 860,
-                maxHeight: '92vh',
-                overflowY: 'auto',
+                margin: '24px auto',
                 background: 'var(--bg-dark, #12091F)',
                 border: '1px solid rgba(201,162,39,0.25)',
                 borderRadius: 18,
                 boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
-                marginBottom: 24
+                overflow: 'hidden'
               }}
             >
               {/* ─── HEADER (GECE/GÜNDÜZ TEMALI HAREKETLİ ARKA PLAN) ─── */}

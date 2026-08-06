@@ -533,7 +533,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       {/* CREATE / EDIT MODAL (Sihirbaz Form Tasarımı) */}
       <AnimatePresence>
         {showModal && (
-          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, overflowY: 'auto', backdropFilter: 'blur(8px)' }}>
+          <div style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.88)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', zIndex: 2000, overflowY: 'auto', backdropFilter: 'blur(8px)', padding: '24px 16px' }}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -541,10 +541,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className={styles.sectionCard} 
               style={{
-                width: '94%',
+                width: '100%',
                 maxWidth: 860,
-                maxHeight: '92vh',
-                overflowY: 'auto',
                 margin: '24px auto',
                 background: 'var(--bg-dark)',
                 border: '1px solid rgba(201, 162, 39, 0.25)',
