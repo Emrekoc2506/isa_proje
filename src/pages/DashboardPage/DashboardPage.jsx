@@ -7,7 +7,7 @@ import {
   FiLogOut, FiMenu, FiX, FiShoppingCart, FiChevronRight,
   FiMapPin, FiBell, FiTrash2, FiMessageSquare, FiLoader
 } from 'react-icons/fi';
-import logoImage from '../../assets/images/Logo-2.png';
+import logoImage from '../../assets/images/logo-2.png';
 import { getMyOrders } from '../../services/orderApi';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';

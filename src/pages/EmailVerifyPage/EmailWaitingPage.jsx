@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiMail, FiLoader, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { resendVerification } from '../../services/authApi';
-import logoImage from '../../assets/images/Logo-2.png';
+import logoImage from '../../assets/images/logo-2.png';
 
 export default function EmailWaitingPage() {
   const location = useLocation();
