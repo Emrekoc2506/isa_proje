@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 export default function SEO({
   title = 'muhristan - Özel Takı & Aksesuar Koleksiyonu',
   description = 'Zarif ve benzersiz gümüş kolyeler, yüzükler, bileklikler ve özel tasarım aksesuarlar muhristan güvencesiyle sizleri bekliyor.',
-  image = '/logo.png',
+  image = '/Logo-2.png',
   url = typeof window !== 'undefined' ? window.location.href : '',
   type = 'website'
 }) {

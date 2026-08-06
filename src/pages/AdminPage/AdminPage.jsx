@@ -6,7 +6,7 @@ import {
   FiGrid, FiPackage, FiFolder, FiMessageSquare, FiLogOut, FiMenu, FiX,
   FiShoppingCart, FiImage, FiTag, FiBox, FiUser, FiTrendingUp, FiBookOpen, FiStar
 } from 'react-icons/fi';
-import logoImage from '../../assets/images/logo.png';
+import logoImage from '../../assets/images/Logo-2.png';
 import ChatUI from '../../components/ChatUI/ChatUI';
 import ThemeToggle from '../../components/ThemeToggle';
 import { useAuth } from '../../context/AuthContext';

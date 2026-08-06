@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiLock, FiLoader, FiCheckCircle } from 'react-icons/fi';
 import { resetPassword } from '../../services/authApi';
-import logoImage from '../../assets/images/logo.png';
+import logoImage from '../../assets/images/Logo-2.png';
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();

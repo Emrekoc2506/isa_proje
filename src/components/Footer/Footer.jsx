@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import styles from './Footer.module.css';
 import { FiFacebook, FiInstagram, FiYoutube, FiTwitter, FiMail } from 'react-icons/fi';
 import { footerLinks } from '../../data/index';
-import logoImage from '../../assets/images/logo.png';
+import logoImage from '../../assets/images/Logo-2.png';
 
 export default function Footer() {
   return (
