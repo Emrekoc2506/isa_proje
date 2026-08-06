@@ -13,6 +13,8 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import ThemeToggle from '../../components/ThemeToggle';
 import ChatUI from '../../components/ChatUI/ChatUI';
 import NotificationDropdown from '../../components/NotificationDropdown/NotificationDropdown';
 import AddressesSection from './AddressesSection';
@@ -36,6 +38,8 @@ export default function DashboardPage({ activeTab = 'overview' }) {
   const { addToCart } = useCart();
   const { unreadCount } = useNotifications();
   const { user, logout, reloadUser } = useAuth();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   
   const navigate = useNavigate();
   const { id: routeOrderId } = useParams();
@@ -281,59 +285,124 @@ export default function DashboardPage({ activeTab = 'overview' }) {
       </AnimatePresence>
 
       {/* SIDEBAR */}
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarMobileOpen : ''}`}>
-        {/* Logo */}
-        <a href="/" className={styles.sidebarLogo}>
-          <img src={logoImage} alt="muhristan" className={styles.sidebarLogoImg} />
-          <span className={styles.sidebarBrand}>muhristan</span>
-        </a>
+      <aside
+        className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarMobileOpen : ''} ${isLight ? styles.sidebarLight : styles.sidebarDark}`}
+        style={isLight ? { background: 'linear-gradient(180deg, #4bbfe8 0%, #62cff0 40%, #7dd9f5 100%)' } : undefined}
+      >
+        {/* ── ANİMASYON KATMANI (scroll etkilemez) ── */}
+        <div className={styles.sidebarAnimBg} aria-hidden="true">
+          {/* GECE MODU */}
+          {!isLight && (<>
+            {/* Ay */}
+            <div className={styles.sidebarMoon}>
+              <div className={styles.sidebarMoonHole} style={{ width: 9, height: 9, top: 14, left: 7 }} />
+              <div className={styles.sidebarMoonHole} style={{ width: 5, height: 5, top: 24, left: 18 }} />
+              <div className={styles.sidebarMoonHole} style={{ width: 4, height: 4, top: 10, left: 21 }} />
+            </div>
+            {/* Yıldızlar */}
+            {[...Array(18)].map((_, i) => (
+              <svg key={i} className={styles.sidebarStar} viewBox="0 0 20 20"
+                style={{
+                  top: `${Math.floor((i * 37 + 11) % 92)}%`,
+                  left: `${Math.floor((i * 53 + 7) % 85)}%`,
+                  width: `${8 + (i % 5) * 3}px`,
+                  animationDelay: `${(i * 0.37).toFixed(2)}s`,
+                  animationDuration: `${2 + (i % 4) * 0.5}s`,
+                }}
+              >
+                <path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z" />
+              </svg>
+            ))}
+          </>)}
 
-        {/* Profil Özeti */}
-        <div className={styles.profileCard}>
-          <div className={styles.avatar}>
-            <span className={styles.avatarInitials}>{initials}</span>
-            <div className={styles.avatarGlow} aria-hidden="true" />
-          </div>
-          <div className={styles.profileInfo}>
-            <p className={styles.profileName}>{displayName}</p>
-            <p className={styles.profileEmail}>{displayEmail}</p>
-            <span className={styles.memberBadge}>Kayıtlı Üye</span>
-          </div>
+          {/* GÜNDÜZ MODU */}
+          {isLight && (<>
+            {/* Güneş */}
+            <div className={styles.sidebarSun} />
+            {/* Bulut 1 — sol üst, büyük */}
+            <div className={styles.sidebarCloudShape} style={{ top: '8%', left: '-10px', animationDuration: '7s', animationDelay: '0s' }}>
+              <div className={styles.sidebarCloudBase} />
+              <div className={styles.sidebarCloudBump1} />
+              <div className={styles.sidebarCloudBump2} />
+              <div className={styles.sidebarCloudBump3} />
+            </div>
+            {/* Bulut 2 — sol orta, küçük */}
+            <div className={styles.sidebarCloudShape} style={{ top: '38%', left: '-20px', animationDuration: '9s', animationDelay: '2s', transform: 'scale(0.65)' }}>
+              <div className={styles.sidebarCloudBase} />
+              <div className={styles.sidebarCloudBump1} />
+              <div className={styles.sidebarCloudBump2} />
+              <div className={styles.sidebarCloudBump3} />
+            </div>
+            {/* Bulut 3 — sol alt, orta */}
+            <div className={styles.sidebarCloudShape} style={{ top: '68%', left: '-15px', animationDuration: '8s', animationDelay: '1s', transform: 'scale(0.8)' }}>
+              <div className={styles.sidebarCloudBase} />
+              <div className={styles.sidebarCloudBump1} />
+              <div className={styles.sidebarCloudBump2} />
+              <div className={styles.sidebarCloudBump3} />
+            </div>
+          </>)}
         </div>
 
-        {/* Navigasyon */}
-        <nav className={styles.nav} aria-label="Panel navigasyonu">
-          {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              className={`${styles.navItem} ${active === id ? styles.navActive : ''}`}
-              onClick={() => {
-                setActive(id);
-                navigate(`/${id === 'overview' ? 'panel' : id === 'wishlist' ? 'favorilerim' : id === 'profile' ? 'profilim' : id === 'orders' ? 'siparislerim' : id === 'addresses' ? 'adreslerim' : id === 'messages' ? 'panel' : 'ayarlar'}`);
-                setSidebarOpen(false);
-                window.scrollTo(0, 0);
-                document.documentElement.scrollTop = 0;
-                document.body.scrollTop = 0;
-              }}
-            >
-              <Icon className={styles.navIcon} />
-              <span>{label}</span>
-              {active === id && (
-                <motion.div className={styles.navIndicator} layoutId="nav-indicator" />
-              )}
-            </button>
-          ))}
-        </nav>
+        {/* ── İÇERİK (scroll edilebilir) ── */}
+        <div className={styles.sidebarInner}>
+          {/* Logo */}
+          <a href="/" className={styles.sidebarLogo}>
+            <img src={logoImage} alt="muhristan" className={styles.sidebarLogoImg} />
+            <span className={styles.sidebarBrand}>muhristan</span>
+          </a>
 
-        {/* Çıkış */}
-        <button
-          className={styles.logoutBtn}
-          onClick={handleLogoutClick}
-          aria-label="Çıkış yap"
-        >
-          <FiLogOut />
-          <span>Çıkış Yap</span>
-        </button>
+          {/* Badge & Theme Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
+            <span className={styles.memberBadge}>Müşteri Paneli</span>
+            <ThemeToggle id="customer-sidebar-theme-toggle" />
+          </div>
+
+          {/* Profil Özeti */}
+          <div className={styles.profileCard}>
+            <div className={styles.avatar}>
+              <span className={styles.avatarInitials}>{initials}</span>
+              <div className={styles.avatarGlow} aria-hidden="true" />
+            </div>
+            <div className={styles.profileInfo}>
+              <p className={styles.profileName}>{displayName}</p>
+              <p className={styles.profileEmail}>{displayEmail}</p>
+            </div>
+          </div>
+
+          {/* Navigasyon */}
+          <nav className={styles.nav} aria-label="Panel navigasyonu">
+            {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                className={`${styles.navItem} ${active === id ? styles.navActive : ''}`}
+                onClick={() => {
+                  setActive(id);
+                  navigate(`/${id === 'overview' ? 'panel' : id === 'wishlist' ? 'favorilerim' : id === 'profile' ? 'profilim' : id === 'orders' ? 'siparislerim' : id === 'addresses' ? 'adreslerim' : id === 'messages' ? 'panel' : 'ayarlar'}`);
+                  setSidebarOpen(false);
+                  window.scrollTo(0, 0);
+                  document.documentElement.scrollTop = 0;
+                  document.body.scrollTop = 0;
+                }}
+              >
+                <Icon className={styles.navIcon} />
+                <span>{label}</span>
+                {active === id && (
+                  <motion.div className={styles.navIndicator} layoutId="nav-indicator" />
+                )}
+              </button>
+            ))}
+          </nav>
+
+          {/* Çıkış */}
+          <button
+            className={styles.logoutBtn}
+            onClick={handleLogoutClick}
+            aria-label="Çıkış yap"
+          >
+            <FiLogOut />
+            <span>Çıkış Yap</span>
+          </button>
+        </div>
       </aside>
 
       {/* ANA İÇERIK */}
