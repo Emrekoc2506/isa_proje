@@ -31,15 +31,9 @@
   transition: transform 0.3s ease;
 }
 
-/* Gündüz modu sidebar arka planı — gökyüzü */
+/* Gündüz modu sidebar arka planı — ThemeToggle ile aynı mavi */
 .sidebarLight {
-  background: linear-gradient(180deg,
-    #4a9fd4 0%,
-    #62b8e8 20%,
-    #87ceeb 50%,
-    #aaddf5 75%,
-    #c8eafa 100%
-  ) !important;
+  background: linear-gradient(180deg, #4bbfe8 0%, #62cff0 30%, #7dd9f5 100%) !important;
 }
 
 /* ── Animasyon katmanı (pointer-events yok, scroll etkilemez) ── */
