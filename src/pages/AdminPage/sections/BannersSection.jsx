@@ -526,9 +526,10 @@ export default function BannersSection() {
         </div>
         <button
           onClick={openModal}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, #c9a227, #967412)', color: '#ffffff', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer', boxShadow: '0 4px 15px rgba(201,162,39,0.35)' }}
         >
-          <FiPlus size={16} /> Yeni Billboard Ekle
+          <FiPlus size={16} style={{ color: '#ffffff' }} />
+          <span style={{ color: '#ffffff' }}>Yeni Billboard Ekle</span>
         </button>
       </div>
 
