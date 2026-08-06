@@ -372,7 +372,7 @@ export default function BannersSection() {
       alert('Lütfen video dosyası yükleyin veya video URL girin.');
       return;
     }
-    if (form.mediaType === 'image' && !form.image) {
+    if (form.mediaType === 'image' && !form.image && !form.imageDark) {
       alert('Lütfen masaüstü görseli yükleyin.');
       return;
     }
@@ -873,45 +873,89 @@ export default function BannersSection() {
                           </div>
                         </SectionBlock>
 
+                        {/* Görünürlük Hedefi (Sadece Gündüz / Sadece Gece / Her İki Tema) */}
+                        <SectionBlock icon={FiEye} title="Görünürlük Hedefi" sub="Bu billboard hangi tema aktifken sitede gösterilsin?">
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 8 }}>
+                            <label style={{
+                              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 8,
+                              background: form.themeMode === 'all' ? 'rgba(201,162,39,0.18)' : 'var(--bg-mid)',
+                              border: form.themeMode === 'all' ? '2px solid var(--gold-light)' : '1px solid var(--border-gold)',
+                              color: form.themeMode === 'all' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                              fontWeight: 'bold', fontSize: 13, cursor: 'pointer'
+                            }}>
+                              <input type="radio" name="themeMode" checked={form.themeMode === 'all'} onChange={() => setVal('themeMode', 'all')} />
+                              🌟 Hem Gece Hem Gündüz
+                            </label>
+
+                            <label style={{
+                              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 8,
+                              background: form.themeMode === 'light' ? 'rgba(2,132,199,0.18)' : 'var(--bg-mid)',
+                              border: form.themeMode === 'light' ? '2px solid #0284c7' : '1px solid var(--border-gold)',
+                              color: form.themeMode === 'light' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                              fontWeight: 'bold', fontSize: 13, cursor: 'pointer'
+                            }}>
+                              <input type="radio" name="themeMode" checked={form.themeMode === 'light'} onChange={() => setVal('themeMode', 'light')} />
+                              ☀️ Sadece Gündüz Modunda
+                            </label>
+
+                            <label style={{
+                              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 8,
+                              background: form.themeMode === 'dark' ? 'rgba(124,58,237,0.18)' : 'var(--bg-mid)',
+                              border: form.themeMode === 'dark' ? '2px solid #7c3aed' : '1px solid var(--border-gold)',
+                              color: form.themeMode === 'dark' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                              fontWeight: 'bold', fontSize: 13, cursor: 'pointer'
+                            }}>
+                              <input type="radio" name="themeMode" checked={form.themeMode === 'dark'} onChange={() => setVal('themeMode', 'dark')} />
+                              🌙 Sadece Gece Modunda
+                            </label>
+                          </div>
+                        </SectionBlock>
+
                         {form.mediaType === 'image' ? (
                           <>
-                            <SectionBlock icon={FiImage} title="☀️ Gündüz Modu Görselleri (Açık Tema / Ana Görsel)" sub="Gündüz modunda gösterilir. Gece görseli yüklenmezse her iki temada da bu görsel kullanılır.">
-                              <UploadDropzone
-                                label="☀️ Gündüz Masaüstü Görseli (1920x600 px Önerilir) *"
-                                value={form.image}
-                                onFile={(e) => handleImageUpload(e, 'desktop')}
-                                onClear={() => setVal('image', '')}
-                                uploading={uploadingImg === 'desktop'}
-                                id="desktopImg"
-                              />
-                              <UploadDropzone
-                                label="📱 Gündüz Mobil Görseli (İsteğe Bağlı - 800x600 px)"
-                                value={form.imageMobile}
-                                onFile={(e) => handleImageUpload(e, 'mobile')}
-                                onClear={() => setVal('imageMobile', '')}
-                                uploading={uploadingImg === 'mobile'}
-                                id="mobileImg"
-                              />
-                            </SectionBlock>
+                            {/* GÜNDÜZ GÖRSELİ (themeMode 'all' veya 'light' ise gösterilir) */}
+                            {(form.themeMode === 'all' || form.themeMode === 'light') && (
+                              <SectionBlock icon={FiImage} title="☀️ Gündüz Modu Görselleri (Açık Tema)" sub={form.themeMode === 'light' ? "Yalnızca Gündüz teması aktifken slaytta gösterilir." : "Gündüz modunda gösterilir. Gece görseli yüklenmezse her iki temada da bu görsel kullanılır."}>
+                                <UploadDropzone
+                                  label="☀️ Gündüz Masaüstü Görseli (1920x600 px Önerilir) *"
+                                  value={form.image}
+                                  onFile={(e) => handleImageUpload(e, 'desktop')}
+                                  onClear={() => setVal('image', '')}
+                                  uploading={uploadingImg === 'desktop'}
+                                  id="desktopImg"
+                                />
+                                <UploadDropzone
+                                  label="📱 Gündüz Mobil Görseli (İsteğe Bağlı - 800x600 px)"
+                                  value={form.imageMobile}
+                                  onFile={(e) => handleImageUpload(e, 'mobile')}
+                                  onClear={() => setVal('imageMobile', '')}
+                                  uploading={uploadingImg === 'mobile'}
+                                  id="mobileImg"
+                                />
+                              </SectionBlock>
+                            )}
 
-                            <SectionBlock icon={FiImage} title="🌙 Gece Modu Görselleri (Karanlık Tema)" sub="Gece modunda farklı bir görsel göstermek isterseniz buraya yükleyin (Boş bırakılırsa Gündüz görseli kullanılır).">
-                              <UploadDropzone
-                                label="🌙 Gece Masaüstü Görseli (İsteğe Bağlı - 1920x600 px)"
-                                value={form.imageDark}
-                                onFile={(e) => handleImageUpload(e, 'desktopDark')}
-                                onClear={() => setVal('imageDark', '')}
-                                uploading={uploadingImg === 'desktopDark'}
-                                id="desktopDarkImg"
-                              />
-                              <UploadDropzone
-                                label="📱 Gece Mobil Görseli (İsteğe Bağlı - 800x600 px)"
-                                value={form.imageMobileDark}
-                                onFile={(e) => handleImageUpload(e, 'mobileDark')}
-                                onClear={() => setVal('imageMobileDark', '')}
-                                uploading={uploadingImg === 'mobileDark'}
-                                id="mobileDarkImg"
-                              />
-                            </SectionBlock>
+                            {/* GECE GÖRSELİ (themeMode 'all' veya 'dark' ise gösterilir) */}
+                            {(form.themeMode === 'all' || form.themeMode === 'dark') && (
+                              <SectionBlock icon={FiImage} title="🌙 Gece Modu Görselleri (Karanlık Tema)" sub={form.themeMode === 'dark' ? "Yalnızca Gece teması aktifken slaytta gösterilir." : "Gece modunda farklı bir görsel göstermek isterseniz buraya yükleyin (Boş bırakılırsa Gündüz görseli kullanılır)."}>
+                                <UploadDropzone
+                                  label="🌙 Gece Masaüstü Görseli (1920x600 px Önerilir)"
+                                  value={form.themeMode === 'dark' ? (form.imageDark || form.image) : form.imageDark}
+                                  onFile={(e) => handleImageUpload(e, form.themeMode === 'dark' ? 'desktop' : 'desktopDark')}
+                                  onClear={() => { setVal('imageDark', ''); if (form.themeMode === 'dark') setVal('image', ''); }}
+                                  uploading={uploadingImg === (form.themeMode === 'dark' ? 'desktop' : 'desktopDark')}
+                                  id="desktopDarkImg"
+                                />
+                                <UploadDropzone
+                                  label="📱 Gece Mobil Görseli (İsteğe Bağlı - 800x600 px)"
+                                  value={form.themeMode === 'dark' ? (form.imageMobileDark || form.imageMobile) : form.imageMobileDark}
+                                  onFile={(e) => handleImageUpload(e, form.themeMode === 'dark' ? 'mobile' : 'mobileDark')}
+                                  onClear={() => { setVal('imageMobileDark', ''); if (form.themeMode === 'dark') setVal('imageMobile', ''); }}
+                                  uploading={uploadingImg === (form.themeMode === 'dark' ? 'mobile' : 'mobileDark')}
+                                  id="mobileDarkImg"
+                                />
+                              </SectionBlock>
+                            )}
                           </>
                         ) : (
                           <>
