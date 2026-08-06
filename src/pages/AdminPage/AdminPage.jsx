@@ -112,31 +112,27 @@ export default function AdminPage() {
           {isLight && (<>
             {/* Güneş */}
             <div className={styles.sidebarSun} />
-            {/* Bulutlar — farklı boyut ve konumlarla dağıtılmış */}
-            {[
-              { top: '18%', left: '5%',  w: 70, h: 40, delay: '0s',    dur: '7s'  },
-              { top: '16%', left: '25%', w: 50, h: 30, delay: '0.5s',  dur: '6s'  },
-              { top: '20%', left: '45%', w: 40, h: 28, delay: '1s',    dur: '8s'  },
-              { top: '42%', left: '8%',  w: 65, h: 38, delay: '1.5s',  dur: '7s'  },
-              { top: '40%', left: '35%', w: 45, h: 30, delay: '0.3s',  dur: '9s'  },
-              { top: '44%', left: '55%', w: 38, h: 24, delay: '2s',    dur: '6s'  },
-              { top: '68%', left: '10%', w: 72, h: 42, delay: '0.8s',  dur: '8s'  },
-              { top: '66%', left: '40%', w: 48, h: 32, delay: '1.8s',  dur: '7s'  },
-              { top: '70%', left: '62%', w: 36, h: 22, delay: '2.5s',  dur: '9s'  },
-              { top: '88%', left: '15%', w: 60, h: 36, delay: '1.2s',  dur: '6s'  },
-            ].map((c, i) => (
-              <div key={i} className={styles.sidebarCloud}
-                style={{
-                  top: c.top,
-                  left: c.left,
-                  width: c.w,
-                  height: c.h,
-                  animationDelay: c.delay,
-                  animationDuration: c.dur,
-                  opacity: 0.75,
-                }}
-              />
-            ))}
+            {/* Bulut 1 — sol üst, büyük */}
+            <div className={styles.sidebarCloudShape} style={{ top: '8%', left: '-10px', animationDuration: '7s', animationDelay: '0s' }}>
+              <div className={styles.sidebarCloudBase} />
+              <div className={styles.sidebarCloudBump1} />
+              <div className={styles.sidebarCloudBump2} />
+              <div className={styles.sidebarCloudBump3} />
+            </div>
+            {/* Bulut 2 — sol orta, küçük */}
+            <div className={styles.sidebarCloudShape} style={{ top: '38%', left: '-20px', animationDuration: '9s', animationDelay: '2s', transform: 'scale(0.65)' }}>
+              <div className={styles.sidebarCloudBase} />
+              <div className={styles.sidebarCloudBump1} />
+              <div className={styles.sidebarCloudBump2} />
+              <div className={styles.sidebarCloudBump3} />
+            </div>
+            {/* Bulut 3 — sol alt, orta */}
+            <div className={styles.sidebarCloudShape} style={{ top: '68%', left: '-15px', animationDuration: '8s', animationDelay: '1s', transform: 'scale(0.8)' }}>
+              <div className={styles.sidebarCloudBase} />
+              <div className={styles.sidebarCloudBump1} />
+              <div className={styles.sidebarCloudBump2} />
+              <div className={styles.sidebarCloudBump3} />
+            </div>
           </>)}
         </div>
 

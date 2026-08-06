@@ -136,18 +136,62 @@
   100% { box-shadow: 0 0 24px rgba(255,159,28,0.5), 0 0 60px rgba(255,200,50,0.25); transform: scale(1); }
 }
 
-/* ── Bulutlar (Gündüz Modu) ── */
-.sidebarCloud {
+/* ── Bulutlar (Gündüz Modu) — gerçek bulut şekli ── */
+.sidebarCloudShape {
   position: absolute;
-  background-color: #4a5568;
+  width: 130px;
+  height: 60px;
+  animation: sidebarCloudDrift 7s ease-in-out infinite;
+}
+
+/* Ana taban gövde */
+.sidebarCloudBase {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: white;
+  border-radius: 20px;
+}
+
+/* Sol tepe */
+.sidebarCloudBump1 {
+  position: absolute;
+  background: white;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  animation: sidebarCloudDrift 6s infinite ease-in-out;
+  bottom: 20px;
+  left: 14px;
+}
+
+/* Orta büyük tepe */
+.sidebarCloudBump2 {
+  position: absolute;
+  background: white;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  bottom: 22px;
+  left: 38px;
+}
+
+/* Sağ küçük tepe */
+.sidebarCloudBump3 {
+  position: absolute;
+  background: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  bottom: 16px;
+  left: 82px;
 }
 
 @keyframes sidebarCloudDrift {
   0%   { transform: translateX(0px); }
-  35%  { transform: translateX(12px); }
-  70%  { transform: translateX(-8px); }
+  40%  { transform: translateX(14px); }
+  80%  { transform: translateX(-8px); }
   100% { transform: translateX(0px); }
 }
 
