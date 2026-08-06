@@ -133,15 +133,16 @@
 /* ── Bulutlar (Gündüz Modu) ── */
 .sidebarCloud {
   position: absolute;
-  background: white;
+  background: radial-gradient(circle, #c8dcf0 0%, #9ab8d8 100%);
   border-radius: 50%;
   animation: sidebarCloudDrift 6s infinite ease-in-out;
+  box-shadow: 0 2px 8px rgba(80,120,180,0.18);
 }
 
 @keyframes sidebarCloudDrift {
   0%   { transform: translateX(0px); }
-  35%  { transform: translateX(10px); }
-  70%  { transform: translateX(-6px); }
+  35%  { transform: translateX(12px); }
+  70%  { transform: translateX(-8px); }
   100% { transform: translateX(0px); }
 }
 

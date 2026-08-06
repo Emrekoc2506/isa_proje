@@ -112,17 +112,28 @@ export default function AdminPage() {
           {isLight && (<>
             {/* Güneş */}
             <div className={styles.sidebarSun} />
-            {/* Bulutlar */}
-            {[...Array(8)].map((_, i) => (
+            {/* Bulutlar — farklı boyut ve konumlarla dağıtılmış */}
+            {[
+              { top: '18%', left: '5%',  w: 70, h: 40, delay: '0s',    dur: '7s'  },
+              { top: '16%', left: '25%', w: 50, h: 30, delay: '0.5s',  dur: '6s'  },
+              { top: '20%', left: '45%', w: 40, h: 28, delay: '1s',    dur: '8s'  },
+              { top: '42%', left: '8%',  w: 65, h: 38, delay: '1.5s',  dur: '7s'  },
+              { top: '40%', left: '35%', w: 45, h: 30, delay: '0.3s',  dur: '9s'  },
+              { top: '44%', left: '55%', w: 38, h: 24, delay: '2s',    dur: '6s'  },
+              { top: '68%', left: '10%', w: 72, h: 42, delay: '0.8s',  dur: '8s'  },
+              { top: '66%', left: '40%', w: 48, h: 32, delay: '1.8s',  dur: '7s'  },
+              { top: '70%', left: '62%', w: 36, h: 22, delay: '2.5s',  dur: '9s'  },
+              { top: '88%', left: '15%', w: 60, h: 36, delay: '1.2s',  dur: '6s'  },
+            ].map((c, i) => (
               <div key={i} className={styles.sidebarCloud}
                 style={{
-                  top: `${Math.floor((i * 41 + 5) % 88)}%`,
-                  left: `${Math.floor((i * 67 + 13) % 75)}%`,
-                  width: `${28 + (i % 4) * 16}px`,
-                  height: `${22 + (i % 3) * 10}px`,
-                  animationDelay: `${(i * 0.8).toFixed(2)}s`,
-                  animationDuration: `${6 + (i % 3) * 2}s`,
-                  opacity: 0.3 + (i % 3) * 0.1,
+                  top: c.top,
+                  left: c.left,
+                  width: c.w,
+                  height: c.h,
+                  animationDelay: c.delay,
+                  animationDuration: c.dur,
+                  opacity: 0.75,
                 }}
               />
             ))}
