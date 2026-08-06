@@ -31,9 +31,15 @@
   transition: transform 0.3s ease;
 }
 
-/* Gündüz modu sidebar arka planı */
+/* Gündüz modu sidebar arka planı — gökyüzü */
 .sidebarLight {
-  background: linear-gradient(160deg, #b8d4f0 0%, #dbeeff 30%, #f5f0e8 65%, #e8ddc8 100%) !important;
+  background: linear-gradient(180deg,
+    #4a9fd4 0%,
+    #62b8e8 20%,
+    #87ceeb 50%,
+    #aaddf5 75%,
+    #c8eafa 100%
+  ) !important;
 }
 
 /* ── Animasyon katmanı (pointer-events yok, scroll etkilemez) ── */
@@ -133,10 +139,10 @@
 /* ── Bulutlar (Gündüz Modu) ── */
 .sidebarCloud {
   position: absolute;
-  background: radial-gradient(circle, #c8dcf0 0%, #9ab8d8 100%);
+  background: rgba(255, 255, 255, 0.88);
   border-radius: 50%;
   animation: sidebarCloudDrift 6s infinite ease-in-out;
-  box-shadow: 0 2px 8px rgba(80,120,180,0.18);
+  box-shadow: 0 4px 16px rgba(255,255,255,0.5), 0 2px 8px rgba(100,160,220,0.2);
 }
 
 @keyframes sidebarCloudDrift {
@@ -248,14 +254,15 @@
   color: var(--gold-light) !important;
 }
 
-/* Gündüz modu nav item renkleri */
+/* Gündüz modu nav item renkleri — gökyüzü arka planı için */
 .sidebarLight .navItem {
-  color: #5a4a2a;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0,80,140,0.35);
 }
 
 .sidebarLight .navItem:hover {
-  background: rgba(201, 162, 39, 0.10);
-  color: #2c1f00;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
 .navIcon {
