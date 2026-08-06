@@ -214,6 +214,26 @@
   margin-top: 4px;
 }
 
+.deleteItemBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.deleteItemBtn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  opacity: 1;
+}
+
 @media (max-width: 400px) {
   .dropdown {
     width: calc(100vw - 32px);

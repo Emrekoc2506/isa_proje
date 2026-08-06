@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../context/NotificationContext';
 
 export default function NotificationDropdown({ open, onClose }) {
-  const { notifications, unreadCount, markRead, markAllRead, clearAll } = useNotifications();
+  const { notifications, unreadCount, markRead, markAllRead, clearAll, deleteSingle } = useNotifications();
   const navigate = useNavigate();
   const ref = useRef(null);
 
@@ -97,7 +97,27 @@ export default function NotificationDropdown({ open, onClose }) {
                       <p className={styles.itemText}>{notif.body}</p>
                       <p className={styles.itemTime}>{notif.time}</p>
                     </div>
-                    {!notif.read && <div className={styles.dot} aria-label="Okunmadı" />}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+                      {!notif.read && <div className={styles.dot} aria-label="Okunmadı" />}
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        title="Bildirimi Sil"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteSingle(notif.id);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.stopPropagation();
+                            deleteSingle(notif.id);
+                          }
+                        }}
+                        className={styles.deleteItemBtn}
+                      >
+                        <FiTrash2 size={13} />
+                      </span>
+                    </div>
                   </motion.button>
                 ))}
               </AnimatePresence>

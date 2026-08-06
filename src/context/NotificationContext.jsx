@@ -12,6 +12,26 @@ export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [connection, setConnection] = useState(null);
 
+  const getDeletedIdsFromStorage = useCallback(() => {
+    try {
+      const raw = localStorage.getItem('deleted_notifications');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const addDeletedIdToStorage = useCallback((idOrIds) => {
+    try {
+      const current = getDeletedIdsFromStorage();
+      const idsToAdd = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+      const updated = Array.from(new Set([...current, ...idsToAdd]));
+      localStorage.setItem('deleted_notifications', JSON.stringify(updated));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [getDeletedIdsFromStorage]);
+
   const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) {
       setNotifications([]);
@@ -21,22 +41,25 @@ export function NotificationProvider({ children }) {
     try {
       const data = await getMyNotifications();
       if (data) {
-        const mapped = data.map(n => ({
-          id: n.id,
-          type: n.type || 'system',
-          title: n.title || 'Bildirim',
-          body: n.body || n.message || '',
-          time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : 'Şimdi',
-          read: n.isRead ?? false,
-          link: n.link || '/panel',
-          icon: mapNotificationTypeToEmoji(n.type)
-        }));
+        const deletedIds = getDeletedIdsFromStorage();
+        const mapped = data
+          .filter(n => !deletedIds.includes(n.id))
+          .map(n => ({
+            id: n.id,
+            type: n.type || 'system',
+            title: n.title || 'Bildirim',
+            body: n.body || n.message || '',
+            time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : 'Şimdi',
+            read: n.isRead ?? false,
+            link: n.link || '/panel',
+            icon: mapNotificationTypeToEmoji(n.type)
+          }));
         setNotifications(mapped);
       }
     } catch {
       // Ignore network errors
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, getDeletedIdsFromStorage]);
 
   const mapNotificationTypeToEmoji = (type) => {
     const t = String(type).toLowerCase();
@@ -80,6 +103,9 @@ export function NotificationProvider({ children }) {
     // Real-time bildirim alıcısı
     hubConn.on("ReceiveNotification", (notif) => {
       if (notif) {
+        const deletedIds = getDeletedIdsFromStorage();
+        if (deletedIds.includes(notif.id)) return;
+
         const newNotif = {
           id: notif.id,
           type: notif.type || 'system',
@@ -99,7 +125,7 @@ export function NotificationProvider({ children }) {
         hubConn.stop().catch(() => null);
       }
     };
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, getDeletedIdsFromStorage]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -122,24 +148,27 @@ export function NotificationProvider({ children }) {
   }, []);
 
   const deleteSingle = useCallback(async (id) => {
+    addDeletedIdToStorage(id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
     try {
       await deleteNotification(id);
-      setNotifications(prev => prev.filter(n => n.id !== id));
     } catch {
       // Ignore error
     }
-  }, []);
+  }, [addDeletedIdToStorage]);
 
   const clearAll = useCallback(async () => {
+    const ids = notifications.map(n => n.id);
+    addDeletedIdToStorage(ids);
+    setNotifications([]);
     try {
       await deleteAllNotifications().catch(() => {
-        return Promise.all(notifications.map(n => deleteNotification(n.id).catch(() => null)));
+        return Promise.all(ids.map(id => deleteNotification(id).catch(() => null)));
       });
-      setNotifications([]);
     } catch {
-      setNotifications([]);
+      // Ignore error
     }
-  }, [notifications]);
+  }, [notifications, addDeletedIdToStorage]);
 
   const value = {
     notifications,
