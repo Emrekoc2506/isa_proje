@@ -4,14 +4,14 @@ import * as categoryApi from '../../../services/categoryApi';
 import { collectDescendantIds } from '../../../utils/categoryTree';
 import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
 
-/* ── İnline Stil Tanımları ────────────────────────────────── */
+/* ── İnline Stil Tanımları (CSS Değişkenleri Uyumlu) ────────────────────────────────── */
 const S = {
   wrapper: {
-    background: 'linear-gradient(135deg, rgba(18, 9, 31, 0.6), rgba(30, 15, 55, 0.4))',
-    border: '1px solid rgba(201, 162, 39, 0.15)',
+    background: 'var(--bg-mid)',
+    border: '1px solid var(--border-gold)',
     borderRadius: 16,
     padding: '28px 24px',
-    backdropFilter: 'blur(12px)',
+    boxShadow: '0 4px 20px rgba(44, 26, 77, 0.08)',
   },
   header: {
     display: 'flex',
@@ -25,9 +25,7 @@ const S = {
     margin: 0,
     fontSize: 18,
     fontWeight: 700,
-    background: 'linear-gradient(135deg, #f5d680, #c9a227)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
+    color: 'var(--text-primary)',
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
   },
@@ -39,10 +37,10 @@ const S = {
     width: '100%',
     height: 38,
     padding: '0 14px 0 36px',
-    background: 'rgba(255, 255, 255, 0.04)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    background: 'var(--bg-dark)',
+    border: '1px solid var(--border-gold)',
     borderRadius: 10,
-    color: '#e8e0f0',
+    color: 'var(--text-primary)',
     fontSize: 13,
     outline: 'none',
     transition: 'border-color 0.3s, box-shadow 0.3s',
@@ -52,7 +50,7 @@ const S = {
     left: 12,
     top: '50%',
     transform: 'translateY(-50%)',
-    color: 'rgba(255,255,255,0.3)',
+    color: 'var(--text-secondary)',
     pointerEvents: 'none',
   },
   grid: {
@@ -62,10 +60,10 @@ const S = {
   },
   /* ─── Sol Panel: Ağaç ─── */
   treePanel: {
-    border: '1px solid rgba(255, 255, 255, 0.06)',
+    border: '1px solid var(--border-gold)',
     borderRadius: 14,
     padding: 14,
-    background: 'rgba(0, 0, 0, 0.2)',
+    background: 'var(--bg-dark)',
     maxHeight: 520,
     overflowY: 'auto',
   },
@@ -78,16 +76,16 @@ const S = {
     marginBottom: 3,
     borderRadius: 10,
     background: isHover
-      ? 'rgba(201, 162, 39, 0.06)'
+      ? 'rgba(184, 134, 11, 0.12)'
       : depth === 0
-        ? 'rgba(255, 255, 255, 0.025)'
+        ? 'var(--bg-mid)'
         : 'transparent',
     transition: 'background 0.2s, transform 0.15s',
     transform: isHover ? 'translateX(2px)' : 'none',
-    borderLeft: depth === 0 ? '3px solid rgba(201, 162, 39, 0.3)' : '3px solid transparent',
+    borderLeft: depth === 0 ? '3px solid var(--gold-light)' : '3px solid transparent',
   }),
   catName: (depth) => ({
-    color: depth === 0 ? '#f5d680' : depth === 1 ? '#e8e0f0' : 'rgba(232, 224, 240, 0.7)',
+    color: 'var(--text-primary)',
     fontSize: depth === 0 ? 14 : 13,
     fontWeight: depth === 0 ? 600 : 400,
     display: 'flex',
@@ -109,7 +107,7 @@ const S = {
   expandBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#f5d680',
+    color: 'var(--gold-light)',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
@@ -121,12 +119,12 @@ const S = {
     display: 'flex',
     gap: 6,
     alignItems: 'center',
-    opacity: 0.7,
+    opacity: 0.9,
     transition: 'opacity 0.2s',
   },
   statusBtn: (isActive) => ({
-    background: isActive ? 'rgba(46, 204, 113, 0.1)' : 'rgba(224, 85, 148, 0.1)',
-    border: `1px solid ${isActive ? 'rgba(46, 204, 113, 0.2)' : 'rgba(224, 85, 148, 0.2)'}`,
+    background: isActive ? 'rgba(46, 204, 113, 0.15)' : 'rgba(224, 85, 148, 0.15)',
+    border: `1px solid ${isActive ? 'rgba(46, 204, 113, 0.3)' : 'rgba(224, 85, 148, 0.3)'}`,
     color: isActive ? '#2ecc71' : '#e05594',
     padding: '4px 10px',
     borderRadius: 8,
@@ -136,12 +134,12 @@ const S = {
     alignItems: 'center',
     gap: 4,
     transition: 'all 0.2s',
-    fontWeight: 500,
+    fontWeight: 600,
   }),
   iconBtn: (color) => ({
-    background: 'rgba(255, 255, 255, 0.03)',
-    border: '1px solid rgba(255, 255, 255, 0.06)',
-    color: color,
+    background: 'var(--bg-mid)',
+    border: '1px solid var(--border-gold)',
+    color: color || 'var(--text-primary)',
     padding: '5px 10px',
     borderRadius: 8,
     cursor: 'pointer',
@@ -154,22 +152,21 @@ const S = {
   }),
   /* ─── Sağ Panel: Form ─── */
   formPanel: (isEditing) => ({
-    border: `1px solid ${isEditing ? 'rgba(201, 162, 39, 0.3)' : 'rgba(255, 255, 255, 0.06)'}`,
+    border: '1px solid var(--border-gold)',
     borderRadius: 14,
     padding: 20,
-    background: isEditing
-      ? 'linear-gradient(145deg, rgba(201, 162, 39, 0.06), rgba(18, 9, 31, 0.7))'
-      : 'rgba(255, 255, 255, 0.02)',
+    background: 'var(--bg-dark)',
     height: 'fit-content',
     position: 'sticky',
     top: 80,
     transition: 'all 0.3s ease',
-    boxShadow: isEditing ? '0 0 30px rgba(201, 162, 39, 0.08)' : 'none',
+    boxShadow: isEditing ? '0 0 30px rgba(201, 162, 39, 0.15)' : 'none',
   }),
   formTitle: {
     margin: '0 0 20px 0',
     fontSize: 14,
     fontWeight: 700,
+    color: 'var(--text-primary)',
     display: 'flex',
     alignItems: 'center',
     gap: 8,
@@ -184,9 +181,9 @@ const S = {
     alignItems: 'center',
     justifyContent: 'center',
     background: isEditing
-      ? 'linear-gradient(135deg, rgba(201, 162, 39, 0.2), rgba(201, 162, 39, 0.05))'
-      : 'linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(46, 204, 113, 0.05))',
-    color: isEditing ? '#f5d680' : '#2ecc71',
+      ? 'rgba(201, 162, 39, 0.2)'
+      : 'rgba(46, 204, 113, 0.2)',
+    color: isEditing ? 'var(--gold-light)' : '#2ecc71',
     fontSize: 13,
     flexShrink: 0,
   }),
@@ -194,7 +191,7 @@ const S = {
     display: 'block',
     fontSize: 11,
     fontWeight: 600,
-    color: 'rgba(232, 224, 240, 0.6)',
+    color: 'var(--text-secondary)',
     marginBottom: 6,
     letterSpacing: '0.06em',
     textTransform: 'uppercase',
@@ -203,10 +200,10 @@ const S = {
     width: '100%',
     height: 40,
     padding: '0 14px',
-    background: 'rgba(0, 0, 0, 0.3)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    background: 'var(--bg-mid)',
+    border: '1px solid var(--border-gold)',
     borderRadius: 10,
-    color: '#e8e0f0',
+    color: 'var(--text-primary)',
     fontSize: 13,
     outline: 'none',
     transition: 'border-color 0.3s, box-shadow 0.3s',
@@ -216,10 +213,10 @@ const S = {
     width: '100%',
     height: 40,
     padding: '0 14px',
-    background: 'rgba(0, 0, 0, 0.3)',
-    border: `1px solid ${hasError ? 'rgba(224, 85, 148, 0.5)' : 'rgba(255, 255, 255, 0.08)'}`,
+    background: 'var(--bg-mid)',
+    border: `1px solid ${hasError ? 'rgba(224, 85, 148, 0.5)' : 'var(--border-gold)'}`,
     borderRadius: 10,
-    color: '#e8e0f0',
+    color: 'var(--text-primary)',
     fontSize: 13,
     outline: 'none',
     cursor: 'pointer',
@@ -234,15 +231,15 @@ const S = {
     userSelect: 'none',
     padding: '10px 12px',
     borderRadius: 10,
-    border: '1px solid rgba(255, 255, 255, 0.05)',
-    background: 'rgba(0, 0, 0, 0.15)',
+    border: '1px solid var(--border-gold)',
+    background: 'var(--bg-mid)',
     transition: 'all 0.2s',
   },
   checkboxCustom: (checked) => ({
     width: 18,
     height: 18,
     borderRadius: 5,
-    border: `2px solid ${checked ? '#e05594' : 'rgba(255, 255, 255, 0.15)'}`,
+    border: `2px solid ${checked ? '#e05594' : 'var(--border-gold)'}`,
     background: checked ? 'rgba(224, 85, 148, 0.15)' : 'transparent',
     display: 'flex',
     alignItems: 'center',
@@ -256,9 +253,9 @@ const S = {
     border: 'none',
     borderRadius: 10,
     background: isEditing
-      ? 'linear-gradient(135deg, #c9a227, #f5d680)'
+      ? 'linear-gradient(135deg, var(--gold-light), #d4891a)'
       : 'linear-gradient(135deg, #2ecc71, #27ae60)',
-    color: '#0a0512',
+    color: '#12091f',
     fontWeight: 700,
     fontSize: 13,
     cursor: 'pointer',
@@ -274,10 +271,205 @@ const S = {
   }),
   cancelBtn: {
     height: 42,
-    border: '1px solid rgba(255, 255, 255, 0.12)',
+    border: '1px solid var(--border-gold)',
     borderRadius: 10,
-    background: 'rgba(255, 255, 255, 0.04)',
-    color: 'rgba(232, 224, 240, 0.7)',
+    background: 'var(--bg-mid)',
+    color: 'var(--text-secondary)',
+    fontWeight: 600,
+    fontSize: 13,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    padding: '0 18px',
+    transition: 'all 0.2s',
+  },
+  errorText: {
+    color: '#e05594',
+    fontSize: 11,
+    marginTop: 4,
+    margin: 0,
+  },
+  hintText: {
+    fontSize: 10,
+    color: 'var(--text-secondary)',
+    marginTop: 4,
+  },
+  emptyText: {
+    letterSpacing: '0.03em',
+  },
+  expandBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--gold-light)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    padding: 2,
+    borderRadius: 4,
+    transition: 'background 0.15s',
+  },
+  actionBtns: {
+    display: 'flex',
+    gap: 6,
+    alignItems: 'center',
+    opacity: 0.9,
+    transition: 'opacity 0.2s',
+  },
+  statusBtn: (isActive) => ({
+    background: isActive ? 'rgba(46, 204, 113, 0.15)' : 'rgba(224, 85, 148, 0.15)',
+    border: `1px solid ${isActive ? 'rgba(46, 204, 113, 0.3)' : 'rgba(224, 85, 148, 0.3)'}`,
+    color: isActive ? '#2ecc71' : '#e05594',
+    padding: '4px 10px',
+    borderRadius: 8,
+    cursor: 'pointer',
+    fontSize: 11,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    transition: 'all 0.2s',
+    fontWeight: 600,
+  }),
+  iconBtn: (color) => ({
+    background: 'var(--bg-mid)',
+    border: '1px solid var(--border-gold)',
+    color: color || 'var(--text-primary)',
+    padding: '5px 10px',
+    borderRadius: 8,
+    cursor: 'pointer',
+    fontSize: 11,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    transition: 'all 0.2s',
+    fontWeight: 500,
+  }),
+  /* ─── Sağ Panel: Form ─── */
+  formPanel: (isEditing) => ({
+    border: '1px solid var(--border-gold)',
+    borderRadius: 14,
+    padding: 20,
+    background: 'var(--bg-dark)',
+    height: 'fit-content',
+    position: 'sticky',
+    top: 80,
+    transition: 'all 0.3s ease',
+    boxShadow: isEditing ? '0 0 30px rgba(201, 162, 39, 0.15)' : 'none',
+  }),
+  formTitle: {
+    margin: '0 0 20px 0',
+    fontSize: 14,
+    fontWeight: 700,
+    color: 'var(--text-primary)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+  },
+  formTitleIcon: (isEditing) => ({
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: isEditing
+      ? 'rgba(201, 162, 39, 0.2)'
+      : 'rgba(46, 204, 113, 0.2)',
+    color: isEditing ? 'var(--gold-light)' : '#2ecc71',
+    fontSize: 13,
+    flexShrink: 0,
+  }),
+  label: {
+    display: 'block',
+    fontSize: 11,
+    fontWeight: 600,
+    color: 'var(--text-secondary)',
+    marginBottom: 6,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+  },
+  input: {
+    width: '100%',
+    height: 40,
+    padding: '0 14px',
+    background: 'var(--bg-mid)',
+    border: '1px solid var(--border-gold)',
+    borderRadius: 10,
+    color: 'var(--text-primary)',
+    fontSize: 13,
+    outline: 'none',
+    transition: 'border-color 0.3s, box-shadow 0.3s',
+    boxSizing: 'border-box',
+  },
+  select: (hasError) => ({
+    width: '100%',
+    height: 40,
+    padding: '0 14px',
+    background: 'var(--bg-mid)',
+    border: `1px solid ${hasError ? 'rgba(224, 85, 148, 0.5)' : 'var(--border-gold)'}`,
+    borderRadius: 10,
+    color: 'var(--text-primary)',
+    fontSize: 13,
+    outline: 'none',
+    cursor: 'pointer',
+    transition: 'border-color 0.3s',
+    boxSizing: 'border-box',
+  }),
+  checkboxWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    cursor: 'pointer',
+    userSelect: 'none',
+    padding: '10px 12px',
+    borderRadius: 10,
+    border: '1px solid var(--border-gold)',
+    background: 'var(--bg-mid)',
+    transition: 'all 0.2s',
+  },
+  checkboxCustom: (checked) => ({
+    width: 18,
+    height: 18,
+    borderRadius: 5,
+    border: `2px solid ${checked ? '#e05594' : 'var(--border-gold)'}`,
+    background: checked ? 'rgba(224, 85, 148, 0.15)' : 'transparent',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s',
+    flexShrink: 0,
+  }),
+  submitBtn: (isEditing) => ({
+    flex: 1,
+    height: 42,
+    border: 'none',
+    borderRadius: 10,
+    background: isEditing
+      ? 'linear-gradient(135deg, var(--gold-light), #d4891a)'
+      : 'linear-gradient(135deg, #2ecc71, #27ae60)',
+    color: '#12091f',
+    fontWeight: 700,
+    fontSize: 13,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    letterSpacing: '0.04em',
+    transition: 'all 0.3s',
+    boxShadow: isEditing
+      ? '0 4px 20px rgba(201, 162, 39, 0.3)'
+      : '0 4px 20px rgba(46, 204, 113, 0.25)',
+  }),
+  cancelBtn: {
+    height: 42,
+    border: '1px solid var(--border-gold)',
+    borderRadius: 10,
+    background: 'var(--bg-mid)',
+    color: 'var(--text-secondary)',
     fontWeight: 600,
     fontSize: 13,
     cursor: 'pointer',
@@ -311,7 +503,6 @@ const S = {
   },
 };
 
-/* ── Bileşen ────────────────────────────────────────────── */
 export default function CategoriesSection() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -613,8 +804,8 @@ export default function CategoriesSection() {
   if (loading && categories.length === 0) {
     return (
       <div style={{ ...S.wrapper, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200 }}>
-        <FiRefreshCw size={20} style={{ color: '#f5d680', animation: 'spin 1s linear infinite' }} />
-        <span style={{ color: 'rgba(232, 224, 240, 0.5)', marginLeft: 10, fontSize: 14 }}>Yükleniyor...</span>
+        <FiRefreshCw size={20} style={{ color: 'var(--gold-light)', animation: 'spin 1s linear infinite' }} />
+        <span style={{ color: 'var(--text-secondary)', marginLeft: 10, fontSize: 14 }}>Yükleniyor...</span>
       </div>
     );
   }
@@ -625,7 +816,7 @@ export default function CategoriesSection() {
       <div style={S.header}>
         <h3 style={S.headerTitle}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <FiFolder size={18} style={{ color: '#f5d680' }} />
+            <FiFolder size={18} style={{ color: 'var(--gold-light)' }} />
             Kategori Yönetimi
           </span>
         </h3>
@@ -639,11 +830,11 @@ export default function CategoriesSection() {
             onChange={e => setSearchQuery(e.target.value)}
             style={S.searchInput}
             onFocus={e => {
-              e.target.style.borderColor = 'rgba(201, 162, 39, 0.3)';
-              e.target.style.boxShadow = '0 0 0 3px rgba(201, 162, 39, 0.08)';
+              e.target.style.borderColor = 'var(--gold-light)';
+              e.target.style.boxShadow = '0 0 0 3px rgba(201, 162, 39, 0.1)';
             }}
             onBlur={e => {
-              e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+              e.target.style.borderColor = 'var(--border-gold)';
               e.target.style.boxShadow = 'none';
             }}
           />
@@ -658,7 +849,7 @@ export default function CategoriesSection() {
           {categories.map(cat => renderCategoryNode(cat, new Set(), 0))}
           {categories.length === 0 && (
             <p style={S.emptyText}>
-              <FiFolder size={24} style={{ display: 'block', margin: '0 auto 8px', opacity: 0.3 }} />
+              <FiFolder size={24} style={{ display: 'block', margin: '0 auto 8px', opacity: 0.5 }} />
               Henüz kategori eklenmemiştir.
             </p>
           )}
@@ -670,7 +861,7 @@ export default function CategoriesSection() {
             <span style={S.formTitleIcon(!!editingCategory)}>
               {editingCategory ? <FiEdit3 size={13} /> : <FiPlus size={13} />}
             </span>
-            <span style={{ color: editingCategory ? '#f5d680' : '#2ecc71' }}>
+            <span style={{ color: editingCategory ? 'var(--gold-light)' : '#2ecc71' }}>
               {editingCategory ? "Kategoriyi Düzenle" : "Yeni Kategori Ekle"}
             </span>
           </h4>
@@ -690,11 +881,11 @@ export default function CategoriesSection() {
                 style={S.input}
                 placeholder="Örn: Gümüş Kolyeler"
                 onFocus={e => {
-                  e.target.style.borderColor = 'rgba(201, 162, 39, 0.4)';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(201, 162, 39, 0.08)';
+                  e.target.style.borderColor = 'var(--gold-light)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(201, 162, 39, 0.1)';
                 }}
                 onBlur={e => {
-                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  e.target.style.borderColor = 'var(--border-gold)';
                   e.target.style.boxShadow = 'none';
                 }}
               />
@@ -711,9 +902,9 @@ export default function CategoriesSection() {
                 }}
                 style={S.select(!!parentError)}
               >
-                <option value="">(Ana Kategori)</option>
+                <option value="" style={{ background: 'var(--bg-mid)', color: 'var(--text-primary)' }}>(Ana Kategori)</option>
                 {allowedParents.map(opt => (
-                  <option key={opt.id} value={opt.databaseId}>{opt.name}</option>
+                  <option key={opt.id} value={opt.databaseId} style={{ background: 'var(--bg-mid)', color: 'var(--text-primary)' }}>{opt.name}</option>
                 ))}
               </select>
               {parentError && <p style={S.errorText}>{parentError}</p>}
@@ -724,8 +915,8 @@ export default function CategoriesSection() {
               <label
                 style={{
                   ...S.checkboxWrap,
-                  borderColor: isSecret ? 'rgba(224, 85, 148, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                  background: isSecret ? 'rgba(224, 85, 148, 0.06)' : 'rgba(0, 0, 0, 0.15)',
+                  borderColor: isSecret ? 'rgba(224, 85, 148, 0.4)' : 'var(--border-gold)',
+                  background: isSecret ? 'rgba(224, 85, 148, 0.08)' : 'var(--bg-mid)',
                 }}
               >
                 <input
@@ -738,7 +929,7 @@ export default function CategoriesSection() {
                   {isSecret && <FiLock size={10} style={{ color: '#e05594' }} />}
                 </span>
                 <div>
-                  <span style={{ color: '#e8e0f0', fontSize: 12, fontWeight: 500 }}>
+                  <span style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 500 }}>
                     Gizli Kategori
                   </span>
                   <span style={S.hintText}>
@@ -775,12 +966,10 @@ export default function CategoriesSection() {
                   onClick={handleCancelEdit}
                   style={S.cancelBtn}
                   onMouseEnter={e => {
-                    e.target.style.background = 'rgba(255, 255, 255, 0.08)';
-                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                    e.target.style.borderColor = 'var(--gold-light)';
                   }}
                   onMouseLeave={e => {
-                    e.target.style.background = 'rgba(255, 255, 255, 0.04)';
-                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                    e.target.style.borderColor = 'var(--border-gold)';
                   }}
                 >
                   <FiX size={14} /> İptal
