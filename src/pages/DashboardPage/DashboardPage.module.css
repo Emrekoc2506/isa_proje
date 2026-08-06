@@ -214,46 +214,56 @@
   color: #0d3b66;
 }
 
-.sidebarLight .navItem {
-  color: #0c2340;
-  font-weight: 700;
+.sidebarLight .navItem,
+.sidebarLight .navItem span {
+  color: #061826 !important;
+  font-weight: 700 !important;
 }
 
+.sidebarLight .navItem svg,
 .sidebarLight .navIcon {
-  color: #0c2340;
-  stroke-width: 2.3px;
+  color: #061826 !important;
+  stroke: #061826 !important;
+  stroke-width: 2.3px !important;
+  opacity: 1 !important;
 }
 
 .sidebarLight .navItem:hover {
-  color: #041020;
-  background: rgba(255, 255, 255, 0.5);
+  color: #020a14 !important;
+  background: rgba(255, 255, 255, 0.55) !important;
 }
 
+.sidebarLight .navItem:hover svg,
 .sidebarLight .navItem:hover .navIcon {
-  color: #041020;
+  color: #020a14 !important;
+  stroke: #020a14 !important;
 }
 
 .sidebarLight .navActive {
-  color: #020b18 !important;
-  font-weight: 750;
-  background: rgba(255, 255, 255, 0.8) !important;
-  box-shadow: 0 4px 14px rgba(0, 40, 80, 0.18);
+  color: #020a14 !important;
+  font-weight: 750 !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 4px 16px rgba(0, 40, 80, 0.2) !important;
 }
 
+.sidebarLight .navActive svg,
 .sidebarLight .navActive .navIcon {
-  color: #020b18 !important;
-  stroke-width: 2.5px;
+  color: #020a14 !important;
+  stroke: #020a14 !important;
+  stroke-width: 2.5px !important;
 }
 
 .sidebarLight .logoutBtn {
-  background: rgba(255, 255, 255, 0.45);
-  color: #991b1b;
-  border-color: rgba(239, 68, 68, 0.4);
-  font-weight: 700;
+  background: rgba(255, 255, 255, 0.55) !important;
+  color: #991b1b !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  font-weight: 750 !important;
 }
 
-.sidebarLight .logoutBtn:hover {
-  background: rgba(254, 226, 226, 0.85);
+.sidebarLight .logoutBtn svg {
+  color: #991b1b !important;
+  stroke: #991b1b !important;
+  stroke-width: 2.3px !important;
 }
 
 /* ── Sidebar Logo ───────────────────────────────────────────── */
