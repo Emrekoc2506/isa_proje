@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import AdminPage from '../pages/AdminPage/AdminPage';
 import { AuthProvider } from '../context/AuthContext';
 import { ProductProvider } from '../context/ProductContext';
+import { ThemeProvider } from '../context/ThemeContext';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 
@@ -55,11 +56,13 @@ describe('AdminPage Integration Tests', () => {
     
     render(
       <BrowserRouter>
-        <AuthProvider>
-          <ProductProvider>
-            <AdminPage />
-          </ProductProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ProductProvider>
+              <AdminPage />
+            </ProductProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </BrowserRouter>
     );
 
