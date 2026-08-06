@@ -823,62 +823,6 @@ export default function BannersSection() {
                           </div>
                         </SectionBlock>
 
-                        <SectionBlock icon={FiSliders} title="Görünürlük Teması" sub="Billboard ilanının hangi temada görüneceğini seçin">
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                            <button
-                              type="button"
-                              onClick={() => setVal('themeMode', 'all')}
-                              style={{
-                                padding: '12px 8px',
-                                borderRadius: 10,
-                                border: form.themeMode === 'all' ? '2px solid var(--gold-light)' : '1px solid var(--border-gold)',
-                                background: form.themeMode === 'all' ? 'rgba(201,162,39,0.18)' : 'var(--bg-mid)',
-                                color: form.themeMode === 'all' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                                fontWeight: 'bold',
-                                fontSize: 13,
-                                cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                              }}
-                            >
-                              🌟 Tüm Temalar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setVal('themeMode', 'light')}
-                              style={{
-                                padding: '12px 8px',
-                                borderRadius: 10,
-                                border: form.themeMode === 'light' ? '2px solid #0284c7' : '1px solid var(--border-gold)',
-                                background: form.themeMode === 'light' ? 'rgba(2,132,199,0.18)' : 'var(--bg-mid)',
-                                color: form.themeMode === 'light' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                                fontWeight: 'bold',
-                                fontSize: 13,
-                                cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                              }}
-                            >
-                              ☀️ Sadece Gündüz
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setVal('themeMode', 'dark')}
-                              style={{
-                                padding: '12px 8px',
-                                borderRadius: 10,
-                                border: form.themeMode === 'dark' ? '2px solid #7c3aed' : '1px solid var(--border-gold)',
-                                background: form.themeMode === 'dark' ? 'rgba(124,58,237,0.18)' : 'var(--bg-mid)',
-                                color: form.themeMode === 'dark' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                                fontWeight: 'bold',
-                                fontSize: 13,
-                                cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                              }}
-                            >
-                              🌙 Sadece Gece
-                            </button>
-                          </div>
-                        </SectionBlock>
-
                         <SectionBlock icon={FiGrid} title="Görünüm Sıralaması" sub="Slider içindeki geçiş sırası">
                           <FieldInput label="Sıralama (0, 1, 2...)" value={form.sortOrder} onChange={set('sortOrder')} type="number" placeholder="0" />
                         </SectionBlock>
@@ -931,7 +875,7 @@ export default function BannersSection() {
 
                         {form.mediaType === 'image' ? (
                           <>
-                            <SectionBlock icon={FiImage} title="☀️ Gündüz Modu Görselleri (Açık Tema)" sub="Gündüz modunda gösterilecek masaüstü ve mobil görseller">
+                            <SectionBlock icon={FiImage} title="☀️ Gündüz Modu Görselleri (Açık Tema / Ana Görsel)" sub="Gündüz modunda gösterilir. Gece görseli yüklenmezse her iki temada da bu görsel kullanılır.">
                               <UploadDropzone
                                 label="☀️ Gündüz Masaüstü Görseli (1920x600 px Önerilir) *"
                                 value={form.image}
@@ -950,9 +894,9 @@ export default function BannersSection() {
                               />
                             </SectionBlock>
 
-                            <SectionBlock icon={FiImage} title="🌙 Gece Modu Görselleri (Karanlık Tema)" sub="Gece modunda gösterilecek masaüstü ve mobil görseller (Boş bırakılırsa Gündüz görseli kullanılır)">
+                            <SectionBlock icon={FiImage} title="🌙 Gece Modu Görselleri (Karanlık Tema)" sub="Gece modunda farklı bir görsel göstermek isterseniz buraya yükleyin (Boş bırakılırsa Gündüz görseli kullanılır).">
                               <UploadDropzone
-                                label="🌙 Gece Masaüstü Görseli (1920x600 px Önerilir)"
+                                label="🌙 Gece Masaüstü Görseli (İsteğe Bağlı - 1920x600 px)"
                                 value={form.imageDark}
                                 onFile={(e) => handleImageUpload(e, 'desktopDark')}
                                 onClear={() => setVal('imageDark', '')}
