@@ -81,14 +81,23 @@ export default function AdminPage() {
       {/* SIDEBAR */}
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarMobileOpen : ''} ${isLight ? styles.sidebarLight : styles.sidebarDark}`}>
 
-        {/* ── Gece Modu: Parlayan Yıldızlar ── */}
-        {!isLight && (
-          <div className={styles.sidebarStarBg} aria-hidden="true">
+        {/* ── ANİMASYON KATMANI (scroll etkilemez) ── */}
+        <div className={styles.sidebarAnimBg} aria-hidden="true">
+
+          {/* GECE MODU */}
+          {!isLight && (<>
+            {/* Ay */}
+            <div className={styles.sidebarMoon}>
+              <div className={styles.sidebarMoonHole} style={{ width: 9, height: 9, top: 14, left: 7 }} />
+              <div className={styles.sidebarMoonHole} style={{ width: 5, height: 5, top: 24, left: 18 }} />
+              <div className={styles.sidebarMoonHole} style={{ width: 4, height: 4, top: 10, left: 21 }} />
+            </div>
+            {/* Yıldızlar */}
             {[...Array(18)].map((_, i) => (
               <svg key={i} className={styles.sidebarStar} viewBox="0 0 20 20"
                 style={{
-                  top: `${Math.floor((i * 37 + 11) % 90)}%`,
-                  left: `${Math.floor((i * 53 + 7) % 88)}%`,
+                  top: `${Math.floor((i * 37 + 11) % 92)}%`,
+                  left: `${Math.floor((i * 53 + 7) % 85)}%`,
                   width: `${8 + (i % 5) * 3}px`,
                   animationDelay: `${(i * 0.37).toFixed(2)}s`,
                   animationDuration: `${2 + (i % 4) * 0.5}s`,
@@ -97,60 +106,64 @@ export default function AdminPage() {
                 <path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z" />
               </svg>
             ))}
-          </div>
-        )}
+          </>)}
 
-        {/* ── Gündüz Modu: Hareket Eden Bulutlar ── */}
-        {isLight && (
-          <div className={styles.sidebarCloudBg} aria-hidden="true">
-            {[...Array(10)].map((_, i) => (
+          {/* GÜNDÜZ MODU */}
+          {isLight && (<>
+            {/* Güneş */}
+            <div className={styles.sidebarSun} />
+            {/* Bulutlar */}
+            {[...Array(8)].map((_, i) => (
               <div key={i} className={styles.sidebarCloud}
                 style={{
                   top: `${Math.floor((i * 41 + 5) % 88)}%`,
-                  left: `${Math.floor((i * 61 + 13) % 80)}%`,
-                  width: `${30 + (i % 4) * 18}px`,
-                  height: `${24 + (i % 3) * 12}px`,
-                  animationDelay: `${(i * 0.7).toFixed(2)}s`,
+                  left: `${Math.floor((i * 67 + 13) % 75)}%`,
+                  width: `${28 + (i % 4) * 16}px`,
+                  height: `${22 + (i % 3) * 10}px`,
+                  animationDelay: `${(i * 0.8).toFixed(2)}s`,
                   animationDuration: `${6 + (i % 3) * 2}s`,
-                  opacity: 0.25 + (i % 3) * 0.08,
+                  opacity: 0.3 + (i % 3) * 0.1,
                 }}
               />
             ))}
-          </div>
-        )}
-
-        <a href="/" className={styles.logoLink}>
-          <img src={logoImage} alt="mysticvelora" className={styles.logoImg} />
-          <span className={styles.brandName}>mysticvelora</span>
-        </a>
-        <div className={styles.badgeWrap} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
-          <span className={styles.adminBadge}>Yönetici Paneli</span>
-          <ThemeToggle id="admin-sidebar-theme-toggle" />
+          </>)}
         </div>
 
-        <nav className={styles.nav} aria-label="Yönetici Menüsü">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                className={`${styles.navItem} ${active === item.id || (item.id === 'products' && active === 'variants') ? styles.navActive : ''}`}
-                onClick={() => { setActive(item.id); setSidebarOpen(false); }}
-              >
-                <Icon className={styles.navIcon} />
-                <span>{item.label}</span>
-                {(active === item.id || (item.id === 'products' && active === 'variants')) && (
-                  <motion.div className={styles.navIndicator} layoutId="admin-nav-indicator" />
-                )}
-              </button>
-            );
-          })}
-        </nav>
+        {/* ── İÇERİK (scroll edilebilir) ── */}
+        <div className={styles.sidebarInner}>
+          <a href="/" className={styles.logoLink}>
+            <img src={logoImage} alt="mysticvelora" className={styles.logoImg} />
+            <span className={styles.brandName}>mysticvelora</span>
+          </a>
+          <div className={styles.badgeWrap} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
+            <span className={styles.adminBadge}>Yönetici Paneli</span>
+            <ThemeToggle id="admin-sidebar-theme-toggle" />
+          </div>
 
-        <button onClick={handleLogoutClick} className={styles.logoutBtn} aria-label="Oturumu Kapat">
-          <FiLogOut />
-          <span>Çıkış Yap</span>
-        </button>
+          <nav className={styles.nav} aria-label="Yönetici Menüsü">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  className={`${styles.navItem} ${active === item.id || (item.id === 'products' && active === 'variants') ? styles.navActive : ''}`}
+                  onClick={() => { setActive(item.id); setSidebarOpen(false); }}
+                >
+                  <Icon className={styles.navIcon} />
+                  <span>{item.label}</span>
+                  {(active === item.id || (item.id === 'products' && active === 'variants')) && (
+                    <motion.div className={styles.navIndicator} layoutId="admin-nav-indicator" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+
+          <button onClick={handleLogoutClick} className={styles.logoutBtn} aria-label="Oturumu Kapat">
+            <FiLogOut />
+            <span>Çıkış Yap</span>
+          </button>
+        </div>
       </aside>
 
       {/* ANA İÇERİK */}

@@ -18,34 +18,85 @@
 /* ── SIDEBAR ────────────────────────────────────────────── */
 .sidebar {
   width: 280px;
-  background: linear-gradient(180deg, rgba(18, 9, 31, 0.95), rgba(10, 5, 18, 0.95));
+  background: linear-gradient(180deg, rgba(18, 9, 31, 0.97), rgba(10, 5, 18, 0.97));
   border-right: 1px solid var(--border-gold);
-  padding: var(--space-xl) var(--space-md);
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
   z-index: 100;
-  overflow: hidden;
+  overflow: hidden; /* animasyon taşmaması için */
   transition: transform 0.3s ease;
 }
 
 /* Gündüz modu sidebar arka planı */
 .sidebarLight {
-  background: linear-gradient(180deg, #dce8f5 0%, #f5f0e8 50%, #e8ddc8 100%) !important;
+  background: linear-gradient(160deg, #b8d4f0 0%, #dbeeff 30%, #f5f0e8 65%, #e8ddc8 100%) !important;
 }
 
-/* ── Sidebar Yıldız Arka Planı (Gece Modu) ── */
-.sidebarStarBg {
+/* ── Animasyon katmanı (pointer-events yok, scroll etkilemez) ── */
+.sidebarAnimBg {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  overflow: hidden;
 }
 
+/* ── İçerik wrapper (scroll edilebilir) ── */
+.sidebarInner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  padding: var(--space-xl) var(--space-md);
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201,162,39,0.3) transparent;
+}
+
+.sidebarInner::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebarInner::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebarInner::-webkit-scrollbar-thumb {
+  background: rgba(201,162,39,0.35);
+  border-radius: 4px;
+}
+
+/* ── Ay (Gece Modu) ── */
+.sidebarMoon {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  background-color: #ede0c8;
+  border-radius: 50%;
+  top: 18px;
+  right: 22px;
+  box-shadow: inset -4px -4px 10px rgba(0,0,0,0.25), 0 0 20px rgba(237,224,200,0.15);
+  animation: sidebarMoonFloat 6s ease-in-out infinite;
+}
+
+.sidebarMoonHole {
+  position: absolute;
+  background-color: #8b79a5;
+  border-radius: 50%;
+}
+
+@keyframes sidebarMoonFloat {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+/* ── Yıldızlar (Gece Modu) ── */
 .sidebarStar {
   position: absolute;
   fill: #f5dfa0;
@@ -54,21 +105,32 @@
 }
 
 @keyframes sidebarStarTwinkle {
-  0%   { transform: scale(1);   opacity: 0.5; }
-  30%  { transform: scale(1.4); opacity: 1;   }
-  60%  { transform: scale(0.7); opacity: 0.3; }
-  100% { transform: scale(1);   opacity: 0.5; }
+  0%   { transform: scale(1);   opacity: 0.4; }
+  30%  { transform: scale(1.5); opacity: 1;   }
+  60%  { transform: scale(0.7); opacity: 0.25; }
+  100% { transform: scale(1);   opacity: 0.4; }
 }
 
-/* ── Sidebar Bulut Arka Planı (Gündüz Modu) ── */
-.sidebarCloudBg {
+/* ── Güneş (Gündüz Modu) ── */
+.sidebarSun {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
+  width: 64px;
+  height: 64px;
+  background: radial-gradient(circle, #ffdd57 0%, #ff9f1c 60%, rgba(255,159,28,0) 100%);
+  border-radius: 50%;
+  top: 14px;
+  right: 18px;
+  box-shadow: 0 0 24px rgba(255,159,28,0.5), 0 0 60px rgba(255,200,50,0.25);
+  animation: sidebarSunPulse 4s ease-in-out infinite;
 }
 
+@keyframes sidebarSunPulse {
+  0%   { box-shadow: 0 0 24px rgba(255,159,28,0.5), 0 0 60px rgba(255,200,50,0.25); transform: scale(1); }
+  50%  { box-shadow: 0 0 36px rgba(255,159,28,0.7), 0 0 90px rgba(255,200,50,0.4); transform: scale(1.07); }
+  100% { box-shadow: 0 0 24px rgba(255,159,28,0.5), 0 0 60px rgba(255,200,50,0.25); transform: scale(1); }
+}
+
+/* ── Bulutlar (Gündüz Modu) ── */
 .sidebarCloud {
   position: absolute;
   background: white;
@@ -78,8 +140,8 @@
 
 @keyframes sidebarCloudDrift {
   0%   { transform: translateX(0px); }
-  35%  { transform: translateX(8px); }
-  70%  { transform: translateX(-5px); }
+  35%  { transform: translateX(10px); }
+  70%  { transform: translateX(-6px); }
   100% { transform: translateX(0px); }
 }
 
