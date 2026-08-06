@@ -202,18 +202,22 @@ export default function CheckoutPage() {
         sessionStorage.setItem('pendingOrderEmail', emailVal);
       }
 
-      // 2. Initialize payment redirect
-      const paymentRes = await paymentApi.initializePayment({
-        orderId,
-        provider: 'iyzico',
-        returnUrl: window.location.origin + '/odeme/sonuc',
-        idempotencyKey: crypto.randomUUID ? crypto.randomUUID() : 'idemp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7)
-      });
+      // 2. Initialize payment redirect (İyzico aktifse yönlendir, pasif/yoksa doğrudan sipariş sonucuna git)
+      try {
+        const paymentRes = await paymentApi.initializePayment({
+          orderId,
+          provider: 'iyzico',
+          returnUrl: window.location.origin + '/odeme/sonuc',
+          idempotencyKey: crypto.randomUUID ? crypto.randomUUID() : 'idemp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7)
+        });
 
-      // 3. Redirect to provider
-      if (paymentRes?.redirectUrl) {
-        window.location.assign(paymentRes.redirectUrl);
-      } else {
+        if (paymentRes?.redirectUrl) {
+          window.location.assign(paymentRes.redirectUrl);
+        } else {
+          navigate('/odeme/sonuc');
+        }
+      } catch {
+        // İyzico entegrasyonu yoksa/devre dışıysa doğrudan sipariş başarı sayfasına geçilir
         navigate('/odeme/sonuc');
       }
     } catch (err) {
