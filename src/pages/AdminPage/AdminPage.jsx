@@ -79,7 +79,10 @@ export default function AdminPage() {
       </AnimatePresence>
 
       {/* SIDEBAR */}
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarMobileOpen : ''} ${isLight ? styles.sidebarLight : styles.sidebarDark}`}>
+      <aside
+        className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarMobileOpen : ''} ${isLight ? styles.sidebarLight : styles.sidebarDark}`}
+        style={isLight ? { background: 'linear-gradient(180deg, #4bbfe8 0%, #62cff0 40%, #7dd9f5 100%)' } : undefined}
+      >
 
         {/* ── ANİMASYON KATMANI (scroll etkilemez) ── */}
         <div className={styles.sidebarAnimBg} aria-hidden="true">
