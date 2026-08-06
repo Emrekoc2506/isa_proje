@@ -22,7 +22,8 @@ const STEPS = [
 const EMPTY_FORM = {
   mediaType: 'image',     // 'image' | 'video'
   mediaSource: 'file',    // 'file' | 'external'
-  title: '', subtitle: '', image: '', imageMobile: '', cta: '',
+  themeMode: 'all',       // 'all' | 'light' | 'dark'
+  title: '', subtitle: '', image: '', imageDark: '', imageMobile: '', imageMobileDark: '', cta: '',
   href: '', sortOrder: '0', price: '',
   videoUrl: '', mobileVideoUrl: '',
   posterImageUrl: '', mobilePosterImageUrl: '',
@@ -266,7 +267,9 @@ export default function BannersSection() {
       const resp = await uploadFile(file, 'banner');
       if (resp?.url) {
         if (type === 'desktop') setVal('image', resp.url);
+        else if (type === 'desktopDark') setVal('imageDark', resp.url);
         else if (type === 'mobile') setVal('imageMobile', resp.url);
+        else if (type === 'mobileDark') setVal('imageMobileDark', resp.url);
         else if (type === 'poster') { setVal('posterImageUrl', resp.url); setVal('image', resp.url); }
         else if (type === 'mobilePoster') { setVal('mobilePosterImageUrl', resp.url); setVal('imageMobile', resp.url); }
       }
@@ -380,6 +383,9 @@ export default function BannersSection() {
       const mobPosterImg = form.mobilePosterImageUrl || form.imageMobile || posterImg;
 
       const content = {
+        themeMode: form.themeMode || "all",
+        imageDark: form.imageDark ? form.imageDark.trim() : "",
+        imageMobileDark: form.imageMobileDark ? form.imageMobileDark.trim() : "",
         mediaType: form.mediaType,
         mediaSource: form.mediaSource,
         videoUrl: form.videoUrl ? form.videoUrl.trim() : "",
@@ -817,6 +823,62 @@ export default function BannersSection() {
                           </div>
                         </SectionBlock>
 
+                        <SectionBlock icon={FiSliders} title="Görünürlük Teması" sub="Billboard ilanının hangi temada görüneceğini seçin">
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                            <button
+                              type="button"
+                              onClick={() => setVal('themeMode', 'all')}
+                              style={{
+                                padding: '12px 8px',
+                                borderRadius: 10,
+                                border: form.themeMode === 'all' ? '2px solid var(--gold-light)' : '1px solid var(--border-gold)',
+                                background: form.themeMode === 'all' ? 'rgba(201,162,39,0.18)' : 'var(--bg-mid)',
+                                color: form.themeMode === 'all' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                fontWeight: 'bold',
+                                fontSize: 13,
+                                cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                              }}
+                            >
+                              🌟 Tüm Temalar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setVal('themeMode', 'light')}
+                              style={{
+                                padding: '12px 8px',
+                                borderRadius: 10,
+                                border: form.themeMode === 'light' ? '2px solid #0284c7' : '1px solid var(--border-gold)',
+                                background: form.themeMode === 'light' ? 'rgba(2,132,199,0.18)' : 'var(--bg-mid)',
+                                color: form.themeMode === 'light' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                fontWeight: 'bold',
+                                fontSize: 13,
+                                cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                              }}
+                            >
+                              ☀️ Sadece Gündüz
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setVal('themeMode', 'dark')}
+                              style={{
+                                padding: '12px 8px',
+                                borderRadius: 10,
+                                border: form.themeMode === 'dark' ? '2px solid #7c3aed' : '1px solid var(--border-gold)',
+                                background: form.themeMode === 'dark' ? 'rgba(124,58,237,0.18)' : 'var(--bg-mid)',
+                                color: form.themeMode === 'dark' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                fontWeight: 'bold',
+                                fontSize: 13,
+                                cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                              }}
+                            >
+                              🌙 Sadece Gece
+                            </button>
+                          </div>
+                        </SectionBlock>
+
                         <SectionBlock icon={FiGrid} title="Görünüm Sıralaması" sub="Slider içindeki geçiş sırası">
                           <FieldInput label="Sıralama (0, 1, 2...)" value={form.sortOrder} onChange={set('sortOrder')} type="number" placeholder="0" />
                         </SectionBlock>
@@ -868,24 +930,45 @@ export default function BannersSection() {
                         </SectionBlock>
 
                         {form.mediaType === 'image' ? (
-                          <SectionBlock icon={FiImage} title="Billboard Görselleri" sub="Masaüstü ve mobil ekranlar için yüksek kaliteli görseller">
-                            <UploadDropzone
-                              label="Masaüstü Görseli (1920x600 px Önerilir) *"
-                              value={form.image}
-                              onFile={(e) => handleImageUpload(e, 'desktop')}
-                              onClear={() => setVal('image', '')}
-                              uploading={uploadingImg === 'desktop'}
-                              id="desktopImg"
-                            />
-                            <UploadDropzone
-                              label="Mobil Görseli (İsteğe Bağlı - 800x600 px)"
-                              value={form.imageMobile}
-                              onFile={(e) => handleImageUpload(e, 'mobile')}
-                              onClear={() => setVal('imageMobile', '')}
-                              uploading={uploadingImg === 'mobile'}
-                              id="mobileImg"
-                            />
-                          </SectionBlock>
+                          <>
+                            <SectionBlock icon={FiImage} title="☀️ Gündüz Modu Görselleri (Açık Tema)" sub="Gündüz modunda gösterilecek masaüstü ve mobil görseller">
+                              <UploadDropzone
+                                label="☀️ Gündüz Masaüstü Görseli (1920x600 px Önerilir) *"
+                                value={form.image}
+                                onFile={(e) => handleImageUpload(e, 'desktop')}
+                                onClear={() => setVal('image', '')}
+                                uploading={uploadingImg === 'desktop'}
+                                id="desktopImg"
+                              />
+                              <UploadDropzone
+                                label="📱 Gündüz Mobil Görseli (İsteğe Bağlı - 800x600 px)"
+                                value={form.imageMobile}
+                                onFile={(e) => handleImageUpload(e, 'mobile')}
+                                onClear={() => setVal('imageMobile', '')}
+                                uploading={uploadingImg === 'mobile'}
+                                id="mobileImg"
+                              />
+                            </SectionBlock>
+
+                            <SectionBlock icon={FiImage} title="🌙 Gece Modu Görselleri (Karanlık Tema)" sub="Gece modunda gösterilecek masaüstü ve mobil görseller (Boş bırakılırsa Gündüz görseli kullanılır)">
+                              <UploadDropzone
+                                label="🌙 Gece Masaüstü Görseli (1920x600 px Önerilir)"
+                                value={form.imageDark}
+                                onFile={(e) => handleImageUpload(e, 'desktopDark')}
+                                onClear={() => setVal('imageDark', '')}
+                                uploading={uploadingImg === 'desktopDark'}
+                                id="desktopDarkImg"
+                              />
+                              <UploadDropzone
+                                label="📱 Gece Mobil Görseli (İsteğe Bağlı - 800x600 px)"
+                                value={form.imageMobileDark}
+                                onFile={(e) => handleImageUpload(e, 'mobileDark')}
+                                onClear={() => setVal('imageMobileDark', '')}
+                                uploading={uploadingImg === 'mobileDark'}
+                                id="mobileDarkImg"
+                              />
+                            </SectionBlock>
+                          </>
                         ) : (
                           <>
                             <SectionBlock icon={FiVideo} title="Video Yükleme & Kaynak" sub="Slider arkasında oynatılacak video">

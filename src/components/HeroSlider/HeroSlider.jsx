@@ -3,12 +3,31 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useProducts } from '../../context/ProductContext';
+import { useTheme } from '../../context/ThemeContext';
 import VideoBannerItem from './VideoBannerItem';
 
 const AUTOPLAY_INTERVAL = 5000;
 
 export default function HeroSlider() {
   const { slides } = useProducts();
+  const { theme } = useTheme();
+
+  // Aktif temaya göre slaytları filtrele ve gece/gündüz görsellerini dinamik seç
+  const activeSlides = slides.filter(s => {
+    if (s.themeMode === 'light') return theme === 'light';
+    if (s.themeMode === 'dark') return theme === 'dark';
+    return true;
+  }).map(s => {
+    if (theme === 'dark' && (s.imageDark || s.imageMobileDark)) {
+      return {
+        ...s,
+        imageUrl: s.imageDark || s.imageUrl,
+        mobileImageUrl: s.imageMobileDark || s.mobileImageUrl || s.imageDark || s.imageUrl
+      };
+    }
+    return s;
+  });
+
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
@@ -19,27 +38,27 @@ export default function HeroSlider() {
   }, []);
 
   const next = useCallback(() => {
-    if (slides.length === 0) return;
-    goTo((current + 1) % slides.length, 1);
-  }, [current, goTo, slides.length]);
+    if (activeSlides.length === 0) return;
+    goTo((current + 1) % activeSlides.length, 1);
+  }, [current, goTo, activeSlides.length]);
 
   const prev = useCallback(() => {
-    if (slides.length === 0) return;
-    goTo((current - 1 + slides.length) % slides.length, -1);
-  }, [current, goTo, slides.length]);
+    if (activeSlides.length === 0) return;
+    goTo((current - 1 + activeSlides.length) % activeSlides.length, -1);
+  }, [current, goTo, activeSlides.length]);
 
   // Otomatik Oynatma
   useEffect(() => {
-    if (isPaused || slides.length === 0) return;
+    if (isPaused || activeSlides.length === 0) return;
     const timer = setInterval(next, AUTOPLAY_INTERVAL);
     return () => clearInterval(timer);
-  }, [next, isPaused, slides.length]);
+  }, [next, isPaused, activeSlides.length]);
 
-  if (slides.length === 0) {
+  if (activeSlides.length === 0) {
     return null; // Slayt yoksa hiçbir şey çizme
   }
 
-  const slide = slides[current];
+  const slide = activeSlides[current] || activeSlides[0];
 
   const variants = {
     enter: (dir) => ({
@@ -124,7 +143,7 @@ export default function HeroSlider() {
 
       {/* ── Pagination Dots ────────────────────────────────── */}
       <div className={styles.pagination} role="tablist" aria-label="Slide navigation">
-        {slides.map((s, i) => (
+        {activeSlides.map((s, i) => (
           <button
             key={s.id}
             className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}
