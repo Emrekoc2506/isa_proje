@@ -74,7 +74,7 @@ export default function AuthPage() {
   const getPasswordStrength = useCallback((pass) => {
     if (!pass) return { score: 0, text: '', color: 'transparent' };
     let score = 0;
-    if (pass.length >= 6) score++;
+    if (pass.length >= 8) score++;
     if (/[A-Z]/.test(pass)) score++;
     if (/[a-z]/.test(pass)) score++;
     if (/[0-9]/.test(pass)) score++;
@@ -96,8 +96,8 @@ export default function AuthPage() {
       return;
     }
 
-    if (loginPassword.length < 6) {
-      setLoginError("Şifre en az 6 karakter olmalıdır.");
+    if (loginPassword.length < 8) {
+      setLoginError("Şifre en az 8 karakter olmalıdır.");
       return;
     }
     
@@ -170,8 +170,8 @@ export default function AuthPage() {
       return;
     }
 
-    if (regPassword.length < 6) {
-      setRegError("Şifre en az 6 karakter olmalıdır.");
+    if (regPassword.length < 8) {
+      setRegError("Şifre en az 8 karakter olmalıdır.");
       return;
     }
 

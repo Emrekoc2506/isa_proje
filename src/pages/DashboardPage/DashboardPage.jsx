@@ -174,8 +174,8 @@ export default function DashboardPage({ activeTab = 'overview' }) {
     setPassError('');
     setPassSuccess(false);
 
-    if (newPass.length < 6) {
-      setPassError("Yeni şifre en az 6 karakter olmalıdır.");
+    if (newPass.length < 8) {
+      setPassError("Yeni şifre en az 8 karakter olmalıdır.");
       return;
     }
 

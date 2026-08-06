@@ -23,8 +23,8 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     if (!newPassword || !confirmPassword) return;
 
-    if (newPassword.length < 6) {
-      setErrorMsg("Yeni şifre en az 6 karakter olmalıdır.");
+    if (newPassword.length < 8) {
+      setErrorMsg("Yeni şifre en az 8 karakter olmalıdır.");
       return;
     }
 

@@ -55,6 +55,11 @@ export function translateErrorMessage(msg) {
   if (m.includes("account is locked")) {
     return "Çok fazla hatalı deneme nedeniyle hesabınız kilitlendi. Lütfen bir süre bekleyin.";
   }
+  if (m.includes("must be at least") || m.includes("minimumlength") || m.includes("too short")) {
+    if (m.includes("password") || m.includes("şifre")) {
+      return "Şifreniz en az 8 karakter olmalıdır.";
+    }
+  }
   if (m.includes("failed to fetch") || m.includes("network error") || m.includes("connection refused") || m.includes("err_connection_refused")) {
     return "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.";
   }
