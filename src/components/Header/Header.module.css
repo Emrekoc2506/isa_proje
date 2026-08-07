@@ -72,6 +72,57 @@
   padding: 9px var(--space-md);
 }
 
+/* ── SubBar (Kategoriler & Ücretsiz Teslimat Bandı) ───────────── */
+.subBar {
+  border-top: 1px solid rgba(201, 162, 39, 0.15);
+  background: var(--bg-dark);
+  transition: all 0.3s ease;
+}
+
+.subBarInner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.announcementSub {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  padding: 6px 0;
+}
+
+.announcementSub strong {
+  color: var(--gold-light);
+}
+
+:global([data-theme="light"]) .header {
+  background: #FAF7F2 !important;
+}
+
+:global([data-theme="light"]) .subBar {
+  background: #F4EFE6 !important;
+  border-top-color: rgba(184, 134, 11, 0.2) !important;
+}
+
+:global([data-theme="light"]) .announcementSub {
+  color: #63527D !important;
+}
+
+@media (max-width: 768px) {
+  .announcementSub {
+    display: none;
+  }
+}
+
 /* ── Logo ──────────────────────────────────────────────────── */
 
 .logo {
