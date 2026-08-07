@@ -590,66 +590,241 @@
   }
 }
 
+/* ── TEMALI SEMA ARKA PLANI (GECE / GÜNDÜZ ANİMASYONLARI) ──── */
+.skyBackground {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Ay & Yıldızlar (Gece Modu) */
+.moon {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background-color: #ede0c8;
+  border-radius: 50%;
+  top: 14px;
+  right: 24px;
+  box-shadow: inset -4px -4px 10px rgba(0,0,0,0.25), 0 0 20px rgba(237,224,200,0.15);
+  animation: chatMoonFloat 6s ease-in-out infinite;
+}
+
+.moonHole1 {
+  position: absolute;
+  background-color: #8b79a5;
+  border-radius: 50%;
+  width: 7px;
+  height: 7px;
+  top: 10px;
+  left: 6px;
+}
+
+.moonHole2 {
+  position: absolute;
+  background-color: #8b79a5;
+  border-radius: 50%;
+  width: 5px;
+  height: 5px;
+  top: 20px;
+  left: 14px;
+}
+
+.star {
+  position: absolute;
+  fill: #f5dfa0;
+  animation: chatStarTwinkle 2s infinite ease-in-out;
+  opacity: 0.7;
+}
+
+@keyframes chatMoonFloat {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes chatStarTwinkle {
+  0%   { transform: scale(1);   opacity: 0.4; }
+  30%  { transform: scale(1.5); opacity: 1;   }
+  60%  { transform: scale(0.7); opacity: 0.25; }
+  100% { transform: scale(1);   opacity: 0.4; }
+}
+
+/* Güneş & Bulutlar (Gündüz Modu) */
+.sun {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  background: radial-gradient(circle, #ffdd57 0%, #ff9f1c 60%, rgba(255,159,28,0) 100%);
+  border-radius: 50%;
+  top: 10px;
+  right: 20px;
+  box-shadow: 0 0 24px rgba(255,159,28,0.5), 0 0 60px rgba(255,200,50,0.25);
+  animation: chatSunPulse 4s ease-in-out infinite;
+}
+
+@keyframes chatSunPulse {
+  0%   { box-shadow: 0 0 24px rgba(255,159,28,0.5), 0 0 60px rgba(255,200,50,0.25); transform: scale(1); }
+  50%  { box-shadow: 0 0 36px rgba(255,159,28,0.7), 0 0 90px rgba(255,200,50,0.4); transform: scale(1.07); }
+  100% { box-shadow: 0 0 24px rgba(255,159,28,0.5), 0 0 60px rgba(255,200,50,0.25); transform: scale(1); }
+}
+
+.cloudShape {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.95;
+  animation: chatCloudDrift 10s ease-in-out infinite;
+}
+
+.cloudBase {
+  position: absolute;
+  width: 90px;
+  height: 28px;
+  background: white;
+  border-radius: 20px;
+}
+
+.cloudBump1 {
+  position: absolute;
+  background: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  bottom: 14px;
+  left: 10px;
+}
+
+.cloudBump2 {
+  position: absolute;
+  background: white;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  bottom: 16px;
+  left: 30px;
+}
+
+.cloudBump3 {
+  position: absolute;
+  background: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  bottom: 14px;
+  left: 65px;
+}
+
+@keyframes chatCloudDrift {
+  0%   { transform: translateX(0px); }
+  50%  { transform: translateX(20px); }
+  100% { transform: translateX(0px); }
+}
+
 /* ============================================================
    CHAT UI — GÜNDÜZ MODU (LIGHT MODE) UYARLAMALARI
    ============================================================ */
 
+.chatContainerLight,
 :global([data-theme="light"]) .chatContainer {
-  background: var(--bg-mid) !important;
-  border-color: var(--border-gold) !important;
-  box-shadow: 0 4px 20px rgba(44, 26, 77, 0.08) !important;
+  background: linear-gradient(180deg, #4bbfe8 0%, #62cff0 40%, #7dd9f5 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 8px 32px rgba(0, 40, 80, 0.15) !important;
+  position: relative;
+  z-index: 1;
 }
 
+.chatContainerLight .sidebar,
 :global([data-theme="light"]) .sidebar {
-  background: var(--bg-dark) !important;
-  border-right-color: var(--border-gold) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(14px);
+  border-right: 1px solid rgba(255, 255, 255, 0.7) !important;
+  position: relative;
+  z-index: 2;
 }
 
+.chatContainerLight .sidebarHeader h3,
+.chatContainerLight .headerInfo h4,
+.chatContainerLight .convName,
 :global([data-theme="light"]) .sidebarHeader h3,
 :global([data-theme="light"]) .headerInfo h4,
 :global([data-theme="light"]) .convName {
-  color: var(--text-primary) !important;
+  color: #0c1929 !important;
+  font-weight: 800 !important;
 }
 
+.chatContainerLight .searchInput,
 :global([data-theme="light"]) .searchInput {
-  background: var(--bg-mid) !important;
-  border-color: var(--border-gold) !important;
-  color: var(--text-primary) !important;
-}
-
-:global([data-theme="light"]) .chatArea {
-  background: var(--bg-mid) !important;
-}
-
-:global([data-theme="light"]) .chatHeader {
-  background: var(--bg-dark) !important;
-  border-bottom-color: var(--border-gold) !important;
-}
-
-:global([data-theme="light"]) .messageBubbleReceived {
-  background: var(--bg-dark) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid var(--border-gold) !important;
-}
-
-:global([data-theme="light"]) .messageBubbleSent {
-  background: linear-gradient(135deg, var(--gold-light), var(--gold-dark)) !important;
-  color: #12091f !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  color: #0c1929 !important;
   font-weight: 600 !important;
 }
 
+.chatContainerLight .searchInput::placeholder,
+:global([data-theme="light"]) .searchInput::placeholder {
+  color: #475569 !important;
+}
+
+.chatContainerLight .convItem,
+:global([data-theme="light"]) .convItem {
+  color: #0c1929 !important;
+}
+
+.chatContainerLight .convItemActive,
+:global([data-theme="light"]) .convItemActive {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(201, 162, 39, 0.6) !important;
+  box-shadow: 0 4px 16px rgba(0, 40, 80, 0.18) !important;
+}
+
+.chatContainerLight .chatArea,
+:global([data-theme="light"]) .chatArea {
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 2;
+}
+
+.chatContainerLight .chatHeader,
+:global([data-theme="light"]) .chatHeader {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.8) !important;
+}
+
+.chatContainerLight .messageBubbleReceived,
+:global([data-theme="light"]) .messageBubbleReceived {
+  background: #ffffff !important;
+  color: #0c1929 !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 2px 12px rgba(0, 40, 80, 0.1) !important;
+}
+
+.chatContainerLight .messageBubbleSent,
+:global([data-theme="light"]) .messageBubbleSent {
+  background: linear-gradient(135deg, #c9a227, #967412) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 12px rgba(201, 162, 39, 0.3) !important;
+}
+
+.chatContainerLight .inputArea,
 :global([data-theme="light"]) .inputArea {
-  background: var(--bg-dark) !important;
-  border-top-color: var(--border-gold) !important;
+  background: rgba(255, 255, 255, 0.65) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.8) !important;
 }
 
+.chatContainerLight .messageInput,
 :global([data-theme="light"]) .messageInput {
-  background: var(--bg-mid) !important;
-  border-color: var(--border-gold) !important;
-  color: var(--text-primary) !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(201, 162, 39, 0.4) !important;
+  color: #0c1929 !important;
+  font-weight: 500 !important;
 }
 
+.chatContainerLight .sendBtn,
 :global([data-theme="light"]) .sendBtn {
-  color: #12091f !important;
+  color: #ffffff !important;
 }
 

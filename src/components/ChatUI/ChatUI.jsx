@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSend, FiSearch, FiCheckCircle, FiPlusCircle, FiTrash2, FiMessageCircle, FiCheck, FiRefreshCw } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import {
   startChatConnection,
   getChatConnection,
@@ -29,6 +30,9 @@ import {
 } from '../../services/chatApi';
 
 export default function ChatUI({ isAdmin = false, initialUserId = null, initialUserName = null }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   const [conversations, setConversations]   = useState([]);
   const [selectedConv, setSelectedConv]     = useState(null); // { id, name, initials, isClosed, isOnline, lastSeenAt }
   const [messages, setMessagesRaw]          = useState([]);
@@ -577,13 +581,63 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
   };
 
   return (
-    <div className={styles.chatContainer}>
+    <div className={`${styles.chatContainer} ${isLight ? styles.chatContainerLight : ''}`}>
+
+      {/* ── BACKGROUND ANIMATIONS (GECE: AY+YILDIZ / GÜNDÜZ: GÜNEŞ+BULUT) ── */}
+      <div className={styles.skyBackground}>
+        {!isLight && (
+          <>
+            <div className={styles.moon}>
+              <div className={styles.moonHole1} />
+              <div className={styles.moonHole2} />
+            </div>
+            {[...Array(16)].map((_, i) => (
+              <svg
+                key={i}
+                className={styles.star}
+                viewBox="0 0 20 20"
+                style={{
+                  top: `${Math.floor((i * 37 + 11) % 85)}%`,
+                  left: `${Math.floor((i * 53 + 7) % 88)}%`,
+                  width: `${8 + (i % 4) * 3}px`,
+                  animationDelay: `${(i * 0.35).toFixed(2)}s`,
+                  animationDuration: `${2 + (i % 3) * 0.5}s`
+                }}
+              >
+                <path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z" />
+              </svg>
+            ))}
+          </>
+        )}
+
+        {isLight && (
+          <>
+            <div className={styles.sun} />
+            <div className={styles.cloudShape} style={{ top: '6%', left: '4%', transform: 'scale(0.7)' }}>
+              <div className={styles.cloudBase} />
+              <div className={styles.cloudBump1} />
+              <div className={styles.cloudBump2} />
+            </div>
+            <div className={styles.cloudShape} style={{ top: '60%', right: '8%', transform: 'scale(0.85)', animationDelay: '2s' }}>
+              <div className={styles.cloudBase} />
+              <div className={styles.cloudBump1} />
+              <div className={styles.cloudBump2} />
+              <div className={styles.cloudBump3} />
+            </div>
+            <div className={styles.cloudShape} style={{ top: '35%', left: '18%', transform: 'scale(0.55)', animationDelay: '4s' }}>
+              <div className={styles.cloudBase} />
+              <div className={styles.cloudBump1} />
+              <div className={styles.cloudBump2} />
+            </div>
+          </>
+        )}
+      </div>
 
       {/* ── Sol Panel ──────────────────────────────────────────── */}
       <div className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ margin: 0, color: '#fff', fontSize: 16, fontWeight: 700 }}>
+            <h3 style={{ margin: 0, color: isLight ? '#0c1929' : '#fff', fontSize: 16, fontWeight: 700 }}>
               {isAdmin ? 'Destek Mesajları' : 'Mesajlarım'}
             </h3>
             {!isAdmin && (
