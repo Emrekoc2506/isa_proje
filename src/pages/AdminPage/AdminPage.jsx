@@ -19,6 +19,7 @@ import {
   FiBookOpen,
   FiStar,
 } from "react-icons/fi";
+import logoImage from "../../assets/images/logo-2.png";
 import ChatUI from "../../components/ChatUI/ChatUI";
 import ThemeToggle from "../../components/ThemeToggle";
 import { useAuth } from "../../context/AuthContext";
@@ -204,18 +205,20 @@ export default function AdminPage() {
 
         {/* ── İÇERİK (scroll edilebilir) ── */}
         <div className={styles.sidebarInner}>
+          <a href="/" className={styles.logoLink}>
+            <img src={logoImage} alt="muhristan" className={styles.logoImg} />
+            <span className={styles.brandName}>muhristan</span>
+          </a>
           <div
             className={styles.badgeWrap}
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "center",
               width: "100%",
-              gap: "8px",
             }}
           >
             <span className={styles.adminBadge}>Yönetici Paneli</span>
-            <ThemeToggle id="admin-sidebar-theme-toggle" />
           </div>
 
           <nav className={styles.nav} aria-label="Yönetici Menüsü">
