@@ -61,6 +61,8 @@ Kullanıcı tercihine istinaden **İyzipay / Sanal POS online ödeme entegrasyon
 - **Sahiplik Kontrolü (Ownership Validation):** Kullanıcılar sadece kendi sepetlerini (`CartController`), siparişlerini (`CheckoutController`), bildirimlerini (`NotificationContext`) ve mesajlaşmalarını (`ChatHub`) görebilir.
 - **Şifre Politikası:** ASP.NET Core Identity’nin yapılandırılmış `PasswordHasher` implementasyonu kullanılır; bu repository’de ayrı bir Argon2 custom implementasyonu yoktur.
 
+- **Refresh Token Riski:** Mevcut bearer sözleşmesi bozulmaması için access/refresh token akışı mevcut storage abstraction içinde korunmuştur. HttpOnly/Secure/SameSite cookie migration’ı CSRF korumasıyla birlikte ayrı ve koordineli bir auth çalışması olarak beklemektedir; yeni checkout kodu token storage eklememektedir.
+
 ### 3.2 Rate Limiting (Oran Sınırlama)
 `Program.cs` içerisinde `PartitionedRateLimiter` kullanılarak `User ID`, `Guest Session ID` veya `Remote IP` bazlı kısıtlamalar yapılmıştır:
 - `AuthRegister` / `AuthLogin` / `AuthForgotPassword` / `AuthResetPassword` için istek limitleri aktif.

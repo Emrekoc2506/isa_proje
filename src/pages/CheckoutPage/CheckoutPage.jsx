@@ -11,6 +11,7 @@ import * as couponApi from '../../services/couponApi';
 import * as orderApi from '../../services/orderApi';
 import * as paymentApi from '../../services/paymentApi';
 import { isManualPayment, shouldInitializePayment, PAYMENT_METHODS } from './paymentFlow';
+import { createSecureRandomId } from '../../utils/guestSession';
 
 export default function CheckoutPage() {
   const { isAuthenticated } = useAuth();
@@ -238,7 +239,7 @@ export default function CheckoutPage() {
           orderId,
           provider: 'iyzico',
           returnUrl: window.location.origin + '/odeme/sonuc',
-          idempotencyKey: globalThis.crypto?.randomUUID?.() || 'idemp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7)
+          idempotencyKey: createSecureRandomId('idemp-')
         });
 
         if (paymentRes?.redirectUrl) {
