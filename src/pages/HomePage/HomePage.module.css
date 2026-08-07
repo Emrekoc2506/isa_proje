@@ -13,7 +13,7 @@
   width: 100%;
   margin-top: 25px; /* Billboard ile arasında tam 25px mesafe */
   background: var(--bg-dark);
-  border-top: 1px solid var(--border-gold);
+  border-top: none;
   border-bottom: 1px solid var(--border-gold);
   margin-bottom: var(--space-xl);
 }
