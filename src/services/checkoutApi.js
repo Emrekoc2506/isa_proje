@@ -13,3 +13,7 @@ export function previewCheckout(payload) {
     })
   });
 }
+
+export function getPaymentOptions() {
+  return request("/checkout/payment-options");
+}
