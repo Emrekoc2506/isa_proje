@@ -55,7 +55,6 @@ export default function Header() {
           {/* Logo */}
           <a href="/" className={styles.logo} aria-label="muhristan – Ana Sayfa">
             <img src={logoImage} alt="muhristan" width={180} height={72} />
-            <span className={styles.brandName}>muhristan</span>
           </a>
 
           {/* Arama Kutusu & Live Autocomplete */}

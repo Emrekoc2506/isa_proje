@@ -60,7 +60,6 @@ export default function ForgotPasswordPage() {
       <div className={styles.wrapper}>
         <a href="/" className={styles.logoLink}>
           <img src={logoImage} alt="muhristan" className={styles.logoImg} />
-          <span className={styles.brandName}>muhristan</span>
         </a>
 
         <motion.div 

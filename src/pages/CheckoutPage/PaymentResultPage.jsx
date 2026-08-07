@@ -121,7 +121,6 @@ export default function PaymentResultPage() {
       <div className={styles.wrapper} style={{ maxWidth: 500, width: '100%' }}>
         <a href="/" className={styles.logoLink} style={{ marginBottom: 20 }}>
           <img src={logoImage} alt="muhristan" className={styles.logoImg} />
-          <span className={styles.brandName}>muhristan</span>
         </a>
 
         <motion.div 

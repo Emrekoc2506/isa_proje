@@ -348,7 +348,6 @@ export default function DashboardPage({ activeTab = 'overview' }) {
           {/* Logo */}
           <a href="/" className={styles.sidebarLogo}>
             <img src={logoImage} alt="muhristan" className={styles.sidebarLogoImg} />
-            <span className={styles.sidebarBrand}>muhristan</span>
           </a>
 
           {/* Badge & Theme Toggle */}

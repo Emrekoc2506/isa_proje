@@ -243,7 +243,6 @@ export default function AuthPage() {
         {/* ── Logo ─────────────────────────────────────────────── */}
         <Link to="/" className={styles.logoLink} aria-label="muhristan – Ana Sayfa">
           <img src={logoImage} alt="muhristan" className={styles.logoImg} />
-          <span className={styles.brandName}>muhristan</span>
         </Link>
 
         {/* ── Kart ─────────────────────────────────────────────── */}

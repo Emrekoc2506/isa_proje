@@ -18,7 +18,6 @@ export default function Footer() {
                 alt="muhristan"
                 className={styles.logo}
               />
-              <span className={styles.brandName}>muhristan</span>
             </a>
             <p className={styles.tagline}>
               Ezoterizmin gizemli dünyasını keşfedin. Yüksek kaliteli ezoterik ürünler,
