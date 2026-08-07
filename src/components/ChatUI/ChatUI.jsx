@@ -591,17 +591,17 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
               <div className={styles.moonHole1} />
               <div className={styles.moonHole2} />
             </div>
-            {[...Array(16)].map((_, i) => (
+            {[...Array(36)].map((_, i) => (
               <svg
                 key={i}
                 className={styles.star}
                 viewBox="0 0 20 20"
                 style={{
-                  top: `${Math.floor((i * 37 + 11) % 85)}%`,
-                  left: `${Math.floor((i * 53 + 7) % 88)}%`,
-                  width: `${8 + (i % 4) * 3}px`,
-                  animationDelay: `${(i * 0.35).toFixed(2)}s`,
-                  animationDuration: `${2 + (i % 3) * 0.5}s`
+                  top: `${Math.floor((i * 29 + 7) % 92)}%`,
+                  left: `${Math.floor((i * 43 + 5) % 92)}%`,
+                  width: `${8 + (i % 5) * 3}px`,
+                  animationDelay: `${(i * 0.22).toFixed(2)}s`,
+                  animationDuration: `${1.8 + (i % 4) * 0.4}s`
                 }}
               >
                 <path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z" />
