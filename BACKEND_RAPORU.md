@@ -48,8 +48,8 @@ Backend uygulaması **.NET 8 Web API** teknolojisi kullanılarak **Clean Archite
 ## 2. 💳 Ödeme Akışı (Online Ödeme Devre Dışı / Opsiyonel)
 
 Kullanıcı tercihine istinaden **İyzipay / Sanal POS online ödeme entegrasyonu şu aşamada zorunlu tutulmamaktadır**:
-- Frontend tarafında `CheckoutPage.jsx` sipariş oluşturulduğunda İyzipay servisine bağlanamazsa veya sanal POS kapalıysa sistem **hata vermeden otomatik olarak sipariş tamamlama sayfasına (`/odeme/sonuc`) yönlenir**.
-- Müşteriler Havale/EFT veya Kapıda Ödeme mantığında doğrudan sipariş oluşturabilir.
+- Online Kart seçilirse backend yapılandırılmış Iyzico akışı kullanılır; initialization başarısızlığı manuel ödeme başarısı gibi gizlenmez ve sipariş gerçek ödeme durumu ile gösterilir.
+- Havale/EFT veya Kapıda Ödeme seçildiğinde Iyzico ve `/api/payments/init` çağrılmaz; sipariş `Unpaid` olarak oluşturulur, stok commit edilir ve sipariş sonucu başarı olarak gösterilir.
 - İleride online kredi kartı ödemesi (İyzipay / Stripe) açılmak istendiğinde tek tıkla sanal POS modülü aktif edilebilir.
 
 ---
@@ -59,7 +59,7 @@ Kullanıcı tercihine istinaden **İyzipay / Sanal POS online ödeme entegrasyon
 ### 3.1 Kimlik Doğrulama (JWT & RBAC)
 - **Roller:** `SuperAdmin`, `Admin`, `Customer` rollerini kapsar.
 - **Sahiplik Kontrolü (Ownership Validation):** Kullanıcılar sadece kendi sepetlerini (`CartController`), siparişlerini (`CheckoutController`), bildirimlerini (`NotificationContext`) ve mesajlaşmalarını (`ChatHub`) görebilir.
-- **Şifre Politikası:** ASP.NET Core Identity altyapısı ile şifreler salted PBKDF2 / Argon2 algoritmalarıyla güvenli hash'lenmektedir.
+- **Şifre Politikası:** ASP.NET Core Identity’nin yapılandırılmış `PasswordHasher` implementasyonu kullanılır; bu repository’de ayrı bir Argon2 custom implementasyonu yoktur.
 
 ### 3.2 Rate Limiting (Oran Sınırlama)
 `Program.cs` içerisinde `PartitionedRateLimiter` kullanılarak `User ID`, `Guest Session ID` veya `Remote IP` bazlı kısıtlamalar yapılmıştır:
