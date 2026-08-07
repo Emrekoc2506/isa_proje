@@ -13,9 +13,9 @@
 .track {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 5.5;
-  min-height: 320px;
-  max-height: 540px;
+  aspect-ratio: 16 / 7;
+  min-height: 420px;
+  max-height: 680px;
   overflow: hidden;
 }
 
