@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-top: 50px; /* Billboard büyütüldü ve altına 50px boşluk eklendi */
+  margin-top: 25px; /* Billboard ile arasında tam 25px mesafe */
   background: var(--bg-dark);
   border-top: 1px solid var(--border-gold);
   border-bottom: 1px solid var(--border-gold);
