@@ -6,7 +6,6 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiLoader,
-  FiPackage,
   FiRefreshCw,
 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
@@ -14,6 +13,7 @@ import { useCart } from "../../context/CartContext";
 import * as orderApi from "../../services/orderApi";
 import * as paymentApi from "../../services/paymentApi";
 import logoImage from "../../assets/images/logo-2.png";
+import { isManualOrderSuccess, shouldClearCart } from "./paymentFlow";
 
 export default function PaymentResultPage() {
   const [searchParams] = useSearchParams();
@@ -65,8 +65,9 @@ export default function PaymentResultPage() {
       }
 
       setOrder(data);
-      if (data && String(data.paymentStatus).toLowerCase() === "paid") {
-        clearCart();
+      if (data && shouldClearCart(data)) {
+        await clearCart();
+        sessionStorage.removeItem("paymentInitError");
       }
     } catch (err) {
       setErrorMsg(err.message || "Sipariş durumu sorgulanamadı.");
@@ -86,12 +87,11 @@ export default function PaymentResultPage() {
         orderId,
         provider: "iyzico",
         returnUrl: window.location.origin + "/odeme/sonuc",
-        idempotencyKey: crypto.randomUUID
-          ? crypto.randomUUID()
-          : "idemp-" +
-            Date.now() +
-            "-" +
-            Math.random().toString(36).substring(2, 7),
+        idempotencyKey: globalThis.crypto?.randomUUID?.() ||
+          "idemp-" +
+          Date.now() +
+          "-" +
+          Math.random().toString(36).substring(2, 7),
       });
       if (paymentRes?.redirectUrl) {
         window.location.assign(paymentRes.redirectUrl);
@@ -109,10 +109,11 @@ export default function PaymentResultPage() {
     fetchOrderStatus();
   }, [orderId, orderNumber, email, isAuthenticated]);
 
-  const isSuccess =
-    order && String(order.paymentStatus).toLowerCase() === "paid";
+  const paymentMethod = String(order?.paymentMethod || "").toLowerCase();
+  const isSuccess = order && String(order.paymentStatus).toLowerCase() === "paid";
+  const isManualSuccess = isManualOrderSuccess(order);
   const isPending =
-    order && String(order.paymentStatus).toLowerCase() === "pending";
+    order && paymentMethod === "onlinecard" && String(order.paymentStatus).toLowerCase() === "pending";
 
   const [cancelling, setCancelling] = useState(false);
 
@@ -299,13 +300,24 @@ export default function PaymentResultPage() {
                 {isAuthenticated ? "Siparişlerime Git" : "Ana Sayfaya Dön"}
               </button>
             </div>
+          ) : isManualSuccess ? (
+            <div className={styles.content}>
+              <FiCheckCircle className={styles.successIcon} />
+              <h2 className={styles.title}>Siparişiniz Alındı</h2>
+              <p className={styles.sub}>
+                Ödeme yöntemi: {paymentMethod === "banktransfer" ? "Havale / EFT" : "Kapıda Ödeme"}.<br />
+                {paymentMethod === "banktransfer" ? "Ödeme durumu: Ödeme Bekleniyor." : "Ödeme teslimat sırasında alınacaktır."}
+              </p>
+              <button onClick={() => navigate(isAuthenticated ? "/siparislerim" : "/")} className={styles.btn}>
+                {isAuthenticated ? "Siparişlerime Git" : "Alışverişe Devam Et"}
+              </button>
+            </div>
           ) : (
             <div className={styles.content}>
               <FiXCircle className={styles.errorIcon} />
               <h2 className={styles.title}>Ödeme Başarısız</h2>
               <p className={styles.sub}>
-                Kartınızdan tahsilat yapılamadı. Lütfen bilgilerinizi kontrol
-                edip tekrar deneyin.
+                {sessionStorage.getItem("paymentInitError") || "Kartınızdan tahsilat yapılamadı. Lütfen bilgilerinizi kontrol edip tekrar deneyin."}
               </p>
 
               <button

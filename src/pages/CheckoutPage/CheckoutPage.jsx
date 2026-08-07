@@ -1,7 +1,7 @@
 import styles from './CheckoutPage.module.css';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiMapPin, FiTruck, FiTag, FiShoppingBag, FiCheck, FiChevronRight, FiLoader, FiAlertTriangle } from 'react-icons/fi';
+import { FiMapPin, FiTruck, FiShoppingBag, FiCheck, FiLoader, FiAlertTriangle } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import LocationSelects from '../../components/LocationSelect/LocationSelects';
@@ -10,9 +10,10 @@ import * as checkoutApi from '../../services/checkoutApi';
 import * as couponApi from '../../services/couponApi';
 import * as orderApi from '../../services/orderApi';
 import * as paymentApi from '../../services/paymentApi';
+import { isManualPayment, shouldInitializePayment, PAYMENT_METHODS } from './paymentFlow';
 
 export default function CheckoutPage() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { items: cartItems, clearCart } = useCart();
   const navigate = useNavigate();
 
@@ -21,6 +22,12 @@ export default function CheckoutPage() {
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
+  const [paymentOptions, setPaymentOptions] = useState({
+    onlineCard: { enabled: false, provider: "Iyzico" },
+    bankTransfer: { enabled: true },
+    cashOnDelivery: { enabled: true },
+  });
+  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS.BANK_TRANSFER);
 
   // Selected values
   const [shippingAddressId, setShippingAddressId] = useState(null);
@@ -45,6 +52,21 @@ export default function CheckoutPage() {
 
   const [previewData, setPreviewData] = useState(null);
   const [previewError, setPreviewError] = useState('');
+
+  useEffect(() => {
+    checkoutApi.getPaymentOptions()
+      .then((data) => {
+        if (!data) return;
+        setPaymentOptions(data);
+        if (!data.onlineCard?.enabled) {
+          setPaymentMethod((current) => current === PAYMENT_METHODS.ONLINE_CARD ? PAYMENT_METHODS.BANK_TRANSFER : current);
+        }
+      })
+      .catch(() => {
+        // Manual methods remain available when the optional capability endpoint is unavailable.
+        setPaymentMethod((current) => current === PAYMENT_METHODS.ONLINE_CARD ? PAYMENT_METHODS.BANK_TRANSFER : current);
+      });
+  }, []);
 
   // Fetch addresses if authenticated
   useEffect(() => {
@@ -76,7 +98,8 @@ export default function CheckoutPage() {
 
     const payload = {
       shippingMethodCode,
-      couponCode: couponApplied || null
+      couponCode: couponApplied || null,
+      paymentMethod,
     };
 
     if (isAuthenticated) {
@@ -103,7 +126,7 @@ export default function CheckoutPage() {
     } finally {
       setPreviewLoading(false);
     }
-  }, [isAuthenticated, cartItems, shippingAddressId, billingAddressId, sameAddress, guestShipping, guestBilling, shippingMethodCode, couponApplied]);
+  }, [isAuthenticated, cartItems, shippingAddressId, billingAddressId, sameAddress, guestShipping, guestBilling, shippingMethodCode, couponApplied, paymentMethod]);
 
   useEffect(() => {
     loadPreview();
@@ -118,7 +141,7 @@ export default function CheckoutPage() {
     if (!couponCode.trim()) return;
 
     try {
-      const res = await couponApi.validateCoupon(couponCode.trim());
+      await couponApi.validateCoupon(couponCode.trim());
       setCouponApplied(couponCode.trim());
       setCouponSuccess(`"${couponCode.trim()}" kuponu başarıyla uygulandı!`);
     } catch (err) {
@@ -202,23 +225,30 @@ export default function CheckoutPage() {
         sessionStorage.setItem('pendingOrderEmail', emailVal);
       }
 
-      // 2. Initialize payment redirect (İyzico aktifse yönlendir, pasif/yoksa doğrudan sipariş sonucuna git)
+      // Manual payments are complete orders and must never call the online payment endpoint.
+      if (isManualPayment(paymentMethod)) {
+        await clearCart();
+        navigate(`/odeme/sonuc?orderId=${encodeURIComponent(orderId)}&orderNumber=${encodeURIComponent(orderRes.orderNumber || "")}`);
+        return;
+      }
+
+      // OnlineCard owns exactly one payment initialization attempt for this submit.
       try {
         const paymentRes = await paymentApi.initializePayment({
           orderId,
           provider: 'iyzico',
           returnUrl: window.location.origin + '/odeme/sonuc',
-          idempotencyKey: crypto.randomUUID ? crypto.randomUUID() : 'idemp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7)
+          idempotencyKey: globalThis.crypto?.randomUUID?.() || 'idemp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7)
         });
 
         if (paymentRes?.redirectUrl) {
           window.location.assign(paymentRes.redirectUrl);
         } else {
-          navigate('/odeme/sonuc');
+          throw new Error("Online ödeme yönlendirme bağlantısı alınamadı.");
         }
-      } catch {
-        // İyzico entegrasyonu yoksa/devre dışıysa doğrudan sipariş başarı sayfasına geçilir
-        navigate('/odeme/sonuc');
+      } catch (err) {
+        sessionStorage.setItem("paymentInitError", err.message || "Online ödeme başlatılamadı.");
+        navigate(`/odeme/sonuc?orderId=${encodeURIComponent(orderId)}&orderNumber=${encodeURIComponent(orderRes.orderNumber || "")}`);
       }
     } catch (err) {
       let errorMessage = err.message || "Sipariş oluşturulurken bir hata oluştu.";
@@ -409,6 +439,34 @@ export default function CheckoutPage() {
               ))}
             </div>
           </div>
+
+          <div className={styles.sectionCard}>
+            <h3 className={styles.sectionTitle}>Ödeme Yöntemi</h3>
+            <div role="radiogroup" aria-label="Ödeme Yöntemi" style={{ display: 'grid', gap: 10 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: paymentOptions.onlineCard?.enabled ? 1 : 0.6 }}>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={PAYMENT_METHODS.ONLINE_CARD}
+                  checked={paymentMethod === PAYMENT_METHODS.ONLINE_CARD}
+                  disabled={!paymentOptions.onlineCard?.enabled}
+                  onChange={() => setPaymentMethod(PAYMENT_METHODS.ONLINE_CARD)}
+                />
+                <span>
+                  Kredi / Banka Kartı
+                  {!paymentOptions.onlineCard?.enabled && <small style={{ display: 'block', color: 'var(--text-muted)' }}>Şu anda kullanılamıyor</small>}
+                </span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <input type="radio" name="paymentMethod" value={PAYMENT_METHODS.BANK_TRANSFER} checked={paymentMethod === PAYMENT_METHODS.BANK_TRANSFER} onChange={() => setPaymentMethod(PAYMENT_METHODS.BANK_TRANSFER)} />
+                <span>Havale / EFT</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <input type="radio" name="paymentMethod" value={PAYMENT_METHODS.CASH_ON_DELIVERY} checked={paymentMethod === PAYMENT_METHODS.CASH_ON_DELIVERY} onChange={() => setPaymentMethod(PAYMENT_METHODS.CASH_ON_DELIVERY)} />
+                <span>Kapıda Ödeme</span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div className={styles.rightColumn}>
@@ -516,7 +574,7 @@ export default function CheckoutPage() {
               style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 20 }}
             >
               {orderLoading && <FiLoader className={styles.spinner} style={{ animation: 'spin 1.5s linear infinite', fontSize: 16, margin: 0 }} />}
-              Siparişi Tamamla & Öde
+              {shouldInitializePayment(paymentMethod) ? "Siparişi Tamamla & Öde" : "Siparişi Tamamla"}
             </button>
           </div>
         </div>
