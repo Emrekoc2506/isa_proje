@@ -305,3 +305,77 @@
     width: 100%;
   }
 }
+
+/* ============================================================
+   FOOTER — GÜNDÜZ MODU (LIGHT MODE) WARM CREAM UYARLAMASI
+   ============================================================ */
+
+:global([data-theme="light"]) .footer {
+  background: linear-gradient(180deg, #F4EFE6 0%, #EFE7DA 100%) !important;
+  border-top: 1px solid rgba(184, 134, 11, 0.3) !important;
+}
+
+:global([data-theme="light"]) .footer::before {
+  background: linear-gradient(90deg, transparent, rgba(184, 134, 11, 0.5), transparent) !important;
+}
+
+:global([data-theme="light"]) .brandName {
+  color: #2C1A4D !important;
+  font-weight: 800 !important;
+}
+
+:global([data-theme="light"]) .tagline,
+:global([data-theme="light"]) .newsletterDesc {
+  color: #63527D !important;
+}
+
+:global([data-theme="light"]) .newsletterTitle,
+:global([data-theme="light"]) .colTitle {
+  color: #2C1A4D !important;
+  font-weight: 800 !important;
+}
+
+:global([data-theme="light"]) .link {
+  color: #4A3866 !important;
+}
+
+:global([data-theme="light"]) .link:hover {
+  color: #B8860B !important;
+}
+
+:global([data-theme="light"]) .socialLink {
+  background: #FFFFFF !important;
+  color: #2C1A4D !important;
+  border: 1px solid rgba(184, 134, 11, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(44, 26, 77, 0.08) !important;
+}
+
+:global([data-theme="light"]) .socialLink:hover {
+  background: #F4EFE6 !important;
+  color: #B8860B !important;
+  border-color: #B8860B !important;
+}
+
+:global([data-theme="light"]) .newsletterInput {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(184, 134, 11, 0.4) !important;
+  color: #2C1A4D !important;
+}
+
+:global([data-theme="light"]) .newsletterInput::placeholder {
+  color: #8E7E9E !important;
+}
+
+:global([data-theme="light"]) .newsletterBtn {
+  background: linear-gradient(135deg, #B8860B, #8B6508) !important;
+  color: #FFFFFF !important;
+}
+
+:global([data-theme="light"]) .copyright,
+:global([data-theme="light"]) .poweredBy {
+  color: #63527D !important;
+}
+
+:global([data-theme="light"]) .divider {
+  background: linear-gradient(90deg, transparent, rgba(184, 134, 11, 0.3), transparent) !important;
+}
