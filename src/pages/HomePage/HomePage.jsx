@@ -43,19 +43,19 @@ export default function HomePage() {
       {/* ── Hero Slider (1. Banner / Billboard) ──────────────── */}
       <HeroSlider />
 
-      {/* ── Billboard Altı: Kategoriler ve Ücretsiz Teslimat Bandı (Alt Alta) ── */}
+      {/* ── Billboard Altı: Ücretsiz Teslimat Bandı (Üstte) ve Kategoriler (Altta) ── */}
       <div className={styles.belowBillboardSection}>
-        {/* 1. Kategoriler */}
-        <div className={styles.categoryNavWrapper}>
-          <CategoryNav />
-        </div>
-
-        {/* 2. 500 ₺ ve Üzeri Ücretsiz Teslimat Bandı */}
+        {/* 1. Üst Sıra: 500 ₺ ve Üzeri Ücretsiz Teslimat Bandı */}
         <div className={styles.announcementBar}>
           <MdOutlineLocalShipping className={styles.announcementIcon} />
           <span>
             <strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat
           </span>
+        </div>
+
+        {/* 2. Alt Sıra: Kategoriler */}
+        <div className={styles.categoryNavWrapper}>
+          <CategoryNav />
         </div>
       </div>
 
