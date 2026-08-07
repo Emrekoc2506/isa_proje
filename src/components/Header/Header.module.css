@@ -78,26 +78,36 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 12px;
   filter: brightness(1.1) saturate(0.8) sepia(0.2) hue-rotate(10deg);
   transition: filter var(--transition-base);
   text-decoration: none;
 }
 
+.logoImg {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.header.sticky .logoImg {
+  height: 38px;
+}
+
 .brandName {
   font-family: var(--font-heading, 'Cinzel', serif);
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--gold-light);
-  letter-spacing: 0.14em;
-  margin-top: 2px;
-  text-align: center;
-  text-transform: lowercase;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
   transition: font-size 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .header.sticky .brandName {
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .logo:hover {
