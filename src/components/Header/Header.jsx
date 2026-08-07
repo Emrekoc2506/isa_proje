@@ -1,5 +1,6 @@
 import styles from "./Header.module.css";
 import { useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSearch,
@@ -25,6 +26,9 @@ import { useAuth } from "../../context/AuthContext";
 import { useProducts } from "../../context/ProductContext";
 
 export default function Header() {
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
+
   const { isSticky } = useStickyHeader(60);
   const { isAuthenticated, isAdmin, logout } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -282,21 +286,23 @@ export default function Header() {
           )}
         </AnimatePresence>
 
-        {/* ── Alt Bar: Kategori Navigasyonu & Ücretsiz Teslimat Bandı ── */}
-        <div className={styles.subBar}>
-          <div className={styles.subBarInner}>
-            <CategoryNav
-              mobileOpen={mobileMenuOpen}
-              onMobileClose={() => setMobileMenuOpen(false)}
-            />
-            <div className={styles.announcementSub}>
-              <MdOutlineLocalShipping className={styles.announcementIcon} />
-              <span>
-                <strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat
-              </span>
+        {/* ── Alt Bar (Sadece İç Sayfalarda Header Altında Gösterilir) ── */}
+        {!isHomePage && (
+          <div className={styles.subBar}>
+            <div className={styles.subBarInner}>
+              <CategoryNav
+                mobileOpen={mobileMenuOpen}
+                onMobileClose={() => setMobileMenuOpen(false)}
+              />
+              <div className={styles.announcementSub}>
+                <MdOutlineLocalShipping className={styles.announcementIcon} />
+                <span>
+                  <strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </header>
 
       {/* ── Sepet Çekmecesi ─────────────────────────────────── */}

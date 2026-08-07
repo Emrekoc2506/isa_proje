@@ -4,6 +4,8 @@ import HeroSlider from '../../components/HeroSlider/HeroSlider';
 import ProductSection from '../../components/ProductSection/ProductSection';
 import BlogSection from '../../components/BlogSection/BlogSection';
 import VideoBannerItem from '../../components/HeroSlider/VideoBannerItem';
+import CategoryNav from '../../components/CategoryNav/CategoryNav';
+import { MdOutlineLocalShipping } from 'react-icons/md';
 import { useProducts } from '../../context/ProductContext';
 import { getBlogArticles } from '../../services/blogApi';
 import { blogArticles as mockArticles } from '../../data/index';
@@ -38,10 +40,26 @@ export default function HomePage() {
 
   return (
     <main id="main-content" className={styles.main}>
-      {/* ── Hero Slider (1. Banner / Hero) ──────────────── */}
+      {/* ── Hero Slider (1. Banner / Billboard) ──────────────── */}
       <HeroSlider />
 
-      {/* ── Haberler (News) ──────────────────────────────── */}
+      {/* ── Billboard Altı: Kategoriler ve Ücretsiz Teslimat Bandı (Alt Alta) ── */}
+      <div className={styles.belowBillboardSection}>
+        {/* 1. Kategoriler */}
+        <div className={styles.categoryNavWrapper}>
+          <CategoryNav />
+        </div>
+
+        {/* 2. 500 ₺ ve Üzeri Ücretsiz Teslimat Bandı */}
+        <div className={styles.announcementBar}>
+          <MdOutlineLocalShipping className={styles.announcementIcon} />
+          <span>
+            <strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat
+          </span>
+        </div>
+      </div>
+
+      {/* ── Haberler / Yeni Gelenler ─────────────────────────── */}
       <ProductSection
         title="Yeni Gelenler"
         viewAllHref="/urunler"
