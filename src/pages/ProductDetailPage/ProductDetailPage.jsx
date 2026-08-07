@@ -344,9 +344,10 @@ export default function ProductDetailPage() {
                   transition={{ duration: 0.35 }}
                 >
                   <img
-                    src={mediaList[activeImg]?.src || "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=500"}
+                    src={mediaList[activeImg]?.src || "/ornek resim.jpg"}
                     alt={mediaList[activeImg]?.alt || productDetail.name}
                     className={styles.mainImg}
+                    onError={(e) => { e.target.onerror = null; e.target.src = '/ornek resim.jpg'; }}
                   />
                 </motion.div>
               </AnimatePresence>
@@ -388,7 +389,7 @@ export default function ProductDetailPage() {
                     onClick={() => setActiveImg(i)}
                     aria-label={`Görsel ${i + 1}`}
                   >
-                    <img src={m.src} alt={m.alt} loading="lazy" />
+                    <img src={m.src} alt={m.alt} loading="lazy" onError={(e) => { e.target.onerror = null; e.target.src = '/ornek resim.jpg'; }} />
                   </button>
                 ))}
               </div>
