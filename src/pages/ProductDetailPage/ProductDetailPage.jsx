@@ -442,6 +442,52 @@ export default function ProductDetailPage() {
               {productDetail.shortDescription || "Mistik şifa enerjileri barındıran bu özel ürün, ritüellerinizde ve günlük yaşamınızda huzuru yakalamanıza yardımcı olur."}
             </p>
 
+            {/* Fiziksel Özellikler (Ağırlık & Ölçü) */}
+            {(productDetail.weightGram || productDetail.weight || productDetail.dimensions) && (
+              <div style={{
+                display: 'flex',
+                gap: '10px',
+                flexWrap: 'wrap',
+                marginTop: '12px'
+              }}>
+                {(productDetail.weightGram || productDetail.weight) && (
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'rgba(201, 162, 39, 0.08)',
+                    border: '1px solid rgba(201, 162, 39, 0.3)',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    color: 'var(--text-primary)',
+                    fontSize: '13px',
+                    fontWeight: 600
+                  }}>
+                    <span style={{ fontSize: '14px' }}>⚖️</span>
+                    <span>Ağırlık: <strong style={{ color: 'var(--gold-light)' }}>{productDetail.weightGram || productDetail.weight} gr</strong></span>
+                  </div>
+                )}
+
+                {productDetail.dimensions && (
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'rgba(201, 162, 39, 0.08)',
+                    border: '1px solid rgba(201, 162, 39, 0.3)',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    color: 'var(--text-primary)',
+                    fontSize: '13px',
+                    fontWeight: 600
+                  }}>
+                    <span style={{ fontSize: '14px' }}>📏</span>
+                    <span>Ölçü: <strong style={{ color: 'var(--gold-light)' }}>{productDetail.dimensions}</strong></span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* VARYANT SEÇİMİ */}
             {productDetail.variants?.length > 0 && (
               <>
@@ -648,6 +694,18 @@ export default function ProductDetailPage() {
                       <tr className={styles.specRow}>
                         <td className={styles.specKey}>Alt Kategori</td>
                         <td className={styles.specVal}>{productDetail.subcategory}</td>
+                      </tr>
+                    )}
+                    {(productDetail.weightGram || productDetail.weight) && (
+                      <tr className={styles.specRow}>
+                        <td className={styles.specKey}>Ağırlık</td>
+                        <td className={styles.specVal}>{productDetail.weightGram || productDetail.weight} gr</td>
+                      </tr>
+                    )}
+                    {productDetail.dimensions && (
+                      <tr className={styles.specRow}>
+                        <td className={styles.specKey}>Ölçü / Boyut</td>
+                        <td className={styles.specVal}>{productDetail.dimensions}</td>
                       </tr>
                     )}
                   </tbody>
