@@ -269,26 +269,32 @@
 /* ── Sidebar Logo ───────────────────────────────────────────── */
 .sidebarLogo {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-sm);
+  justify-content: center;
   text-decoration: none;
   padding-bottom: var(--space-md);
   border-bottom: 1px solid var(--border-gold);
+  width: 100%;
 }
 
 .sidebarLogoImg {
-  height: 38px;
+  height: 64px;
+  max-width: 100%;
   width: auto;
   object-fit: contain;
   filter: brightness(1.1) saturate(0.8);
 }
 
 .sidebarBrand {
-  font-family: var(--font-heading);
-  font-size: 18px;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: 17px;
   font-weight: 700;
   color: var(--gold-light);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.14em;
+  margin-top: 6px;
+  text-align: center;
+  text-transform: lowercase;
 }
 
 /* ── Profil Özet Kartı ──────────────────────────────────────── */

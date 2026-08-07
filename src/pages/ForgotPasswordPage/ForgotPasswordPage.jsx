@@ -1,16 +1,16 @@
-import styles from '../EmailVerifyPage/EmailVerifyPage.module.css'; // Re-use styling
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FiLock, FiMail, FiLoader } from 'react-icons/fi';
-import { forgotPassword } from '../../services/authApi';
-import logoImage from '../../assets/images/logo-2.png';
+import styles from "../EmailVerifyPage/EmailVerifyPage.module.css"; // Re-use styling
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FiLock, FiMail, FiLoader } from "react-icons/fi";
+import { forgotPassword } from "../../services/authApi";
+import logoImage from "../../assets/images/logo-2.png";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
 
     try {
       setLoading(true);
-      setErrorMsg('');
+      setErrorMsg("");
       await forgotPassword(trimmedEmail);
       setSubmitted(true);
     } catch (err) {
@@ -34,14 +34,20 @@ export default function ForgotPasswordPage() {
       // But if there's a validation error (like empty email), we show it.
       if (err.code === "validation_error") {
         setErrorMsg("Lütfen geçerli bir e-posta adresi girin.");
-      } else if (err.code === "network_error" || (err.status && err.status >= 500)) {
-        setErrorMsg(err.message || "Sunucu veya bağlantı hatası oluştu. Lütfen tekrar deneyin.");
+      } else if (
+        err.code === "network_error" ||
+        (err.status && err.status >= 500)
+      ) {
+        setErrorMsg(
+          err.message ||
+            "Sunucu veya bağlantı hatası oluştu. Lütfen tekrar deneyin.",
+        );
       } else {
         let errorMessage = err.message || "";
         if (err.errors) {
           errorMessage = Object.entries(err.errors)
-            .map(([key, value]) => `${key}: ${value.join(', ')}`)
-            .join(' | ');
+            .map(([key, value]) => `${key}: ${value.join(", ")}`)
+            .join(" | ");
           setErrorMsg(errorMessage);
         } else {
           setSubmitted(true); // E-posta varlık gizliliği için güvenlik amacıyla başarılı ekranı göster
@@ -56,13 +62,14 @@ export default function ForgotPasswordPage() {
     <div className={styles.page}>
       <div className={styles.bgOrb1} />
       <div className={styles.bgOrb2} />
-      
+
       <div className={styles.wrapper}>
         <a href="/" className={styles.logoLink}>
           <img src={logoImage} alt="muhristan" className={styles.logoImg} />
+          <span className={styles.brandName}>muhristan</span>
         </a>
 
-        <motion.div 
+        <motion.div
           className={styles.card}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -70,60 +77,107 @@ export default function ForgotPasswordPage() {
         >
           {submitted ? (
             <div className={styles.content}>
-              <FiMail className={styles.successIcon} style={{ fontSize: 56, color: 'var(--gold-light)' }} />
+              <FiMail
+                className={styles.successIcon}
+                style={{ fontSize: 56, color: "var(--gold-light)" }}
+              />
               <h2 className={styles.title}>Talep Gönderildi</h2>
               <p className={styles.sub}>
-                Eğer bu e-posta adresi sistemimizde kayıtlı ise, şifrenizi sıfırlayabilmeniz için gerekli adımları içeren bir e-posta gönderilecektir. Lütfen gelen kutunuzu (ve spam klasörünü) kontrol edin.
+                Eğer bu e-posta adresi sistemimizde kayıtlı ise, şifrenizi
+                sıfırlayabilmeniz için gerekli adımları içeren bir e-posta
+                gönderilecektir. Lütfen gelen kutunuzu (ve spam klasörünü)
+                kontrol edin.
               </p>
-              <button onClick={() => navigate('/giris')} className={styles.btn}>
+              <button onClick={() => navigate("/giris")} className={styles.btn}>
                 Giriş Sayfasına Dön
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className={styles.content} style={{ width: '100%' }}>
-              <FiLock className={styles.spinner} style={{ animation: 'none', fontSize: 56 }} />
+            <form
+              onSubmit={handleSubmit}
+              className={styles.content}
+              style={{ width: "100%" }}
+            >
+              <FiLock
+                className={styles.spinner}
+                style={{ animation: "none", fontSize: 56 }}
+              />
               <h2 className={styles.title}>Şifremi Unuttum</h2>
-              <p className={styles.sub}>Hesap e-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.</p>
+              <p className={styles.sub}>
+                Hesap e-posta adresinizi girin, size şifre sıfırlama bağlantısı
+                gönderelim.
+              </p>
 
               {errorMsg && (
-                <div style={{ color: '#e05594', fontSize: 13, marginBottom: 16 }}>
+                <div
+                  style={{ color: "#e05594", fontSize: 13, marginBottom: 16 }}
+                >
                   {errorMsg}
                 </div>
               )}
 
-              <div style={{ position: 'relative', width: '100%', marginBottom: 20 }}>
-                <FiMail style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input 
-                  type="email" 
-                  required 
+              <div
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  marginBottom: 20,
+                }}
+              >
+                <FiMail
+                  style={{
+                    position: "absolute",
+                    left: 16,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "var(--text-muted)",
+                  }}
+                />
+                <input
+                  type="email"
+                  required
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="E-posta adresiniz"
                   style={{
-                    width: '100%',
-                    padding: '14px 14px 14px 44px',
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid var(--border-gold)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-light)',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                    outline: 'none'
+                    width: "100%",
+                    padding: "14px 14px 14px 44px",
+                    background: "rgba(255, 255, 255, 0.04)",
+                    border: "1px solid var(--border-gold)",
+                    borderRadius: "var(--radius-md)",
+                    color: "var(--text-light)",
+                    fontSize: "14px",
+                    boxSizing: "border-box",
+                    outline: "none",
                   }}
                 />
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={loading}
                 className={styles.btn}
-                style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 12 }}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 12,
+                }}
               >
-                {loading && <FiLoader className={styles.spinner} style={{ margin: 0, fontSize: 16 }} />}
+                {loading && (
+                  <FiLoader
+                    className={styles.spinner}
+                    style={{ margin: 0, fontSize: 16 }}
+                  />
+                )}
                 Sıfırlama Bağlantısı Gönder
               </button>
 
-              <button type="button" onClick={() => navigate('/giris')} className={styles.btnOutline}>
+              <button
+                type="button"
+                onClick={() => navigate("/giris")}
+                className={styles.btnOutline}
+              >
                 Geri Dön
               </button>
             </form>

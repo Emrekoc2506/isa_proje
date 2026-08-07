@@ -1,38 +1,46 @@
-import { Link } from 'react-router-dom';
-import styles from './Footer.module.css';
-import { FiFacebook, FiInstagram, FiYoutube, FiTwitter, FiMail } from 'react-icons/fi';
-import { footerLinks } from '../../data/index';
-import logoImage from '../../assets/images/logo-2.png';
+import { Link } from "react-router-dom";
+import styles from "./Footer.module.css";
+import {
+  FiFacebook,
+  FiInstagram,
+  FiYoutube,
+  FiTwitter,
+  FiMail,
+} from "react-icons/fi";
+import { footerLinks } from "../../data/index";
+import logoImage from "../../assets/images/Logo-2.png";
 
 export default function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>
-
         {/* ── Üst: Logo + Newsletter ────────────────────────── */}
         <div className={styles.top}>
           <div className={styles.brand}>
             <a href="/" className={styles.logoLink}>
-              <img
-                src={logoImage}
-                alt="muhristan"
-                className={styles.logo}
-              />
+              <img src={logoImage} alt="muhristan" className={styles.logo} />
+              <span className={styles.brandName}>muhristan</span>
             </a>
             <p className={styles.tagline}>
-              Ezoterizmin gizemli dünyasını keşfedin. Yüksek kaliteli ezoterik ürünler,
-              uçucu yağlar, tütsüler, kristaller, tarot ve çok daha fazlası.
+              Ezoterizmin gizemli dünyasını keşfedin. Yüksek kaliteli ezoterik
+              ürünler, uçucu yağlar, tütsüler, kristaller, tarot ve çok daha
+              fazlası.
             </p>
 
             {/* Sosyal Medya */}
             <div className={styles.social}>
               {[
-                { Icon: FiFacebook, label: 'Facebook', href: '#' },
-                { Icon: FiInstagram, label: 'Instagram', href: '#' },
-                { Icon: FiYoutube, label: 'YouTube', href: '#' },
-                { Icon: FiTwitter, label: 'Twitter/X', href: '#' },
+                { Icon: FiFacebook, label: "Facebook", href: "#" },
+                { Icon: FiInstagram, label: "Instagram", href: "#" },
+                { Icon: FiYoutube, label: "YouTube", href: "#" },
+                { Icon: FiTwitter, label: "Twitter/X", href: "#" },
               ].map(({ Icon, label, href }) => (
-                <a key={label} href={href} className={styles.socialLink} aria-label={label}>
+                <a
+                  key={label}
+                  href={href}
+                  className={styles.socialLink}
+                  aria-label={label}
+                >
                   <Icon />
                 </a>
               ))}
@@ -43,9 +51,13 @@ export default function Footer() {
           <div className={styles.newsletter}>
             <h4 className={styles.newsletterTitle}>Mistik Çemberde Kalın</h4>
             <p className={styles.newsletterDesc}>
-              Özel teklifler, ezoterik içgörüler ve yeni ürünlerden e-posta ile haberdar olun.
+              Özel teklifler, ezoterik içgörüler ve yeni ürünlerden e-posta ile
+              haberdar olun.
             </p>
-            <form className={styles.newsletterForm} onSubmit={e => e.preventDefault()}>
+            <form
+              className={styles.newsletterForm}
+              onSubmit={(e) => e.preventDefault()}
+            >
               <div className={styles.inputGroup}>
                 <FiMail className={styles.inputIcon} />
                 <input
@@ -70,9 +82,15 @@ export default function Footer() {
           <div className={styles.linkCol}>
             <h5 className={styles.colTitle}>Bilgi</h5>
             <ul className={styles.linkList}>
-              {footerLinks.info.map(l => (
+              {footerLinks.info.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.href} className={styles.link} onClick={() => window.scrollTo(0, 0)}>{l.label}</Link>
+                  <Link
+                    to={l.href}
+                    className={styles.link}
+                    onClick={() => window.scrollTo(0, 0)}
+                  >
+                    {l.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -81,9 +99,15 @@ export default function Footer() {
           <div className={styles.linkCol}>
             <h5 className={styles.colTitle}>Hesabım</h5>
             <ul className={styles.linkList}>
-              {footerLinks.customer.map(l => (
+              {footerLinks.customer.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.href} className={styles.link} onClick={() => window.scrollTo(0, 0)}>{l.label}</Link>
+                  <Link
+                    to={l.href}
+                    className={styles.link}
+                    onClick={() => window.scrollTo(0, 0)}
+                  >
+                    {l.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -92,9 +116,15 @@ export default function Footer() {
           <div className={styles.linkCol}>
             <h5 className={styles.colTitle}>Kategoriler</h5>
             <ul className={styles.linkList}>
-              {footerLinks.categories.map(l => (
+              {footerLinks.categories.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.href} className={styles.link} onClick={() => window.scrollTo(0, 0)}>{l.label}</Link>
+                  <Link
+                    to={l.href}
+                    className={styles.link}
+                    onClick={() => window.scrollTo(0, 0)}
+                  >
+                    {l.label}
+                  </Link>
                 </li>
               ))}
             </ul>

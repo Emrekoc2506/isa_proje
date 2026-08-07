@@ -43,17 +43,20 @@
 
 .logoLink {
   display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
   text-decoration: none;
 }
 
 .brandName {
-  font-family: var(--font-heading);
-  font-size: 24px;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: 18px;
   font-weight: 700;
   color: var(--gold-light);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.14em;
+  margin-top: 4px;
+  text-transform: lowercase;
 }
 
 .logo {

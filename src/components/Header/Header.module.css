@@ -77,24 +77,28 @@
 .logo {
   flex-shrink: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-sm);
+  justify-content: center;
+  text-decoration: none;
   filter: brightness(1.1) saturate(0.8) sepia(0.2) hue-rotate(10deg);
   transition: filter var(--transition-base);
-  text-decoration: none;
 }
 
 .brandName {
-  font-family: var(--font-heading);
-  font-size: 28px;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: 15px;
   font-weight: 700;
   color: var(--gold-light);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.14em;
+  margin-top: 2px;
+  text-align: center;
+  text-transform: lowercase;
   transition: font-size 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .header.sticky .brandName {
-  font-size: 22px;
+  font-size: 13px;
 }
 
 .logo:hover {

@@ -195,24 +195,34 @@
 }
 
 
+.logoLink,
 .sidebarLogo {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-sm);
+  justify-content: center;
   text-decoration: none;
+  width: 100%;
 }
 
+.logoImg,
 .sidebarLogoImg {
-  height: 40px;
+  height: 64px;
+  max-width: 100%;
   width: auto;
+  object-fit: contain;
 }
 
+.brandName,
 .sidebarBrand {
-  font-family: var(--font-heading);
-  font-size: 20px;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: 17px;
   font-weight: 700;
   color: var(--gold-light);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.14em;
+  margin-top: 6px;
+  text-align: center;
+  text-transform: lowercase;
 }
 
 /* Admin Card */

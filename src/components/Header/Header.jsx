@@ -1,33 +1,42 @@
-import styles from './Header.module.css';
-import { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiShoppingCart, FiHeart, FiUser, FiX, FiMenu, FiBell, FiLogOut } from 'react-icons/fi';
-import { MdOutlineLocalShipping } from 'react-icons/md';
-import { useStickyHeader } from '../../hooks/useStickyHeader';
-import CategoryNav from '../CategoryNav/CategoryNav';
-import CartDrawer from '../CartDrawer/CartDrawer';
-import NotificationDropdown from '../NotificationDropdown/NotificationDropdown';
-import ThemeToggle from '../ThemeToggle';
-import logoImage from '../../assets/images/logo-2.png';
-import { useCart } from '../../context/CartContext';
-import { useNotifications } from '../../context/NotificationContext';
-import { useWishlist } from '../../context/WishlistContext';
-import { useAuth } from '../../context/AuthContext';
-import { useProducts } from '../../context/ProductContext';
+import styles from "./Header.module.css";
+import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiSearch,
+  FiShoppingCart,
+  FiHeart,
+  FiUser,
+  FiX,
+  FiMenu,
+  FiBell,
+  FiLogOut,
+} from "react-icons/fi";
+import { MdOutlineLocalShipping } from "react-icons/md";
+import { useStickyHeader } from "../../hooks/useStickyHeader";
+import CategoryNav from "../CategoryNav/CategoryNav";
+import CartDrawer from "../CartDrawer/CartDrawer";
+import NotificationDropdown from "../NotificationDropdown/NotificationDropdown";
+import ThemeToggle from "../ThemeToggle";
+import logoImage from "../../assets/images/logo-2.png";
+import { useCart } from "../../context/CartContext";
+import { useNotifications } from "../../context/NotificationContext";
+import { useWishlist } from "../../context/WishlistContext";
+import { useAuth } from "../../context/AuthContext";
+import { useProducts } from "../../context/ProductContext";
 
 export default function Header() {
   const { isSticky } = useStickyHeader(60);
   const { isAuthenticated, isAdmin, logout } = useAuth();
-  const [searchOpen, setSearchOpen]     = useState(false);
-  const [searchQuery, setSearchQuery]   = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [cartOpen, setCartOpen]         = useState(false);
-  const [notifOpen, setNotifOpen]       = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef(null);
 
   const handleLogout = async () => {
     await logout();
-    window.location.href = '/giris';
+    window.location.href = "/giris";
   };
 
   const { totalCount, totalPrice } = useCart();
@@ -36,39 +45,61 @@ export default function Header() {
   const productContext = useProducts();
   const allProducts = productContext?.products || [];
 
-  const searchResults = searchQuery.trim().length >= 2
-    ? allProducts.filter(p => p.name?.toLowerCase().includes(searchQuery.toLowerCase().trim())).slice(0, 5)
-    : [];
+  const searchResults =
+    searchQuery.trim().length >= 2
+      ? allProducts
+          .filter((p) =>
+            p.name?.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+          )
+          .slice(0, 5)
+      : [];
 
   return (
     <>
       {/* ── Ücretsiz Teslimat Bandı ─────────────────────────── */}
-      <div className={`${styles.announcement} ${isSticky ? styles.announcementScrolled : ''}`}>
+      <div
+        className={`${styles.announcement} ${isSticky ? styles.announcementScrolled : ""}`}
+      >
         <MdOutlineLocalShipping className={styles.announcementIcon} />
-        <span><strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat</span>
+        <span>
+          <strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat
+        </span>
       </div>
 
       {/* ── Ana Header ─────────────────────────────────────── */}
-      <header className={`${styles.header} ${isSticky ? styles.sticky : ''}`}>
+      <header className={`${styles.header} ${isSticky ? styles.sticky : ""}`}>
         <div className={styles.inner}>
-
           {/* Logo */}
-          <a href="/" className={styles.logo} aria-label="muhristan – Ana Sayfa">
+          <a
+            href="/"
+            className={styles.logo}
+            aria-label="muhristan – Ana Sayfa"
+          >
             <img src={logoImage} alt="muhristan" width={180} height={72} />
+            <span className={styles.brandName}>muhristan</span>
           </a>
 
           {/* Arama Kutusu & Live Autocomplete */}
-          <div className={`${styles.searchWrapper} ${searchOpen ? styles.searchOpen : ''}`}>
-            <form className={styles.searchForm} onSubmit={e => e.preventDefault()}>
+          <div
+            className={`${styles.searchWrapper} ${searchOpen ? styles.searchOpen : ""}`}
+          >
+            <form
+              className={styles.searchForm}
+              onSubmit={(e) => e.preventDefault()}
+            >
               <input
                 type="text"
                 className={styles.searchInput}
                 placeholder="Ürün ara…"
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Ara"
               />
-              <button type="submit" className={styles.searchBtn} aria-label="Ara">
+              <button
+                type="submit"
+                className={styles.searchBtn}
+                aria-label="Ara"
+              >
                 <FiSearch />
               </button>
             </form>
@@ -77,27 +108,35 @@ export default function Header() {
             {searchQuery.trim().length >= 2 && (
               <div className={styles.searchDropdown}>
                 {searchResults.length > 0 ? (
-                  searchResults.map(item => (
+                  searchResults.map((item) => (
                     <a
                       key={item.id}
                       href={`/urun/${item.slug || item.id}`}
                       className={styles.searchDropdownItem}
-                      onClick={() => setSearchQuery('')}
+                      onClick={() => setSearchQuery("")}
                     >
                       <img
                         src={item.imageUrl || item.image || "/ornek resim.jpg"}
                         alt={item.name}
                         className={styles.searchThumb}
-                        onError={(e) => { e.target.src = "/ornek resim.jpg"; }}
+                        onError={(e) => {
+                          e.target.src = "/ornek resim.jpg";
+                        }}
                       />
                       <div className={styles.searchInfo}>
-                        <span className={styles.searchItemTitle}>{item.name}</span>
-                        <span className={styles.searchItemPrice}>{item.price} ₺</span>
+                        <span className={styles.searchItemTitle}>
+                          {item.name}
+                        </span>
+                        <span className={styles.searchItemPrice}>
+                          {item.price} ₺
+                        </span>
                       </div>
                     </a>
                   ))
                 ) : (
-                  <div className={styles.searchNoResults}>Eşleşen ürün bulunamadı.</div>
+                  <div className={styles.searchNoResults}>
+                    Eşleşen ürün bulunamadı.
+                  </div>
                 )}
               </div>
             )}
@@ -111,8 +150,8 @@ export default function Header() {
             {/* Mobil arama */}
             <button
               className={`${styles.actionBtn} ${styles.mobileSearch}`}
-              onClick={() => setSearchOpen(v => !v)}
-              aria-label={searchOpen ? 'Aramayı kapat' : 'Aramayı aç'}
+              onClick={() => setSearchOpen((v) => !v)}
+              aria-label={searchOpen ? "Aramayı kapat" : "Aramayı aç"}
             >
               {searchOpen ? <FiX /> : <FiSearch />}
             </button>
@@ -120,7 +159,11 @@ export default function Header() {
             {/* Kullanıcı Durumu (Panelim & Çıkış Yap) */}
             {isAuthenticated ? (
               <>
-                <a href={isAdmin ? "/admin" : "/panel"} className={styles.actionBtn} aria-label="Panelim">
+                <a
+                  href={isAdmin ? "/admin" : "/panel"}
+                  className={styles.actionBtn}
+                  aria-label="Panelim"
+                >
                   <FiUser />
                   <span className={styles.actionLabel}>Panelim</span>
                 </a>
@@ -128,7 +171,11 @@ export default function Header() {
                   type="button"
                   onClick={handleLogout}
                   className={styles.actionBtn}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
                   aria-label="Çıkış Yap"
                 >
                   <FiLogOut />
@@ -136,7 +183,11 @@ export default function Header() {
                 </button>
               </>
             ) : (
-              <a href="/giris" className={styles.actionBtn} aria-label="Giriş Yap">
+              <a
+                href="/giris"
+                className={styles.actionBtn}
+                aria-label="Giriş Yap"
+              >
                 <FiUser />
                 <span className={styles.actionLabel}>Giriş Yap</span>
               </a>
@@ -144,7 +195,11 @@ export default function Header() {
 
             {/* Favoriler */}
             <div className={styles.wishlistWrapper}>
-              <a href="/favorilerim" className={styles.actionBtn} aria-label={`Favoriler - ${wishlistCount} ürün`}>
+              <a
+                href="/favorilerim"
+                className={styles.actionBtn}
+                aria-label={`Favoriler - ${wishlistCount} ürün`}
+              >
                 <FiHeart />
                 {wishlistCount > 0 && (
                   <span className={styles.wishlistBadge}>{wishlistCount}</span>
@@ -157,20 +212,26 @@ export default function Header() {
             <div className={styles.notifWrapper} ref={notifRef}>
               <button
                 id="btn-notifications"
-                className={`${styles.actionBtn} ${notifOpen ? styles.actionActive : ''}`}
-                onClick={() => setNotifOpen(v => !v)}
+                className={`${styles.actionBtn} ${notifOpen ? styles.actionActive : ""}`}
+                onClick={() => setNotifOpen((v) => !v)}
                 aria-label="Bildirimler"
                 aria-expanded={notifOpen}
               >
                 <FiBell />
                 {unreadCount > 0 && (
-                  <span className={styles.notifBadge} aria-label={`${unreadCount} okunmamış bildirim`}>
+                  <span
+                    className={styles.notifBadge}
+                    aria-label={`${unreadCount} okunmamış bildirim`}
+                  >
                     {unreadCount}
                   </span>
                 )}
                 <span className={styles.actionLabel}>Bildirimler</span>
               </button>
-              <NotificationDropdown open={notifOpen} onClose={() => setNotifOpen(false)} />
+              <NotificationDropdown
+                open={notifOpen}
+                onClose={() => setNotifOpen(false)}
+              />
             </div>
 
             {/* 🛒 Sepet */}
@@ -182,15 +243,19 @@ export default function Header() {
             >
               <FiShoppingCart />
               {totalCount > 0 && (
-                <span className={styles.cartBadge} aria-live="polite">{totalCount}</span>
+                <span className={styles.cartBadge} aria-live="polite">
+                  {totalCount}
+                </span>
               )}
-              <span className={styles.actionLabel}>{Math.round(totalPrice).toLocaleString('tr-TR')} ₺</span>
+              <span className={styles.actionLabel}>
+                {Math.round(totalPrice).toLocaleString("tr-TR")} ₺
+              </span>
             </button>
 
             {/* Mobil hamburger */}
             <button
               className={`${styles.actionBtn} ${styles.hamburger}`}
-              onClick={() => setMobileMenuOpen(v => !v)}
+              onClick={() => setMobileMenuOpen((v) => !v)}
               aria-label="Menü"
             >
               {mobileMenuOpen ? <FiX /> : <FiMenu />}
@@ -204,11 +269,14 @@ export default function Header() {
             <motion.div
               className={styles.mobileSearchPanel}
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
+              animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.25 }}
             >
-              <form className={styles.mobileSearchForm} onSubmit={e => e.preventDefault()}>
+              <form
+                className={styles.mobileSearchForm}
+                onSubmit={(e) => e.preventDefault()}
+              >
                 <input
                   type="text"
                   className={styles.mobileSearchInput}
@@ -225,7 +293,10 @@ export default function Header() {
         </AnimatePresence>
 
         {/* ── Kategori Navigasyonu (Header ile tam birleşmiş) ── */}
-        <CategoryNav mobileOpen={mobileMenuOpen} onMobileClose={() => setMobileMenuOpen(false)} />
+        <CategoryNav
+          mobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
+        />
       </header>
 
       {/* ── Sepet Çekmecesi ─────────────────────────────────── */}

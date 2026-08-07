@@ -1,19 +1,19 @@
-import styles from './EmailVerifyPage.module.css'; // Reuse verify styles
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FiMail, FiLoader, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
-import { resendVerification } from '../../services/authApi';
-import logoImage from '../../assets/images/logo-2.png';
+import styles from "./EmailVerifyPage.module.css"; // Reuse verify styles
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FiMail, FiLoader, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
+import { resendVerification } from "../../services/authApi";
+import logoImage from "../../assets/images/logo-2.png";
 
 export default function EmailWaitingPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const email = location.state?.email || '';
+  const email = location.state?.email || "";
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
   // Cooldown geri sayım logic
@@ -33,17 +33,18 @@ export default function EmailWaitingPage() {
 
     try {
       setLoading(true);
-      setErrorMsg('');
+      setErrorMsg("");
       setSuccess(false);
       await resendVerification(email);
       setSuccess(true);
       setCooldown(60); // 60 saniye bekleme süresi
     } catch (err) {
-      let errorMessage = err.message || "Doğrulama e-postası tekrar gönderilemedi.";
+      let errorMessage =
+        err.message || "Doğrulama e-postası tekrar gönderilemedi.";
       if (err.errors) {
         errorMessage = Object.entries(err.errors)
-          .map(([key, value]) => `${key}: ${value.join(', ')}`)
-          .join(' | ');
+          .map(([key, value]) => `${key}: ${value.join(", ")}`)
+          .join(" | ");
       }
       setErrorMsg(errorMessage);
     } finally {
@@ -55,52 +56,99 @@ export default function EmailWaitingPage() {
     <div className={styles.page}>
       <div className={styles.bgOrb1} />
       <div className={styles.bgOrb2} />
-      
+
       <div className={styles.wrapper}>
         <a href="/" className={styles.logoLink}>
           <img src={logoImage} alt="muhristan" className={styles.logoImg} />
+          <span className={styles.brandName}>muhristan</span>
         </a>
 
-        <motion.div 
+        <motion.div
           className={styles.card}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <div className={styles.content}>
-            <FiMail className={styles.spinner} style={{ animation: 'none', fontSize: 56 }} />
+            <FiMail
+              className={styles.spinner}
+              style={{ animation: "none", fontSize: 56 }}
+            />
             <h2 className={styles.title}>E-postanızı Onaylayın</h2>
             <p className={styles.sub}>
               {email ? (
-                <><strong>{email}</strong> adresine bir doğrulama e-postası gönderdik. Hesabınızı aktifleştirmek için e-postadaki bağlantıya tıklayın.</>
+                <>
+                  <strong>{email}</strong> adresine bir doğrulama e-postası
+                  gönderdik. Hesabınızı aktifleştirmek için e-postadaki
+                  bağlantıya tıklayın.
+                </>
               ) : (
-                <>Kaydı tamamlamak için e-posta adresinize gönderilen doğrulama bağlantısına tıklayın.</>
+                <>
+                  Kaydı tamamlamak için e-posta adresinize gönderilen doğrulama
+                  bağlantısına tıklayın.
+                </>
               )}
             </p>
 
             {success && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#2ecc71', marginBottom: 20, fontSize: 13 }}>
-                <FiCheckCircle /> Yeni doğrulama bağlantısı e-postanıza gönderildi.
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  color: "#2ecc71",
+                  marginBottom: 20,
+                  fontSize: 13,
+                }}
+              >
+                <FiCheckCircle /> Yeni doğrulama bağlantısı e-postanıza
+                gönderildi.
               </div>
             )}
 
             {errorMsg && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#e05594', marginBottom: 20, fontSize: 13 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  color: "#e05594",
+                  marginBottom: 20,
+                  fontSize: 13,
+                }}
+              >
                 <FiAlertCircle /> {errorMsg}
               </div>
             )}
 
-            <button 
-              onClick={handleResend} 
+            <button
+              onClick={handleResend}
               disabled={loading || cooldown > 0}
               className={styles.btn}
-              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 12, opacity: (loading || cooldown > 0) ? 0.5 : 1 }}
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 12,
+                opacity: loading || cooldown > 0 ? 0.5 : 1,
+              }}
             >
-              {loading && <FiLoader className={styles.spinner} style={{ margin: 0, fontSize: 16 }} />}
-              {cooldown > 0 ? `Tekrar Gönder (${cooldown}s)` : 'Tekrar E-posta Gönder'}
+              {loading && (
+                <FiLoader
+                  className={styles.spinner}
+                  style={{ margin: 0, fontSize: 16 }}
+                />
+              )}
+              {cooldown > 0
+                ? `Tekrar Gönder (${cooldown}s)`
+                : "Tekrar E-posta Gönder"}
             </button>
 
-            <button onClick={() => navigate('/giris')} className={styles.btnOutline}>
+            <button
+              onClick={() => navigate("/giris")}
+              className={styles.btnOutline}
+            >
               Giriş Sayfasına Dön
             </button>
           </div>
