@@ -570,23 +570,6 @@ export default function ProductDetailPage() {
                 )}
               </button>
 
-              <button 
-                className={styles.buyBtn} 
-                onClick={handleBuyNow}
-                disabled={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0}
-                style={{
-                  background: 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)',
-                  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                <FiZap style={{ color: '#fff' }} /> Hızlı Öde
-              </button>
-
               <button
                 className={`${styles.wishBtn} ${isFav ? styles.wishOn : ''}`}
                 onClick={() => toggleWishlist({ 
