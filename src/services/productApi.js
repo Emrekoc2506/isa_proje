@@ -50,16 +50,26 @@ export function getAdminProductById(id) {
 }
 
 export function createAdminProduct(payload) {
+  const backendPayload = { ...payload };
+  if (payload.weightGram != null && payload.weightGram !== '') {
+    backendPayload.weight = parseFloat(payload.weightGram);
+    backendPayload.weightUnit = 'gr';
+  }
   return request("/admin/products", {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: JSON.stringify(backendPayload)
   });
 }
 
 export function updateAdminProduct(id, payload) {
+  const backendPayload = { ...payload };
+  if (payload.weightGram != null && payload.weightGram !== '') {
+    backendPayload.weight = parseFloat(payload.weightGram);
+    backendPayload.weightUnit = 'gr';
+  }
   return request(`/admin/products/${id}/update`, {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: JSON.stringify(backendPayload)
   });
 }
 
