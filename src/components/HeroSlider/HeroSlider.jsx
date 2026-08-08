@@ -104,12 +104,7 @@ export default function HeroSlider() {
               onVideoEnd={next}
             />
 
-            {/* Overlay gradient (Yalnızca metin overlay açıkken uygulanır) */}
-            {!slide.hideTextOverlay && (slide.title || slide.subtitle) && (
-              <div className={styles.slideOverlay} />
-            )}
-
-            {/* Metin İçeriği (Yazısız afiş seçeneği işaretli değilse ve metin varsa gösterilir) */}
+            {/* Metin İçeriği (hideTextOverlay kapalıysa ve başlık varsa) */}
             {!slide.hideTextOverlay && (slide.title || slide.subtitle) && (
               <motion.div
                 className={styles.slideContent}
