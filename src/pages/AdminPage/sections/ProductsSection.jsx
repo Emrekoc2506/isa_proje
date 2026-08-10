@@ -49,6 +49,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [shortDescription, setShortDescription] = useState('');
   const [description, setDescription] = useState('');
   const [unit, setUnit] = useState('adet');
+  const [weightGram, setWeightGram] = useState('');
+  const [dimensions, setDimensions] = useState('');
   const [discount, setDiscount] = useState('');
   const [slug, setSlug] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -220,6 +222,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setShortDescription('');
     setDescription('');
     setUnit('adet');
+    setWeightGram('');
+    setDimensions('');
     setDiscount('');
     setSlug('');
     setIsActive(true);
@@ -259,6 +263,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setShortDescription(p.shortDescription || '');
     setDescription(p.description || '');
     setUnit(p.unit || 'adet');
+    setWeightGram(p.weightGram || p.weight || '');
+    setDimensions(p.dimensions || '');
     setDiscount(p.discount || '');
     setSlug(p.slug || '');
     setIsActive(p.isActive ?? true);
@@ -339,6 +345,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       shortDescription: shortDescription.trim(),
       description: description.trim(),
       unit: unit || 'adet',
+      weightGram: weightGram !== '' && weightGram !== null ? parseFloat(weightGram) || weightGram : null,
+      dimensions: dimensions ? dimensions.trim() : null,
       discount: discount || null,
       slug: (slug || cleanName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ('urun-' + Date.now()),
       isActive
@@ -839,6 +847,14 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                           <div className={styles.formField}>
                             <label className={styles.fieldLabel}>Takma Ad (Slug)</label>
                             <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className={styles.fieldInput} placeholder="Boş bırakılırsa otomatik üretilir" />
+                          </div>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>⚖️ Ürün Ağırlığı (Gram — İsteğe Bağlı)</label>
+                            <input type="number" step="0.1" value={weightGram} onChange={e => setWeightGram(e.target.value)} className={styles.fieldInput} placeholder="Örn: 45 (veya 45.5)" />
+                          </div>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>📏 Ürün Ölçüsü / Boyutu (İsteğe Bağlı)</label>
+                            <input type="text" value={dimensions} onChange={e => setDimensions(e.target.value)} className={styles.fieldInput} placeholder="Örn: 2.5 x 4 cm veya Ø 30 mm" />
                           </div>
                         </div>
                       </div>

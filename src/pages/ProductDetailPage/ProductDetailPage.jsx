@@ -344,9 +344,10 @@ export default function ProductDetailPage() {
                   transition={{ duration: 0.35 }}
                 >
                   <img
-                    src={mediaList[activeImg]?.src || "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=500"}
+                    src={mediaList[activeImg]?.src || "/ornek resim.jpg"}
                     alt={mediaList[activeImg]?.alt || productDetail.name}
                     className={styles.mainImg}
+                    onError={(e) => { e.target.onerror = null; e.target.src = '/ornek resim.jpg'; }}
                   />
                 </motion.div>
               </AnimatePresence>
@@ -388,7 +389,7 @@ export default function ProductDetailPage() {
                     onClick={() => setActiveImg(i)}
                     aria-label={`Görsel ${i + 1}`}
                   >
-                    <img src={m.src} alt={m.alt} loading="lazy" />
+                    <img src={m.src} alt={m.alt} loading="lazy" onError={(e) => { e.target.onerror = null; e.target.src = '/ornek resim.jpg'; }} />
                   </button>
                 ))}
               </div>
@@ -441,6 +442,52 @@ export default function ProductDetailPage() {
             <p style={{ color: 'var(--text-muted)', lineHeight: '1.6' }}>
               {productDetail.shortDescription || "Mistik şifa enerjileri barındıran bu özel ürün, ritüellerinizde ve günlük yaşamınızda huzuru yakalamanıza yardımcı olur."}
             </p>
+
+            {/* Fiziksel Özellikler (Ağırlık & Ölçü) */}
+            {(productDetail.weightGram || productDetail.weight || productDetail.dimensions) && (
+              <div style={{
+                display: 'flex',
+                gap: '10px',
+                flexWrap: 'wrap',
+                marginTop: '12px'
+              }}>
+                {(productDetail.weightGram || productDetail.weight) && (
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'rgba(201, 162, 39, 0.08)',
+                    border: '1px solid rgba(201, 162, 39, 0.3)',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    color: 'var(--text-primary)',
+                    fontSize: '13px',
+                    fontWeight: 600
+                  }}>
+                    <span style={{ fontSize: '14px' }}>⚖️</span>
+                    <span>Ağırlık: <strong style={{ color: 'var(--gold-light)' }}>{productDetail.weightGram || productDetail.weight} gr</strong></span>
+                  </div>
+                )}
+
+                {productDetail.dimensions && (
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'rgba(201, 162, 39, 0.08)',
+                    border: '1px solid rgba(201, 162, 39, 0.3)',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    color: 'var(--text-primary)',
+                    fontSize: '13px',
+                    fontWeight: 600
+                  }}>
+                    <span style={{ fontSize: '14px' }}>📏</span>
+                    <span>Ölçü: <strong style={{ color: 'var(--gold-light)' }}>{productDetail.dimensions}</strong></span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* VARYANT SEÇİMİ */}
             {productDetail.variants?.length > 0 && (
@@ -521,23 +568,6 @@ export default function ProductDetailPage() {
                 ) : (
                   <span><FiShoppingCart /> Sepete Ekle</span>
                 )}
-              </button>
-
-              <button 
-                className={styles.buyBtn} 
-                onClick={handleBuyNow}
-                disabled={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0}
-                style={{
-                  background: 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)',
-                  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                <FiZap style={{ color: '#fff' }} /> Hızlı Öde
               </button>
 
               <button
@@ -648,6 +678,18 @@ export default function ProductDetailPage() {
                       <tr className={styles.specRow}>
                         <td className={styles.specKey}>Alt Kategori</td>
                         <td className={styles.specVal}>{productDetail.subcategory}</td>
+                      </tr>
+                    )}
+                    {(productDetail.weightGram || productDetail.weight) && (
+                      <tr className={styles.specRow}>
+                        <td className={styles.specKey}>Ağırlık</td>
+                        <td className={styles.specVal}>{productDetail.weightGram || productDetail.weight} gr</td>
+                      </tr>
+                    )}
+                    {productDetail.dimensions && (
+                      <tr className={styles.specRow}>
+                        <td className={styles.specKey}>Ölçü / Boyut</td>
+                        <td className={styles.specVal}>{productDetail.dimensions}</td>
                       </tr>
                     )}
                   </tbody>
