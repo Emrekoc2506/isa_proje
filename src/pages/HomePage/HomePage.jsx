@@ -4,10 +4,31 @@ import HeroSlider from '../../components/HeroSlider/HeroSlider';
 import ProductSection from '../../components/ProductSection/ProductSection';
 import BlogSection from '../../components/BlogSection/BlogSection';
 import CategoryNav from '../../components/CategoryNav/CategoryNav';
+import SEO from '../../components/SEO/SEO';
 import { MdOutlineLocalShipping } from 'react-icons/md';
 import { useProducts } from '../../context/ProductContext';
 import { getBlogArticles } from '../../services/blogApi';
 import { blogArticles as mockArticles } from '../../data/index';
+
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  'name': 'Muhristan',
+  'url': 'https://muhristan.com/',
+  'logo': 'https://muhristan.com/logo-2.png'
+};
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  'name': 'Muhristan',
+  'url': 'https://muhristan.com/',
+  'potentialAction': {
+    '@type': 'SearchAction',
+    'target': 'https://muhristan.com/urunler?search={search_term_string}',
+    'query-input': 'required name=search_term_string'
+  }
+};
 
 export default function HomePage() {
   const { products } = useProducts();
@@ -36,6 +57,12 @@ export default function HomePage() {
 
   return (
     <main id="main-content" className={styles.main}>
+      <SEO 
+        title="Muhristan | Tılsımlı Takılar, Vefk ve Spiritüel Çalışmalar"
+        description="Muhristan ile özel tasarım tılsımlı takılar, vefk çalışmaları, gümüş kolyeler ve spiritüel ürünleri keşfedin. Güvenli alışveriş ve hızlı kargo fırsatıyla."
+        canonical="https://muhristan.com/"
+        jsonLd={[orgSchema, websiteSchema]}
+      />
       {/* ── Hero Slider (1. Banner / Billboard) ──────────────── */}
       <HeroSlider />
 

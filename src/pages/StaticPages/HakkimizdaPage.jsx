@@ -1,4 +1,5 @@
 import { FiStar, FiHeart, FiShield, FiAward } from 'react-icons/fi';
+import SEO from '../../components/SEO/SEO';
 import s from './StaticPage.module.css';
 
 const values = [
@@ -18,6 +19,11 @@ const team = [
 export default function HakkimizdaPage() {
   return (
     <div className={s.page}>
+      <SEO 
+        title="Hakkımızda | Muhristan"
+        description="Muhristan hakkında bilgi edinin. Özel tasarım takılar, vefk çalışmaları ve spiritüel mirasımız hakkında detaylar."
+        canonical="https://muhristan.com/hakkimizda"
+      />
       <section className={s.hero}>
         <div className={s.heroContent}>
           <h1 className={s.heroTitle}>Hakkımızda</h1>

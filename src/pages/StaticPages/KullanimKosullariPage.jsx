@@ -1,9 +1,15 @@
 import { FiFileText, FiShoppingCart, FiUserCheck, FiAlertTriangle } from 'react-icons/fi';
+import SEO from '../../components/SEO/SEO';
 import s from './StaticPage.module.css';
 
 export default function KullanimKosullariPage() {
   return (
     <div className={s.page}>
+      <SEO
+        title="Kullanım Koşulları | Muhristan"
+        description="Muhristan web sitesi kullanım koşulları ve mesafeli satış esasları."
+        canonical="https://muhristan.com/kullanim-kosullari"
+      />
       <section className={s.hero}>
         <div className={s.heroContent}>
           <h1 className={s.heroTitle}>Kullanım Koşulları</h1>

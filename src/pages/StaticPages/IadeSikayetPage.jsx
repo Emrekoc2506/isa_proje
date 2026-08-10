@@ -1,4 +1,5 @@
 import { FiRefreshCw, FiShield, FiAlertCircle, FiCheck } from 'react-icons/fi';
+import SEO from '../../components/SEO/SEO';
 import s from './StaticPage.module.css';
 
 const steps = [
@@ -11,6 +12,11 @@ const steps = [
 export default function IadeSikayetPage() {
   return (
     <div className={s.page}>
+      <SEO
+        title="İade ve İptal Şartları | Muhristan"
+        description="Muhristan iade, değişim ve iptal şartları hakkında detaylı bilgilendirme."
+        canonical="https://muhristan.com/iade-sikayet"
+      />
       <section className={s.hero}>
         <div className={s.heroContent}>
           <h1 className={s.heroTitle}>İade & Şikayetler</h1>

@@ -152,8 +152,62 @@ export default function ProductsPage() {
     setSearchParams({});
   };
 
+  // Category SEO & Schema Calculation
+  const matchedCategoryObj = categories.find(c => 
+    String(c.id) === String(selectedCategory) || 
+    c.slug === selectedCategory || 
+    c.name?.toLowerCase() === String(selectedCategory).toLowerCase()
+  );
+
+  let pageTitle = 'Tüm Ürünler | Muhristan';
+  let pageDesc = 'Muhristan koleksiyonundaki özel tasarım takı, vefk ve spiritüel ürünleri inceleyin.';
+  let pageKeywords = null;
+  let pageImage = matchedCategoryObj?.imageUrl || '/logo-2.png';
+  let pageCanonical = matchedCategoryObj?.canonicalUrl || null;
+  let pageJsonLd = null;
+
+  if (matchedCategoryObj) {
+    pageTitle = matchedCategoryObj.seoTitle || `${matchedCategoryObj.name} | Muhristan`;
+    pageDesc = matchedCategoryObj.seoDescription || matchedCategoryObj.description || `Muhristan ${matchedCategoryObj.name} kategorisindeki özel tasarım takıları ve spiritüel ürünleri keşfedin.`;
+    pageKeywords = matchedCategoryObj.seoKeywords || null;
+    if (!pageCanonical) {
+      pageCanonical = `https://muhristan.com/urunler?kategori=${encodeURIComponent(matchedCategoryObj.slug || matchedCategoryObj.name)}`;
+    }
+
+    pageJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      'itemListElement': [
+        {
+          '@type': 'ListItem',
+          'position': 1,
+          'name': 'Ana Sayfa',
+          'item': 'https://muhristan.com/'
+        },
+        {
+          '@type': 'ListItem',
+          'position': 2,
+          'name': matchedCategoryObj.name,
+          'item': pageCanonical
+        }
+      ]
+    };
+  } else if (searchParam) {
+    pageTitle = `"${searchParam}" Arama Sonuçları | Muhristan`;
+    pageDesc = `"${searchParam}" aramasına ait ürün sonuçları Muhristan mağazasında.`;
+  }
+
   return (
     <div className={styles.shopContainer}>
+      <SEO
+        title={pageTitle}
+        description={pageDesc}
+        keywords={pageKeywords}
+        canonical={pageCanonical}
+        image={pageImage}
+        jsonLd={pageJsonLd}
+        noindex={Boolean(searchParam && searchParam.trim())}
+      />
         
         {/* Üst Kısım: Breadcrumb & Başlık */}
         <div className={styles.shopHeader}>
@@ -402,11 +456,6 @@ export default function ProductsPage() {
 
             </div>
           </aside>
-
-      <SEO
-        title={selectedCategory !== 'hepsi' ? `${selectedCategory} | muhristan` : 'Tüm Ürünler | muhristan'}
-        description="Özel tasarım gümüş kolyeler, yüzükler, bileklikler ve şık aksesuarlar muhristan'da."
-      />
 
       {/* ── SAĞ TARAF: ÜRÜN GRİDİ ──────────────────────────────── */}
       <main className={styles.productsArea}>
