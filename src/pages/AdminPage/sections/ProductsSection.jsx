@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-  FiTrash2, FiEdit3, FiPlus, FiGrid, FiList, FiAlertCircle, FiLock, FiUnlock,
+  FiTrash2, FiEdit3, FiPlus, FiLock, FiUnlock,
   FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText, FiX
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';

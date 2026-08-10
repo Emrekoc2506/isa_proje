@@ -5,7 +5,7 @@ import { useProducts } from '../../context/ProductContext';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import SEO from '../../components/SEO/SEO';
 import { ProductCardSkeleton } from '../../components/Skeleton/Skeleton';
-import { FiSearch, FiSliders, FiGrid, FiList, FiChevronRight, FiChevronDown, FiBook, FiFolder, FiCheckSquare, FiSquare } from 'react-icons/fi';
+import { FiSearch, FiSliders, FiChevronRight, FiChevronDown, FiBook, FiFolder, FiCheckSquare, FiSquare } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ProductsPage() {

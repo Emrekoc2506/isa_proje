@@ -2,9 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { 
   getProducts, 
   createAdminProduct, 
-  deleteAdminProduct, 
-  updateAdminProductPrice, 
-  updateAdminProductStatus 
+  deleteAdminProduct 
 } from '../services/productApi';
 import { 
   getCategories, 
@@ -15,19 +13,12 @@ import {
 import { 
   getBanners, 
   createAdminBanner, 
-  deleteAdminBanner, 
-  updateAdminBannerStatus 
+  deleteAdminBanner 
 } from '../services/bannerApi';
 import { 
   parseBannerContent 
 } from '../utils/bannerContent';
-import { 
-  newsProducts as mockNews, 
-  saleProducts as mockSale, 
-  featuredProducts as mockFeatured 
-} from '../data/index';
 
-const MOCK_PRODUCTS = [...mockNews, ...mockSale, ...mockFeatured];
 const INITIAL_SLIDES = [];
 const ProductContext = createContext(null);
 

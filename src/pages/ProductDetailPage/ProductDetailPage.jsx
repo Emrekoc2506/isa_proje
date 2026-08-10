@@ -5,8 +5,8 @@ import DOMPurify from 'dompurify';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiShoppingCart, FiHeart, FiCheck, FiStar,
-  FiChevronRight, FiPackage, FiTruck,
-  FiShield, FiMinus, FiPlus, FiShare2, FiAward,
+  FiChevronRight, FiTruck,
+  FiShield, FiMinus, FiPlus, FiShare2,
   FiZap, FiChevronDown, FiMessageCircle, FiBell
 } from 'react-icons/fi';
 import { FaHeart, FaWhatsapp, FaInstagram } from 'react-icons/fa';
@@ -21,28 +21,6 @@ import ProductReviews from '../../components/ProductReviews/ProductReviews';
 import RecentlyViewed from '../../components/RecentlyViewed/RecentlyViewed';
 import StockNotifyModal from '../../components/StockNotifyModal/StockNotifyModal';
 import { addRecentlyViewed } from '../../utils/recentlyViewed';
-
-/* ─── Animasyon Varyantları ──────────────────────────────── */
-const fadeUp = {
-  hidden: { opacity: 0, y: 32 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] } }
-};
-const fadeLeft = {
-  hidden: { opacity: 0, x: -40 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94] } }
-};
-const fadeRight = {
-  hidden: { opacity: 0, x: 40 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94] } }
-};
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } }
-};
-const staggerItem = {
-  hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } }
-};
 
 /* ─── Yıldız Bileşeni ────────────────────────────────────── */
 function Stars({ rating, size = 14 }) {
