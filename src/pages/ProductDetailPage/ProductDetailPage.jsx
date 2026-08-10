@@ -152,7 +152,9 @@ export default function ProductDetailPage() {
   /* ─── Medya Listesi ─────────────────────────────────── */
   const mediaList = useMemo(() => {
     if (productDetail?.images?.length) {
-      return productDetail.images.map(img => ({ type: 'image', src: img.url, alt: productDetail.name }));
+      return [...productDetail.images]
+        .sort((a, b) => Number(Boolean(b.isPrimary)) - Number(Boolean(a.isPrimary)) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+        .map(img => ({ type: 'image', src: img.url, alt: productDetail.name }));
     }
     if (productDetail?.imageUrl) {
       return [{ type: 'image', src: productDetail.imageUrl, alt: productDetail.name }];
@@ -162,6 +164,10 @@ export default function ProductDetailPage() {
     }
     return [];
   }, [productDetail, product]);
+
+  useEffect(() => {
+    setActiveImg(previous => Math.min(previous, Math.max(0, mediaList.length - 1)));
+  }, [mediaList.length]);
 
   /* ─── Related Scroll Ref ────────────────────────────── */
   const relatedRef = useRef(null);

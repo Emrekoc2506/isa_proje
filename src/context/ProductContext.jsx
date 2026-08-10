@@ -37,9 +37,16 @@ function normalizeProducts(productsData) {
     : (productsData?.items || productsData?.data || []);
 
   return rawList.map(p => {
-    const mainImg = (p.imageUrls && p.imageUrls.length > 0)
-      ? p.imageUrls[0]
-      : (p.imageUrl || p.ImageUrl || p.image || p.Image || '');
+    const detailImageUrls = Array.isArray(p.images)
+      ? [...p.images]
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+          .map(image => image?.url)
+          .filter(Boolean)
+      : [];
+    const imageUrls = Array.isArray(p.imageUrls) && p.imageUrls.length > 0
+      ? p.imageUrls
+      : detailImageUrls;
+    const mainImg = imageUrls[0] || (p.imageUrl || p.ImageUrl || p.image || p.Image || '');
       
     const priceVal = p.price ?? p.Price ?? 0;
     const oldPriceVal = p.oldPrice ?? p.OldPrice ?? null;
@@ -54,7 +61,7 @@ function normalizeProducts(productsData) {
       rawOldPrice: oldPriceVal,
       image: mainImg,
       imageUrl: mainImg,
-      imageUrls: p.imageUrls || (mainImg ? [mainImg] : []),
+      imageUrls: imageUrls.length > 0 ? imageUrls : (mainImg ? [mainImg] : []),
       isNew: Boolean(p.isNew ?? p.IsNew),
       isSale: Boolean(p.isSale ?? p.IsSale),
       isFeatured: Boolean(p.isFeatured ?? p.IsFeatured),
@@ -236,7 +243,9 @@ export function ProductProvider({ children }) {
         stockQuantity: productData.stockQuantity ? parseInt(productData.stockQuantity) : 10,
         shortDescription: productData.shortDescription || (productData.name + " şifa dolu mistik ürün."),
         description: productData.description || (productData.name + " şifa dolu mistik ürün."),
-        imageUrls: productData.imageUrl ? [productData.imageUrl] : (productData.image ? [productData.image] : []),
+        imageUrls: Array.isArray(productData.imageUrls) && productData.imageUrls.length > 0
+          ? productData.imageUrls
+          : (productData.imageUrl ? [productData.imageUrl] : (productData.image ? [productData.image] : [])),
         slug: slug,
         isActive: productData.isActive !== false,
         isNew: productData.isNew || false,
