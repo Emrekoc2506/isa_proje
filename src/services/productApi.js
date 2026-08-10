@@ -51,6 +51,11 @@ export function getAdminProductById(id) {
 
 export function createAdminProduct(payload) {
   const backendPayload = { ...payload };
+  if (payload.imageUrls !== undefined || payload.imageUrl !== undefined) {
+    backendPayload.imageUrls = Array.isArray(payload.imageUrls)
+      ? payload.imageUrls
+      : (payload.imageUrl ? [payload.imageUrl] : []);
+  }
   if (payload.weightGram != null && payload.weightGram !== '') {
     backendPayload.weight = parseFloat(payload.weightGram);
     backendPayload.weightUnit = 'gr';
@@ -63,6 +68,11 @@ export function createAdminProduct(payload) {
 
 export function updateAdminProduct(id, payload) {
   const backendPayload = { ...payload };
+  if (payload.imageUrls !== undefined || payload.imageUrl !== undefined) {
+    backendPayload.imageUrls = Array.isArray(payload.imageUrls)
+      ? payload.imageUrls
+      : (payload.imageUrl ? [payload.imageUrl] : []);
+  }
   if (payload.weightGram != null && payload.weightGram !== '') {
     backendPayload.weight = parseFloat(payload.weightGram);
     backendPayload.weightUnit = 'gr';

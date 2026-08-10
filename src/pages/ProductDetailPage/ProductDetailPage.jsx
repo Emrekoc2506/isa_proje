@@ -129,16 +129,32 @@ export default function ProductDetailPage() {
 
   /* ─── Medya Listesi ─────────────────────────────────── */
   const mediaList = useMemo(() => {
-    if (productDetail?.images?.length) {
-      return productDetail.images.map(img => ({ type: 'image', src: img.url, alt: productDetail.name }));
+    let urls = [];
+    if (Array.isArray(productDetail?.images) && productDetail.images.length > 0) {
+      const sorted = [...productDetail.images].sort((a, b) => {
+        const aPrimary = a.isPrimary || a.IsPrimary ? 1 : 0;
+        const bPrimary = b.isPrimary || b.IsPrimary ? 1 : 0;
+        if (aPrimary !== bPrimary) return bPrimary - aPrimary;
+        return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+      });
+      urls = sorted.map(i => (typeof i === 'string' ? i : (i?.url || i?.Url))).filter(Boolean);
+    } else if (Array.isArray(productDetail?.imageUrls) && productDetail.imageUrls.length > 0) {
+      urls = productDetail.imageUrls.filter(Boolean);
+    } else if (productDetail?.imageUrl || productDetail?.ImageUrl) {
+      urls = [productDetail.imageUrl || productDetail.ImageUrl];
+    } else if (product?.image || product?.imageUrl) {
+      urls = [product.image || product.imageUrl];
     }
-    if (productDetail?.imageUrl) {
-      return [{ type: 'image', src: productDetail.imageUrl, alt: productDetail.name }];
+
+    if (urls.length === 0) {
+      urls = ['/ornek resim.jpg'];
     }
-    if (product) {
-      return [{ type: 'image', src: product.image, alt: product.name }];
-    }
-    return [];
+
+    return urls.map(src => ({
+      type: 'image',
+      src,
+      alt: productDetail?.name || 'Ürün Görseli'
+    }));
   }, [productDetail, product]);
 
   /* ─── Related Scroll Ref ────────────────────────────── */

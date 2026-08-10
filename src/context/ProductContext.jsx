@@ -28,9 +28,19 @@ function normalizeProducts(productsData) {
     : (productsData?.items || productsData?.data || []);
 
   return rawList.map(p => {
-    const mainImg = (p.imageUrls && p.imageUrls.length > 0)
-      ? p.imageUrls[0]
-      : (p.imageUrl || p.ImageUrl || p.image || p.Image || '');
+    const imagesList = Array.isArray(p.images) ? p.images : (Array.isArray(p.Images) ? p.Images : []);
+    const primaryObj = imagesList.find(i => i.isPrimary || i.IsPrimary);
+    const primaryUrl = primaryObj?.url || primaryObj?.Url || imagesList[0]?.url || imagesList[0]?.Url;
+
+    const imageUrlsArr = Array.isArray(p.imageUrls)
+      ? p.imageUrls
+      : (Array.isArray(p.ImageUrls)
+        ? p.ImageUrls
+        : (imagesList.length > 0
+          ? imagesList.map(i => (typeof i === 'string' ? i : (i.url || i.Url))).filter(Boolean)
+          : (p.imageUrl || p.ImageUrl || p.image || p.Image ? [p.imageUrl || p.ImageUrl || p.image || p.Image] : [])));
+
+    const mainImg = p.imageUrl || p.ImageUrl || primaryUrl || imageUrlsArr[0] || p.image || p.Image || '';
       
     const priceVal = p.price ?? p.Price ?? 0;
     const oldPriceVal = p.oldPrice ?? p.OldPrice ?? null;
@@ -45,7 +55,8 @@ function normalizeProducts(productsData) {
       rawOldPrice: oldPriceVal,
       image: mainImg,
       imageUrl: mainImg,
-      imageUrls: p.imageUrls || (mainImg ? [mainImg] : []),
+      imageUrls: imageUrlsArr,
+      images: imagesList.length > 0 ? imagesList : imageUrlsArr.map((url, idx) => ({ url, isPrimary: idx === 0, sortOrder: idx })),
       isNew: Boolean(p.isNew ?? p.IsNew),
       isSale: Boolean(p.isSale ?? p.IsSale),
       isFeatured: Boolean(p.isFeatured ?? p.IsFeatured),
