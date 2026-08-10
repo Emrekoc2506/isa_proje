@@ -1,10 +1,8 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { 
   getProducts, 
   createAdminProduct, 
-  deleteAdminProduct, 
-  updateAdminProductPrice, 
-  updateAdminProductStatus 
+  deleteAdminProduct 
 } from '../services/productApi';
 import { 
   getCategories, 
@@ -15,19 +13,12 @@ import {
 import { 
   getBanners, 
   createAdminBanner, 
-  deleteAdminBanner, 
-  updateAdminBannerStatus 
+  deleteAdminBanner 
 } from '../services/bannerApi';
 import { 
   parseBannerContent 
 } from '../utils/bannerContent';
-import { 
-  newsProducts as mockNews, 
-  saleProducts as mockSale, 
-  featuredProducts as mockFeatured 
-} from '../data/index';
 
-const MOCK_PRODUCTS = [...mockNews, ...mockSale, ...mockFeatured];
 const INITIAL_SLIDES = [];
 const ProductContext = createContext(null);
 
@@ -37,9 +28,19 @@ function normalizeProducts(productsData) {
     : (productsData?.items || productsData?.data || []);
 
   return rawList.map(p => {
-    const mainImg = (p.imageUrls && p.imageUrls.length > 0)
-      ? p.imageUrls[0]
-      : (p.imageUrl || p.ImageUrl || p.image || p.Image || '');
+    const imagesList = Array.isArray(p.images) ? p.images : (Array.isArray(p.Images) ? p.Images : []);
+    const primaryObj = imagesList.find(i => i.isPrimary || i.IsPrimary);
+    const primaryUrl = primaryObj?.url || primaryObj?.Url || imagesList[0]?.url || imagesList[0]?.Url;
+
+    const imageUrlsArr = Array.isArray(p.imageUrls)
+      ? p.imageUrls
+      : (Array.isArray(p.ImageUrls)
+        ? p.ImageUrls
+        : (imagesList.length > 0
+          ? imagesList.map(i => (typeof i === 'string' ? i : (i.url || i.Url))).filter(Boolean)
+          : (p.imageUrl || p.ImageUrl || p.image || p.Image ? [p.imageUrl || p.ImageUrl || p.image || p.Image] : [])));
+
+    const mainImg = p.imageUrl || p.ImageUrl || primaryUrl || imageUrlsArr[0] || p.image || p.Image || '';
       
     const priceVal = p.price ?? p.Price ?? 0;
     const oldPriceVal = p.oldPrice ?? p.OldPrice ?? null;
@@ -54,7 +55,8 @@ function normalizeProducts(productsData) {
       rawOldPrice: oldPriceVal,
       image: mainImg,
       imageUrl: mainImg,
-      imageUrls: p.imageUrls || (mainImg ? [mainImg] : []),
+      imageUrls: imageUrlsArr,
+      images: imagesList.length > 0 ? imagesList : imageUrlsArr.map((url, idx) => ({ url, isPrimary: idx === 0, sortOrder: idx })),
       isNew: Boolean(p.isNew ?? p.IsNew),
       isSale: Boolean(p.isSale ?? p.IsSale),
       isFeatured: Boolean(p.isFeatured ?? p.IsFeatured),
@@ -69,12 +71,22 @@ export function ProductProvider({ children }) {
   const [slides, setSlides] = useState(INITIAL_SLIDES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Tüm kamu ve admin (varsa) verilerini yükleme
   const loadInitialData = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
+      if (isMountedRef.current && typeof window !== 'undefined') {
+        setLoading(true);
+        setError(null);
+      }
 
       // Kategori ve Banner (Afiş) verileri her zaman public'tir
       const [categoriesData, bannersData, productsData] = await Promise.all([
@@ -82,6 +94,8 @@ export function ProductProvider({ children }) {
         getBanners().catch(() => []),
         getProducts({ pageSize: 100 }).catch(() => [])
       ]);
+
+      if (!isMountedRef.current || typeof window === 'undefined') return;
 
       setCategories(categoriesData || []);
 
@@ -125,9 +139,13 @@ export function ProductProvider({ children }) {
       setSlides(mappedSlides);
     } catch (err) {
       console.error("Veri yükleme hatası:", err);
-      setError("Veriler yüklenirken bir hata oluştu.");
+      if (isMountedRef.current && typeof window !== 'undefined') {
+        setError("Veriler yüklenirken bir hata oluştu.");
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current && typeof window !== 'undefined') {
+        setLoading(false);
+      }
     }
   }, []);
 

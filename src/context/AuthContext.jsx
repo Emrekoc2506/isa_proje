@@ -4,6 +4,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import * as authApi from "../services/authApi";
 import { safeGetItem, safeSetItem, safeRemoveItem } from "../utils/storage";
@@ -28,31 +29,45 @@ export function AuthProvider({ children }) {
   const [roles, setRoles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const safeSetState = useCallback((setter, val) => {
+    if (isMountedRef.current && typeof window !== 'undefined') {
+      setter(val);
+    }
+  }, []);
+
   const reloadUser = useCallback(async () => {
     const token = safeGetItem("accessToken");
     if (!token) {
-      setUser(null);
-      setRoles([]);
-      setIsLoading(false);
+      safeSetState(setUser, null);
+      safeSetState(setRoles, []);
+      safeSetState(setIsLoading, false);
       return null;
     }
 
     try {
-      setIsLoading(true);
+      safeSetState(setIsLoading, true);
       const res = await authApi.me();
       if (res && safeGetItem("accessToken")) {
-        setUser(res);
-        setRoles(res.roles || []);
+        safeSetState(setUser, res);
+        safeSetState(setRoles, res.roles || []);
         return res;
       }
     } catch (err) {
-      setUser(null);
-      setRoles([]);
+      safeSetState(setUser, null);
+      safeSetState(setRoles, []);
     } finally {
-      setIsLoading(false);
+      safeSetState(setIsLoading, false);
     }
     return null;
-  }, []);
+  }, [safeSetState]);
 
   useEffect(() => {
     reloadUser();

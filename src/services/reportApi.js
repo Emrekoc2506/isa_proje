@@ -54,3 +54,20 @@ export async function downloadOrdersCsv(params = {}) {
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
 }
+
+// ─── Genişletilmiş Dashboard Metrikleri ────────────────────────────────
+export function getCustomersReport() {
+  return request("/admin/customers").catch(() => []);
+}
+
+export function getRecentOrders(count = 5) {
+  const query = new URLSearchParams();
+  query.append("page", "1");
+  query.append("pageSize", String(count));
+  return request(`/admin/orders?${query.toString()}`).catch(() => ({ items: [], totalCount: 0 }));
+}
+
+export function getReviewsReport() {
+  return request("/admin/reviews?page=1&pageSize=100").catch(() => ({ items: [], totalCount: 0 }));
+}
+

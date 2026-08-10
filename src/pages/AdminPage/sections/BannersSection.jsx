@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   FiPlus, FiTrash2, FiToggleLeft, FiToggleRight, FiTag, FiImage,
   FiSliders, FiCheck, FiUploadCloud, FiChevronLeft, FiChevronRight,
-  FiFileText, FiStar, FiGrid, FiVideo, FiDollarSign, FiEdit2,
-  FiAlignLeft, FiList, FiEye, FiX
+  FiGrid, FiVideo, FiEdit2,
+  FiEye, FiX
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as bannerApi from '../../../services/bannerApi';

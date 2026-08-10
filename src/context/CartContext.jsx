@@ -72,23 +72,37 @@ export function CartProvider({ children }) {
   const removingItemIdsRef = useRef(new Set());
   const isMergingCartRef = useRef(false);
 
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const safeSetState = useCallback((setter, val) => {
+    if (isMountedRef.current && typeof window !== 'undefined') {
+      setter(val);
+    }
+  }, []);
+
   const applyServerCart = useCallback((data) => {
     const { cartData: newCartData, items: newItems } = mapServerCart(data);
-    setCartData(newCartData);
-    setItems(newItems);
-  }, []);
+    safeSetState(setCartData, newCartData);
+    safeSetState(setItems, newItems);
+  }, [safeSetState]);
 
   const refreshCart = useCallback(async () => {
     try {
-      if (typeof window !== 'undefined') setLoading(true);
+      safeSetState(setLoading, true);
       const data = await cartApi.getCart();
-      if (typeof window !== 'undefined') applyServerCart(data);
+      applyServerCart(data);
     } catch (err) {
       console.error("Cart fetch failed:", err);
     } finally {
-      if (typeof window !== 'undefined') setLoading(false);
+      safeSetState(setLoading, false);
     }
-  }, [applyServerCart]);
+  }, [applyServerCart, safeSetState]);
 
   const triggerGuestCartMerge = useCallback((retryCount = 0) => {
     if (hasMergedInCurrentSession) return Promise.resolve();
@@ -97,39 +111,31 @@ export function CartProvider({ children }) {
 
     hasMergedInCurrentSession = true;
     isMergingCartRef.current = true;
-    setIsMergingCart(true);
+    safeSetState(setIsMergingCart, true);
 
     activeMergePromise = (async () => {
       try {
         await cartApi.mergeGuestCart();
         await refreshCart();
-        if (typeof window !== 'undefined') {
-          setItems(prev => prev.filter(i => i.source !== 'mock'));
-        }
+        safeSetState(setItems, prev => prev.filter(i => i.source !== 'mock'));
       } catch (err) {
         if (err.code === 'cart_concurrency_conflict' && retryCount === 0) {
           await new Promise(r => setTimeout(r, 400));
           isMergingCartRef.current = false;
-          if (typeof window !== 'undefined') {
-            setIsMergingCart(false);
-          }
+          safeSetState(setIsMergingCart, false);
           activeMergePromise = null;
           return triggerGuestCartMerge(1);
         }
         await refreshCart();
-        if (typeof window !== 'undefined') {
-          setCartError(getCartErrorMessage(err));
-        }
+        safeSetState(setCartError, getCartErrorMessage(err));
       } finally {
         isMergingCartRef.current = false;
-        if (typeof window !== 'undefined') {
-          setIsMergingCart(false);
-        }
+        safeSetState(setIsMergingCart, false);
       }
     })();
 
     return activeMergePromise;
-  }, [refreshCart]);
+  }, [refreshCart, safeSetState]);
 
   // Sync cart on auth change
   useEffect(() => {

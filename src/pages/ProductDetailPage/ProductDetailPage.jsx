@@ -5,8 +5,8 @@ import DOMPurify from 'dompurify';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiShoppingCart, FiHeart, FiCheck, FiStar,
-  FiChevronRight, FiPackage, FiTruck,
-  FiShield, FiMinus, FiPlus, FiShare2, FiAward,
+  FiChevronRight, FiTruck,
+  FiShield, FiMinus, FiPlus, FiShare2,
   FiZap, FiChevronDown, FiMessageCircle, FiBell
 } from 'react-icons/fi';
 import { FaHeart, FaWhatsapp, FaInstagram } from 'react-icons/fa';
@@ -21,28 +21,6 @@ import ProductReviews from '../../components/ProductReviews/ProductReviews';
 import RecentlyViewed from '../../components/RecentlyViewed/RecentlyViewed';
 import StockNotifyModal from '../../components/StockNotifyModal/StockNotifyModal';
 import { addRecentlyViewed } from '../../utils/recentlyViewed';
-
-/* ─── Animasyon Varyantları ──────────────────────────────── */
-const fadeUp = {
-  hidden: { opacity: 0, y: 32 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] } }
-};
-const fadeLeft = {
-  hidden: { opacity: 0, x: -40 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94] } }
-};
-const fadeRight = {
-  hidden: { opacity: 0, x: 40 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94] } }
-};
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } }
-};
-const staggerItem = {
-  hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } }
-};
 
 /* ─── Yıldız Bileşeni ────────────────────────────────────── */
 function Stars({ rating, size = 14 }) {
@@ -151,16 +129,32 @@ export default function ProductDetailPage() {
 
   /* ─── Medya Listesi ─────────────────────────────────── */
   const mediaList = useMemo(() => {
-    if (productDetail?.images?.length) {
-      return productDetail.images.map(img => ({ type: 'image', src: img.url, alt: productDetail.name }));
+    let urls = [];
+    if (Array.isArray(productDetail?.images) && productDetail.images.length > 0) {
+      const sorted = [...productDetail.images].sort((a, b) => {
+        const aPrimary = a.isPrimary || a.IsPrimary ? 1 : 0;
+        const bPrimary = b.isPrimary || b.IsPrimary ? 1 : 0;
+        if (aPrimary !== bPrimary) return bPrimary - aPrimary;
+        return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+      });
+      urls = sorted.map(i => (typeof i === 'string' ? i : (i?.url || i?.Url))).filter(Boolean);
+    } else if (Array.isArray(productDetail?.imageUrls) && productDetail.imageUrls.length > 0) {
+      urls = productDetail.imageUrls.filter(Boolean);
+    } else if (productDetail?.imageUrl || productDetail?.ImageUrl) {
+      urls = [productDetail.imageUrl || productDetail.ImageUrl];
+    } else if (product?.image || product?.imageUrl) {
+      urls = [product.image || product.imageUrl];
     }
-    if (productDetail?.imageUrl) {
-      return [{ type: 'image', src: productDetail.imageUrl, alt: productDetail.name }];
+
+    if (urls.length === 0) {
+      urls = ['/ornek resim.jpg'];
     }
-    if (product) {
-      return [{ type: 'image', src: product.image, alt: product.name }];
-    }
-    return [];
+
+    return urls.map(src => ({
+      type: 'image',
+      src,
+      alt: productDetail?.name || 'Ürün Görseli'
+    }));
   }, [productDetail, product]);
 
   /* ─── Related Scroll Ref ────────────────────────────── */

@@ -309,7 +309,8 @@ export default function AdminPage() {
               exit="exit"
               style={{ height: active === "messages" ? "100%" : "auto" }}
             >
-              {active === "overview" && <DashboardSection />}
+              {active === "overview" && <DashboardSection onNavigate={setActive} />}
+
 
               {active === "products" && <ProductsSection />}
 
