@@ -251,8 +251,12 @@ export const footerLinks = {
     { label: 'Hakkımızda', href: '/hakkimizda' },
     { label: 'İletişim', href: '/iletisim' },
     { label: 'Kargo & Teslimat', href: '/kargo-teslimat' },
-    { label: 'İade & Şikayetler', href: '/iade-sikayet' },
+    { label: 'Garanti & İptal Şartları', href: '/garanti-ve-iptal' },
+    { label: 'Mesafeli Satış Sözleşmesi', href: '/mesafeli-satis-sozlesmesi' },
+    { label: 'Ön Bilgilendirme Formu', href: '/on-bilgilendirme-formu' },
+    { label: 'KVKK Aydınlatma Metni', href: '/kvkk-aydinlatma' },
     { label: 'Gizlilik Politikası', href: '/gizlilik-politikasi' },
+    { label: 'Çerez Politikası', href: '/cerez-politikasi' },
     { label: 'Kullanım Koşulları', href: '/kullanim-kosullari' },
   ],
   customer: [
