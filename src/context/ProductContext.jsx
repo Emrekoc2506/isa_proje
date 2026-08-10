@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { 
   getProducts, 
   createAdminProduct, 
@@ -69,12 +69,22 @@ export function ProductProvider({ children }) {
   const [slides, setSlides] = useState(INITIAL_SLIDES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Tüm kamu ve admin (varsa) verilerini yükleme
   const loadInitialData = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
+      if (isMountedRef.current && typeof window !== 'undefined') {
+        setLoading(true);
+        setError(null);
+      }
 
       // Kategori ve Banner (Afiş) verileri her zaman public'tir
       const [categoriesData, bannersData, productsData] = await Promise.all([
@@ -82,6 +92,8 @@ export function ProductProvider({ children }) {
         getBanners().catch(() => []),
         getProducts({ pageSize: 100 }).catch(() => [])
       ]);
+
+      if (!isMountedRef.current || typeof window === 'undefined') return;
 
       setCategories(categoriesData || []);
 
@@ -125,9 +137,13 @@ export function ProductProvider({ children }) {
       setSlides(mappedSlides);
     } catch (err) {
       console.error("Veri yükleme hatası:", err);
-      setError("Veriler yüklenirken bir hata oluştu.");
+      if (isMountedRef.current && typeof window !== 'undefined') {
+        setError("Veriler yüklenirken bir hata oluştu.");
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current && typeof window !== 'undefined') {
+        setLoading(false);
+      }
     }
   }, []);
 
