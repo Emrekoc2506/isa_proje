@@ -10,7 +10,6 @@ import {
   LineChart, Line, PieChart, Pie, Cell, Legend
 } from 'recharts';
 import * as reportApi from '../../../services/reportApi';
-import { useNotifications } from '../../../context/NotificationContext';
 import styles from '../AdminPage.module.css';
 
 // ─── Renk paleti ───────────────────────────────────────────
@@ -94,7 +93,7 @@ export default function DashboardSection({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const { notifications } = useNotifications?.() || {};
+
 
   const fetchAll = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
