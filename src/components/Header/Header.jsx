@@ -28,6 +28,10 @@ import { useProducts } from "../../context/ProductContext";
 export default function Header() {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
+  const isProductPage =
+    location.pathname === "/urunler" ||
+    location.pathname.startsWith("/urun/") ||
+    location.pathname.startsWith("/kategori/");
 
   const { isSticky } = useStickyHeader(60);
   const { isAuthenticated, isAdmin, logout } = useAuth();
@@ -289,18 +293,29 @@ export default function Header() {
         {/* ── Alt Bar (Sadece İç Sayfalarda Header Altında Gösterilir) ── */}
         {!isHomePage && (
           <div className={styles.subBar}>
-            <div className={styles.subBarInner}>
-              <CategoryNav
-                mobileOpen={mobileMenuOpen}
-                onMobileClose={() => setMobileMenuOpen(false)}
-              />
-              <div className={styles.announcementSub}>
-                <MdOutlineLocalShipping className={styles.announcementIcon} />
-                <span>
-                  <strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat
-                </span>
+            {isProductPage ? (
+              <div className={styles.subBarStacked}>
+                <div className={styles.announcementRow}>
+                  <MdOutlineLocalShipping className={styles.announcementIcon} />
+                  <span>
+                    <strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat
+                  </span>
+                </div>
+                <div className={styles.categoryRow}>
+                  <CategoryNav
+                    mobileOpen={mobileMenuOpen}
+                    onMobileClose={() => setMobileMenuOpen(false)}
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className={styles.subBarInner}>
+                <CategoryNav
+                  mobileOpen={mobileMenuOpen}
+                  onMobileClose={() => setMobileMenuOpen(false)}
+                />
+              </div>
+            )}
           </div>
         )}
       </header>
