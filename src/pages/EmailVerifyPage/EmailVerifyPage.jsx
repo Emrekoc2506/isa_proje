@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FiCheckCircle, FiXCircle, FiLoader } from "react-icons/fi";
+import SEO from "../../components/SEO/SEO";
 import { verifyEmail } from "../../services/authApi";
 import logoImage from "../../assets/images/logo-2.png";
 
@@ -46,6 +47,7 @@ export default function EmailVerifyPage() {
 
   return (
     <div className={styles.page}>
+      <SEO title="E-Posta Doğrulama | Muhristan" noindex={true} />
       <div className={styles.bgOrb1} />
       <div className={styles.bgOrb2} />
 

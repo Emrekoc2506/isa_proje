@@ -1,9 +1,15 @@
 import { FiLock, FiEye, FiDatabase, FiMail } from 'react-icons/fi';
+import SEO from '../../components/SEO/SEO';
 import s from './StaticPage.module.css';
 
 export default function GizlilikPage() {
   return (
     <div className={s.page}>
+      <SEO
+        title="Gizlilik Politikası | Muhristan"
+        description="Muhristan kişisel verilerin korunması ve gizlilik politikası metni."
+        canonical="https://muhristan.com/gizlilik-politikasi"
+      />
       <section className={s.hero}>
         <div className={s.heroContent}>
           <h1 className={s.heroTitle}>Gizlilik Politikası</h1>

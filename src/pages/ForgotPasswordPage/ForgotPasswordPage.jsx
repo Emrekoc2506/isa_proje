@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FiLock, FiMail, FiLoader } from "react-icons/fi";
+import SEO from "../../components/SEO/SEO";
 import { forgotPassword } from "../../services/authApi";
 import logoImage from "../../assets/images/logo-2.png";
 

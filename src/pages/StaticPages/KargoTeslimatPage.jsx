@@ -1,4 +1,5 @@
 import { FiTruck, FiPackage, FiCreditCard, FiCheckCircle } from 'react-icons/fi';
+import SEO from '../../components/SEO/SEO';
 import s from './StaticPage.module.css';
 
 const features = [
@@ -11,6 +12,11 @@ const features = [
 export default function KargoTeslimatPage() {
   return (
     <div className={s.page}>
+      <SEO
+        title="Kargo ve Teslimat | Muhristan"
+        description="Muhristan kargo ve teslimat politikası. 500 TL üzeri ücretsiz teslimat ve hızlı gönderim şartları."
+        canonical="https://muhristan.com/kargo-teslimat"
+      />
       <section className={s.hero}>
         <div className={s.heroContent}>
           <h1 className={s.heroTitle}>Kargo & Teslimat</h1>

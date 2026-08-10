@@ -12,6 +12,8 @@ import * as orderApi from '../../services/orderApi';
 import * as paymentApi from '../../services/paymentApi';
 import { isManualPayment, shouldInitializePayment, PAYMENT_METHODS } from './paymentFlow';
 
+import SEO from '../../components/SEO/SEO';
+
 export default function CheckoutPage() {
   const { isAuthenticated } = useAuth();
   const { items: cartItems, clearCart } = useCart();
@@ -304,6 +306,7 @@ export default function CheckoutPage() {
 
   return (
     <div className={styles.page}>
+      <SEO title="Ödeme ve Sipariş | Muhristan" noindex={true} />
       <div className={styles.container}>
         <div className={styles.leftColumn}>
           {/* 1. ADRES SEÇİMİ */}

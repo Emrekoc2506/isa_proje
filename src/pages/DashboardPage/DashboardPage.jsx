@@ -1,6 +1,7 @@
 import styles from "./DashboardPage.module.css";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import SEO from "../../components/SEO/SEO";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiGrid,
@@ -312,6 +313,7 @@ export default function DashboardPage({ activeTab = "overview" }) {
 
   return (
     <div className={styles.page}>
+      <SEO title="Hesabım | Muhristan" noindex={true} />
       {/* MOBİL SIDEBAR OVERLAY */}
       <AnimatePresence>
         {sidebarOpen && (

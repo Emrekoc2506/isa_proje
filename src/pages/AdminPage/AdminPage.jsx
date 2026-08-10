@@ -24,6 +24,7 @@ import ChatUI from "../../components/ChatUI/ChatUI";
 import ThemeToggle from "../../components/ThemeToggle";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import SEO from "../../components/SEO/SEO";
 
 // Import modular sections
 import DashboardSection from "./sections/DashboardSection";
@@ -57,8 +58,7 @@ const NAV_ITEMS = [
 export default function AdminPage() {
   const [active, setActive] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedChatUser, setSelectedChatUser] = useState(null); // { id, name }
+  const [selectedProductForVariants, setSelectedProductForVariants] = useState(null);
 
   const { logout } = useAuth();
   const { theme } = useTheme();
@@ -68,6 +68,11 @@ export default function AdminPage() {
   const handleLogoutClick = async () => {
     await logout();
     navigate("/giris");
+  };
+
+  const handleSelectProductForVariants = (product) => {
+    setSelectedProductForVariants(product);
+    setActive("variants");
   };
 
   const contentVariants = {
@@ -82,6 +87,7 @@ export default function AdminPage() {
 
   return (
     <div className={styles.page}>
+      <SEO title="Yönetim Paneli | Muhristan" noindex={true} />
       {/* Mobil Sidebar Overlay */}
       <AnimatePresence>
         {sidebarOpen && (
