@@ -1,4 +1,4 @@
-import { FiLock, FiEye, FiDatabase, FiMail } from 'react-icons/fi';
+import { FiLock, FiEye, FiDatabase, FiMail, FiShield, FiCreditCard } from 'react-icons/fi';
 import SEO from '../../components/SEO/SEO';
 import s from './StaticPage.module.css';
 
@@ -7,94 +7,53 @@ export default function GizlilikPage() {
     <div className={s.page}>
       <SEO
         title="Gizlilik Politikası | Muhristan"
-        description="Muhristan kişisel verilerin korunması ve gizlilik politikası metni."
+        description="Muhristan gizlilik politikası. Kullanıcı verilerinin güvenliği, ödeme güvenliği ve veri sorumlusu İsa Şahap işletmesi gizlilik esasları."
         canonical="https://muhristan.com/gizlilik-politikasi"
       />
       <section className={s.hero}>
         <div className={s.heroContent}>
           <h1 className={s.heroTitle}>Gizlilik Politikası</h1>
           <p className={s.heroSubtitle}>
-            Kişisel verilerinizin güvenliği bizim için en önemli önceliktir.
+            Kullanıcı bilgilerinizin gizliliği ve güvenliği bizim için en yüksek önceliktir.
           </p>
         </div>
       </section>
 
       <div className={s.container}>
         <div className={s.section}>
-          <h2 className={s.sectionTitle}><FiLock style={{ marginRight: 8 }} /> Veri Güvenliği</h2>
+          <h2 className={s.sectionTitle}><FiLock style={{ marginRight: 8 }} /> 1. İşletme Bilgileri</h2>
           <p className={s.text}>
-            Muhristan olarak, kişisel verilerinizin güvenliğine büyük önem veriyoruz. 6698 sayılı Kişisel Verilerin Korunması 
-            Kanunu'na (KVKK) tam uyumlulukla hareket ediyor, verilerinizi en üst düzeyde koruyoruz.
+            Muhristan markası <strong>İsa Şahap şahıs işletmesi</strong> tarafından işletilmektedir.
           </p>
           <p className={s.textSecondary}>
-            Web sitemiz 256-bit SSL sertifikası ile korunmaktadır. Tüm ödeme işlemleri PCI DSS standartlarına uygun 
-            olarak gerçekleştirilir. Kredi kartı bilgileriniz sistemimizde saklanmaz, yalnızca ödeme anında kullanılır.
+            <strong>Vergi Numarası / Dairesi:</strong> 7890939339 / Şehitlik Vergi Dairesi<br />
+            <strong>Adres:</strong> Akpıyar Mahallesi, 4094. Sokak, Karaköprü / Şanlıurfa<br />
+            <strong>E-posta:</strong> <a href="mailto:muhristan@gmail.com" style={{ color: 'var(--gold)' }}>muhristan@gmail.com</a><br />
+            <strong>Telefon / WhatsApp:</strong> 0542 790 68 63
           </p>
         </div>
 
         <div className={s.section}>
-          <h2 className={s.sectionTitle}><FiDatabase style={{ marginRight: 8 }} /> Toplanan Bilgiler</h2>
-          <p className={s.text}>Size daha iyi hizmet verebilmek için aşağıdaki bilgileri toplayabiliriz:</p>
-          <ul className={s.list}>
-            <li className={s.listItem}>Ad, soyad, e-posta adresi, telefon numarası</li>
-            <li className={s.listItem}>Teslimat ve fatura adresi bilgileri</li>
-            <li className={s.listItem}>Sipariş geçmişi ve alışveriş alışkanlıkları</li>
-            <li className={s.listItem}>IP adresi, tarayıcı bilgileri ve çerez verileri</li>
-            <li className={s.listItem}>Ödeme yöntemi tercihleri (kart bilgileri saklanmaz)</li>
-          </ul>
-        </div>
-
-        <div className={s.section}>
-          <h2 className={s.sectionTitle}><FiEye style={{ marginRight: 8 }} /> Bilgilerin Kullanımı</h2>
-          <p className={s.text}>Topladığımız bilgiler aşağıdaki amaçlarla kullanılır:</p>
-          <ul className={s.list}>
-            <li className={s.listItem}>Siparişlerinizin işlenmesi ve teslimatı</li>
-            <li className={s.listItem}>Müşteri hizmetleri ve destek sağlanması</li>
-            <li className={s.listItem}>Hesap güvenliğinin sağlanması</li>
-            <li className={s.listItem}>Kişiselleştirilmiş alışveriş deneyimi sunulması</li>
-            <li className={s.listItem}>Yasal yükümlülüklerin yerine getirilmesi</li>
-          </ul>
-        </div>
-
-        <div className={s.section}>
-          <h2 className={s.sectionTitle}><FiMail style={{ marginRight: 8 }} /> İletişim İzinleri</h2>
+          <h2 className={s.sectionTitle}><FiEye style={{ marginRight: 8 }} /> 2. Toplanan Bilgiler ve Kullanımı</h2>
           <p className={s.text}>
-            Kayıt sırasında veya alışveriş esnasında vermiş olduğunuz onay doğrultusunda, size özel teklifler, 
-            kampanyalar ve yenilikler hakkında e-posta gönderebiliriz. İstediğiniz zaman bu e-postaların altındaki 
-            "abonelikten çık" bağlantısını kullanarak veya müşteri hizmetlerimize başvurarak bu iletişimi durdurabilirsiniz.
+            Sitemizi ziyaret ettiğinizde, üye olduğunuzda veya sipariş verdiğinizde kimlik, iletişim, teslimat, fatura, sipariş tercihleri ve güvenlik verileri işlenebilir.
+          </p>
+          <p className={s.textSecondary}>
+            Bu bilgiler siparişlerin hazırlanması, teslimatı, faturalandırılması, müşteri desteği ve yasal yükümlülüklerin ifası amacıyla kullanılır.
           </p>
         </div>
 
         <div className={s.section}>
-          <h2 className={s.sectionTitle}>Çerez Politikası</h2>
+          <h2 className={s.sectionTitle}><FiCreditCard style={{ marginRight: 8 }} /> 3. Ödeme ve Hesap Güvenliği</h2>
           <p className={s.text}>
-            Web sitemiz, kullanıcı deneyimini iyileştirmek ve site trafiğini analiz etmek için çerezler (cookies) kullanmaktadır. 
-            Çerez kullanımını tarayıcı ayarlarınızdan kontrol edebilir veya tamamen devre dışı bırakabilirsiniz.
-          </p>
-          <p className={s.textSecondary}>
-            Detaylı bilgi için Çerez Politikamızı inceleyebilirsiniz.
+            Ödeme işlemleri BDDK lisanslı ödeme kuruluşları (örn. İyzico) ve bankaların 256-bit SSL korumalı altyapıları üzerinden gerçekleştirilir. Kredi kartı bilgileriniz Muhristan sunucularında saklanmaz.
           </p>
         </div>
 
         <div className={s.section}>
-          <h2 className={s.sectionTitle}>Haklarınız</h2>
-          <p className={s.text}>KVKK kapsamında aşağıdaki haklara sahipsiniz:</p>
-          <ul className={s.list}>
-            <li className={s.listItem}>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
-            <li className={s.listItem}>Kişisel verileriniz hakkında bilgi talep etme</li>
-            <li className={s.listItem}>Kişisel verilerinizin düzeltilmesini isteme</li>
-            <li className={s.listItem}>Kişisel verilerinizin silinmesini veya yok edilmesini isteme</li>
-            <li className={s.listItem}>Kişisel verilerinizin üçüncü kişilere aktarılmamasını isteme</li>
-          </ul>
+          <h2 className={s.sectionTitle}><FiShield style={{ marginRight: 8 }} /> 4. Üçüncü Taraf Paylaşımları</h2>
           <p className={s.textSecondary}>
-            Haklarınızı kullanmak için <strong style={{ color: 'var(--gold-light)' }}>info@muhristan.com</strong> adresine e-posta gönderebilirsiniz.
-          </p>
-        </div>
-
-        <div className={s.section}>
-          <p className={s.textSecondary}>
-            Son güncelleme: 2026. Bu gizlilik politikası önceden bildirilmeksizin değiştirilebilir. Güncellemeler web sitemizde 
-            yayınlandığı anda yürürlüğe girer.
+            Kişisel verileriniz yalnızca siparişinizin tamamlanması için zorunlu olan kargo şirketleri, bankalar ve yasal mercilerle paylaşılır. Üçüncü taraflara pazarlama amacıyla satılmaz.
           </p>
         </div>
       </div>

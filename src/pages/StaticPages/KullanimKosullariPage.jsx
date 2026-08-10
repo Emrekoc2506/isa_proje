@@ -7,100 +7,49 @@ export default function KullanimKosullariPage() {
     <div className={s.page}>
       <SEO
         title="Kullanım Koşulları | Muhristan"
-        description="Muhristan web sitesi kullanım koşulları ve mesafeli satış esasları."
+        description="Muhristan web sitesi üyelik ve kullanım koşulları. Kullanıcı hakları, hesap güvenliği ve satış esasları."
         canonical="https://muhristan.com/kullanim-kosullari"
       />
       <section className={s.hero}>
         <div className={s.heroContent}>
           <h1 className={s.heroTitle}>Kullanım Koşulları</h1>
           <p className={s.heroSubtitle}>
-            Sitemizi kullanmadan önce lütfen kullanım koşullarını dikkatlice okuyun.
+            Sitemizi ve hizmetlerimizi kullanmadan önce lütfen kullanım koşullarını dikkatlice okuyunuz.
           </p>
         </div>
       </section>
 
       <div className={s.container}>
         <div className={s.section}>
-          <h2 className={s.sectionTitle}><FiFileText style={{ marginRight: 8 }} /> Genel Hükümler</h2>
+          <h2 className={s.sectionTitle}><FiFileText style={{ marginRight: 8 }} /> 1. Genel Hükümler</h2>
           <p className={s.text}>
-            Bu kullanım koşulları, Muhristan web sitesini ziyaret eden tüm kullanıcılar için geçerlidir. 
-            Siteyi kullanarak aşağıda belirtilen koşulları kabul etmiş sayılırsınız. Koşulları kabul etmiyorsanız, 
-            lütfen sitemizi kullanmayınız.
+            Bu kullanım koşulları, Muhristan web sitesini ziyaret eden ve alışveriş yapan tüm kullanıcılar için geçerlidir. Muhristan markası <strong>İsa Şahap şahıs işletmesi</strong> tarafından işletilmektedir.
           </p>
           <p className={s.textSecondary}>
-            Muhristan, bu kullanım koşullarını önceden bildirim yapmaksızın değiştirme hakkını saklı tutar. 
-            Değişiklikler sitede yayınlandığı anda yürürlüğe girer. Sitemizi düzenli olarak ziyaret ederek 
-            güncel koşulları kontrol etmeniz önerilir.
+            <strong>Vergi Numarası / Dairesi:</strong> 7890939339 / Şehitlik Vergi Dairesi<br />
+            <strong>Adres:</strong> Akpıyar Mahallesi, 4094. Sokak, Karaköprü / Şanlıurfa<br />
+            <strong>İletişim:</strong> <a href="mailto:muhristan@gmail.com" style={{ color: 'var(--gold)' }}>muhristan@gmail.com</a> | 0542 790 68 63
           </p>
         </div>
 
         <div className={s.section}>
-          <h2 className={s.sectionTitle}><FiShoppingCart style={{ marginRight: 8 }} /> Sipariş ve Sözleşme</h2>
+          <h2 className={s.sectionTitle}><FiUserCheck style={{ marginRight: 8 }} /> 2. Üyelik ve Hesap Güvenliği</h2>
           <p className={s.text}>
-            Sipariş verdiğinizde, ürün açıklamaları, fiyatlar ve teslimat bilgilerini doğrulamanız gerekmektedir. 
-            Siparişinizin onaylanması, bir bağlayıcı sözleşme niteliği taşır. Muhristan, siparişinizi onaylama 
-            veya reddetme hakkını saklı tutar.
+            Kullanıcılar üyelik oluştururken doğru, güncel ve eksiksiz bilgi vermekle yükümlüdür. Hesap parola ve giriş bilgilerinin gizliliği kullanıcının kendi sorumluluğundadır.
           </p>
-          <ul className={s.list}>
-            <li className={s.listItem}>Tüm siparişler stok durumuna bağlıdır.</li>
-            <li className={s.listItem}>Fiyatlar önceden bildirilmeksizin değiştirilebilir.</li>
-            <li className={s.listItem}>Sipariş onayı e-posta ile bildirilir.</li>
-            <li className={s.listItem}>Sözleşme, siparişin onaylanmasıyla kurulmuş sayılır.</li>
-          </ul>
         </div>
 
         <div className={s.section}>
-          <h2 className={s.sectionTitle}><FiUserCheck style={{ marginRight: 8 }} /> Hesap Güvenliği</h2>
+          <h2 className={s.sectionTitle}><FiShoppingCart style={{ marginRight: 8 }} /> 3. Sipariş ve Kullanım Kuralları</h2>
           <p className={s.text}>
-            Hesap oluşturduğunuzda, hesap bilgilerinizin gizliliğinden ve hesabınız altında gerçekleşen tüm 
-            işlemlerden siz sorumlusunuz. Şifrenizi güvende tutmak ve hesabınıza yetkisiz erişimi önlemek 
-            için gerekli önlemleri almalısınız.
+            Sitede sunulan tılsımlı takılar, vefk ve spiritüel ürünlerin siparişinde kullanıcılar sipariş özeti ve sözleşme koşullarını onaylarlar. Kişiye özel ürünlerde verilen ölçü ve kişiselleştirme bilgilerinin doğruluğu kullanıcının sorumluluğundadır.
           </p>
+        </div>
+
+        <div className={s.section}>
+          <h2 className={s.sectionTitle}><FiAlertTriangle style={{ marginRight: 8 }} /> 4. Fikri Mülkiyet ve Değişiklikler</h2>
           <p className={s.textSecondary}>
-            Hesabınızda yetkisiz kullanım fark ederseniz, derhal müşteri hizmetlerimizi bilgilendirmelisiniz. 
-            Muhristan, yetkisiz kullanımdan kaynaklanan kayıplardan sorumlu değildir.
-          </p>
-        </div>
-
-        <div className={s.section}>
-          <h2 className={s.sectionTitle}><FiAlertTriangle style={{ marginRight: 8 }} /> Sorumluluk Reddi</h2>
-          <p className={s.text}>
-            Muhristan, ürünlerimizin ezoterik ve spiritüel amaçlı olduğunu, tıbbi tedavi veya teşhis 
-            amacı taşımadığını belirtir. Ürünlerimiz hakkında yapılan açıklamalar, kişisel deneyimlere 
-            dayanmaktadır ve herhangi bir tıbbi iddia olarak değerlendirilmemelidir.
-          </p>
-          <ul className={s.list}>
-            <li className={s.listItem}>Ürün açıklamaları bilgilendirme amaçlıdır.</li>
-            <li className={s.listItem}>Web sitesi kesintisiz hizmet garantisi vermez.</li>
-            <li className={s.listItem}>Üçüncü taraf bağlantılarının içeriğinden sorumlu değiliz.</li>
-            <li className={s.listItem}>Mücbir sebeplerden kaynaklanan gecikmelerde sorumluluk kabul edilmez.</li>
-          </ul>
-        </div>
-
-        <div className={s.section}>
-          <h2 className={s.sectionTitle}>Fikri Mülkiyet Hakları</h2>
-          <p className={s.text}>
-            Sitede yer alan tüm içerik (metin, görsel, logo, grafik, yazılım) Muhristan'ya aittir ve 
-            telif hakkı yasaları ile korunmaktadır. İçeriklerin izinsiz kopyalanması, dağıtılması veya 
-            ticari amaçla kullanılması yasaktır.
-          </p>
-        </div>
-
-        <div className={s.section}>
-          <h2 className={s.sectionTitle}>Uyuşmazlıkların Çözümü</h2>
-          <p className={s.text}>
-            Bu kullanım koşulları Türkiye Cumhuriyeti yasalarına tabidir. Ortaya çıkabilecek uyuşmazlıkların 
-            çözümünde öncelikle müşteri hizmetlerimizle iletişime geçilmesi, çözüm sağlanamaması durumunda 
-            İstanbul Mahkemeleri ve İcra Daireleri yetkilidir.
-          </p>
-          <p className={s.textSecondary}>
-            Tüketici uyuşmazlıklarında, Tüketici Hakem Heyeti'ne başvuru hakkınız saklıdır.
-          </p>
-        </div>
-
-        <div className={s.section}>
-          <p className={s.textSecondary} style={{ textAlign: 'center' }}>
-            Son güncelleme: 2026 &bull; Muhristan &bull; Tüm hakları saklıdır.
+            Muhristan markası, logo, tasarım ve görseller İsa Şahap işletmesine aittir. Muhristan kullanım koşullarını güncel tutma hakkını saklı tutar.
           </p>
         </div>
       </div>

@@ -35,6 +35,11 @@ import KargoTeslimatPage from './pages/StaticPages/KargoTeslimatPage';
 import IadeSikayetPage from './pages/StaticPages/IadeSikayetPage';
 import GizlilikPage from './pages/StaticPages/GizlilikPage';
 import KullanimKosullariPage from './pages/StaticPages/KullanimKosullariPage';
+import MesafeliSatisPage from './pages/StaticPages/MesafeliSatisPage';
+import KvkkAydinlatmaPage from './pages/StaticPages/KvkkAydinlatmaPage';
+import GarantiIptalPage from './pages/StaticPages/GarantiIptalPage';
+import OnBilgilendirmePage from './pages/StaticPages/OnBilgilendirmePage';
+import CerezPolitikasiPage from './pages/StaticPages/CerezPolitikasiPage';
 
 import SEO from './components/SEO/SEO';
 
@@ -77,6 +82,11 @@ function AppRoutes() {
       <Route path="/iade-sikayet" element={<MainLayout><IadeSikayetPage /></MainLayout>} />
       <Route path="/gizlilik-politikasi" element={<MainLayout><GizlilikPage /></MainLayout>} />
       <Route path="/kullanim-kosullari" element={<MainLayout><KullanimKosullariPage /></MainLayout>} />
+      <Route path="/mesafeli-satis-sozlesmesi" element={<MainLayout><MesafeliSatisPage /></MainLayout>} />
+      <Route path="/kvkk-aydinlatma" element={<MainLayout><KvkkAydinlatmaPage /></MainLayout>} />
+      <Route path="/garanti-ve-iptal" element={<MainLayout><GarantiIptalPage /></MainLayout>} />
+      <Route path="/on-bilgilendirme-formu" element={<MainLayout><OnBilgilendirmePage /></MainLayout>} />
+      <Route path="/cerez-politikasi" element={<MainLayout><CerezPolitikasiPage /></MainLayout>} />
 
       {/* Guest Rotaları (Giriş yapanlar giremez) */}
       <Route path="/giris" element={<GuestRoute><AuthPage /></GuestRoute>} />
