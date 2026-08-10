@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /hesabim
+Disallow: /sepet
+Disallow: /odeme
+Disallow: /siparis-takip
+Disallow: /giris
+Disallow: /kayit
+
+Sitemap: https://muhristan.com/sitemap.xml

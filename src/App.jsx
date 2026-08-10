@@ -36,9 +36,12 @@ import IadeSikayetPage from './pages/StaticPages/IadeSikayetPage';
 import GizlilikPage from './pages/StaticPages/GizlilikPage';
 import KullanimKosullariPage from './pages/StaticPages/KullanimKosullariPage';
 
+import SEO from './components/SEO/SEO';
+
 function UnauthorizedPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'var(--bg-dark)', color: 'var(--text-light)', fontFamily: 'var(--font-body)' }}>
+      <SEO title="Yetkisiz Erişim | Muhristan" noindex={true} />
       <h2 style={{ color: '#e05594', fontSize: '32px', marginBottom: '8px' }}>Yetkisiz Erişim</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>Bu sayfayı görüntülemek için gerekli yetkilere sahip değilsiniz.</p>
       <Link to="/" style={{ background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: 'var(--bg-dark)', padding: '12px 24px', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 }}>Ana Sayfaya Git</Link>
@@ -49,6 +52,7 @@ function UnauthorizedPage() {
 function NotFoundPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'var(--bg-dark)', color: 'var(--text-light)', fontFamily: 'var(--font-body)' }}>
+      <SEO title="Sayfa Bulunamadı | Muhristan" is404={true} />
       <h2 style={{ color: 'var(--gold-light)', fontSize: '48px', marginBottom: '8px' }}>404</h2>
       <h3 style={{ color: '#fff', fontSize: '24px', marginBottom: '8px' }}>Sayfa Bulunamadı</h3>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>Aradığınız sayfa mevcut değil veya taşınmış olabilir.</p>

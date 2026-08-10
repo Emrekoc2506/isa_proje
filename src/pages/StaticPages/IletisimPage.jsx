@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FiMapPin, FiPhone, FiMail, FiClock } from 'react-icons/fi';
+import SEO from '../../components/SEO/SEO';
 import s from './StaticPage.module.css';
 
 const contactDetails = [
@@ -24,6 +25,11 @@ export default function IletisimPage() {
 
   return (
     <div className={s.page}>
+      <SEO
+        title="İletişim | Muhristan"
+        description="Muhristan ile iletişime geçin. Sorularınız, sipariş takibi ve destek için bize ulaşın."
+        canonical="https://muhristan.com/iletisim"
+      />
       <section className={s.hero}>
         <div className={s.heroContent}>
           <h1 className={s.heroTitle}>İletişim</h1>

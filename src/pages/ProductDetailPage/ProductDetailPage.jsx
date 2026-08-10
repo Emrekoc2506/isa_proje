@@ -16,6 +16,7 @@ import { useWishlist } from '../../context/WishlistContext';
 import { getProductById, getProductBySlug, getProductReviews, createProductReview } from '../../services/productApi';
 import MainLayout from '../../layouts/MainLayout/MainLayout';
 import SEO from '../../components/SEO/SEO';
+import { toAbsoluteUrl, stripHtml } from '../../utils/seoHelpers';
 import { ProductDetailSkeleton } from '../../components/Skeleton/Skeleton';
 import ProductReviews from '../../components/ProductReviews/ProductReviews';
 import RecentlyViewed from '../../components/RecentlyViewed/RecentlyViewed';
@@ -264,7 +265,7 @@ export default function ProductDetailPage() {
     return (
       <MainLayout>
         <div className={styles.page} style={{ textAlign: 'center', padding: '120px 20px', minHeight: '60vh' }}>
-          <SEO title="Ürün Bulunamadı | muhristan" />
+          <SEO title="Ürün Bulunamadı | Muhristan" is404={true} />
           <h2 style={{ color: 'var(--gold-light)', fontSize: '32px', marginBottom: '12px', fontFamily: 'var(--font-heading)' }}>Ürün Bulunamadı</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '28px', fontSize: '16px' }}>Aradığınız ilan veya ürün mevcut değil ya da kaldırılmış olabilir.</p>
           <Link to="/urunler" style={{ background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: 'var(--bg-dark)', padding: '14px 28px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '15px' }}>
@@ -275,12 +276,76 @@ export default function ProductDetailPage() {
     );
   }
 
+  /* ─── SEO & Structured Data (Product & Breadcrumb JSON-LD) ─── */
+  const productTitle = productDetail.seoTitle || `${productDetail.name} | Muhristan`;
+  const productDesc = productDetail.seoDescription || productDetail.shortDescription || stripHtml(productDetail.description) || `${productDetail.name} özel tasarım takı ve aksesuar.`;
+  const canonicalUrl = productDetail.canonicalUrl || `https://muhristan.com/urun/${productDetail.slug || productDetail.id}`;
+  const primaryImgUrl = toAbsoluteUrl(productDetail.imageUrl || mediaList[0]?.src || '/logo-2.png');
+  const rawPriceNum = typeof productDetail.price === 'number'
+    ? productDetail.price
+    : parseFloat(String(productDetail.price).replace(/[^0-9.]/g, '')) || 0;
+
+  const productSchema = {
+    '@context': 'https://schema.org/',
+    '@type': 'Product',
+    'name': productDetail.name,
+    'image': [primaryImgUrl],
+    'description': stripHtml(productDetail.description || productDetail.shortDescription || productDetail.name).slice(0, 160),
+    'sku': productDetail.sku || String(productDetail.id),
+    'brand': {
+      '@type': 'Brand',
+      'name': productDetail.brand || 'Muhristan'
+    },
+    'url': canonicalUrl,
+    'offers': {
+      '@type': 'Offer',
+      'priceCurrency': 'TRY',
+      'price': rawPriceNum,
+      'availability': (productDetail.stockQuantity > 0 || productDetail.stock > 0 || productDetail.inStock !== false) 
+        ? 'https://schema.org/InStock' 
+        : 'https://schema.org/OutOfStock',
+      'url': canonicalUrl
+    }
+  };
+
+  const categoryName = productDetail.categoryName || productDetail.category?.name || 'Kategori';
+  const categorySlug = productDetail.categorySlug || productDetail.category?.slug || '';
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Ana Sayfa',
+        'item': 'https://muhristan.com/'
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': categoryName,
+        'item': categorySlug ? `https://muhristan.com/urunler?category=${categorySlug}` : 'https://muhristan.com/urunler'
+      },
+      {
+        '@type': 'ListItem',
+        'position': 3,
+        'name': productDetail.name,
+        'item': canonicalUrl
+      }
+    ]
+  };
+
   return (
     <MainLayout>
       <SEO
-        title={productDetail.name}
-        description={productDetail.description || `${productDetail.name} özel tasarım takı ve aksesuar.`}
-        image={productDetail.imageUrl || (productDetail.images?.[0]?.url || '')}
+        title={productTitle}
+        description={productDesc}
+        keywords={productDetail.seoKeywords}
+        canonical={canonicalUrl}
+        type="product"
+        image={primaryImgUrl}
+        jsonLd={[productSchema, breadcrumbSchema]}
       />
       <div className={styles.page}>
 
