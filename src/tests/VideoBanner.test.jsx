@@ -292,7 +292,7 @@ describe('Video Banner & Upload Functionality', () => {
 
     await waitFor(() => {
       expect(screen.getByText('1. Hero Video Banner')).toBeInTheDocument();
-      expect(screen.getByText('2. Video Banner')).toBeInTheDocument();
+      expect(screen.queryByText('2. Video Banner')).not.toBeInTheDocument();
     });
   });
 

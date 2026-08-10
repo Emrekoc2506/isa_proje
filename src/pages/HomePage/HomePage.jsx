@@ -3,7 +3,6 @@ import styles from './HomePage.module.css';
 import HeroSlider from '../../components/HeroSlider/HeroSlider';
 import ProductSection from '../../components/ProductSection/ProductSection';
 import BlogSection from '../../components/BlogSection/BlogSection';
-import VideoBannerItem from '../../components/HeroSlider/VideoBannerItem';
 import CategoryNav from '../../components/CategoryNav/CategoryNav';
 import { MdOutlineLocalShipping } from 'react-icons/md';
 import { useProducts } from '../../context/ProductContext';
@@ -11,7 +10,7 @@ import { getBlogArticles } from '../../services/blogApi';
 import { blogArticles as mockArticles } from '../../data/index';
 
 export default function HomePage() {
-  const { products, slides } = useProducts();
+  const { products } = useProducts();
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
@@ -34,9 +33,6 @@ export default function HomePage() {
   const displayNews = newsProducts.length > 0 ? newsProducts : products.slice(0, 8);
   const displaySale = saleProducts.length > 0 ? saleProducts : (products.length > 4 ? products.slice(4, 12) : products.slice(0, 8));
   const displayFeatured = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8);
-
-  // 1. banner HeroSlider'da gösterilir. Sonraki bannerlar SortOrder sırasıyla sayfa altında gösterilir.
-  const secondaryBanners = slides.slice(1);
 
   return (
     <main id="main-content" className={styles.main}>
@@ -65,26 +61,6 @@ export default function HomePage() {
         viewAllHref="/urunler"
         products={displayNews}
       />
-
-      {/* ── 2. Banner (Aşağıdaki İkinci Geniş Video/Görsel Alanı) ── */}
-      {secondaryBanners.length > 0 && (
-        <section style={{ maxWidth: 1280, margin: '40px auto', padding: '0 20px' }}>
-          {secondaryBanners.map((s) => (
-            <div key={s.id} style={{ borderRadius: 16, overflow: 'hidden', position: 'relative', minHeight: 320, maxHeight: 450, background: '#000', marginBottom: 24, boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-              <VideoBannerItem slide={s} />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '32px', pointerEvents: 'none' }}>
-                {s.subtitle && <span style={{ color: 'var(--gold-light)', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>{s.subtitle}</span>}
-                {s.title && <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 800, margin: '6px 0 12px 0' }}>{s.title}</h2>}
-                {s.href && (
-                  <a href={s.href} style={{ pointerEvents: 'auto', display: 'inline-block', width: 'fit-content', background: 'linear-gradient(135deg, var(--gold-light, #c9a227), #d4891a)', color: '#000', padding: '10px 24px', borderRadius: 8, fontWeight: 700, fontSize: 13, textDecoration: 'none', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}>
-                    {s.cta || 'Keşfet'} →
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
-        </section>
-      )}
 
       {/* ── Satış (Sale) ─────────────────────────────────── */}
       <section className={styles.saleSection}>
