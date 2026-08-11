@@ -146,20 +146,22 @@ export default function CouponsSection() {
     }
 
     setSaving(true);
+    const val = isPercentage ? parseFloat(discountPercentage) || 0 : parseFloat(discountAmount) || 0;
     try {
       await couponApi.createAdminCoupon({
         code: code.toUpperCase().trim(),
-        discountAmount: isPercentage ? 0 : parseFloat(discountAmount) || 0,
-        discountPercentage: isPercentage ? parseFloat(discountPercentage) || 0 : 0,
+        name: `${code.toUpperCase().trim()} Kuponu`,
+        discountType: isPercentage ? 1 : 0,
+        discountValue: val,
         isPercentage,
         expiryDate: expiryDate ? new Date(expiryDate).toISOString() : null,
-        maxUses: maxUses ? parseInt(maxUses) : null,
+        totalUsageLimit: maxUses ? parseInt(maxUses) : null,
         isActive: true
       });
       setShowModal(false);
       fetchCoupons();
     } catch (err) {
-      alert("Kupon oluşturulamadı: " + err.message);
+      alert("Kupon oluşturulamadı: " + (err.message || "Lütfen kupon bilgilerini kontrol edin."));
     } finally {
       setSaving(false);
     }
