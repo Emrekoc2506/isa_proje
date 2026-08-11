@@ -57,6 +57,12 @@ const STATUS_COLORS = {
   Published: { bg: 'rgba(39,174,96,0.15)', color: '#27ae60', label: 'Yayında' },
   Draft:     { bg: 'rgba(201,162,39,0.15)', color: '#c9a227', label: 'Taslak' },
   Archived:  { bg: 'rgba(127,140,141,0.15)', color: '#7f8c8d', label: 'Arşiv' },
+  1:         { bg: 'rgba(39,174,96,0.15)', color: '#27ae60', label: 'Yayında' },
+  0:         { bg: 'rgba(201,162,39,0.15)', color: '#c9a227', label: 'Taslak' },
+  2:         { bg: 'rgba(127,140,141,0.15)', color: '#7f8c8d', label: 'Arşiv' },
+  '1':       { bg: 'rgba(39,174,96,0.15)', color: '#27ae60', label: 'Yayında' },
+  '0':       { bg: 'rgba(201,162,39,0.15)', color: '#c9a227', label: 'Taslak' },
+  '2':       { bg: 'rgba(127,140,141,0.15)', color: '#7f8c8d', label: 'Arşiv' },
 };
 
 function StatusBadge({ status }) {
@@ -246,14 +252,20 @@ export default function BlogAdminSection() {
   // ── Durum toggle (Published ↔ Draft) ──────────────────
   const handleToggleStatus = async (art) => {
     if (togglingId) return;
-    const newStatus = art.status === 'Published' ? 'Draft' : 'Published';
+    const isCurrentlyPublished = art.status === 'Published' || art.status === 1 || art.status === '1' || art.isActive === true;
+    const newStatus = isCurrentlyPublished ? 'Draft' : 'Published';
     setTogglingId(art.id);
     setError('');
+
+    // Anında canlı arayüz güncellemesi (Optimistic UI)
+    setArticles(prev => prev.map(a => a.id === art.id ? { ...a, status: newStatus, isActive: newStatus === 'Published' } : a));
+
     try {
       await updateAdminBlogArticleStatus(art.id, newStatus);
       await loadArticles();
     } catch (err) {
       setError(resolveErrorMsg(err));
+      await loadArticles();
     } finally {
       setTogglingId(null);
     }
@@ -375,26 +387,32 @@ export default function BlogAdminSection() {
                   </button>
 
                   {/* Yayın Toggle */}
-                  <button
-                    id={`btn-status-blog-${art.id}`}
-                    onClick={() => handleToggleStatus(art)}
-                    disabled={togglingId === art.id}
-                    style={{
-                      background: art.status === 'Published' ? 'rgba(127,140,141,0.1)' : 'rgba(39,174,96,0.1)',
-                      color: art.status === 'Published' ? '#7f8c8d' : '#27ae60',
-                      border: `1px solid ${art.status === 'Published' ? 'rgba(127,140,141,0.3)' : 'rgba(39,174,96,0.3)'}`,
-                      padding: '6px 12px', borderRadius: '6px', cursor: togglingId === art.id ? 'not-allowed' : 'pointer', fontSize: '13px',
-                      display: 'flex', alignItems: 'center', gap: '5px', opacity: togglingId === art.id ? 0.7 : 1,
-                    }}
-                    title={art.status === 'Published' ? 'Taslağa al' : 'Yayınla'}
-                  >
-                    {togglingId === art.id ? (
-                      <FiLoader size={13} style={{ animation: 'spin 1s linear infinite' }} />
-                    ) : (
-                      art.status === 'Published' ? <FiEyeOff size={13} /> : <FiEye size={13} />
-                    )}
-                    {togglingId === art.id ? 'İşleniyor...' : (art.status === 'Published' ? 'Gizle' : 'Yayınla')}
-                  </button>
+                  {(() => {
+                    const isPub = art.status === 'Published' || art.status === 1 || art.status === '1' || art.isActive === true;
+                    return (
+                      <button
+                        id={`btn-status-blog-${art.id}`}
+                        onClick={() => handleToggleStatus(art)}
+                        disabled={togglingId === art.id}
+                        style={{
+                          background: isPub ? 'rgba(127,140,141,0.1)' : 'rgba(39,174,96,0.15)',
+                          color: isPub ? '#7f8c8d' : '#27ae60',
+                          border: `1px solid ${isPub ? 'rgba(127,140,141,0.3)' : 'rgba(39,174,96,0.4)'}`,
+                          padding: '6px 12px', borderRadius: '6px', cursor: togglingId === art.id ? 'not-allowed' : 'pointer', fontSize: '13px',
+                          display: 'flex', alignItems: 'center', gap: '5px', opacity: togglingId === art.id ? 0.7 : 1,
+                          fontWeight: isPub ? 500 : 700
+                        }}
+                        title={isPub ? 'Taslağa al' : 'Yayınla'}
+                      >
+                        {togglingId === art.id ? (
+                          <FiLoader size={13} style={{ animation: 'spin 1s linear infinite' }} />
+                        ) : (
+                          isPub ? <FiEyeOff size={13} /> : <FiEye size={13} />
+                        )}
+                        {togglingId === art.id ? 'İşleniyor...' : (isPub ? 'Gizle (Taslağa Al)' : 'Yayınla')}
+                      </button>
+                    );
+                  })()}
 
                   {/* Sil */}
                   <button

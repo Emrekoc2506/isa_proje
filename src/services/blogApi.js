@@ -22,6 +22,18 @@ function normalizeDates(item) {
       dateStr = raw;
     }
   }
+
+  // Raw status parsing (Enum 1 = Published, 0 = Draft, 2 = Archived or string/boolean)
+  const s = item.status;
+  let statusStr = 'Draft';
+  if (s === 'Published' || s === 'published' || s === 1 || s === '1' || item.isActive === true) {
+    statusStr = 'Published';
+  } else if (s === 'Archived' || s === 'archived' || s === 2 || s === '2') {
+    statusStr = 'Archived';
+  } else if (s === 'Draft' || s === 'draft' || s === 0 || s === '0') {
+    statusStr = 'Draft';
+  }
+
   return {
     ...item,
     // Ortak alan isimlendirmeleri frontend'e normalize et
@@ -30,8 +42,8 @@ function normalizeDates(item) {
     description: item.summary || item.description || '',
     date:        dateStr,
     readTime:    item.readTime || '5 dk okuma',
-    isActive:    item.status === 'Published' || item.isActive === true,
-    status:      item.status || (item.isActive ? 'Published' : 'Draft'),
+    isActive:    statusStr === 'Published',
+    status:      statusStr,
     slug:        item.slug || item.id,
   };
 }
