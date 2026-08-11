@@ -46,13 +46,12 @@ export default function ProductSection({ title, viewAllHref = '#', products = []
 
         {/* Kaydırılabilir Liste */}
         <motion.div
-          key={products.map(p => p.id || p.name).join('-') || 'empty-list'}
           className={styles.list}
           ref={scrollRef}
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
-          viewport={{ amount: 0.05 }}
+          viewport={{ once: true, amount: 0.05 }}
         >
           {products.map((product) => (
             <motion.div
