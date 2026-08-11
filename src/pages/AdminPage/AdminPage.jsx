@@ -1,6 +1,6 @@
 import styles from "./AdminPage.module.css";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiGrid,
@@ -56,7 +56,15 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminPage() {
-  const [active, setActive] = useState("overview");
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+
+  const [active, setActive] = useState(() => {
+    if (tabParam && NAV_ITEMS.some(n => n.id === tabParam)) {
+      return tabParam;
+    }
+    return "overview";
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedProductForVariants, setSelectedProductForVariants] = useState(null);
 
@@ -64,6 +72,12 @@ export default function AdminPage() {
   const { theme } = useTheme();
   const isLight = theme === "light";
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (tabParam && NAV_ITEMS.some(n => n.id === tabParam)) {
+      setActive(tabParam);
+    }
+  }, [tabParam]);
 
   const handleLogoutClick = async () => {
     await logout();
