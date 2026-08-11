@@ -8,21 +8,10 @@ import {
 } from "react";
 import * as authApi from "../services/authApi";
 import { safeGetItem, safeSetItem, safeRemoveItem } from "../utils/storage";
+import { isJwtExpired } from "../utils/jwt";
 
+export { isJwtExpired };
 const AuthContext = createContext(null);
-
-export function isJwtExpired(token) {
-  if (!token) return true;
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return true;
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-    if (!payload.exp) return false;
-    return payload.exp * 1000 < Date.now();
-  } catch (e) {
-    return true;
-  }
-}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -45,7 +34,11 @@ export function AuthProvider({ children }) {
 
   const reloadUser = useCallback(async () => {
     const token = safeGetItem("accessToken");
-    if (!token) {
+    if (!token || isJwtExpired(token)) {
+      if (token && isJwtExpired(token) && !safeGetItem("refreshToken")) {
+        safeRemoveItem("accessToken");
+        safeRemoveItem("refreshToken");
+      }
       safeSetState(setUser, null);
       safeSetState(setRoles, []);
       safeSetState(setIsLoading, false);
