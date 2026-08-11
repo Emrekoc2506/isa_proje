@@ -36,8 +36,9 @@ export default function ProductSection({ title, viewAllHref = '#', products = []
       <div className={styles.track}>
         {/* Sol Ok */}
         <button
+          type="button"
           className={`${styles.scrollBtn} ${styles.scrollPrev}`}
-          onClick={() => scroll(-1)}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); scroll(-1); }}
           aria-label="Sola kaydır"
         >
           <FiChevronLeft />
@@ -66,8 +67,9 @@ export default function ProductSection({ title, viewAllHref = '#', products = []
 
         {/* Sağ Ok */}
         <button
+          type="button"
           className={`${styles.scrollBtn} ${styles.scrollNext}`}
-          onClick={() => scroll(1)}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); scroll(1); }}
           aria-label="Sağa kaydır"
         >
           <FiChevronRight />

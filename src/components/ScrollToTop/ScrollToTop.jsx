@@ -10,27 +10,12 @@ export function scrollToTop() {
 }
 
 export default function ScrollToTop() {
-  const { pathname, search, hash } = useLocation();
+  const { pathname } = useLocation();
 
-  // 1. Rota veya URL parametresi değiştiğinde en üste kaydır
+  // Yalnızca rota/sayfa değiştiğinde sayfanın en üstüne kaydır
   useEffect(() => {
     scrollToTop();
-  }, [pathname, search, hash]);
-
-  // 2. Herhangi bir buton veya bağlantıya tıklandığında otomatik en üste kaydır
-  useEffect(() => {
-    const handleGlobalClick = (e) => {
-      const target = e.target.closest('a, button');
-      if (target) {
-        setTimeout(() => {
-          scrollToTop();
-        }, 50);
-      }
-    };
-
-    document.addEventListener('click', handleGlobalClick);
-    return () => document.removeEventListener('click', handleGlobalClick);
-  }, []);
+  }, [pathname]);
 
   return null;
 }
