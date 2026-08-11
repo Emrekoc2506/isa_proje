@@ -4,6 +4,8 @@ import {
   ApiError,
   translateErrorMessage,
 } from "../api/apiError";
+import { isJwtExpired } from "../utils/jwt";
+import { safeGetItem, safeSetItem, safeRemoveItem } from "../utils/storage";
 
 let apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7148/api";
@@ -21,6 +23,26 @@ let isRefreshing = false;
 let refreshQueue = [];
 let activeRefreshPromise = null;
 
+const PUBLIC_PREFIXES = [
+  "/products",
+  "/categories",
+  "/banners",
+  "/blog",
+  "/coupons/validate",
+];
+
+function isPublicEndpoint(path, method = "GET") {
+  const p = (path || "").toLowerCase();
+  const m = (method || "GET").toUpperCase();
+  if (p.includes("/admin/")) return false;
+  if (p.includes("/auth/me")) return false;
+  if (p.includes("/auth/")) return true;
+  if (m === "GET") {
+    return PUBLIC_PREFIXES.some((prefix) => p.startsWith(prefix) || p.includes(prefix));
+  }
+  return false;
+}
+
 function subscribeTokenRefresh(resolve, reject) {
   refreshQueue.push({ resolve, reject });
 }
@@ -37,8 +59,6 @@ function rejectRefreshQueue(error) {
   queue.forEach((item) => item.reject(error));
 }
 
-import { safeGetItem, safeSetItem, safeRemoveItem } from "../utils/storage";
-
 function dispatchSessionExpired() {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("auth:session-expired"));
@@ -46,7 +66,8 @@ function dispatchSessionExpired() {
 }
 
 async function request(path, options = {}) {
-  const token = safeGetItem("accessToken");
+  let token = safeGetItem("accessToken");
+  const isPublic = isPublicEndpoint(path, options.method);
   const headers = new Headers(options.headers || {});
 
   if (!(options.body instanceof FormData)) {
@@ -60,7 +81,17 @@ async function request(path, options = {}) {
     headers.set("X-Guest-SessionId", guestSessionId); // Legacy compatibility
   }
 
-  if (token) {
+  // Handle expired tokens before sending request
+  if (token && isJwtExpired(token)) {
+    const refreshTokenVal = safeGetItem("refreshToken");
+    if (!refreshTokenVal) {
+      safeRemoveItem("accessToken");
+      safeRemoveItem("refreshToken");
+      token = null;
+    }
+  }
+
+  if (token && (!isJwtExpired(token) || !isPublic)) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
@@ -93,6 +124,15 @@ async function request(path, options = {}) {
       path.includes("/auth/register");
 
     if (response.status === 401 && !isAuthPath && !isRetry) {
+      // If it's a public endpoint (e.g. GET /products), retry once WITHOUT Authorization header!
+      if (isPublic) {
+        const publicRetryOptions = { ...options, _isRetry: true };
+        const publicRetryHeaders = new Headers(options.headers || {});
+        publicRetryHeaders.delete("Authorization");
+        publicRetryOptions.headers = publicRetryHeaders;
+        return request(path, publicRetryOptions);
+      }
+
       const refreshTokenVal = safeGetItem("refreshToken");
 
       if (!refreshTokenVal) {
@@ -107,7 +147,7 @@ async function request(path, options = {}) {
 
       // If token in localStorage changed while this request was in flight, retry with new token
       const currentToken = safeGetItem("accessToken");
-      if (currentToken && currentToken !== token) {
+      if (currentToken && currentToken !== token && !isJwtExpired(currentToken)) {
         const retryOptions = { ...options, _isRetry: true };
         const retryHeaders = new Headers(options.headers || {});
         if (!(options.body instanceof FormData)) {
@@ -146,7 +186,6 @@ async function request(path, options = {}) {
       return new Promise((resolve, reject) => {
         subscribeTokenRefresh(
           (newAccessToken) => {
-            // Retry once with _isRetry flag
             const newOptions = { ...options, _isRetry: true };
             const newHeaders = new Headers(options.headers || {});
             if (!(options.body instanceof FormData)) {
@@ -229,14 +268,16 @@ function handleLogoutRedirect() {
   safeRemoveItem("accessToken");
   safeRemoveItem("refreshToken");
 
-  // Only force redirect to login if the user was actually authenticated before
-  if (
-    hadToken &&
-    typeof window !== "undefined" &&
-    window.location.pathname !== "/giris" &&
-    window.location.pathname !== "/uye-ol"
-  ) {
-    window.location.href = "/giris";
+  const protectedRoutes = [
+    "/admin", "/panel", "/odeme", "/siparislerim", "/adreslerim", "/profil", "/hesabim"
+  ];
+
+  if (hadToken && typeof window !== "undefined") {
+    const currentPath = window.location.pathname.toLowerCase();
+    const isProtectedRoute = protectedRoutes.some(route => currentPath.startsWith(route));
+    if (isProtectedRoute && currentPath !== "/giris" && currentPath !== "/uye-ol") {
+      window.location.href = "/giris";
+    }
   }
 }
 
