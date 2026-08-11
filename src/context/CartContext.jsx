@@ -138,9 +138,21 @@ export function CartProvider({ children }) {
     return activeMergePromise;
   }, [refreshCart, safeSetState]);
 
-  // Sync cart on auth change
+  // Sync cart on mount and auth change
+  const isInitialMountRef = useRef(true);
   const prevAuthRef = useRef(isAuthenticated);
   useEffect(() => {
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      prevAuthRef.current = isAuthenticated;
+      if (isAuthenticated) {
+        triggerGuestCartMerge();
+      } else {
+        refreshCart();
+      }
+      return;
+    }
+
     if (prevAuthRef.current !== isAuthenticated) {
       prevAuthRef.current = isAuthenticated;
       if (isAuthenticated) {
