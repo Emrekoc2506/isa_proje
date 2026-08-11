@@ -82,13 +82,61 @@ function setCachedSlides(slidesData) {
   }
 }
 
+export function isTransientError(err) {
+  if (!err) return false;
+  const status = err.status || err.statusCode || err.response?.status;
+  const code = err.code || err.name;
+
+  // Non-retryable status codes: 400, 401, 403, 404, 422
+  if (status === 400 || status === 401 || status === 403 || status === 404 || status === 422) {
+    return false;
+  }
+
+  // Transient status codes: 500, 502, 503, 504
+  if (status === 500 || status === 502 || status === 503 || status === 504) {
+    return true;
+  }
+
+  // Network errors, timeouts, abort errors
+  if (
+    code === 'network_error' ||
+    code === 'AbortError' ||
+    err.name === 'AbortError' ||
+    (err.message && String(err.message).includes('Zaman aşımı'))
+  ) {
+    return true;
+  }
+
+  return !status;
+}
+
+export async function fetchProductsWithRetry(fetcher, maxAttempts = 3, delays = [1000, 2000]) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fetcher();
+    } catch (err) {
+      lastError = err;
+      const canRetry = isTransientError(err);
+      if (!canRetry || attempt >= maxAttempts) {
+        throw err;
+      }
+      const delayMs = delays[attempt - 1] ?? 1000;
+      await new Promise((res) => setTimeout(res, delayMs));
+    }
+  }
+  throw lastError;
+}
+
 export function ProductProvider({ children }) {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [slides, setSlides] = useState(() => getCachedSlides());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const isMountedRef = useRef(true);
+  const latestRequestIdRef = useRef(0);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -143,32 +191,45 @@ export function ProductProvider({ children }) {
     }
   }, []);
 
-  // Tüm kamu ve admin (varsa) verilerini yükleme
+  // Tüm kamu ve admin (varsa) verilerini yükleme (bağımsız & retry destekli)
   const loadInitialData = useCallback(async () => {
+    const currentRequestId = ++latestRequestIdRef.current;
+
     try {
       if (isMountedRef.current && typeof window !== 'undefined') {
         setLoading(true);
         setError(null);
       }
 
-      // Kategori ve Ürün verilerini paralel çek
-      const [categoriesData, productsData] = await Promise.all([
-        getCategoryTree().catch(() => getCategories().catch(() => [])),
-        getProducts({ pageSize: 100 }).catch(() => [])
+      // Kategori ve Ürün verilerini bağımsız paralel çek
+      const [catResult, prodResult] = await Promise.allSettled([
+        getCategoryTree().catch(() => getCategories()),
+        fetchProductsWithRetry(() => getProducts({ pageSize: 100 }))
       ]);
 
-      if (!isMountedRef.current || typeof window === 'undefined') return;
+      if (!isMountedRef.current || currentRequestId !== latestRequestIdRef.current || typeof window === 'undefined') return;
 
-      setCategories(categoriesData || []);
-      const normalized = normalizeProducts(productsData);
-      setProducts(normalized || []);
+      if (catResult.status === 'fulfilled') {
+        setCategories(catResult.value || []);
+      }
+
+      if (prodResult.status === 'fulfilled') {
+        const normalized = normalizeProducts(prodResult.value);
+        setProducts(normalized || []);
+        setError(null);
+      } else {
+        const prodErr = prodResult.reason;
+        console.error("Ürün yükleme hatası (retry sonrası):", prodErr);
+        setError("Ürünler yüklenirken bir hata oluştu.");
+        // KULLANICI DENEYİMİ KORUMASI: Mevcut ürün listesi API geçici hatası nedeniyle silinmez!
+      }
     } catch (err) {
       console.error("Veri yükleme hatası:", err);
-      if (isMountedRef.current && typeof window !== 'undefined') {
+      if (isMountedRef.current && currentRequestId === latestRequestIdRef.current && typeof window !== 'undefined') {
         setError("Veriler yüklenirken bir hata oluştu.");
       }
     } finally {
-      if (isMountedRef.current && typeof window !== 'undefined') {
+      if (isMountedRef.current && currentRequestId === latestRequestIdRef.current && typeof window !== 'undefined') {
         setLoading(false);
       }
     }
@@ -398,6 +459,8 @@ export function ProductProvider({ children }) {
       loading,
       error,
       refreshData: loadInitialData,
+      refreshProducts: loadInitialData,
+      retry: loadInitialData,
       addCategory,
       deleteCategory,
       addSubcategory,
