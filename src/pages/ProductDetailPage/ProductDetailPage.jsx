@@ -415,10 +415,20 @@ export default function ProductDetailPage() {
               {/* Navigasyon Okları */}
               {mediaList.length > 1 && (
                 <>
-                  <button className={`${styles.navBtn} ${styles.navLeft}`} onClick={handlePrev} aria-label="Önceki">
+                  <button
+                    type="button"
+                    className={`${styles.navBtn} ${styles.navLeft}`}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePrev(e); }}
+                    aria-label="Önceki"
+                  >
                     &#10094;
                   </button>
-                  <button className={`${styles.navBtn} ${styles.navRight}`} onClick={handleNext} aria-label="Sonraki">
+                  <button
+                    type="button"
+                    className={`${styles.navBtn} ${styles.navRight}`}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleNext(e); }}
+                    aria-label="Sonraki"
+                  >
                     &#10095;
                   </button>
                 </>
@@ -430,8 +440,9 @@ export default function ProductDetailPage() {
                   {mediaList.map((_, i) => (
                     <button
                       key={i}
+                      type="button"
                       className={`${styles.dot} ${i === activeImg ? styles.dotActive : ''}`}
-                      onClick={() => setActiveImg(i)}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveImg(i); }}
                       aria-label={`Görsel ${i + 1}`}
                     />
                   ))}
@@ -445,8 +456,9 @@ export default function ProductDetailPage() {
                 {mediaList.map((m, i) => (
                   <button
                     key={i}
+                    type="button"
                     className={`${styles.thumb} ${i === activeImg ? styles.thumbActive : ''}`}
-                    onClick={() => setActiveImg(i)}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveImg(i); }}
                     aria-label={`Görsel ${i + 1}`}
                   >
                     <img src={m.src} alt={m.alt} loading="lazy" onError={(e) => { e.target.onerror = null; e.target.src = '/ornek resim.jpg'; }} />

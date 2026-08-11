@@ -122,15 +122,17 @@ export default function HeroSlider() {
 
       {/* ── Önceki / Sonraki Butonları ─────────────────────── */}
       <button
+        type="button"
         className={`${styles.navBtn} ${styles.prevBtn}`}
-        onClick={prev}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); prev(); }}
         aria-label="Previous slide"
       >
         <FiChevronLeft />
       </button>
       <button
+        type="button"
         className={`${styles.navBtn} ${styles.nextBtn}`}
-        onClick={next}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); next(); }}
         aria-label="Next slide"
       >
         <FiChevronRight />
@@ -141,8 +143,9 @@ export default function HeroSlider() {
         {activeSlides.map((s, i) => (
           <button
             key={s.id}
+            type="button"
             className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}
-            onClick={() => goTo(i, i > current ? 1 : -1)}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); goTo(i, i > current ? 1 : -1); }}
             role="tab"
             aria-selected={i === current}
             aria-label={`Slide ${i + 1}`}
