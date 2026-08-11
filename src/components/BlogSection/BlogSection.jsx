@@ -26,19 +26,13 @@ export default function BlogSection({ articles = [] }) {
         </div>
 
         {/* ── Makale Grid ─────────────────────────────────── */}
-        <motion.div
-          className={styles.grid}
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.05 }}
-        >
+        <div className={styles.grid}>
           {articles.map((article) => (
-            <motion.div key={article.id} variants={staggerItem}>
+            <div key={article.id}>
               <ArticleCard article={article} />
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
