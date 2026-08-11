@@ -122,9 +122,16 @@ export default function OrdersSection() {
                 <h5 style={{ margin: '0 0 8px 0', color: 'var(--gold-light)', fontSize: 14 }}>Ürünler</h5>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {(selectedOrder.items || []).map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: isLight ? '1px solid var(--border-gold)' : '1px solid rgba(255,255,255,0.05)', paddingBottom: 6 }}>
-                      <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{item.productName}</span>
-                      <span style={{ color: 'var(--text-secondary)' }}>{item.quantity} adet × {item.unitPrice} ₺</span>
+                    <div key={idx} style={{ borderBottom: isLight ? '1px solid var(--border-gold)' : '1px solid rgba(255,255,255,0.05)', paddingBottom: 6, marginBottom: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{item.productName}</span>
+                        <span style={{ color: 'var(--text-secondary)' }}>{item.quantity} adet × {item.unitPrice} ₺</span>
+                      </div>
+                      {(item.customNote || item.note || item.personalizationNote) && (
+                        <div style={{ fontSize: 11, color: 'var(--gold-light)', background: 'rgba(201, 162, 39, 0.12)', border: '1px solid rgba(201, 162, 39, 0.25)', borderRadius: 4, padding: '3px 8px', marginTop: 4 }}>
+                          ✨ Kişiselleştirme Notu: <strong>{item.customNote || item.note || item.personalizationNote}</strong>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

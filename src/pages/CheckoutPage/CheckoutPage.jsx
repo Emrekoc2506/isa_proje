@@ -483,6 +483,11 @@ export default function CheckoutPage() {
                   <img src={item.image} alt={item.name} className={styles.cartItemImg} />
                   <div className={styles.cartItemInfo}>
                     <p className={styles.cartItemName}>{item.name}</p>
+                    {item.customNote && (
+                      <p style={{ fontSize: 11, color: 'var(--gold-light, #f5d680)', margin: '2px 0 4px 0' }}>
+                        ✨ Kişiselleştirme: {item.customNote}
+                      </p>
+                    )}
                     <p className={styles.cartItemMeta}>{item.qty} adet × {item.price}</p>
                   </div>
                 </div>

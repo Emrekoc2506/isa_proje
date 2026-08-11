@@ -13,6 +13,7 @@ export function mapServerCart(data) {
     productVariantId: item.productVariantId,
     qty: item.quantity,
     quantity: item.quantity,
+    customNote: item.customNote || item.personalizationNote || item.note || null,
     price: `${item.unitPrice} ₺`,
     unitPrice: item.unitPrice,
     image: item.imageUrl || "/ornek resim.jpg",
@@ -146,7 +147,7 @@ export function CartProvider({ children }) {
     }
   }, [isAuthenticated, refreshCart, triggerGuestCartMerge]);
 
-  const addToCart = useCallback(async (product, quantity = 1, variantId = null) => {
+  const addToCart = useCallback(async (product, quantity = 1, variantId = null, customNote = null) => {
     setCartError(null);
     const rawId = product?.databaseId ?? product?.productId ?? product?.id;
     const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(rawId || ''));
@@ -163,7 +164,8 @@ export function CartProvider({ children }) {
         const data = await cartApi.addCartItem({
           productId: rawId,
           productVariantId: variantId,
-          quantity
+          quantity,
+          customNote: customNote || null
         });
         applyServerCart(data);
         return { success: true, cart: data };
@@ -188,7 +190,7 @@ export function CartProvider({ children }) {
     setItems(prev => {
       const existing = prev.find(i => String(i.id || i.productId) === String(rawId));
       if (existing) {
-        return prev.map(i => String(i.id || i.productId) === String(rawId) ? { ...i, qty: (i.qty || i.quantity || 1) + quantity } : i);
+        return prev.map(i => String(i.id || i.productId) === String(rawId) ? { ...i, qty: (i.qty || i.quantity || 1) + quantity, customNote: customNote || i.customNote } : i);
       }
       const rawPrice = product.price || 100;
       const numPrice = typeof rawPrice === 'number' ? rawPrice : parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 100;
@@ -202,6 +204,7 @@ export function CartProvider({ children }) {
         image: product.image || product.imageUrl || "/ornek resim.jpg",
         qty: quantity,
         quantity: quantity,
+        customNote: customNote || null,
         source: 'mock'
       }];
     });

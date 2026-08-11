@@ -10,7 +10,9 @@ export function addCartItem(payload) {
     body: JSON.stringify({
       productId: payload.productId,
       productVariantId: payload.productVariantId || null,
-      quantity: payload.quantity || 1
+      quantity: payload.quantity || 1,
+      customNote: payload.customNote || payload.note || null,
+      note: payload.customNote || payload.note || null
     })
   });
 }

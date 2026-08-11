@@ -82,6 +82,21 @@ export default function CartDrawer({ open, onClose }) {
                         />
                         <div className={styles.itemInfo}>
                           <p className={styles.itemName}>{item.name}</p>
+                          {item.customNote && (
+                            <div style={{
+                              fontSize: '11px',
+                              color: 'var(--gold-light, #f5d680)',
+                              background: 'rgba(201, 162, 39, 0.1)',
+                              border: '1px solid rgba(201, 162, 39, 0.25)',
+                              borderRadius: '4px',
+                              padding: '2px 6px',
+                              marginTop: '3px',
+                              marginBottom: '4px',
+                              lineHeight: 1.3
+                            }}>
+                              ✨ Kişiselleştirme: {item.customNote}
+                            </div>
+                          )}
                           <p className={styles.itemPrice}>{item.price}</p>
                           {/* Miktar kontrolü */}
                           <div className={styles.qtyRow}>
