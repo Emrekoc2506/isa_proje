@@ -595,35 +595,32 @@ export default function ProductDetailPage() {
 
             {/* KİŞİSELLEŞTİRME BÖLÜMÜ */}
             <div style={{
-              margin: '18px 0',
-              padding: '16px',
-              background: 'var(--bg-mid, #1a1625)',
-              border: '1px solid var(--border-gold, rgba(201, 162, 39, 0.35))',
-              borderRadius: '12px'
+              margin: '20px 0',
+              padding: '18px',
+              background: 'linear-gradient(135deg, rgba(201, 162, 39, 0.08), rgba(20, 10, 32, 0.95))',
+              border: '1.5px solid var(--gold, #c9a227)',
+              borderRadius: '14px',
+              boxShadow: '0 4px 16px rgba(201, 162, 39, 0.15)'
             }}>
               <div style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: 'var(--text-secondary, #cbd5e1)',
-                marginBottom: '8px',
+                fontSize: '14px',
+                fontWeight: 700,
+                color: 'var(--gold-light, #f5d680)',
+                marginBottom: '6px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px'
+                gap: '8px'
               }}>
-                <span style={{ fontSize: '14px', color: 'var(--gold-light, #f5d680)' }}>—</span> Kişiselleştirme ekleyin
-              </div>
-
-              <div style={{ marginBottom: '6px', fontSize: '15px', fontWeight: 700, color: 'var(--text-primary, #fff)' }}>
-                Kişiselleştirme
+                <span>✨</span> Kişiye Özel Tılsım & İsim Hazırlığı (İsteğe Bağlı)
               </div>
 
               <p style={{
                 fontSize: '12px',
-                color: 'var(--text-secondary, #94a3b8)',
+                color: 'var(--text-secondary, #cbd5e1)',
                 lineHeight: '1.5',
                 marginBottom: '12px'
               }}>
-                Kolyenizi / ürününüzü kişiselleştirmek için lütfen takacak kişinin tam adını ve annesinin adını belirtin. Bu bilgiler yalnızca ürünü sizin için özel olarak hazırlamak amacıyla kullanılacak olup gizli kalacaktır.
+                Ürününüzün size özel niyet ve ebced vefki ile hazırlanması için lütfen ürünü takacak kişinin <strong>Tam Adı</strong> ve <strong>Anne Adı</strong> bilgilerini yazın (Bilgileriniz tamamen gizli tutulmaktadır).
               </p>
 
               <div style={{ position: 'relative' }}>
@@ -632,12 +629,12 @@ export default function ProductDetailPage() {
                   maxLength={150}
                   value={customNote}
                   onChange={(e) => setCustomNote(e.target.value)}
-                  placeholder=""
+                  placeholder="Örn: Ahmet oğlu Mehmet, Anne Adı: Ayşe — Özel tılsım notu..."
                   style={{
                     width: '100%',
                     padding: '12px 14px 28px 14px',
                     background: 'var(--bg-dark, #0f0a18)',
-                    border: '1px solid var(--border-gold, rgba(201, 162, 39, 0.3))',
+                    border: '1px solid var(--border-gold, rgba(201, 162, 39, 0.4))',
                     borderRadius: '10px',
                     color: 'var(--text-primary, #fff)',
                     fontSize: '13px',
@@ -652,7 +649,7 @@ export default function ProductDetailPage() {
                   bottom: '8px',
                   right: '12px',
                   fontSize: '11px',
-                  color: 'var(--text-muted, #64748b)',
+                  color: 'var(--text-muted, #94a3b8)',
                   fontWeight: 600
                 }}>
                   {customNote.length}/150
