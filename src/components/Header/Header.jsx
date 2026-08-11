@@ -33,7 +33,7 @@ export default function Header() {
     location.pathname.startsWith("/urun/") ||
     location.pathname.startsWith("/kategori/");
 
-  const { isSticky } = useStickyHeader(60);
+  const { isSticky } = useStickyHeader(120, 40);
   const { isAuthenticated, isAdmin, logout } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
