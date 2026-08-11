@@ -139,11 +139,15 @@ export function CartProvider({ children }) {
   }, [refreshCart, safeSetState]);
 
   // Sync cart on auth change
+  const prevAuthRef = useRef(isAuthenticated);
   useEffect(() => {
-    if (isAuthenticated) {
-      triggerGuestCartMerge();
-    } else {
-      refreshCart();
+    if (prevAuthRef.current !== isAuthenticated) {
+      prevAuthRef.current = isAuthenticated;
+      if (isAuthenticated) {
+        triggerGuestCartMerge();
+      } else {
+        refreshCart();
+      }
     }
   }, [isAuthenticated, refreshCart, triggerGuestCartMerge]);
 
