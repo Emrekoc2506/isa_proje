@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { 
   FiTrash2, FiEdit3, FiPlus, FiLock, FiUnlock,
-  FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText, FiX
+  FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText, FiX, FiSearch
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as productApi from '../../../services/productApi';
 import * as categoryApi from '../../../services/categoryApi';
 import { uploadFile } from '../../../services/fileApi';
 import RichTextEditor from '../../../components/RichTextEditor/RichTextEditor';
+import AdminSEOSection from '../../../components/AdminSEOSection/AdminSEOSection';
 import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
 import styles from '../AdminPage.module.css';
 import { useTheme } from '../../../context/ThemeContext';
@@ -16,7 +17,8 @@ const STEPS = [
   { id: 1, label: "Genel", icon: FiTag, color: "#6366f1" },
   { id: 2, label: "Fiyat & Stok", icon: FiDollarSign, color: "#16a34a" },
   { id: 3, label: "Görsel", icon: FiImage, color: "#10b981" },
-  { id: 4, label: "Detaylar", icon: FiSliders, color: "#f59e0b" }
+  { id: 4, label: "Detaylar", icon: FiSliders, color: "#f59e0b" },
+  { id: 5, label: "SEO", icon: FiSearch, color: "#3b82f6" }
 ];
 
 export default function ProductsSection({ onSelectProductForVariants }) {
@@ -53,6 +55,9 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [dimensions, setDimensions] = useState('');
   const [discount, setDiscount] = useState('');
   const [slug, setSlug] = useState('');
+  const [seoTitle, setSeoTitle] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
+  const [seoKeywords, setSeoKeywords] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [uploadingImg, setUploadingImg] = useState(false);
   const [modalStep, setModalStep] = useState(1); // Sihirbaz Adım Lojiği
@@ -174,6 +179,9 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setDimensions('');
     setDiscount('');
     setSlug('');
+    setSeoTitle('');
+    setSeoDescription('');
+    setSeoKeywords('');
     setIsActive(true);
     setModalStep(1);
     setFieldErrors({});
@@ -230,6 +238,9 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setDimensions(p.dimensions || '');
     setDiscount(p.discount || '');
     setSlug(p.slug || '');
+    setSeoTitle(p.seoTitle || '');
+    setSeoDescription(p.seoDescription || '');
+    setSeoKeywords(p.seoKeywords || '');
     setIsActive(p.isActive ?? true);
     setModalStep(1);
     setFieldErrors({});
@@ -342,6 +353,9 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       dimensions: dimensions ? dimensions.trim() : null,
       discount: discount || null,
       slug: (slug || cleanName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ('urun-' + Date.now()),
+      seoTitle: seoTitle ? seoTitle.trim() : null,
+      seoDescription: seoDescription ? seoDescription.trim() : null,
+      seoKeywords: seoKeywords ? seoKeywords.trim() : null,
       isActive
     };
 
@@ -1201,6 +1215,32 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                       </div>
                     </motion.div>
                   )}
+
+                  {/* ADIM 5: SEO AYARLARI */}
+                  {modalStep === 5 && (
+                    <motion.div
+                      key="step5"
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 15 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <AdminSEOSection
+                        seoTitle={seoTitle}
+                        onChangeSeoTitle={setSeoTitle}
+                        seoDescription={seoDescription}
+                        onChangeSeoDescription={setSeoDescription}
+                        seoKeywords={seoKeywords}
+                        onChangeSeoKeywords={setSeoKeywords}
+                        slug={slug}
+                        onChangeSlug={setSlug}
+                        fallbackTitle={name}
+                        fallbackDescription={shortDescription || description}
+                        baseUrl="https://muhristan.com/urun/"
+                        typeLabel="ürün"
+                      />
+                    </motion.div>
+                  )}
                 </AnimatePresence>
 
                 {/* Sihirbaz Navigasyon Butonları */}
@@ -1227,9 +1267,9 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                     )}
                   </div>
 
-                  {/* Sağ Taraf: İleri (Adım 1-3) veya Ürünü Kaydet (Yalnızca Adım 4) */}
+                  {/* Sağ Taraf: İleri (Adım 1-4) veya Ürünü Kaydet (Adım 5) */}
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    {modalStep < 4 ? (
+                    {modalStep < 5 ? (
                       <button 
                         type="button" 
                         onClick={() => {

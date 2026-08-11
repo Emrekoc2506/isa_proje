@@ -3,6 +3,7 @@ import { FiPlus, FiTrash2, FiCornerDownRight, FiChevronDown, FiChevronRight, FiL
 import * as categoryApi from '../../../services/categoryApi';
 import { collectDescendantIds } from '../../../utils/categoryTree';
 import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
+import AdminSEOSection from '../../../components/AdminSEOSection/AdminSEOSection';
 
 /* ── İnline Stil Tanımları (CSS Değişkenleri Uyumlu) ────────────────────────────────── */
 const S = {
@@ -509,6 +510,11 @@ export default function CategoriesSection() {
 
   // Form Fields
   const [newCatName, setNewCatName] = useState('');
+  const [description, setDescription] = useState('');
+  const [slug, setSlug] = useState('');
+  const [seoTitle, setSeoTitle] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
+  const [seoKeywords, setSeoKeywords] = useState('');
   const [parentId, setParentId] = useState('');
   const [editingCategory, setEditingCategory] = useState(null);
   const [isSecret, setIsSecret] = useState(false);
@@ -542,6 +548,19 @@ export default function CategoriesSection() {
     setExpandedCats(prev => ({ ...prev, [catId]: !prev[catId] }));
   };
 
+  const resetForm = () => {
+    setNewCatName('');
+    setDescription('');
+    setSlug('');
+    setSeoTitle('');
+    setSeoDescription('');
+    setSeoKeywords('');
+    setParentId('');
+    setIsSecret(false);
+    setEditingCategory(null);
+    setParentError('');
+  };
+
   const handleToggleStatus = async (cat) => {
     const catId = cat.databaseId ?? cat.id;
     try {
@@ -572,30 +591,28 @@ export default function CategoriesSection() {
       finalName = finalName.replace(' [GİZLİ]', '').trim();
     }
 
+    const payload = {
+      name: finalName,
+      description: description ? description.trim() : null,
+      parentCategoryId: parentId || null,
+      isSecret: isSecret,
+      slug: slug ? slug.trim().toLowerCase().replace(/\s+/g, '-') : null,
+      seoTitle: seoTitle ? seoTitle.trim() : null,
+      seoDescription: seoDescription ? seoDescription.trim() : null,
+      seoKeywords: seoKeywords ? seoKeywords.trim() : null,
+      isActive: editingCategory ? (editingCategory.isActive ?? true) : true,
+      sortOrder: editingCategory ? (editingCategory.sortOrder ?? 0) : 0
+    };
+
     try {
       if (editingCategory) {
         const catId = editingCategory.databaseId ?? editingCategory.id;
-        await categoryApi.updateAdminCategory(catId, {
-          name: finalName,
-          parentCategoryId: parentId || null,
-          isSecret: isSecret,
-          isActive: editingCategory.isActive ?? true,
-          sortOrder: editingCategory.sortOrder ?? 0
-        });
-        setNewCatName('');
-        setParentId('');
-        setIsSecret(false);
-        setEditingCategory(null);
+        await categoryApi.updateAdminCategory(catId, payload);
+        resetForm();
         fetchCategories();
       } else {
-        await categoryApi.createAdminCategory({
-          name: finalName,
-          parentCategoryId: parentId || null,
-          isSecret: isSecret
-        });
-        setNewCatName('');
-        setParentId('');
-        setIsSecret(false);
+        await categoryApi.createAdminCategory(payload);
+        resetForm();
         fetchCategories();
       }
     } catch (err) {
@@ -622,16 +639,17 @@ export default function CategoriesSection() {
       setNewCatName(cat.name);
       setIsSecret(false);
     }
+    setDescription(cat.description || '');
+    setSlug(cat.slug || '');
+    setSeoTitle(cat.seoTitle || '');
+    setSeoDescription(cat.seoDescription || '');
+    setSeoKeywords(cat.seoKeywords || '');
     setParentId(cat.parentCategoryId || '');
     setParentError('');
   };
 
   const handleCancelEdit = () => {
-    setEditingCategory(null);
-    setNewCatName('');
-    setParentId('');
-    setIsSecret(false);
-    setParentError('');
+    resetForm();
   };
 
   const handleDelete = async (id) => {
@@ -910,6 +928,18 @@ export default function CategoriesSection() {
               {parentError && <p style={S.errorText}>{parentError}</p>}
             </div>
 
+            {/* Kategori Açıklaması */}
+            <div style={S.fieldGroup}>
+              <label style={S.label}>Kategori Açıklaması (Opsiyonel)</label>
+              <textarea
+                rows={2}
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                style={{ ...S.input, height: 'auto', padding: '10px 14px', resize: 'vertical' }}
+                placeholder="Kategori hakkında kısa tanıtım metni..."
+              />
+            </div>
+
             {/* Gizli Kategori */}
             <div style={S.fieldGroup}>
               <label
@@ -938,6 +968,22 @@ export default function CategoriesSection() {
                 </div>
               </label>
             </div>
+
+            {/* SEO Ayarları */}
+            <AdminSEOSection
+              seoTitle={seoTitle}
+              onChangeSeoTitle={setSeoTitle}
+              seoDescription={seoDescription}
+              onChangeSeoDescription={setSeoDescription}
+              seoKeywords={seoKeywords}
+              onChangeSeoKeywords={setSeoKeywords}
+              slug={slug}
+              onChangeSlug={setSlug}
+              fallbackTitle={newCatName}
+              fallbackDescription={description}
+              baseUrl="https://muhristan.com/urunler?kategori="
+              typeLabel="kategori"
+            />
 
             {/* Butonlar */}
             <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>

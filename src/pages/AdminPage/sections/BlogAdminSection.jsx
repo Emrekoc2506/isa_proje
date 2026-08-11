@@ -14,6 +14,7 @@ import {
 } from '../../../services/blogApi';
 import { uploadFile } from '../../../services/fileApi';
 import RichTextEditor from '../../../components/RichTextEditor/RichTextEditor';
+import AdminSEOSection from '../../../components/AdminSEOSection/AdminSEOSection';
 
 // ── Hata kodu → Türkçe mesaj ──────────────────────────────
 function resolveErrorMsg(err) {
@@ -612,26 +613,21 @@ export default function BlogAdminSection() {
                 />
               </div>
 
-              {/* SEO Alanları (Opsiyonel — daraltılmış) */}
-              <details style={{ marginBottom: '20px' }}>
-                <summary style={{ cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 600, marginBottom: '12px' }}>
-                  SEO Ayarları (Opsiyonel)
-                </summary>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
-                  <div>
-                    <label style={labelStyle}>SEO Başlığı</label>
-                    <input type="text" value={form.seoTitle} onChange={e => setField('seoTitle', e.target.value)} placeholder="Arama motorları için başlık" style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>SEO Açıklaması</label>
-                    <textarea value={form.seoDescription} onChange={e => setField('seoDescription', e.target.value)} placeholder="Arama motorları için kısa açıklama" rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>SEO Anahtar Kelimeler</label>
-                    <input type="text" value={form.seoKeywords} onChange={e => setField('seoKeywords', e.target.value)} placeholder="kelime1, kelime2, kelime3" style={inputStyle} />
-                  </div>
-                </div>
-              </details>
+              {/* SEO Ayarları */}
+              <AdminSEOSection
+                seoTitle={form.seoTitle || ''}
+                onChangeSeoTitle={(val) => setField('seoTitle', val)}
+                seoDescription={form.seoDescription || ''}
+                onChangeSeoDescription={(val) => setField('seoDescription', val)}
+                seoKeywords={form.seoKeywords || ''}
+                onChangeSeoKeywords={(val) => setField('seoKeywords', val)}
+                slug={form.slug || ''}
+                onChangeSlug={(val) => setField('slug',val)}
+                fallbackTitle={form.title}
+                fallbackDescription={form.summary || form.content}
+                baseUrl="https://muhristan.com/blog?article="
+                typeLabel="blog yazısı"
+              />
 
               {/* Form Butonları */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
