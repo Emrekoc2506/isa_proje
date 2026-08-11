@@ -68,6 +68,6 @@ export function getRecentOrders(count = 5) {
 }
 
 export function getReviewsReport() {
-  return request("/admin/reviews?page=1&pageSize=100").catch(() => ({ items: [], totalCount: 0 }));
+  return request("/admin/reviews/pending").catch(() => ({ items: [], totalCount: 0 }));
 }
 
