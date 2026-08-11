@@ -1,7 +1,7 @@
-// useStickyHeader — Scroll pozisyonuna göre header sticky davranışı
+// useStickyHeader — Scroll pozisyonuna göre header sticky davranışı (Hysteresis korumalı)
 import { useState, useEffect, useRef } from 'react';
 
-export function useStickyHeader(threshold = 80) {
+export function useStickyHeader(threshold = 120, offThreshold = 40) {
   const [isSticky, setIsSticky] = useState(false);
   const [scrollDir, setScrollDir] = useState('up');
   const lastScrollYRef = useRef(0);
@@ -10,14 +10,19 @@ export function useStickyHeader(threshold = 80) {
     const handleScroll = () => {
       const currentY = window.scrollY;
 
-      setIsSticky(currentY > threshold);
+      setIsSticky((prev) => {
+        if (!prev && currentY > threshold) return true;
+        if (prev && currentY < offThreshold) return false;
+        return prev;
+      });
+
       setScrollDir(currentY > lastScrollYRef.current ? 'down' : 'up');
       lastScrollYRef.current = currentY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [threshold]);
+  }, [threshold, offThreshold]);
 
   return { isSticky, scrollDir };
 }
