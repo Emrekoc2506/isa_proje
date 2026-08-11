@@ -1,4 +1,4 @@
-// useScrollReveal — Intersection Observer ile scroll animasyonu
+// useScrollReveal — Kesintisiz ve her zaman görünür içerik sunumu
 import { useEffect, useRef } from 'react';
 
 export function useScrollReveal(options = {}) {
@@ -7,27 +7,9 @@ export function useScrollReveal(options = {}) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.classList.add('visible');
-          if (!options.repeat) observer.unobserve(el);
-        } else if (options.repeat) {
-          el.classList.remove('visible');
-        }
-      },
-      {
-        threshold: options.threshold || 0.15,
-        rootMargin: options.rootMargin || '0px 0px -50px 0px',
-      }
-    );
-
     el.classList.add('reveal');
-    observer.observe(el);
-
-    return () => observer.disconnect();
-  }, [options.repeat, options.threshold, options.rootMargin]);
+    el.classList.add('visible');
+  }, []);
 
   return ref;
 }
