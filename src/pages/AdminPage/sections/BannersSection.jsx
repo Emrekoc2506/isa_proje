@@ -994,7 +994,7 @@ export default function BannersSection() {
                                   id="desktopImg"
                                 />
                                 <UploadDropzone
-                                  label="📱 Gündüz Mobil Görseli (İsteğe Bağlı - 800x600 px)"
+                                  label="📱 Gündüz Mobil Görseli (İsteğe Bağlı - 1080x1080 px Kare Önerilir)"
                                   value={form.imageMobile}
                                   onFile={(e) => handleImageUpload(e, 'mobile')}
                                   onClear={() => setVal('imageMobile', '')}
@@ -1016,7 +1016,7 @@ export default function BannersSection() {
                                   id="desktopDarkImg"
                                 />
                                 <UploadDropzone
-                                  label="📱 Gece Mobil Görseli (İsteğe Bağlı - 800x600 px)"
+                                  label="📱 Gece Mobil Görseli (İsteğe Bağlı - 1080x1080 px Kare Önerilir)"
                                   value={form.themeMode === 'dark' ? (form.imageMobileDark || form.imageMobile) : form.imageMobileDark}
                                   onFile={(e) => handleImageUpload(e, form.themeMode === 'dark' ? 'mobile' : 'mobileDark')}
                                   onClear={() => { setVal('imageMobileDark', ''); if (form.themeMode === 'dark') setVal('imageMobile', ''); }}
