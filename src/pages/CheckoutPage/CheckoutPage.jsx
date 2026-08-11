@@ -51,6 +51,7 @@ export default function CheckoutPage() {
   const [couponApplied, setCouponApplied] = useState('');
   const [couponError, setCouponError] = useState('');
   const [couponSuccess, setCouponSuccess] = useState('');
+  const [orderCustomNote, setOrderCustomNote] = useState('');
 
   const [previewData, setPreviewData] = useState(null);
   const [previewError, setPreviewError] = useState('');
@@ -166,7 +167,8 @@ export default function CheckoutPage() {
 
     const payload = {
       shippingMethodCode,
-      couponCode: couponApplied || null
+      couponCode: couponApplied || null,
+      customerNote: orderCustomNote.trim() || null
     };
 
     if (isAuthenticated) {
@@ -420,6 +422,66 @@ export default function CheckoutPage() {
           </div>
 
 
+
+          {/* KİŞİSELLEŞTİRME BÖLÜMÜ */}
+          <div className={styles.sectionCard} style={{
+            background: 'linear-gradient(135deg, rgba(201, 162, 39, 0.08), rgba(20, 10, 32, 0.95))',
+            border: '1.5px solid var(--gold, #c9a227)',
+            boxShadow: '0 4px 16px rgba(201, 162, 39, 0.15)'
+          }}>
+            <div style={{
+              fontSize: '14px',
+              fontWeight: 700,
+              color: 'var(--gold-light, #f5d680)',
+              marginBottom: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span>✨</span> Kişiye Özel Tılsım & İsim Hazırlığı (İsteğe Bağlı)
+            </div>
+            <p style={{
+              fontSize: '12px',
+              color: 'var(--text-secondary, #cbd5e1)',
+              lineHeight: '1.5',
+              marginBottom: '12px'
+            }}>
+              Ürününüzün size özel niyet ve ebced vefki ile hazırlanması için lütfen ürünü takacak kişinin <strong>Tam Adı</strong> ve <strong>Anne Adı</strong> bilgilerini yazın (Bilgileriniz tamamen gizli tutulmaktadır).
+            </p>
+            <div style={{ position: 'relative' }}>
+              <textarea
+                rows={3}
+                maxLength={250}
+                value={orderCustomNote}
+                onChange={(e) => setOrderCustomNote(e.target.value)}
+                placeholder="Örn: Ahmet oğlu Mehmet, Anne Adı: Ayşe — Özel tılsım notu..."
+                style={{
+                  width: '100%',
+                  padding: '12px 14px 28px 14px',
+                  background: 'var(--bg-dark, #0f0a18)',
+                  border: '1px solid rgba(201, 162, 39, 0.4)',
+                  borderRadius: '10px',
+                  color: 'var(--text-primary, #fff)',
+                  fontSize: '13px',
+                  outline: 'none',
+                  resize: 'none',
+                  fontFamily: 'inherit',
+                  lineHeight: 1.5,
+                  boxSizing: 'border-box'
+                }}
+              />
+              <div style={{
+                position: 'absolute',
+                bottom: '8px',
+                right: '12px',
+                fontSize: '11px',
+                color: 'var(--text-muted, #94a3b8)',
+                fontWeight: 600
+              }}>
+                {orderCustomNote.length}/250
+              </div>
+            </div>
+          </div>
 
           <div className={styles.sectionCard}>
             <h3 className={styles.sectionTitle}>Ödeme Yöntemi</h3>
