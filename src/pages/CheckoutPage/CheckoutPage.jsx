@@ -419,29 +419,7 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          {/* 2. KARGO YÖNTEMİ */}
-          <div className={styles.sectionCard}>
-            <h3 className={styles.sectionTitle}><FiTruck /> Kargo Yöntemi</h3>
-            <div className={styles.shippingMethods}>
-              {previewData?.shippingMethods?.map(method => (
-                <div 
-                  key={method.code} 
-                  className={`${styles.shippingMethodCard} ${shippingMethodCode === method.code ? styles.selectedCard : ''}`}
-                  onClick={() => setShippingMethodCode(method.code)}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                    <div>
-                      <p className={styles.methodName}>{method.name}</p>
-                      <p className={styles.methodDesc}>{method.code === 'standard' ? '3-5 iş günü teslimat' : method.code === 'express' ? '1-2 iş günü teslimat' : 'Mağazadan teslim alma'}</p>
-                    </div>
-                    <span className={styles.methodPrice}>
-                      {method.amount === 0 ? 'Ücretsiz' : `${method.amount} ₺`}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+
 
           <div className={styles.sectionCard}>
             <h3 className={styles.sectionTitle}>Ödeme Yöntemi</h3>

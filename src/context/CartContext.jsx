@@ -213,7 +213,12 @@ export function CartProvider({ children }) {
 
   const removeFromCart = useCallback(async (itemId) => {
     setCartError(null);
-    if (removingItemIdsRef.current.has(itemId)) return { success: false };
+    if (!itemId) return { success: false };
+
+    // Anında (0ms) sepet listesinden sil ki kullanıcı beklemesin
+    setItems(prev => prev.filter(i => i.id !== itemId && i.cartItemId !== itemId && i.productId !== itemId));
+
+    if (removingItemIdsRef.current.has(itemId)) return { success: true };
     removingItemIdsRef.current.add(itemId);
     setRemovingItemIds(Array.from(removingItemIdsRef.current));
     try {
