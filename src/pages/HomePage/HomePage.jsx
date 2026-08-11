@@ -52,7 +52,7 @@ export default function HomePage() {
   const featuredProducts = products.filter(p => p.isFeatured);
 
   const displayNews = newsProducts.length > 0 ? newsProducts : products.slice(0, 8);
-  const displaySale = saleProducts.length > 0 ? saleProducts : (products.length > 4 ? products.slice(4, 12) : products.slice(0, 8));
+  const displaySale = saleProducts.length > 0 ? saleProducts : products.slice(0, 8);
   const displayFeatured = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8);
 
   return (
