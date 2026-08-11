@@ -65,10 +65,27 @@ function normalizeProducts(productsData) {
   });
 }
 
+function getCachedSlides() {
+  try {
+    const raw = sessionStorage.getItem('muhristan_cached_slides');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setCachedSlides(slidesData) {
+  try {
+    sessionStorage.setItem('muhristan_cached_slides', JSON.stringify(slidesData));
+  } catch {
+    // Ignore storage error
+  }
+}
+
 export function ProductProvider({ children }) {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
-  const [slides, setSlides] = useState(INITIAL_SLIDES);
+  const [slides, setSlides] = useState(() => getCachedSlides());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const isMountedRef = useRef(true);
@@ -80,30 +97,13 @@ export function ProductProvider({ children }) {
     };
   }, []);
 
-  // Tüm kamu ve admin (varsa) verilerini yükleme
-  const loadInitialData = useCallback(async () => {
+  // Banner/Afiş verilerini anında (ürünleri beklemeden) ultra hızlı yükle
+  const fetchBannersFast = useCallback(async () => {
     try {
-      if (isMountedRef.current && typeof window !== 'undefined') {
-        setLoading(true);
-        setError(null);
-      }
+      const bannersData = await getBanners();
+      if (!isMountedRef.current || !Array.isArray(bannersData)) return;
 
-      // Kategori ve Banner (Afiş) verileri her zaman public'tir
-      const [categoriesData, bannersData, productsData] = await Promise.all([
-        getCategoryTree().catch(() => getCategories().catch(() => [])),
-        getBanners().catch(() => []),
-        getProducts({ pageSize: 100 }).catch(() => [])
-      ]);
-
-      if (!isMountedRef.current || typeof window === 'undefined') return;
-
-      setCategories(categoriesData || []);
-
-      const normalized = normalizeProducts(productsData);
-      setProducts(normalized || []);
-      
-      // Slaytları/Bannerları map edelim (backend formatı -> frontend formatı)
-      const mappedSlides = (bannersData || [])
+      const mappedSlides = bannersData
         .map(b => {
           const parsedContent = parseBannerContent(b.contentJson);
           const videoUrl = b.videoUrl || parsedContent.videoUrl || "";
@@ -137,6 +137,31 @@ export function ProductProvider({ children }) {
         .sort((a, b) => a.sortOrder - b.sortOrder);
 
       setSlides(mappedSlides);
+      setCachedSlides(mappedSlides);
+    } catch (err) {
+      console.error("Banner yükleme hatası:", err);
+    }
+  }, []);
+
+  // Tüm kamu ve admin (varsa) verilerini yükleme
+  const loadInitialData = useCallback(async () => {
+    try {
+      if (isMountedRef.current && typeof window !== 'undefined') {
+        setLoading(true);
+        setError(null);
+      }
+
+      // Kategori ve Ürün verilerini paralel çek
+      const [categoriesData, productsData] = await Promise.all([
+        getCategoryTree().catch(() => getCategories().catch(() => [])),
+        getProducts({ pageSize: 100 }).catch(() => [])
+      ]);
+
+      if (!isMountedRef.current || typeof window === 'undefined') return;
+
+      setCategories(categoriesData || []);
+      const normalized = normalizeProducts(productsData);
+      setProducts(normalized || []);
     } catch (err) {
       console.error("Veri yükleme hatası:", err);
       if (isMountedRef.current && typeof window !== 'undefined') {
@@ -150,8 +175,9 @@ export function ProductProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    fetchBannersFast();
     loadInitialData();
-  }, [loadInitialData]);
+  }, [fetchBannersFast, loadInitialData]);
 
 
 

@@ -986,7 +986,7 @@ export default function BannersSection() {
                             {(form.themeMode === 'all' || form.themeMode === 'light') && (
                               <SectionBlock icon={FiImage} title="☀️ Gündüz Modu Görselleri (Açık Tema)" sub={form.themeMode === 'light' ? "Yalnızca Gündüz teması aktifken slaytta gösterilir." : "Gündüz modunda gösterilir. Gece görseli yüklenmezse her iki temada da bu görsel kullanılır."}>
                                 <UploadDropzone
-                                  label="☀️ Gündüz Masaüstü Görseli (1920x840 px Önerilir) *"
+                                  label="☀️ Gündüz Masaüstü Görseli (1920x660 px Önerilir) *"
                                   value={form.image}
                                   onFile={(e) => handleImageUpload(e, 'desktop')}
                                   onClear={() => setVal('image', '')}
@@ -1008,7 +1008,7 @@ export default function BannersSection() {
                             {(form.themeMode === 'all' || form.themeMode === 'dark') && (
                               <SectionBlock icon={FiImage} title="🌙 Gece Modu Görselleri (Karanlık Tema)" sub={form.themeMode === 'dark' ? "Yalnızca Gece teması aktifken slaytta gösterilir." : "Gece modunda farklı bir görsel göstermek isterseniz buraya yükleyin (Boş bırakılırsa Gündüz görseli kullanılır)."}>
                                 <UploadDropzone
-                                  label="🌙 Gece Masaüstü Görseli (1920x840 px Önerilir)"
+                                  label="🌙 Gece Masaüstü Görseli (1920x660 px Önerilir)"
                                   value={form.themeMode === 'dark' ? (form.imageDark || form.image) : form.imageDark}
                                   onFile={(e) => handleImageUpload(e, form.themeMode === 'dark' ? 'desktop' : 'desktopDark')}
                                   onClear={() => { setVal('imageDark', ''); if (form.themeMode === 'dark') setVal('image', ''); }}
