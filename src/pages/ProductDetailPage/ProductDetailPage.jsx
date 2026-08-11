@@ -114,6 +114,7 @@ export default function ProductDetailPage() {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState(null);
+  const [customNote, setCustomNote] = useState('');
 
   // Auto-select first variant on load if exists
   useEffect(() => {
@@ -200,7 +201,7 @@ export default function ProductDetailPage() {
       name: productDetail.name + (selectedVariant ? ` (${selectedVariant.name})` : ''), 
       price: finalPrice + ' ₺', 
       image: productDetail.imageUrl || (productDetail.images?.[0]?.url || '') 
-    }, qty, selectedVariantId);
+    }, qty, selectedVariantId, customNote.trim());
     
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2200);
@@ -213,7 +214,7 @@ export default function ProductDetailPage() {
       name: productDetail.name + (selectedVariant ? ` (${selectedVariant.name})` : ''), 
       price: finalPrice + ' ₺', 
       image: productDetail.imageUrl || (productDetail.images?.[0]?.url || '') 
-    }, qty, selectedVariantId);
+    }, qty, selectedVariantId, customNote.trim());
     
     navigate('/odeme');
   };
@@ -579,6 +580,73 @@ export default function ProductDetailPage() {
                 </div>
               </>
             )}
+
+            {/* KİŞİSELLEŞTİRME BÖLÜMÜ */}
+            <div style={{
+              margin: '18px 0',
+              padding: '16px',
+              background: 'var(--bg-mid, #1a1625)',
+              border: '1px solid var(--border-gold, rgba(201, 162, 39, 0.35))',
+              borderRadius: '12px'
+            }}>
+              <div style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: 'var(--text-secondary, #cbd5e1)',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <span style={{ fontSize: '14px', color: 'var(--gold-light, #f5d680)' }}>—</span> Kişiselleştirme ekleyin
+              </div>
+
+              <div style={{ marginBottom: '6px', fontSize: '15px', fontWeight: 700, color: 'var(--text-primary, #fff)' }}>
+                Kişiselleştirme
+              </div>
+
+              <p style={{
+                fontSize: '12px',
+                color: 'var(--text-secondary, #94a3b8)',
+                lineHeight: '1.5',
+                marginBottom: '12px'
+              }}>
+                Kolyenizi / ürününüzü kişiselleştirmek için lütfen takacak kişinin tam adını ve annesinin adını belirtin. Bu bilgiler yalnızca ürünü sizin için özel olarak hazırlamak amacıyla kullanılacak olup gizli kalacaktır.
+              </p>
+
+              <div style={{ position: 'relative' }}>
+                <textarea
+                  rows={3}
+                  maxLength={150}
+                  value={customNote}
+                  onChange={(e) => setCustomNote(e.target.value)}
+                  placeholder=""
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px 28px 14px',
+                    background: 'var(--bg-dark, #0f0a18)',
+                    border: '1px solid var(--border-gold, rgba(201, 162, 39, 0.3))',
+                    borderRadius: '10px',
+                    color: 'var(--text-primary, #fff)',
+                    fontSize: '13px',
+                    outline: 'none',
+                    resize: 'none',
+                    fontFamily: 'inherit',
+                    lineHeight: 1.5
+                  }}
+                />
+                <div style={{
+                  position: 'absolute',
+                  bottom: '8px',
+                  right: '12px',
+                  fontSize: '11px',
+                  color: 'var(--text-muted, #64748b)',
+                  fontWeight: 600
+                }}>
+                  {customNote.length}/150
+                </div>
+              </div>
+            </div>
 
             <div className={styles.hr} />
 
