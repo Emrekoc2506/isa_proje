@@ -59,7 +59,13 @@ function rejectRefreshQueue(error) {
   queue.forEach((item) => item.reject(error));
 }
 
+let isSessionExpiredDispatched = false;
+
 function dispatchSessionExpired() {
+  if (isSessionExpiredDispatched) return;
+  isSessionExpiredDispatched = true;
+  setTimeout(() => { isSessionExpiredDispatched = false; }, 5000);
+
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("auth:session-expired"));
   }
@@ -68,6 +74,7 @@ function dispatchSessionExpired() {
 async function request(path, options = {}) {
   let token = safeGetItem("accessToken");
   const isPublic = isPublicEndpoint(path, options.method);
+  const isRetry = options._isRetry === true;
   const headers = new Headers(options.headers || {});
 
   if (!(options.body instanceof FormData)) {
@@ -91,7 +98,7 @@ async function request(path, options = {}) {
     }
   }
 
-  if (token && (!isJwtExpired(token) || !isPublic)) {
+  if (token && !isRetry && (!isJwtExpired(token) || !isPublic)) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
