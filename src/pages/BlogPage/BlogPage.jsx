@@ -261,7 +261,7 @@ export default function BlogPage() {
   const restArticles = filtered.slice(1);
 
   // SEO Calculation
-  let seoTitle = 'Mistik Blog & Rehber | Muhristan';
+  let seoTitle = 'Muhristan Blog & Rehber | Muhristan';
   let seoDesc = 'Doğal taşlar, kristaller, meditasyon ve enerji ritüelleri hakkında uzman makaleler ve rehberler Muhristan blogda.';
   let seoImage = '/logo-2.png';
   let seoType = 'website';
@@ -362,7 +362,7 @@ export default function BlogPage() {
               <FiBookOpen className={styles.heroIcon} />
             </motion.div>
             <h1 className={styles.heroTitle}>
-              <span className={styles.heroTitleGold}>Mistik</span> Blog
+              <span className={styles.heroTitleGold}>Muhristan</span> Blog
             </h1>
             <p className={styles.heroSubtitle}>
               Doğal taşlar, kristaller ve enerji ritüelleri dünyasını keşfedin
