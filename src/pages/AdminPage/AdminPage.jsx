@@ -67,6 +67,7 @@ export default function AdminPage() {
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedProductForVariants, setSelectedProductForVariants] = useState(null);
+  const [selectedChatUser, setSelectedChatUser] = useState(null);
 
   const { logout } = useAuth();
   const { theme } = useTheme();
