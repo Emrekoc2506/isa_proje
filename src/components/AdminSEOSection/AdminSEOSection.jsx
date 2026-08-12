@@ -118,10 +118,10 @@ export default function AdminSEOSection({
               fontWeight: 700,
               padding: '2px 8px',
               borderRadius: '10px',
-              background: titleLength > 60 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-              color: titleLength > 60 ? '#ef4444' : 'var(--text-secondary, #94a3b8)'
+              background: titleLength > 140 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+              color: titleLength > 140 ? '#ef4444' : 'var(--text-secondary, #94a3b8)'
             }}>
-              {titleLength} / 60 Karakter
+              {titleLength} / 140 Karakter
             </span>
           </div>
           <input
@@ -133,7 +133,7 @@ export default function AdminSEOSection({
               width: '100%',
               padding: '9px 12px',
               background: 'var(--bg-dark, #0f0a18)',
-              border: `1px solid ${titleLength > 60 ? '#ef4444' : 'var(--border-gold, rgba(201, 162, 39, 0.3))'}`,
+              border: `1px solid ${titleLength > 140 ? '#ef4444' : 'var(--border-gold, rgba(201, 162, 39, 0.3))'}`,
               borderRadius: '6px',
               color: 'var(--text-primary, #fff)',
               fontSize: '13px',
@@ -143,9 +143,9 @@ export default function AdminSEOSection({
           <div style={{ fontSize: '11px', color: 'var(--text-muted, #64748b)', marginTop: '3px' }}>
             Google arama sonuçlarında en üstte mavi/sarı başlık olarak görünür.
           </div>
-          {titleLength > 60 && (
+          {titleLength > 140 && (
             <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <FiAlertCircle /> 60 karakteri aştınız (Google aramalarında başlığın sonu kesilebilir).
+              <FiAlertCircle /> 140 karakteri aştınız (Google aramalarında başlığın sonu kesilebilir).
             </div>
           )}
         </div>
