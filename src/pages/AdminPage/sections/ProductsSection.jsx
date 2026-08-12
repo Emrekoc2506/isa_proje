@@ -200,15 +200,14 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setShowModal(true);
   };
 
-  const handleOpenEdit = (p) => {
-    setModalMode('edit');
-    setCurrentId(p.id);
-    setName(p.name || '');
-    setPrice(p.price || '');
-    setOldPrice(p.oldPrice || '');
-    setStockQuantity(p.stockQuantity || 0);
+  const populateFormFromProduct = (p) => {
+    if (!p) return;
+    setName(p.name || p.Name || '');
+    setPrice(p.price ?? p.Price ?? '');
+    setOldPrice(p.oldPrice ?? p.OldPrice ?? '');
+    setStockQuantity(getSafeStockQuantity(p));
 
-    const targetCatId = p.categoryId || '';
+    const targetCatId = p.categoryId || p.CategoryId || '';
     setCategoryId(targetCatId);
 
     const allCats = flattenCategories(categories);
@@ -218,45 +217,91 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     if (parentIdOfCat) {
       setSelectedMainCatId(String(parentIdOfCat));
       setSelectedSubCatId(String(targetCatId));
-    } else {
+    } else if (targetCatId) {
       setSelectedMainCatId(String(targetCatId));
       setSelectedSubCatId('');
     }
 
     let initialUrls = [];
-    if (Array.isArray(p.images) && p.images.length > 0) {
-      const sorted = [...p.images].sort((a, b) => {
+    const imgs = p.images || p.Images;
+    const imgUrls = p.imageUrls || p.ImageUrls;
+    if (Array.isArray(imgs) && imgs.length > 0) {
+      const sorted = [...imgs].sort((a, b) => {
         const aP = a.isPrimary || a.IsPrimary ? 1 : 0;
         const bP = b.isPrimary || b.IsPrimary ? 1 : 0;
         if (aP !== bP) return bP - aP;
         return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
       });
       initialUrls = sorted.map(i => (typeof i === 'string' ? i : (i.url || i.Url))).filter(Boolean);
-    } else if (Array.isArray(p.imageUrls) && p.imageUrls.length > 0) {
-      initialUrls = p.imageUrls.filter(Boolean);
+    } else if (Array.isArray(imgUrls) && imgUrls.length > 0) {
+      initialUrls = imgUrls.filter(Boolean);
     } else if (p.imageUrl || p.ImageUrl || p.image || p.Image) {
       initialUrls = [p.imageUrl || p.ImageUrl || p.image || p.Image];
     }
-    setImageUrls(initialUrls);
+    if (initialUrls.length > 0) {
+      setImageUrls(initialUrls);
+    }
 
-    setIsNew(p.isNew || false);
-    setIsSale(p.isSale || false);
-    setIsFeatured(p.isFeatured || false);
-    setShortDescription(p.shortDescription || '');
-    setDescription(p.description || '');
-    setUnit(p.unit || 'adet');
-    setWeightGram(p.weightGram || p.weight || '');
-    setDimensions(p.dimensions || '');
-    setDiscount(p.discount || '');
-    setSlug(p.slug || '');
-    setSeoTitle(p.seoTitle || '');
-    setSeoDescription(p.seoDescription || '');
-    setSeoKeywords(p.seoKeywords || '');
-    setIsActive(p.isActive ?? true);
+    setIsNew(p.isNew ?? p.IsNew ?? false);
+    setIsSale(p.isSale ?? p.IsSale ?? false);
+    setIsFeatured(p.isFeatured ?? p.IsFeatured ?? false);
+    
+    // Açıklamalar (ShortDescription / Description / detailedDescription / shortDesc)
+    const shortDescVal = p.shortDescription || p.ShortDescription || p.shortDesc || p.ShortDesc;
+    if (shortDescVal !== undefined && shortDescVal !== null) {
+      setShortDescription(shortDescVal);
+    }
+    
+    const descVal = p.description || p.Description || p.detailedDescription || p.DetailedDescription || p.longDescription || p.LongDescription;
+    if (descVal !== undefined && descVal !== null) {
+      setDescription(descVal);
+    }
+
+    // Birim & Ölçüler & İndirim Notu
+    if (p.unit || p.Unit) setUnit(p.unit || p.Unit);
+    if (p.weightGram ?? p.WeightGram ?? p.weight ?? p.Weight) setWeightGram(p.weightGram ?? p.WeightGram ?? p.weight ?? p.Weight ?? '');
+    if (p.dimensions || p.Dimensions) setDimensions(p.dimensions || p.Dimensions || '');
+    if (p.discount ?? p.Discount ?? p.discountRate ?? p.DiscountRate) setDiscount(p.discount ?? p.Discount ?? p.discountRate ?? p.DiscountRate ?? '');
+    if (p.slug || p.Slug) setSlug(p.slug || p.Slug || '');
+
+    // SEO Alanları
+    if (p.seoTitle || p.SeoTitle) setSeoTitle(p.seoTitle || p.SeoTitle || '');
+    if (p.seoDescription || p.SeoDescription) setSeoDescription(p.seoDescription || p.SeoDescription || '');
+    if (p.seoKeywords || p.SeoKeywords) setSeoKeywords(p.seoKeywords || p.SeoKeywords || '');
+
+    setIsActive(p.isActive ?? p.IsActive ?? true);
+  };
+
+  const handleOpenEdit = (p) => {
+    setModalMode('edit');
+    setCurrentId(p.id);
     setModalStep(1);
     setFieldErrors({});
     setFormGeneralError('');
+
+    // 1. Önce listedeki mevcut özet veriyle formu doldur
+    populateFormFromProduct(p);
     setShowModal(true);
+
+    // 2. Arka planda backend'den tüm detaylı ürün verisini çekip formu güncelle
+    const fetchFullDetails = async () => {
+      try {
+        let fullData = null;
+        try {
+          fullData = await productApi.getAdminProductById(p.id);
+        } catch {
+          fullData = await productApi.getProductById(p.id).catch(() => null);
+        }
+        if (fullData) {
+          const detailObj = fullData.data || fullData.product || fullData;
+          populateFormFromProduct(detailObj);
+        }
+      } catch (err) {
+        console.warn("Detaylı ürün bilgileri çekilemedi, özet veri kullanılıyor:", err);
+      }
+    };
+
+    fetchFullDetails();
   };
 
   const handleImageUpload = async (e) => {
