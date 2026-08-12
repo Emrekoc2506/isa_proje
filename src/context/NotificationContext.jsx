@@ -215,11 +215,39 @@ export function NotificationProvider({ children }) {
     }
   }, [notifications, addDeletedIdToStorage]);
 
+  const markChatNotificationsRead = useCallback(async () => {
+    setNotifications(prev => prev.map(n => {
+      const type = String(n.type || '').toLowerCase();
+      const title = String(n.title || '').toLowerCase();
+      const body = String(n.body || n.message || '').toLowerCase();
+      if (type === 'chat' || type === 'message' || title.includes('mesaj') || body.includes('mesaj')) {
+        return { ...n, read: true };
+      }
+      return n;
+    }));
+
+    const chatNotifs = notifications.filter(n => {
+      const type = String(n.type || '').toLowerCase();
+      const title = String(n.title || '').toLowerCase();
+      const body = String(n.body || n.message || '').toLowerCase();
+      return !n.read && (type === 'chat' || type === 'message' || title.includes('mesaj') || body.includes('mesaj'));
+    });
+
+    if (chatNotifs.length > 0) {
+      try {
+        await Promise.all(chatNotifs.map(n => markNotificationAsRead(n.id).catch(() => null)));
+      } catch {
+        // Ignore error
+      }
+    }
+  }, [notifications]);
+
   const value = {
     notifications,
     unreadCount,
     markRead,
     markAllRead,
+    markChatNotificationsRead,
     deleteSingle,
     clearAll,
     refreshNotifications: fetchNotifications
