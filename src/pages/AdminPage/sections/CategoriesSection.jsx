@@ -299,9 +299,6 @@ const S = {
   },
   emptyText: {
     letterSpacing: '0.03em',
-  },
-
-  emptyText: {
     textAlign: 'center',
     color: 'rgba(232, 224, 240, 0.3)',
     fontSize: 13,

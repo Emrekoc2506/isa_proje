@@ -22,6 +22,7 @@ import ProductReviews from '../../components/ProductReviews/ProductReviews';
 import RecentlyViewed from '../../components/RecentlyViewed/RecentlyViewed';
 import StockNotifyModal from '../../components/StockNotifyModal/StockNotifyModal';
 import { addRecentlyViewed } from '../../utils/recentlyViewed';
+import { getSafeStockQuantity } from '../../utils/stockUtils';
 
 /* ─── Yıldız Bileşeni ────────────────────────────────────── */
 function Stars({ rating, size = 14 }) {
@@ -192,6 +193,7 @@ export default function ProductDetailPage() {
   const isFav = isInWishlist(productDetail.id);
   const rating = avg(reviews);
   const visibleReviews = showAllReviews ? reviews : (reviews || []).slice(0, 3);
+  const currentAvailableStock = getSafeStockQuantity(selectedVariant || productDetail);
 
   /* ─── Handlers ──────────────────────────────────────── */
   const handleAddToCart = () => {
@@ -602,7 +604,7 @@ export default function ProductDetailPage() {
                 <button
                   className={styles.qtyBtn}
                   onClick={() => setQty(q => Math.max(1, q - 1))}
-                  disabled={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0}
+                  disabled={currentAvailableStock === 0}
                   aria-label="Azalt"
                 >
                   <FiMinus />
@@ -610,8 +612,8 @@ export default function ProductDetailPage() {
                 <span className={styles.qtyVal}>{qty}</span>
                 <button
                   className={styles.qtyBtn}
-                  onClick={() => setQty(q => Math.min(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity, q + 1))}
-                  disabled={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0}
+                  onClick={() => setQty(q => Math.min(currentAvailableStock, q + 1))}
+                  disabled={currentAvailableStock === 0}
                   aria-label="Artır"
                 >
                   <FiPlus />
@@ -619,10 +621,10 @@ export default function ProductDetailPage() {
               </div>
               <span className={styles.stockLabel}>
                 <FiZap className={styles.stockIcon} /> 
-                {(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0 ? (
+                {currentAvailableStock === 0 ? (
                   <span style={{ color: '#e05594' }}>Tükendi</span>
                 ) : (
-                  <>Stokta Mevcut ({(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity)} Adet)</>
+                  <>Stokta Mevcut ({currentAvailableStock} Adet)</>
                 )}
               </span>
             </div>
@@ -631,9 +633,9 @@ export default function ProductDetailPage() {
             <div className={styles.ctaGroup}>
               <button
                 className={`${styles.cartBtn} ${addedToCart ? styles.cartAdded : ''}`}
-                onClick={(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0 ? () => setStockModalOpen(true) : handleAddToCart}
+                onClick={currentAvailableStock === 0 ? () => setStockModalOpen(true) : handleAddToCart}
               >
-                {(selectedVariant ? selectedVariant.stockQuantity : productDetail.stockQuantity) === 0 ? (
+                {currentAvailableStock === 0 ? (
                   <span><FiBell /> Stoka Gelince Bildir</span>
                 ) : addedToCart ? (
                   <span><FiCheck /> Sepete Eklendi!</span>

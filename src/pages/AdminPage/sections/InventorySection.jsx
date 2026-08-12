@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { FiAlertTriangle, FiCheck, FiSave, FiChevronDown, FiChevronUp, FiBox } from 'react-icons/fi';
 import * as productApi from '../../../services/productApi';
+import { getSafeStockQuantity } from '../../../utils/stockUtils';
+import { useProducts } from '../../../context/ProductContext';
 import styles from '../AdminPage.module.css';
 
 export default function InventorySection() {
@@ -8,6 +10,15 @@ export default function InventorySection() {
   const [lowStockProducts, setLowStockProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterLowStock, setFilterLowStock] = useState(false);
+
+  // Optional ProductContext hook access (safe for isolated component testing)
+  let refreshProducts = null;
+  try {
+    const prodCtx = useProducts();
+    refreshProducts = prodCtx?.refreshProducts;
+  } catch {
+    // Component used outside ProductProvider in isolated test
+  }
 
   // Per-row editing state maps: { [id]: value }
   const [editingIds, setEditingIds] = useState({});
@@ -80,6 +91,9 @@ export default function InventorySection() {
 
       // Re-fetch backend DB state to ensure 100% persistence alignment
       await loadInventory();
+      if (refreshProducts) {
+        refreshProducts().catch(() => null);
+      }
 
       setEditingIds(prev => ({ ...prev, [id]: false }));
       setSuccessIds(prev => ({ ...prev, [id]: true }));
@@ -111,10 +125,10 @@ export default function InventorySection() {
       <div className={styles.sectionHeader}>
         <h3 className={styles.sectionTitle}>Stok & Envanter Yönetimi</h3>
         <button
-          onClick={() => setFilterLowStock(f => !f)}
+          onClick={() => setFilterLowStock(prev => !prev)}
           className={styles.seeAllBtn}
           style={{
-            background: filterLowStock ? 'rgba(224, 85, 148, 0.15)' : 'rgba(255,255,255,0.05)',
+            background: filterLowStock ? 'rgba(224, 85, 148, 0.2)' : 'rgba(255,255,255,0.05)',
             borderColor: filterLowStock ? '#e05594' : 'var(--border-mid)',
             color: filterLowStock ? '#e05594' : '#fff'
           }}
@@ -134,7 +148,7 @@ export default function InventorySection() {
         </thead>
         <tbody>
           {displayedProducts.map(p => {
-            const currentStock = p.stockQuantity ?? 0;
+            const currentStock = getSafeStockQuantity(p);
             const isCritical = currentStock <= 3;
             const isEditing = Boolean(editingIds[p.id]);
             const isUpdating = Boolean(updatingIds[p.id]);
@@ -242,7 +256,7 @@ export default function InventorySection() {
                   {hasVariants && isVariantExpanded && (
                     <div style={{ marginTop: 12, paddingLeft: 12, borderLeft: '2px solid var(--border-gold)' }}>
                       {p.variants.map(v => {
-                        const vStock = v.stockQuantity ?? 0;
+                        const vStock = getSafeStockQuantity(v);
                         const isVEditing = Boolean(editingIds[v.id]);
                         const isVUpdating = Boolean(updatingIds[v.id]);
                         const isVSuccess = Boolean(successIds[v.id]);

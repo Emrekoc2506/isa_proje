@@ -125,7 +125,7 @@ export default function AuthPage() {
 
     try {
       setLoginLoading(true);
-      const res = await login({ email: loginEmail, password: loginPassword });
+      await login({ email: loginEmail, password: loginPassword });
 
       // Beni hatırla kaydı
       if (rememberMe) {
