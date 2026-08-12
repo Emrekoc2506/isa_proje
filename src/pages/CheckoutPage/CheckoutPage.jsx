@@ -224,10 +224,6 @@ export default function CheckoutPage() {
       if (orderRes.orderNumber) {
         sessionStorage.setItem('pendingOrderNumber', orderRes.orderNumber);
       }
-      const emailVal = isAuthenticated ? '' : guestShipping.email;
-      if (emailVal) {
-        sessionStorage.setItem('pendingOrderEmail', emailVal);
-      }
 
       // Manual payments are complete orders and must never call the online payment endpoint.
       if (isManualPayment(paymentMethod)) {
@@ -242,7 +238,7 @@ export default function CheckoutPage() {
           orderId,
           provider: 'iyzico',
           returnUrl: window.location.origin + '/odeme/sonuc',
-          idempotencyKey: globalThis.crypto?.randomUUID?.() || 'idemp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7)
+          idempotencyKey: globalThis.crypto?.randomUUID?.() || `idemp-${Date.now()}`
         });
 
         if (paymentRes?.redirectUrl) {

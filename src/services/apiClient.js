@@ -76,6 +76,7 @@ async function request(path, options = {}) {
   const isPublic = isPublicEndpoint(path, options.method);
   const isRetry = options._isRetry === true;
   const headers = new Headers(options.headers || {});
+  const credentials = options.credentials ?? "include";
 
   if (!(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
@@ -90,12 +91,8 @@ async function request(path, options = {}) {
 
   // Handle expired tokens before sending request
   if (token && isJwtExpired(token)) {
-    const refreshTokenVal = safeGetItem("refreshToken");
-    if (!refreshTokenVal) {
-      safeRemoveItem("accessToken");
-      safeRemoveItem("refreshToken");
-      token = null;
-    }
+    safeRemoveItem("accessToken");
+    token = null;
   }
 
   if (token && !isRetry && (!isJwtExpired(token) || !isPublic)) {
@@ -111,6 +108,7 @@ async function request(path, options = {}) {
   try {
     const response = await fetch(`${apiBaseUrl}${path}`, {
       ...options,
+      credentials,
       headers,
       signal: controller.signal,
     });
@@ -124,7 +122,6 @@ async function request(path, options = {}) {
     }
 
     // Handle 401 Unauthorized
-    const isRetry = options._isRetry === true;
     const isAuthPath =
       path.includes("/auth/refresh-token") ||
       path.includes("/auth/login") ||
@@ -138,18 +135,6 @@ async function request(path, options = {}) {
         publicRetryHeaders.delete("Authorization");
         publicRetryOptions.headers = publicRetryHeaders;
         return request(path, publicRetryOptions);
-      }
-
-      const refreshTokenVal = safeGetItem("refreshToken");
-
-      if (!refreshTokenVal) {
-        dispatchSessionExpired();
-        handleLogoutRedirect();
-        throw new ApiError({
-          message: "Oturum süresi doldu.",
-          status: 401,
-          code: "unauthorized",
-        });
       }
 
       // If token in localStorage changed while this request was in flight, retry with new token
@@ -171,7 +156,7 @@ async function request(path, options = {}) {
 
       if (!isRefreshing) {
         isRefreshing = true;
-        refreshAccessToken(refreshTokenVal)
+        refreshAccessToken()
           .then((newAccessToken) => {
             isRefreshing = false;
             resolveRefreshQueue(newAccessToken);
@@ -240,16 +225,16 @@ async function request(path, options = {}) {
   }
 }
 
-function refreshAccessToken(refreshTokenVal) {
+function refreshAccessToken() {
   if (activeRefreshPromise) return activeRefreshPromise;
 
   activeRefreshPromise = (async () => {
     const response = await fetch(`${apiBaseUrl}/auth/refresh-token`, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ refreshToken: refreshTokenVal }),
     });
 
     if (!response.ok) {
@@ -257,9 +242,8 @@ function refreshAccessToken(refreshTokenVal) {
     }
 
     const data = await response.json();
-    if (data.accessToken && data.refreshToken) {
+    if (data && data.accessToken) {
       safeSetItem("accessToken", data.accessToken);
-      safeSetItem("refreshToken", data.refreshToken);
       return data.accessToken;
     }
     throw new Error("Invalid token response");
@@ -271,9 +255,8 @@ function refreshAccessToken(refreshTokenVal) {
 }
 
 function handleLogoutRedirect() {
-  const hadToken = safeGetItem("accessToken") || safeGetItem("refreshToken");
+  const hadToken = Boolean(safeGetItem("accessToken"));
   safeRemoveItem("accessToken");
-  safeRemoveItem("refreshToken");
 
   const protectedRoutes = [
     "/admin", "/panel", "/odeme", "/siparislerim", "/adreslerim", "/profil", "/hesabim"

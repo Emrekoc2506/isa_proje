@@ -33,7 +33,6 @@ export default function PaymentResultPage() {
     "";
   const email =
     searchParams.get("email") ||
-    sessionStorage.getItem("pendingOrderEmail") ||
     "";
 
   const [loading, setLoading] = useState(true);
