@@ -48,7 +48,7 @@ jobs:
           local-dir: ./dist/
           server-dir: ${{ vars.FTP_TEST_DIR }}
           port: 21
-          protocol: ftps
+          protocol: ftp
           security: loose
           log-level: verbose
           timeout: 120000
