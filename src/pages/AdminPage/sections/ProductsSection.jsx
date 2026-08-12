@@ -41,6 +41,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deletingId, setDeletingId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Edit / Create Modal States
   const [showModal, setShowModal] = useState(false);
@@ -488,6 +489,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   return (
     <div>
       {/* ── PAGE HEADER ── */}
+      {/* ── PAGE HEADER ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h3 style={{ color: 'var(--gold-light)', fontSize: 20, fontWeight: 700, margin: 0, fontFamily: 'var(--font-heading)' }}>
@@ -497,12 +499,44 @@ export default function ProductsSection({ onSelectProductForVariants }) {
             {products.length} ürün • Mağazada listelenen tüm ürün kataloğunuz
           </p>
         </div>
-        <button
-          onClick={handleOpenCreate}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', border: 'none', borderRadius: 10, padding: '12px 22px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)', transition: 'transform 0.15s ease' }}
-        >
-          <FiPlus size={18} /> Yeni Ürün Ekle
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', minWidth: 260 }}>
+            <FiSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--gold-light)' }} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Ürün adı veya SKU ara..."
+              style={{
+                width: '100%',
+                padding: '8px 32px 8px 36px',
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid var(--border-gold, rgba(201, 162, 39, 0.3))',
+                borderRadius: 8,
+                color: '#fff',
+                fontSize: 13,
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                title="Aramayı Temizle"
+              >
+                <FiX size={14} />
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={handleOpenCreate}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', border: 'none', borderRadius: 10, padding: '12px 22px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)', transition: 'transform 0.15s ease' }}
+          >
+            <FiPlus size={18} /> Yeni Ürün Ekle
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -523,34 +557,55 @@ export default function ProductsSection({ onSelectProductForVariants }) {
         </div>
       ) : (
         <>
-          <div style={{ overflowX: 'auto' }}>
-            <table className={styles.table} style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
-              <thead>
-                <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-gold)' }}>
-                  <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Görsel</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Ürün Adı</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Fiyat</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Stok</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>İşlemler</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map(p => {
-                  const stockVal = getSafeStockQuantity(p);
-                  return (
-                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: 8 }}>
-                        <img src={p.imageUrl || "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100"} alt="" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
-                      </td>
-                      <td style={{ padding: 8, color: '#fff' }}>
-                        {p.name}
-                        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                          {p.isNew && <span style={{ fontSize: 9, background: 'rgba(52,152,219,0.15)', color: '#3498db', padding: '2px 6px', borderRadius: 4 }}>YENİ</span>}
-                          {p.isSale && <span style={{ fontSize: 9, background: 'rgba(224,85,148,0.15)', color: '#e05594', padding: '2px 6px', borderRadius: 4 }}>İNDİRİM</span>}
-                        </div>
-                      </td>
-                      <td style={{ padding: 8, color: 'var(--gold-light)' }}>{p.price} ₺</td>
-                      <td style={{ padding: 8, color: stockVal <= 3 ? '#e05594' : '#2ecc71' }}>{stockVal} Adet</td>
+          {(() => {
+            const displayedProducts = products.filter(p => {
+              if (!searchQuery.trim()) return true;
+              const q = searchQuery.toLowerCase().trim();
+              const nameMatch = (p.name || p.Name || '').toLowerCase().includes(q);
+              const skuMatch = (p.sku || p.Sku || '').toLowerCase().includes(q);
+              const idMatch = String(p.id || '').toLowerCase().includes(q);
+              return nameMatch || skuMatch || idMatch;
+            });
+
+            return (
+              <div style={{ overflowX: 'auto' }}>
+                <table className={styles.table} style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-gold)' }}>
+                      <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Görsel</th>
+                      <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Ürün Adı</th>
+                      <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Fiyat</th>
+                      <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Stok</th>
+                      <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>İşlemler</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayedProducts.map(p => {
+                      const stockVal = getSafeStockQuantity(p);
+                      return (
+                        <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td style={{ padding: 8 }}>
+                            <img src={p.imageUrl || p.ImageUrl || p.image || p.Image || "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100"} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6, border: '1px solid rgba(201,162,39,0.3)' }} />
+                          </td>
+                          <td style={{ padding: 8, color: '#fff' }}>
+                            <a
+                              href={`/urun/${p.slug || p.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Ürün sayfasına git (Yeni Sekmede Açılır)"
+                              style={{ color: '#ffffff', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }}
+                              onMouseEnter={e => e.currentTarget.style.color = 'var(--gold-light, #c9a227)'}
+                              onMouseLeave={e => e.currentTarget.style.color = '#ffffff'}
+                            >
+                              {p.name}
+                            </a>
+                            <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                              {p.isNew && <span style={{ fontSize: 9, background: 'rgba(52,152,219,0.15)', color: '#3498db', padding: '2px 6px', borderRadius: 4 }}>YENİ</span>}
+                              {p.isSale && <span style={{ fontSize: 9, background: 'rgba(224,85,148,0.15)', color: '#e05594', padding: '2px 6px', borderRadius: 4 }}>İNDİRİM</span>}
+                            </div>
+                          </td>
+                          <td style={{ padding: 8, color: 'var(--gold-light)' }}>{p.price} ₺</td>
+                          <td style={{ padding: 8, color: stockVal <= 3 ? '#e05594' : '#2ecc71' }}>{stockVal} Adet</td>
                       <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button 
@@ -590,8 +645,10 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                 );
               })}
               </tbody>
-            </table>
-          </div>
+                </table>
+              </div>
+            );
+          })()}
 
           {/* Pagination */}
           {totalPages > 1 && (
