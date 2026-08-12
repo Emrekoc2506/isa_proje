@@ -33,16 +33,28 @@ export function AuthProvider({ children }) {
   }, []);
 
   const reloadUser = useCallback(async () => {
-    const token = safeGetItem("accessToken");
+    let token = safeGetItem("accessToken");
     if (!token || isJwtExpired(token)) {
-      if (token && isJwtExpired(token) && !safeGetItem("refreshToken")) {
+      if (token) {
         safeRemoveItem("accessToken");
-        safeRemoveItem("refreshToken");
       }
-      safeSetState(setUser, null);
-      safeSetState(setRoles, []);
-      safeSetState(setIsLoading, false);
-      return null;
+      try {
+        const refreshRes = await authApi.refreshToken();
+        if (refreshRes?.accessToken) {
+          safeSetItem("accessToken", refreshRes.accessToken);
+          token = refreshRes.accessToken;
+        } else {
+          safeSetState(setUser, null);
+          safeSetState(setRoles, []);
+          safeSetState(setIsLoading, false);
+          return null;
+        }
+      } catch {
+        safeSetState(setUser, null);
+        safeSetState(setRoles, []);
+        safeSetState(setIsLoading, false);
+        return null;
+      }
     }
 
     try {
@@ -68,7 +80,6 @@ export function AuthProvider({ children }) {
     if (typeof window === "undefined") return;
     const handleSessionExpired = () => {
       safeRemoveItem("accessToken");
-      safeRemoveItem("refreshToken");
       setUser(null);
       setRoles([]);
     };
@@ -99,16 +110,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
-    const refreshTokenVal = safeGetItem("refreshToken");
     try {
-      if (refreshTokenVal) {
-        await authApi.logout(refreshTokenVal);
-      }
+      await authApi.logout();
     } catch (err) {
-      console.warn("Backend logout request error:", err);
+      // Ignore logout errors
     } finally {
       safeRemoveItem("accessToken");
-      safeRemoveItem("refreshToken");
       setUser(null);
       setRoles([]);
     }
@@ -118,37 +125,28 @@ export function AuthProvider({ children }) {
     try {
       await authApi.logoutAll();
     } catch (err) {
-      console.warn("Backend logoutAll request error:", err);
+      // Ignore logout errors
     } finally {
       safeRemoveItem("accessToken");
-      safeRemoveItem("refreshToken");
       setUser(null);
       setRoles([]);
     }
   }, []);
 
   const refreshSession = useCallback(async () => {
-    const rToken = safeGetItem("refreshToken");
-    if (!rToken) {
-      setUser(null);
-      setRoles([]);
-      return null;
-    }
     try {
-      const res = await authApi.refreshToken(rToken);
-      if (res.accessToken) {
+      const res = await authApi.refreshToken();
+      if (res?.accessToken) {
         safeSetItem("accessToken", res.accessToken);
-        if (res.refreshToken) {
-          safeSetItem("refreshToken", res.refreshToken);
-        }
         return await reloadUser();
       }
     } catch (err) {
-      console.error("Failed to refresh session:", err);
-      await logout();
+      safeRemoveItem("accessToken");
+      setUser(null);
+      setRoles([]);
     }
     return null;
-  }, [reloadUser, logout]);
+  }, [reloadUser]);
 
   const isAuthenticated = !!user;
   const isAdmin = roles.some(r => ['Admin', 'SuperAdmin', 'admin', 'superadmin'].includes(r)) || user?.role === 'Admin' || user?.role === 'SuperAdmin';
