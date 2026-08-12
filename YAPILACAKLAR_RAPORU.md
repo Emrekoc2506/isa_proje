@@ -9,9 +9,9 @@
 | Testler (`npm run test`) | ✅ **152 / 152 geçti** (16 dosya) |
 | Build (`npm run build`) | ✅ Başarılı (yalnızca 3rd-party uyarı) |
 | Lint (`npm run lint`) | ⚠️ Geçiyor, **126 uyarı** (0 hata) |
-| Commit edilmemiş değişiklik | ⚠️ 4 dosya + 1 yeni test dosyası |
+| Git & Push / Merge | ✅ `Develop` ve `main` dallarına commit, push ve merge tamamlandı |
 
-İlk analizde **5 test hatalıydı** (`AdminRoleAndStockPersistence.test.jsx`). Kök nedenler aşağıda (Bölüm 2) belgelendi; çalışma ağacındaki düzeltmelerle birlikte **tüm testler artık geçiyor**. Kalan yapılacaklar Bölüm 3'te listelenmiştir.
+İlk analizde **5 test hatalıydı** (`AdminRoleAndStockPersistence.test.jsx`). Kök nedenler aşağıda (Bölüm 2) belgelendi; yapılan düzeltmelerle birlikte **tüm testler sorunsuz geçmektedir** ve kodlar `Develop` / `main` dallarına push edilmiştir. Kalan öneriler Bölüm 3'te listelenmiştir.
 
 ---
 
@@ -58,16 +58,13 @@
 
 ## 3. Yapılacaklar Listesi
 
-### 🔴 Öncelikli (Yapılmalı)
+### 🔴 Tamamlanan Öncelikli İşlemler
 
-1. **Commit edilmemiş değişiklikleri işle**
-   - `git add` + commit edilecek dosyalar:
-     - `src/pages/AdminPage/sections/CustomersSection.jsx`
-     - `src/pages/AdminPage/sections/InventorySection.jsx`
-     - `src/services/customerApi.js`
-     - `src/services/productApi.js`
-     - `src/tests/AdminRoleAndStockPersistence.test.jsx` (yeni test dosyası)
-   - Test dosyası dahil edilmezse CI'da 152 test geçer ama yeni suite koruma altına alınmaz.
+1. **Git Commit, Push & Merge İşlemleri (Tamamlandı)**
+   - Değişiklik yapılan tüm dosyalar (`customerApi.js`, `productApi.js`, `CustomersSection.jsx`, `InventorySection.jsx`) ve yeni test dosyası (`src/tests/AdminRoleAndStockPersistence.test.jsx`) git'e eklendi.
+   - `Develop` dalına commit & push yapıldı, ardından `main` dalına sorunsuz merge edilip uzak depoya aktarıldı.
+
+### 🟡 Gelecek İyileştirme Önerileri
 
 2. **Test süitinde `window.alert()` uyarısını temizle**
    - Konsol uyarısı: `Not implemented: Window's alert() method`
