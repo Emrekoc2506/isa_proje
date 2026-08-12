@@ -17,7 +17,7 @@ export function updateAdminCustomerStatus(id, isActive) {
 
 export function updateAdminCustomerRole(id, role) {
   return request(`/admin/customers/${id}/role`, {
-    method: "PATCH",
+    method: "POST",
     body: JSON.stringify({ role })
   });
 }

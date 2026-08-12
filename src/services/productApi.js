@@ -105,11 +105,13 @@ export function updateAdminProductPrice(id, price) {
 }
 
 export function updateAdminProductStock(id, payload) {
+  const stockQuantity = typeof payload === 'object' ? payload.stockQuantity : payload;
+  const note = (typeof payload === 'object' && payload.note) || "Admin stok güncellemesi";
   return request(`/admin/products/${id}/stock`, {
-    method: "PATCH",
+    method: "POST",
     body: JSON.stringify({
-      stockQuantity: payload.stockQuantity,
-      note: payload.note || "Admin stok guncellemesi"
+      stockQuantity,
+      note
     })
   });
 }
@@ -154,11 +156,13 @@ export function deleteAdminProductVariant(productId, variantId) {
 }
 
 export function updateAdminProductVariantStock(productId, variantId, payload) {
+  const stockQuantity = typeof payload === 'object' ? payload.stockQuantity : payload;
+  const note = (typeof payload === 'object' && payload.note) || "Admin varyant stok güncellemesi";
   return request(`/admin/products/${productId}/variants/${variantId}/stock`, {
-    method: "PATCH",
+    method: "POST",
     body: JSON.stringify({
-      stockQuantity: payload.stockQuantity,
-      note: payload.note || "Admin varyant stok guncellemesi"
+      stockQuantity,
+      note
     })
   });
 }
