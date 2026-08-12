@@ -1,17 +1,29 @@
 import { request } from "./apiClient";
 
 function normalizeCouponPayload(payload = {}) {
-  const isPercentage = Boolean(payload.isPercentage || payload.discountType === "Percentage" || payload.discountType === 1);
-  const isFreeShipping = Boolean(payload.isFreeShipping || payload.discountType === "FreeShipping" || payload.discountType === 2);
+  const isFreeShipping = Boolean(
+    payload.isFreeShipping ||
+    payload.discountType === "FreeShipping" ||
+    payload.discountType === 2
+  );
+  const isPercentage = Boolean(
+    payload.isPercentage ||
+    payload.discountType === "Percentage" ||
+    payload.discountType === 0
+  );
   
-  // CouponDiscountType Enum in C#: 0 = FixedAmount, 1 = Percentage, 2 = FreeShipping
-  let discountType = 0;
+  // CouponDiscountType Enum in C#: 0 = Percentage, 1 = FixedAmount, 2 = FreeShipping
+  let discountType;
   if (isFreeShipping) {
     discountType = 2;
   } else if (isPercentage) {
+    discountType = 0;
+  } else if (payload.discountType === 1 || payload.discountType === "FixedAmount") {
     discountType = 1;
   } else if (typeof payload.discountType === 'number') {
     discountType = payload.discountType;
+  } else {
+    discountType = 1;
   }
 
   // Calculate actual discount value based on mode
@@ -71,21 +83,22 @@ export function createAdminCoupon(payload) {
 }
 
 export function updateAdminCoupon(id, payload) {
-  return request(`/admin/coupons/${id}`, {
-    method: "PUT",
+  return request(`/admin/coupons/${id}/update`, {
+    method: "POST",
     body: JSON.stringify(normalizeCouponPayload(payload))
   });
 }
 
 export function updateAdminCouponStatus(id, isActive) {
   return request(`/admin/coupons/${id}/status`, {
-    method: "PATCH",
+    method: "POST",
     body: JSON.stringify({ isActive })
   });
 }
 
 export function deleteAdminCoupon(id) {
-  return request(`/admin/coupons/${id}`, {
-    method: "DELETE"
+  return request(`/admin/coupons/${id}/delete`, {
+    method: "POST",
+    body: JSON.stringify({ confirm: true })
   });
 }

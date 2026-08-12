@@ -231,15 +231,15 @@ export function CartProvider({ children }) {
     setCartError(null);
     if (!itemId) return { success: false };
 
-    // Anında (0ms) sepet listesinden sil ki kullanıcı beklemesin
-    setItems(prev => prev.filter(i => i.id !== itemId && i.cartItemId !== itemId && i.productId !== itemId));
+    if (removingItemIdsRef.current.has(itemId)) {
+      return { success: false, code: "duplicate_request", message: "İşlem devam ediyor." };
+    }
 
-    if (removingItemIdsRef.current.has(itemId)) return { success: true };
     removingItemIdsRef.current.add(itemId);
     setRemovingItemIds(Array.from(removingItemIdsRef.current));
     try {
       const res = await cartApi.removeCartItem(itemId);
-      if (res && res.items) {
+      if (res && (res.items || res.cartData)) {
         applyServerCart(res);
       } else {
         await refreshCart();
@@ -247,9 +247,9 @@ export function CartProvider({ children }) {
       return { success: true };
     } catch (err) {
       await refreshCart();
-      const msg = getCartErrorMessage(err);
+      const msg = getCartErrorMessage(err) || "Ürün sepetten kaldırılamadı. Lütfen tekrar deneyin.";
       setCartError(msg);
-      return { success: false, code: err.code, message: msg };
+      return { success: false, code: err.code || "cart_remove_failed", message: msg };
     } finally {
       removingItemIdsRef.current.delete(itemId);
       setRemovingItemIds(Array.from(removingItemIdsRef.current));
@@ -258,16 +258,25 @@ export function CartProvider({ children }) {
 
   const updateQty = useCallback(async (itemId, qty) => {
     setCartError(null);
-    if (updatingItemIdsRef.current.has(itemId)) return { success: false };
+    if (!itemId) return { success: false };
+
     if (qty < 1) {
       return removeFromCart(itemId);
+    }
+
+    if (updatingItemIdsRef.current.has(itemId)) {
+      return { success: false, code: "duplicate_request", message: "İşlem devam ediyor." };
     }
 
     updatingItemIdsRef.current.add(itemId);
     setUpdatingItemIds(Array.from(updatingItemIdsRef.current));
     try {
       const data = await cartApi.updateCartItem(itemId, { quantity: qty });
-      applyServerCart(data);
+      if (data && (data.items || data.cartData)) {
+        applyServerCart(data);
+      } else {
+        await refreshCart();
+      }
       return { success: true, cart: data };
     } catch (err) {
       await refreshCart();
@@ -287,16 +296,21 @@ export function CartProvider({ children }) {
   const clearCart = useCallback(async () => {
     setCartError(null);
     try {
-      await cartApi.clearCart();
-      setCartData(null);
-      setItems([]);
+      const res = await cartApi.clearCart();
+      if (res && (res.items || res.cartData)) {
+        applyServerCart(res);
+      } else {
+        setCartData(null);
+        setItems([]);
+      }
       return { success: true };
     } catch (err) {
+      await refreshCart();
       const msg = getCartErrorMessage(err);
       setCartError(msg);
       return { success: false, code: err.code, message: msg };
     }
-  }, []);
+  }, [applyServerCart, refreshCart]);
 
   const totalCount = cartData?.totalQuantity || items.reduce((s, i) => s + (i.qty || i.quantity || 0), 0);
   const totalPrice = cartData?.subtotal || items.reduce((s, i) => {
