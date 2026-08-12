@@ -18,6 +18,7 @@ import {
 import { 
   parseBannerContent 
 } from '../utils/bannerContent';
+import { getSafeStockQuantity } from '../utils/stockUtils';
 
 const ProductContext = createContext(null);
 
@@ -43,6 +44,7 @@ function normalizeProducts(productsData) {
       
     const priceVal = p.price ?? p.Price ?? 0;
     const oldPriceVal = p.oldPrice ?? p.OldPrice ?? null;
+    const stockVal = getSafeStockQuantity(p);
 
     return {
       ...p,
@@ -52,6 +54,8 @@ function normalizeProducts(productsData) {
       oldPrice: oldPriceVal ? (typeof oldPriceVal === 'number' ? `₺${oldPriceVal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` : String(oldPriceVal)) : null,
       rawPrice: priceVal,
       rawOldPrice: oldPriceVal,
+      stockQuantity: stockVal,
+      stock: stockVal,
       image: mainImg,
       imageUrl: mainImg,
       imageUrls: imageUrlsArr,

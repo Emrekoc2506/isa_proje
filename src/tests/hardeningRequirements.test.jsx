@@ -448,6 +448,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
       render(<AuthProvider><CartProvider><TestComp /></CartProvider></AuthProvider>);
       await act(async () => { await new Promise(r => setTimeout(r, 100)); });
 
+      expect(authRes).toBeDefined();
       expect(localStorage.getItem('accessToken')).toBe(MOCK_JWT);
     });
 

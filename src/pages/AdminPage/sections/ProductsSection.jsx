@@ -10,6 +10,8 @@ import { uploadFile } from '../../../services/fileApi';
 import RichTextEditor from '../../../components/RichTextEditor/RichTextEditor';
 import AdminSEOSection from '../../../components/AdminSEOSection/AdminSEOSection';
 import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
+import { getSafeStockQuantity } from '../../../utils/stockUtils';
+import { useProducts } from '../../../context/ProductContext';
 import styles from '../AdminPage.module.css';
 import { useTheme } from '../../../context/ThemeContext';
 
@@ -24,6 +26,15 @@ const STEPS = [
 export default function ProductsSection({ onSelectProductForVariants }) {
   const { theme } = useTheme();
   const isLight = theme === 'light';
+
+  let refreshProducts = null;
+  try {
+    const prodCtx = useProducts();
+    refreshProducts = prodCtx?.refreshProducts;
+  } catch {
+    // Isolated component testing fallback
+  }
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -368,6 +379,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       }
       setShowModal(false);
       fetchProducts();
+      refreshProducts?.();
       alert(modalMode === 'create' ? "Ürün başarıyla oluşturuldu!" : "Ürün başarıyla güncellendi!");
     } catch (err) {
       console.error("Ürün kaydetme hatası:", err);
@@ -405,6 +417,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       } else {
         fetchProducts();
       }
+      refreshProducts?.();
       alert("Ürün başarıyla silindi.");
     } catch (err) {
       alert(getHardDeleteErrorMessage(err, "Ürün"));
@@ -419,6 +432,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       const nextActive = !product.isActive;
       await productApi.updateAdminProductStatus(product.id, nextActive);
       fetchProducts();
+      refreshProducts?.();
     } catch (err) {
       alert("Ürün gizlilik durumu değiştirilemedi: " + err.message);
     } finally {
@@ -476,21 +490,23 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                 </tr>
               </thead>
               <tbody>
-                {products.map(p => (
-                  <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <td style={{ padding: 8 }}>
-                      <img src={p.imageUrl || "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100"} alt="" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
-                    </td>
-                    <td style={{ padding: 8, color: '#fff' }}>
-                      {p.name}
-                      <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                        {p.isNew && <span style={{ fontSize: 9, background: 'rgba(52,152,219,0.15)', color: '#3498db', padding: '2px 6px', borderRadius: 4 }}>YENİ</span>}
-                        {p.isSale && <span style={{ fontSize: 9, background: 'rgba(224,85,148,0.15)', color: '#e05594', padding: '2px 6px', borderRadius: 4 }}>İNDİRİM</span>}
-                      </div>
-                    </td>
-                    <td style={{ padding: 8, color: 'var(--gold-light)' }}>{p.price} ₺</td>
-                    <td style={{ padding: 8, color: p.stockQuantity <= 3 ? '#e05594' : '#2ecc71' }}>{p.stockQuantity} Adet</td>
-                    <td style={{ padding: 8 }}>
+                {products.map(p => {
+                  const stockVal = getSafeStockQuantity(p);
+                  return (
+                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={{ padding: 8 }}>
+                        <img src={p.imageUrl || "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100"} alt="" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
+                      </td>
+                      <td style={{ padding: 8, color: '#fff' }}>
+                        {p.name}
+                        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                          {p.isNew && <span style={{ fontSize: 9, background: 'rgba(52,152,219,0.15)', color: '#3498db', padding: '2px 6px', borderRadius: 4 }}>YENİ</span>}
+                          {p.isSale && <span style={{ fontSize: 9, background: 'rgba(224,85,148,0.15)', color: '#e05594', padding: '2px 6px', borderRadius: 4 }}>İNDİRİM</span>}
+                        </div>
+                      </td>
+                      <td style={{ padding: 8, color: 'var(--gold-light)' }}>{p.price} ₺</td>
+                      <td style={{ padding: 8, color: stockVal <= 3 ? '#e05594' : '#2ecc71' }}>{stockVal} Adet</td>
+                      <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button 
                           onClick={() => handleToggleProductStatus(p)} 
@@ -526,7 +542,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                       </div>
                     </td>
                   </tr>
-                ))}
+                );
+              })}
               </tbody>
             </table>
           </div>
