@@ -59,10 +59,7 @@ const STATUS_COLORS = {
   Archived:  { bg: 'rgba(127,140,141,0.15)', color: '#7f8c8d', label: 'Arşiv' },
   1:         { bg: 'rgba(39,174,96,0.15)', color: '#27ae60', label: 'Yayında' },
   0:         { bg: 'rgba(201,162,39,0.15)', color: '#c9a227', label: 'Taslak' },
-  2:         { bg: 'rgba(127,140,141,0.15)', color: '#7f8c8d', label: 'Arşiv' },
-  '1':       { bg: 'rgba(39,174,96,0.15)', color: '#27ae60', label: 'Yayında' },
-  '0':       { bg: 'rgba(201,162,39,0.15)', color: '#c9a227', label: 'Taslak' },
-  '2':       { bg: 'rgba(127,140,141,0.15)', color: '#7f8c8d', label: 'Arşiv' },
+  2:         { bg: 'rgba(127,140,141,0.15)', color: '#7f8c8d', label: 'Arşiv' }
 };
 
 function StatusBadge({ status }) {

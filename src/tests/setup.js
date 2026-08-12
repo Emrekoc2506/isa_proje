@@ -18,6 +18,10 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock alert and confirm
+window.alert = window.alert || vi.fn();
+window.confirm = window.confirm || vi.fn().mockReturnValue(true);
+
 // Mock SignalR
 vi.mock('@microsoft/signalr', () => {
   return {

@@ -19,7 +19,6 @@ import {
   parseBannerContent 
 } from '../utils/bannerContent';
 
-const INITIAL_SLIDES = [];
 const ProductContext = createContext(null);
 
 function normalizeProducts(productsData) {

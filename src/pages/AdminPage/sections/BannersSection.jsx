@@ -375,31 +375,31 @@ export default function BannersSection() {
   };
 
   // ── Feature list ──────────────────────────────────────────────────────────────
-  const addFeature = () => setForm(f => ({ ...f, features: [...f.features, { title: '', desc: '' }] }));
-  const updateFeature = (i, key, val) => setForm(f => {
+  const _addFeature = () => setForm(f => ({ ...f, features: [...f.features, { title: '', desc: '' }] }));
+  const _updateFeature = (i, key, val) => setForm(f => {
     const copy = [...f.features];
     copy[i] = { ...copy[i], [key]: val };
     return { ...f, features: copy };
   });
-  const removeFeature = (i) => setForm(f => ({ ...f, features: f.features.filter((_, idx) => idx !== i) }));
+  const _removeFeature = (i) => setForm(f => ({ ...f, features: f.features.filter((_, idx) => idx !== i) }));
 
   // ── Specs table ───────────────────────────────────────────────────────────────
-  const addSpec = () => setForm(f => ({ ...f, specs: [...f.specs, { key: '', value: '' }] }));
-  const updateSpec = (i, key, val) => setForm(f => {
+  const _addSpec = () => setForm(f => ({ ...f, specs: [...f.specs, { key: '', value: '' }] }));
+  const _updateSpec = (i, key, val) => setForm(f => {
     const copy = [...f.specs];
     copy[i] = { ...copy[i], [key]: val };
     return { ...f, specs: copy };
   });
-  const removeSpec = (i) => setForm(f => ({ ...f, specs: f.specs.filter((_, idx) => idx !== i) }));
+  const _removeSpec = (i) => setForm(f => ({ ...f, specs: f.specs.filter((_, idx) => idx !== i) }));
 
   // ── Sections ─────────────────────────────────────────────────────────────────
-  const addSection = () => setForm(f => ({ ...f, sections: [...f.sections, { title: '', body: '' }] }));
-  const updateSection = (i, key, val) => setForm(f => {
+  const _addSection = () => setForm(f => ({ ...f, sections: [...f.sections, { title: '', body: '' }] }));
+  const _updateSection = (i, key, val) => setForm(f => {
     const copy = [...f.sections];
     copy[i] = { ...copy[i], [key]: val };
     return { ...f, sections: copy };
   });
-  const removeSection = (i) => setForm(f => ({ ...f, sections: f.sections.filter((_, idx) => idx !== i) }));
+  const _removeSection = (i) => setForm(f => ({ ...f, sections: f.sections.filter((_, idx) => idx !== i) }));
 
   // ── Submit ────────────────────────────────────────────────────────────────────
   const handleAdd = async (e) => {
