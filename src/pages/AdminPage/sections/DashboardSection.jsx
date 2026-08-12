@@ -6,8 +6,7 @@ import {
 } from 'react-icons/fi';
 import { MdOutlineLocalShipping } from 'react-icons/md';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, Legend
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import * as reportApi from '../../../services/reportApi';
 import styles from '../AdminPage.module.css';

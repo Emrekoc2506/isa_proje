@@ -29,7 +29,6 @@ import SEO from "../../components/SEO/SEO";
 // Import modular sections
 import DashboardSection from "./sections/DashboardSection";
 import ProductsSection from "./sections/ProductsSection";
-import VariantsSection from "./sections/VariantsSection";
 import CategoriesSection from "./sections/CategoriesSection";
 import BannersSection from "./sections/BannersSection";
 import CouponsSection from "./sections/CouponsSection";
