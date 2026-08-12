@@ -385,6 +385,20 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     if (e && e.preventDefault) e.preventDefault();
     setFormGeneralError('');
 
+    // Adım 5 (SEO Ayarları) öncesinde Enter tuşuna basılırsa ürünü erken kaydetme, bir sonraki adıma geç
+    if (modalStep < 5) {
+      if (modalStep === 1 && !name.trim()) {
+        alert("Lütfen ürün adını doldurun.");
+        return;
+      }
+      if (modalStep === 2 && (price === "" || price == null || isNaN(parseFloat(price)))) {
+        alert("Lütfen geçerli bir fiyat girin.");
+        return;
+      }
+      setModalStep(s => s + 1);
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
