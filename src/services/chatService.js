@@ -125,3 +125,13 @@ export const adminJoinSupportPanelLive = async () => {
     await connection.invoke("AdminJoinSupportPanel");
   }
 };
+
+export const markConversationReadLive = async (conversationId) => {
+  if (connection && connection.state === signalR.HubConnectionState.Connected) {
+    try {
+      await connection.invoke("MarkAsRead", conversationId);
+    } catch (err) {
+      console.warn("SignalR MarkAsRead invocation not supported or failed:", err);
+    }
+  }
+};
