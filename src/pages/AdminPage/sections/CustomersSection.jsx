@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FiToggleLeft, FiToggleRight, FiMail, FiPhone, FiCalendar, FiMessageCircle, FiShield, FiUser, FiCheckCircle, FiUserX } from 'react-icons/fi';
 import * as customerApi from '../../../services/customerApi';
 import { useAuth } from '../../../context/AuthContext';
@@ -44,21 +44,31 @@ export default function CustomersSection({ onMessageUser }) {
     return 'Customer';
   };
 
+  const [updatingRoleId, setUpdatingRoleId] = useState(null);
+  const isUpdatingRoleRef = useRef(false);
+
   const handleToggleRole = async (id, newRole) => {
+    if (isUpdatingRoleRef.current || updatingRoleId) return;
     const roleLabel = newRole === 'Admin' ? 'Admin' : 'Müşteri';
     if (!window.confirm(`Bu kullanıcının yetkisini "${roleLabel}" olarak değiştirmek istediğinize emin misiniz?`)) {
       return;
     }
 
     try {
+      isUpdatingRoleRef.current = true;
+      setUpdatingRoleId(id);
       await customerApi.updateAdminCustomerRole(id, newRole);
-      setCustomers(prev => prev.map(item => item.id === id ? { ...item, role: newRole, isAdmin: newRole === 'Admin' } : item));
       alert(`Kullanıcı yetkisi "${roleLabel}" olarak güncellendi.`);
-      fetchCustomers();
+      await fetchCustomers();
     } catch (err) {
-      // Client-side fallback update for testing / mock API environments
-      setCustomers(prev => prev.map(item => item.id === id ? { ...item, role: newRole, isAdmin: newRole === 'Admin' } : item));
-      alert(`Kullanıcı yetkisi "${roleLabel}" olarak güncellendi.`);
+      console.error("Rol güncellenemedi:", err);
+      const msg = err?.status === 403
+        ? "Bu işlem için SuperAdmin yetkisi gereklidir."
+        : (err?.message || "Kullanıcı rolü güncellenemedi.");
+      alert(msg);
+    } finally {
+      isUpdatingRoleRef.current = false;
+      setUpdatingRoleId(null);
     }
   };
 
@@ -83,6 +93,7 @@ export default function CustomersSection({ onMessageUser }) {
         <tbody>
           {customers.map(c => {
             const roleType = getUserRole(c);
+            const isUpdatingThis = updatingRoleId === c.id;
             return (
               <tr key={c.id} style={{ borderBottom: '1px solid var(--border-gold)' }}>
                 <td style={{ padding: 8, color: 'var(--text-primary)', fontWeight: 600 }}>{c.fullName}</td>
@@ -150,6 +161,7 @@ export default function CustomersSection({ onMessageUser }) {
                       roleType === 'Admin' ? (
                         <button
                           onClick={() => handleToggleRole(c.id, 'Customer')}
+                          disabled={isUpdatingThis}
                           title="Admin yetkisini kaldır, Müşteri yap"
                           style={{
                             background: 'rgba(224, 85, 148, 0.15)',
@@ -157,7 +169,8 @@ export default function CustomersSection({ onMessageUser }) {
                             color: '#e05594',
                             borderRadius: 8,
                             padding: '6px 12px',
-                            cursor: 'pointer',
+                            cursor: isUpdatingThis ? 'not-allowed' : 'pointer',
+                            opacity: isUpdatingThis ? 0.6 : 1,
                             display: 'flex',
                             alignItems: 'center',
                             gap: 6,
@@ -166,11 +179,12 @@ export default function CustomersSection({ onMessageUser }) {
                             transition: 'all 0.2s',
                           }}
                         >
-                          <FiUserX size={14} /> Adminliği Kaldır
+                          <FiUserX size={14} /> {isUpdatingThis ? 'Kaydediliyor...' : 'Adminliği Kaldır'}
                         </button>
                       ) : (
                         <button
                           onClick={() => handleToggleRole(c.id, 'Admin')}
+                          disabled={isUpdatingThis}
                           title="Kullanıcıyı Admin olarak yetkilendir"
                           style={{
                             background: 'rgba(46, 204, 113, 0.15)',
@@ -178,7 +192,8 @@ export default function CustomersSection({ onMessageUser }) {
                             color: '#2ecc71',
                             borderRadius: 8,
                             padding: '6px 12px',
-                            cursor: 'pointer',
+                            cursor: isUpdatingThis ? 'not-allowed' : 'pointer',
+                            opacity: isUpdatingThis ? 0.6 : 1,
                             display: 'flex',
                             alignItems: 'center',
                             gap: 6,
@@ -187,7 +202,7 @@ export default function CustomersSection({ onMessageUser }) {
                             transition: 'all 0.2s',
                           }}
                         >
-                          <FiCheckCircle size={14} /> Admin Yap
+                          <FiCheckCircle size={14} /> {isUpdatingThis ? 'Kaydediliyor...' : 'Admin Yap'}
                         </button>
                       )
                     )}

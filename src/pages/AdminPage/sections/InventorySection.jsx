@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FiAlertTriangle, FiCheck, FiSave, FiChevronDown, FiChevronUp, FiBox } from 'react-icons/fi';
 import * as productApi from '../../../services/productApi';
 import styles from '../AdminPage.module.css';
@@ -16,6 +16,7 @@ export default function InventorySection() {
   const [successIds, setSuccessIds] = useState({});
   const [errorMsgs, setErrorMsgs] = useState({});
   const [expandedVariants, setExpandedVariants] = useState({});
+  const isUpdatingStockRef = useRef({});
 
   const loadInventory = async () => {
     try {
@@ -51,6 +52,8 @@ export default function InventorySection() {
   };
 
   const handleUpdateStock = async (id, isVariant = false, productId = null) => {
+    if (isUpdatingStockRef.current[id] || updatingIds[id]) return;
+
     const rawVal = stockValues[id];
     const stockQuantity = parseInt(rawVal, 10);
     if (isNaN(stockQuantity) || stockQuantity < 0) {
@@ -59,6 +62,7 @@ export default function InventorySection() {
     }
 
     try {
+      isUpdatingStockRef.current[id] = true;
       setUpdatingIds(prev => ({ ...prev, [id]: true }));
       setErrorMsgs(prev => ({ ...prev, [id]: null }));
 
@@ -67,30 +71,15 @@ export default function InventorySection() {
           stockQuantity,
           note: "Envanter ekranından varyant stok güncelleme"
         });
-
-        // Optimistic local update for variant
-        setProducts(prevProducts =>
-          prevProducts.map(p => {
-            if (p.id === productId && p.variants) {
-              const updatedVariants = p.variants.map(v =>
-                v.id === id ? { ...v, stockQuantity } : v
-              );
-              return { ...p, variants: updatedVariants };
-            }
-            return p;
-          })
-        );
       } else {
         await productApi.updateAdminProductStock(id, {
           stockQuantity,
           note: "Envanter ekranından hızlı stok güncelleme"
         });
-
-        // Optimistic local update for product
-        setProducts(prevProducts =>
-          prevProducts.map(p => (p.id === id ? { ...p, stockQuantity } : p))
-        );
       }
+
+      // Re-fetch backend DB state to ensure 100% persistence alignment
+      await loadInventory();
 
       setEditingIds(prev => ({ ...prev, [id]: false }));
       setSuccessIds(prev => ({ ...prev, [id]: true }));
@@ -99,8 +88,12 @@ export default function InventorySection() {
       }, 3000);
     } catch (err) {
       console.error("Stok güncellenemedi:", err);
-      setErrorMsgs(prev => ({ ...prev, [id]: err.message || 'Stok güncellenemedi.' }));
+      const msg = err?.status === 403
+        ? "Bu işlem için yetki gereklidir."
+        : (err?.message || "Stok güncellenemedi. Lütfen tekrar deneyin.");
+      setErrorMsgs(prev => ({ ...prev, [id]: msg }));
     } finally {
+      isUpdatingStockRef.current[id] = false;
       setUpdatingIds(prev => ({ ...prev, [id]: false }));
     }
   };
@@ -213,6 +206,8 @@ export default function InventorySection() {
                       <button
                         onClick={() => handleUpdateStock(p.id)}
                         disabled={isUpdating}
+                        title="Kaydet"
+                        aria-label="Kaydet"
                         className={styles.shopBtn}
                         style={{ padding: '6px 12px', fontSize: 12 }}
                       >
@@ -264,7 +259,7 @@ export default function InventorySection() {
                                   style={{ width: 60, padding: '2px 6px', fontSize: 12, background: '#000', color: '#fff', border: '1px solid var(--gold)' }}
                                   min="0"
                                 />
-                                <button onClick={() => handleUpdateStock(v.id, true, p.id)} disabled={isVUpdating} style={{ padding: '2px 6px', fontSize: 11 }}>
+                                <button onClick={() => handleUpdateStock(v.id, true, p.id)} disabled={isVUpdating} title="Kaydet" aria-label="Kaydet" style={{ padding: '2px 6px', fontSize: 11 }}>
                                   {isVUpdating ? '...' : 'Kaydet'}
                                 </button>
                                 <button onClick={() => handleCancelEdit(v.id)} style={{ padding: '2px 6px', fontSize: 11 }}>
