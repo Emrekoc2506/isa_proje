@@ -9,8 +9,27 @@ import {
 } from "react-icons/fi";
 import { footerLinks } from "../../data/index";
 import logoImage from "../../assets/images/logo-2.png";
+import { useProducts } from "../../context/ProductContext";
 
 export default function Footer() {
+  let dynamicCategories = [];
+  try {
+    const prodCtx = useProducts();
+    dynamicCategories = prodCtx?.categories || [];
+  } catch {
+    // Isolated component environment fallback
+  }
+
+  const categoryItems = (Array.isArray(dynamicCategories) && dynamicCategories.length > 0)
+    ? [
+        ...dynamicCategories.slice(0, 5).map(c => ({
+          label: c.name || c.label,
+          href: `/urunler?kategori=${c.id}`
+        })),
+        { label: 'Blog', href: '/blog' }
+      ]
+    : footerLinks.categories;
+
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>
@@ -22,9 +41,7 @@ export default function Footer() {
               <span className={styles.brandName}>muhristan</span>
             </a>
             <p className={styles.tagline}>
-              Ezoterizmin gizemli dünyasını keşfedin. Yüksek kaliteli ezoterik
-              ürünler, uçucu yağlar, tütsüler, kristaller, tarot ve çok daha
-              fazlası.
+              Mühristan'ın eşsiz dünyasını keşfedin. Yüksek kaliteli özel tasarım mühürler, gümüş yüzükler, kolyeler ve el sanatları ürünleri.
             </p>
 
             {/* Sosyal Medya */}
@@ -49,10 +66,9 @@ export default function Footer() {
 
           {/* Newsletter */}
           <div className={styles.newsletter}>
-            <h4 className={styles.newsletterTitle}>Mistik Çemberde Kalın</h4>
+            <h4 className={styles.newsletterTitle}>Mühristan Ailesine Katılın</h4>
             <p className={styles.newsletterDesc}>
-              Özel teklifler, ezoterik içgörüler ve yeni ürünlerden e-posta ile
-              haberdar olun.
+              Özel teklifler, yeni tasarımlar ve kampanyalardan e-posta ile haberdar olun.
             </p>
             <form
               className={styles.newsletterForm}
@@ -116,7 +132,7 @@ export default function Footer() {
           <div className={styles.linkCol}>
             <h5 className={styles.colTitle}>Kategoriler</h5>
             <ul className={styles.linkList}>
-              {footerLinks.categories.map((l) => (
+              {categoryItems.map((l) => (
                 <li key={l.label}>
                   <Link
                     to={l.href}

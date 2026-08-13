@@ -266,11 +266,11 @@ export const footerLinks = {
     { label: 'Sipariş Takibi', href: '/siparislerim' },
   ],
   categories: [
-    { label: 'Uçucu Yağlar', href: '/urunler' },
-    { label: 'Kristaller & Taşlar', href: '/urunler' },
-    { label: 'Tütsüler', href: '/urunler' },
-    { label: 'Tarot & Kehanet', href: '/urunler' },
-    { label: 'Takı', href: '/urunler' },
+    { label: 'Mühürler & Yüzükler', href: '/urunler' },
+    { label: 'Özel Tasarım Takılar', href: '/urunler' },
+    { label: 'Kolyeler & Bileklikler', href: '/urunler' },
+    { label: 'Doğal Taşlar', href: '/urunler' },
+    { label: 'El Sanatları & Aksesuar', href: '/urunler' },
     { label: 'Blog', href: '/blog' },
   ],
 };
