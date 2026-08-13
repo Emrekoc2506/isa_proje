@@ -61,7 +61,7 @@ export default function AdminSEOSection({
       }}>
         <FiInfo style={{ color: 'var(--gold, #c9a227)', fontSize: '16px', flexShrink: 0, marginTop: '2px' }} />
         <span>
-          <strong>Otomatik SEO Mantığı:</strong> Bu alanları boş bırakırsanız sistem otomatik olarak {typeLabel} adından ve açıklamasından arama başlığı ve açıklaması oluşturur. Google'da özel görünmesini istiyorsanız aşağıdaki alanları doldurabilirsiniz.
+          <strong>SEO Ayarlarınızı Özelleştirin:</strong> Başlık, açıklama ve URL adresi ürün bilgilerinizden otomatik hazırlanmıştır. Google ve arama motorlarında özel başlık/açıklama görünmesini istiyorsanız aşağıdaki alanları dilediğiniz gibi güncelleyebilirsiniz.
         </span>
       </div>
 
