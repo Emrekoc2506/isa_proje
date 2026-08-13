@@ -68,11 +68,11 @@ export default function HomePage() {
 
       {/* ── Billboard Altı: Ücretsiz Teslimat Bandı (Üstte) ve Kategoriler (Altta) ── */}
       <div className={styles.belowBillboardSection}>
-        {/* 1. Üst Sıra: 500 ₺ ve Üzeri Ücretsiz Teslimat Bandı */}
+        {/* 1. Üst Sıra: Yurtiçi Kargo Bandı */}
         <div className={styles.announcementBar}>
           <MdOutlineLocalShipping className={styles.announcementIcon} />
           <span>
-            <strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat
+            Siparişleriniz <strong>Yurtiçi Kargo</strong> ile hızlı ve güvenli teslim edilir — Kargo Ücreti: <strong>170 ₺</strong>
           </span>
         </div>
 

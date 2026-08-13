@@ -54,9 +54,10 @@ export default function OnBilgilendirmePage() {
         </div>
 
         <div className={s.section}>
-          <h2 className={s.sectionTitle}>5. Anlaşmalı İade Kargo Firması</h2>
+          <h2 className={s.sectionTitle}>5. Anlaşmalı İade Kargo Firması ve Ücreti</h2>
           <p className={s.text}>
-            <strong>Anlaşmalı Kargo Firmamız:</strong> Yurtiçi Kargo / MNG Kargo / PTT Kargo<br />
+            <strong>Anlaşmalı Kargo Firmamız:</strong> Yurtiçi Kargo<br />
+            <strong>Sabit Kargo Gönderim Ücreti:</strong> 170.00 TL<br />
             Cayma hakkı veya iade taleplerinizde ürünlerin tarafımıza anlaşmalı kargo firmamız vasıtasıyla gönderilmesi gerekmektedir. İade kargo adres bilgisi ve kargo kodu müşteri hizmetlerimiz (info@muhristan.com) tarafından iletilir.
           </p>
         </div>

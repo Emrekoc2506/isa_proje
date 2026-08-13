@@ -86,7 +86,8 @@ export default function MesafeliSatisPage() {
         <div className={s.section} style={{ borderColor: 'var(--gold-light)' }}>
           <h2 className={s.sectionTitle}>Madde 7 – Kargo ve İade Koşulları</h2>
           <p className={s.text}>
-            <strong>Anlaşmalı İade Kargo Firması:</strong> Yurtiçi Kargo / MNG Kargo / PTT Kargo<br />
+            <strong>Anlaşmalı İade Kargo Firması:</strong> Yurtiçi Kargo<br />
+            <strong>Sabit Kargo Ücreti:</strong> 170.00 TL<br />
             ALICI, cayma hakkını kullandığı takdirde ürünleri SATICI'nın belirlediği anlaşmalı kargo firması vasıtasıyla ücretsiz veya sözleşmede belirtilen kargo şartlarıyla iade etmekle yükümlüdür.
           </p>
         </div>
