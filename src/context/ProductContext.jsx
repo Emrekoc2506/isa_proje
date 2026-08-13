@@ -207,7 +207,7 @@ export function ProductProvider({ children }) {
       // Kategori ve Ürün verilerini bağımsız paralel çek
       const [catResult, prodResult] = await Promise.allSettled([
         getCategoryTree().catch(() => getCategories()),
-        fetchProductsWithRetry(() => getProducts({ pageSize: 100 }))
+        fetchProductsWithRetry(() => getProducts({ pageSize: 1000 }))
       ]);
 
       if (!isMountedRef.current || currentRequestId !== latestRequestIdRef.current || typeof window === 'undefined') return;

@@ -41,7 +41,7 @@ export function createProductReview(productId, payload) {
 export function getAdminProducts(params = {}) {
   const query = new URLSearchParams();
   if (params.page) query.append("page", params.page);
-  if (params.pageSize) query.append("pageSize", params.pageSize);
+  query.append("pageSize", params.pageSize || 500);
   return request(`/admin/products?${query.toString()}`);
 }
 

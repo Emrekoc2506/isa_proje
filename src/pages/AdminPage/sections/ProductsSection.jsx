@@ -140,7 +140,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await productApi.getAdminProducts({ page, pageSize: 10 });
+      const res = await productApi.getAdminProducts({ page, pageSize: 500 });
       setProducts(res.items || []);
       setTotalPages(res.totalPages || 1);
     } catch (err) {
