@@ -463,6 +463,25 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     }
   };
 
+  // Adım 5 (SEO Ayarları) ekranına gelindiğinde alanları ürün bilgilerinden otomatik ön doldur
+  useEffect(() => {
+    if (modalStep === 5 && name.trim()) {
+      if (!seoTitle.trim()) {
+        setSeoTitle(`${name.trim()} | Muhristan`);
+      }
+      if (!seoDescription.trim()) {
+        const rawDesc = shortDescription.trim() || (description || '').replace(/<[^>]*>?/gm, '').trim();
+        if (rawDesc) {
+          setSeoDescription(rawDesc.slice(0, 160));
+        }
+      }
+      if (!slug.trim()) {
+        const generatedSlug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        if (generatedSlug) setSlug(generatedSlug);
+      }
+    }
+  }, [modalStep, name, shortDescription, description]);
+
   const handleDelete = async (id) => {
     if (!window.confirm("Bu ürün kalıcı olarak silinecektir. Bu işlem geri alınamaz. Devam etmek istediğinize emin misiniz?")) {
       return;
@@ -889,7 +908,27 @@ export default function ProductsSection({ onSelectProductForVariants }) {
               </div>
 
               {/* Form Content */}
-              <form onSubmit={handleSave} style={{ padding: 24 }} className={styles.profileForm}>
+              <form
+                onSubmit={handleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                    e.preventDefault();
+                    if (modalStep < 5) {
+                      if (modalStep === 1 && !name.trim()) {
+                        alert("Lütfen ürün adını doldurun.");
+                        return;
+                      }
+                      if (modalStep === 2 && (price === "" || price == null || isNaN(parseFloat(price)))) {
+                        alert("Lütfen geçerli bir fiyat girin.");
+                        return;
+                      }
+                      setModalStep(s => Math.min(s + 1, 5));
+                    }
+                  }
+                }}
+                style={{ padding: 24 }}
+                className={styles.profileForm}
+              >
                 
                 {formGeneralError && (
                   <div style={{ background: 'rgba(224, 85, 148, 0.15)', border: '1px solid #e05594', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#ff6b9d', fontSize: 13 }}>
