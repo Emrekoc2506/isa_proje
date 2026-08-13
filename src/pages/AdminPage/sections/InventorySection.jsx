@@ -38,7 +38,7 @@ export default function InventorySection() {
     try {
       setLoading(true);
       const [allRes, lowRes] = await Promise.all([
-        productApi.getAdminProducts({ page: 1, pageSize: 100 }).catch(() => ({ items: [] })),
+        productApi.getAdminProducts({ page: 1, pageSize: 500 }).catch(() => ({ items: [] })),
         productApi.getAdminLowStockProducts().catch(() => [])
       ]);
 
