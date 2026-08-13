@@ -27,7 +27,7 @@ export default function OnBilgilendirmePage() {
             <strong>İşletme Türü:</strong> Şahıs İşletmesi<br />
             <strong>Vergi Numarası / Dairesi:</strong> 7890939339 / Şehitlik Vergi Dairesi<br />
             <strong>Adres:</strong> Akpıyar Mahallesi, 4094. Sokak, Karaköprü / Şanlıurfa<br />
-            <strong>E-posta:</strong> <a href="mailto:muhristan@gmail.com" style={{ color: 'var(--gold)' }}>muhristan@gmail.com</a><br />
+            <strong>E-posta:</strong> <a href="mailto:info@muhristan.com" style={{ color: 'var(--gold)' }}>info@muhristan.com</a><br />
             <strong>Telefon / WhatsApp:</strong> 0542 790 68 63
           </p>
         </div>
@@ -35,7 +35,7 @@ export default function OnBilgilendirmePage() {
         <div className={s.section}>
           <h2 className={s.sectionTitle}>2. Ürün / Hizmet Bilgileri ve Fiyatlandırma</h2>
           <p className={s.text}>
-            Siparişe konu ürün veya hizmetin temel nitelikleri, miktarı, vergiler dahil toplam satış fiyatı ve kargo bedelleri sipariş onayından önce tüketiciye gösterilir.
+            Siparişe konu özel tasarım yüzük, mühür, kolye ve el sanatları ürünlerinin temel nitelikleri, miktarı, vergiler dahil toplam satış fiyatı ve kargo bedelleri sipariş onayından önce tüketiciye gösterilir.
           </p>
         </div>
 
@@ -49,12 +49,20 @@ export default function OnBilgilendirmePage() {
         <div className={s.section}>
           <h2 className={s.sectionTitle}>4. Cayma Hakkı ve İstisnaları</h2>
           <p className={s.text}>
-            Tüketici 14 gün içinde cayma hakkına sahiptir. Ancak kişiye özel olarak hazırlanan tılsımlı ürünlerde mevzuattaki cayma hakkı istisnaları uygulanabilir. Ayrıca Muhristan ek olarak ödeme sonrası <strong>1 saatlik hızlı sipariş iptali</strong> seçeneği sunmaktadır.
+            Tüketici 14 gün içinde cayma hakkına sahiptir. Ancak tüketicinin istekleri veya kişisel ihtiyaçları doğrultusunda özel olarak hazırlanan kişiye özel ürünlerde (harf, isim, özel boyut veya mühür işlenmiş takılar) mevzuattaki cayma hakkı istisnaları uygulanabilir. Ayrıca Muhristan ek olarak ödeme sonrası <strong>1 saatlik hızlı sipariş iptali</strong> seçeneği sunmaktadır.
           </p>
         </div>
 
         <div className={s.section}>
-          <h2 className={s.sectionTitle}>5. Şikâyet ve Uyuşmazlık Çözümü</h2>
+          <h2 className={s.sectionTitle}>5. Anlaşmalı İade Kargo Firması</h2>
+          <p className={s.text}>
+            <strong>Anlaşmalı Kargo Firmamız:</strong> Yurtiçi Kargo / MNG Kargo / PTT Kargo<br />
+            Cayma hakkı veya iade taleplerinizde ürünlerin tarafımıza anlaşmalı kargo firmamız vasıtasıyla gönderilmesi gerekmektedir. İade kargo adres bilgisi ve kargo kodu müşteri hizmetlerimiz (info@muhristan.com) tarafından iletilir.
+          </p>
+        </div>
+
+        <div className={s.section}>
+          <h2 className={s.sectionTitle}>6. Şikâyet ve Uyuşmazlık Çözümü</h2>
           <p className={s.textSecondary}>
             Tüketiciler şikâyetlerini satıcı iletişim kanallarına iletebilir. Uyuşmazlık halinde Tüketici Hakem Heyetleri ve Tüketici Mahkemelerine başvurulabilir.
           </p>

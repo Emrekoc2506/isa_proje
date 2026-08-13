@@ -28,7 +28,7 @@ export default function KvkkAydinlatmaPage() {
             <strong>Resmî Unvan:</strong> İsa Şahap (Muhristan)<br />
             <strong>Vergi Numarası / Dairesi:</strong> 7890939339 / Şehitlik Vergi Dairesi<br />
             <strong>Adres:</strong> Akpıyar Mahallesi, 4094. Sokak, Karaköprü / Şanlıurfa<br />
-            <strong>E-posta:</strong> <a href="mailto:muhristan@gmail.com" style={{ color: 'var(--gold)' }}>muhristan@gmail.com</a><br />
+            <strong>E-posta:</strong> <a href="mailto:info@muhristan.com" style={{ color: 'var(--gold)' }}>info@muhristan.com</a><br />
             <strong>Telefon / WhatsApp:</strong> 0542 790 68 63
           </p>
         </div>
@@ -36,7 +36,7 @@ export default function KvkkAydinlatmaPage() {
         <div className={s.section}>
           <h2 className={s.sectionTitle}>2. Kişisel Verilerin Toplanma Yöntemleri</h2>
           <p className={s.text}>
-            Kişisel verileriniz; web sitemiz, üyelik formu, sipariş işlemleri, kişiye özel çalışma ve danışmanlık talepleri, iletişim formları, e-posta, WhatsApp ve ödeme altyapıları aracılığıyla otomatik veya otomatik olmayan yöntemlerle toplanmaktadır.
+            Kişisel verileriniz; web sitemiz, üyelik formu, sipariş işlemleri, kişiye özel çalışma ve müşteri talepleri, iletişim formları, e-posta, WhatsApp ve ödeme altyapıları aracılığıyla otomatik veya otomatik olmayan yöntemlerle toplanmaktadır.
           </p>
         </div>
 
@@ -46,7 +46,7 @@ export default function KvkkAydinlatmaPage() {
             <li className={s.listItem}>Kimlik ve İletişim Bilgileri (Ad, soyad, e-posta, telefon, adres)</li>
             <li className={s.listItem}>Sipariş ve Fatura Bilgileri (Satın alınan ürünler, ödeme ve kargo kayıtları)</li>
             <li className={s.listItem}>Müşteri İşlem ve Destek Bilgileri (WhatsApp ve e-posta yazışmaları)</li>
-            <li className={s.listItem}>Kişiye Özel Ürün / Çalışma Bilgileri (Talep edilen özel ölçü, isim, semboller)</li>
+            <li className={s.listItem}>Kişiye Özel Ürün / Tasarım Bilgileri (Talep edilen özel ölçü, isim, semboller)</li>
             <li className={s.listItem}>İnternet Sitesi İşlem Kayıtları (IP adresi, güvenlik ve çerez kayıtları)</li>
           </ul>
         </div>
@@ -68,7 +68,7 @@ export default function KvkkAydinlatmaPage() {
         <div className={s.section}>
           <h2 className={s.sectionTitle}>6. İlgili Kişinin Hakları (KVKK Madde 11)</h2>
           <p className={s.text}>
-            KVKK Madde 11 uyarınca verilerinizin işlenip işlenmediğini öğrenme, düzeltilmesini veya silinmesini talep etme ve itiraz etme haklarına sahipsiniz. Taleplerinizi <a href="mailto:muhristan@gmail.com" style={{ color: 'var(--gold)' }}>muhristan@gmail.com</a> adresine iletebilirsiniz.
+            KVKK Madde 11 uyarınca verilerinizin işlenip işlenmediğini öğrenme, düzeltilmesini veya silinmesini talep etme ve itiraz etme haklarına sahipsiniz. Taleplerinizi <a href="mailto:info@muhristan.com" style={{ color: 'var(--gold)' }}>info@muhristan.com</a> adresine iletebilirsiniz.
           </p>
         </div>
       </div>

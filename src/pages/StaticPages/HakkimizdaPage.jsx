@@ -21,7 +21,7 @@ export default function HakkimizdaPage() {
     <div className={s.page}>
       <SEO 
         title="Hakkımızda | Muhristan"
-        description="Muhristan hakkında bilgi edinin. Özel tasarım takılar, vefk çalışmaları ve spiritüel mirasımız hakkında detaylar."
+        description="Muhristan hakkında bilgi edinin. Özel tasarım takılar, kişiye özel mühür çalışmaları ve el sanatları mirasımız hakkında detaylar."
         canonical="https://muhristan.com/hakkimizda"
       />
       <section className={s.hero}>
