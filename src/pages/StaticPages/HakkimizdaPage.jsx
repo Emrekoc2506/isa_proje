@@ -9,12 +9,7 @@ const values = [
   { Icon: FiAward, title: 'Özgünlük', text: 'Her bir ürünümüz özgün ve benzersizdir. Ruhsal yolculuğunuzda size eşlik edecek en özel ürünleri sunuyoruz.' },
 ];
 
-const team = [
-  { name: 'Elif Yıldız', role: 'Kurucu & Ezoterik Uzman', image: 'EL' },
-  { name: 'Can Güneş', role: 'Ürün Geliştirme Müdürü', image: 'CG' },
-  { name: 'Zehra Ay', role: 'Müşteri Deneyimi Yöneticisi', image: 'ZA' },
-  { name: 'Mert Taş', role: 'Lojistik & Operasyon', image: 'MT' },
-];
+
 
 export default function HakkimizdaPage() {
   return (
@@ -63,29 +58,12 @@ export default function HakkimizdaPage() {
           <h2 className={s.sectionTitle}>Misyonumuz & Vizyonumuz</h2>
           <h3 className={s.sectionSubtitle}>Misyonumuz</h3>
           <p className={s.text}>
-            Ezoterik ürünleri ve bilgiyi herkes için erişilebilir kılmak, doğal ve etik kaynaklardan temin edilmiş 
-            yüksek kaliteli ürünlerle ruhsal yolculuğunuzu desteklemek.
+            Özel tasarım ürünleri, kişiye özel mühürleri ve geleneksel el sanatlarını herkes için erişilebilir kılmak, doğal ve kaliteli ürünlerle müşteri memnuniyetini en üst düzeyde tutmak.
           </p>
           <h3 className={s.sectionSubtitle}>Vizyonumuz</h3>
           <p className={s.textSecondary}>
-            Türkiye'nin en güvenilir ezoterik alışveriş platformu olmak, kadim bilgelikleri modern dünyaya taşıyarak 
-            daha bilinçli ve farkındalıklı bir toplum oluşumuna katkı sağlamak.
+            Türkiye'nin en güvenilir ve kaliteli özel tasarım alışveriş platformu olmak, el sanatları ve mühür kültürünü modern dünyayla buluşturmak.
           </p>
-        </div>
-
-        <div className={s.section}>
-          <h2 className={s.sectionTitle}>Ekibimiz</h2>
-          <div className={s.grid}>
-            {team.map(({ name, role, image }) => (
-              <div key={name} className={s.card}>
-                <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg, var(--gold-dark), var(--gold-light))', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--space-md)', fontSize: 24, fontWeight: 700, color: 'var(--bg-deep)' }}>
-                  {image}
-                </div>
-                <h3 className={s.cardTitle}>{name}</h3>
-                <p className={s.cardText}>{role}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
