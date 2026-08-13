@@ -86,7 +86,7 @@ export default function PaymentResultPage() {
     try {
       const paymentRes = await paymentApi.initializePayment({
         orderId,
-        provider: "iyzico",
+        provider: "online",
         returnUrl: window.location.origin + "/odeme/sonuc",
         idempotencyKey: globalThis.crypto?.randomUUID?.() ||
           "idemp-" +
