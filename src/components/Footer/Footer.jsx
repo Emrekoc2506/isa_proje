@@ -166,7 +166,7 @@ export default function Footer() {
               troy
             </span>
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold-light)', background: 'rgba(201,162,39,0.1)', padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(201,162,39,0.25)' }}>
-              iyzico ile Güvenli Öde
+              %100 Güvenli Alışveriş
             </span>
           </div>
 
