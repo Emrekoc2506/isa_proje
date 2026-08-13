@@ -22,7 +22,7 @@ export default function Footer() {
 
   const categoryItems = (Array.isArray(dynamicCategories) && dynamicCategories.length > 0)
     ? [
-        ...dynamicCategories.slice(0, 5).map(c => ({
+        ...dynamicCategories.slice(0, 8).map(c => ({
           label: c.name || c.label,
           href: `/urunler?kategori=${c.id}`
         })),
