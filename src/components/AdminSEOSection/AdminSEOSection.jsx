@@ -38,11 +38,46 @@ export default function AdminSEOSection({
       marginBottom: '16px'
     }}>
       {/* Section Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', borderBottom: '1px solid var(--border-gold, rgba(201, 162, 39, 0.2))', paddingBottom: '10px' }}>
-        <FiSearch style={{ color: 'var(--gold, #c9a227)', fontSize: '18px' }} />
-        <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--gold-light, #f5d680)', letterSpacing: '0.03em' }}>
-          SEO (Arama Motoru) Ayarları
-        </h4>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '1px solid var(--border-gold, rgba(201, 162, 39, 0.2))', paddingBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FiSearch style={{ color: 'var(--gold, #c9a227)', fontSize: '18px' }} />
+          <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--gold-light, #f5d680)', letterSpacing: '0.03em' }}>
+            SEO (Arama Motoru) Ayarları
+          </h4>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (fallbackTitle) {
+              onChangeSeoTitle(`${fallbackTitle.trim()} | ${siteBrand}`);
+              const generatedSlug = fallbackTitle.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+              onChangeSlug(generatedSlug);
+              const clean = stripHtml(fallbackDescription || '');
+              const autoDesc = clean ? clean.slice(0, 160) : `${fallbackTitle} - Muhristan güvencesiyle sipariş verin.`;
+              onChangeSeoDescription(autoDesc);
+              const words = fallbackTitle.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+              const keywords = Array.from(new Set([fallbackTitle.toLowerCase(), ...words, 'muhristan', 'özel tasarım'])).join(', ');
+              onChangeSeoKeywords(keywords);
+            }
+          }}
+          style={{
+            background: 'linear-gradient(135deg, rgba(201,162,39,0.3), rgba(201,162,39,0.15))',
+            border: '1px solid rgba(201,162,39,0.4)',
+            color: 'var(--gold-light, #f5d680)',
+            fontSize: '12px',
+            fontWeight: 700,
+            padding: '5px 12px',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            transition: 'all 0.2s'
+          }}
+        >
+          ✨ Tümünü Otomatik Doldur
+        </button>
       </div>
 
       {/* Notice Info Box */}
@@ -61,7 +96,7 @@ export default function AdminSEOSection({
       }}>
         <FiInfo style={{ color: 'var(--gold, #c9a227)', fontSize: '16px', flexShrink: 0, marginTop: '2px' }} />
         <span>
-          <strong>SEO Bilgilerinizi Kendiniz Doldurun:</strong> Arama motorlarında (Google) {typeLabel} sayfanızın özel olarak görünmesini istediğiniz arama başlığını, özel açıklamasını ve anahtar kelimelerini aşağıdaki alanlara yazabilirsiniz.
+          <strong>SEO Bilgilerinizi Yönetin:</strong> Dilerseniz aşağıdaki kutucuklara kendiniz yazabilir, dilerseniz her kutucuğun yanındaki <strong>"✨ Otomatik Oluştur"</strong> butonuna basarak üründen otomatik türetebilirsiniz.
         </span>
       </div>
 
@@ -109,20 +144,42 @@ export default function AdminSEOSection({
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         {/* SEO Title Input */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
             <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold, #c9a227)' }}>
               SEO Başlığı (`seoTitle`)
             </label>
-            <span style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              padding: '2px 8px',
-              borderRadius: '10px',
-              background: titleLength > 140 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-              color: titleLength > 140 ? '#ef4444' : 'var(--text-secondary, #94a3b8)'
-            }}>
-              {titleLength} / 140 Karakter
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => onChangeSeoTitle(fallbackTitle ? `${fallbackTitle.trim()} | ${siteBrand}` : siteBrand)}
+                style={{
+                  background: 'rgba(201,162,39,0.15)',
+                  border: '1px solid rgba(201,162,39,0.3)',
+                  color: 'var(--gold-light, #f5d680)',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  padding: '3px 9px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Ürün adından otomatik SEO başlığı türet"
+              >
+                ✨ Otomatik Oluştur
+              </button>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: '10px',
+                background: titleLength > 140 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                color: titleLength > 140 ? '#ef4444' : 'var(--text-secondary, #94a3b8)'
+              }}>
+                {titleLength} / 140 Karakter
+              </span>
+            </div>
           </div>
           <input
             type="text"
@@ -152,20 +209,46 @@ export default function AdminSEOSection({
 
         {/* SEO Description Input */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
             <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold, #c9a227)' }}>
               SEO Açıklaması (`seoDescription`)
             </label>
-            <span style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              padding: '2px 8px',
-              borderRadius: '10px',
-              background: descLength > 160 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-              color: descLength > 160 ? '#ef4444' : 'var(--text-secondary, #94a3b8)'
-            }}>
-              {descLength} / 160 Karakter
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const clean = stripHtml(fallbackDescription || '');
+                  const autoDesc = clean ? clean.slice(0, 160) : `${fallbackTitle || 'Özel tasarım ürün'} - Muhristan güvencesiyle sipariş verin.`;
+                  onChangeSeoDescription(autoDesc);
+                }}
+                style={{
+                  background: 'rgba(201,162,39,0.15)',
+                  border: '1px solid rgba(201,162,39,0.3)',
+                  color: 'var(--gold-light, #f5d680)',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  padding: '3px 9px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Ürün açıklamasından otomatik SEO açıklaması türet"
+              >
+                ✨ Otomatik Oluştur
+              </button>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: '10px',
+                background: descLength > 160 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                color: descLength > 160 ? '#ef4444' : 'var(--text-secondary, #94a3b8)'
+              }}>
+                {descLength} / 160 Karakter
+              </span>
+            </div>
           </div>
           <textarea
             rows={3}
@@ -196,9 +279,36 @@ export default function AdminSEOSection({
 
         {/* SEO Keywords Input */}
         <div>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold, #c9a227)', display: 'block', marginBottom: '4px' }}>
-            SEO Anahtar Kelimeleri (`seoKeywords`) - İsteğe Bağlı
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold, #c9a227)' }}>
+              SEO Anahtar Kelimeleri (`seoKeywords`) - İsteğe Bağlı
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                if (!fallbackTitle) return;
+                const words = fallbackTitle.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+                const keywords = Array.from(new Set([fallbackTitle.toLowerCase(), ...words, 'muhristan', 'özel tasarım'])).join(', ');
+                onChangeSeoKeywords(keywords);
+              }}
+              style={{
+                background: 'rgba(201,162,39,0.15)',
+                border: '1px solid rgba(201,162,39,0.3)',
+                color: 'var(--gold-light, #f5d680)',
+                fontSize: '11px',
+                fontWeight: 600,
+                padding: '3px 9px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              title="Ürün adından otomatik anahtar kelimeler türet"
+            >
+              ✨ Otomatik Oluştur
+            </button>
+          </div>
           <input
             type="text"
             value={seoKeywords}
@@ -222,9 +332,34 @@ export default function AdminSEOSection({
 
         {/* Slug Input */}
         <div>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold, #c9a227)', display: 'block', marginBottom: '4px' }}>
-            Sayfa Adresi (URL Slug - `slug`)
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold, #c9a227)' }}>
+              Sayfa Adresi (URL Slug - `slug`)
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                const generatedSlug = (fallbackTitle || 'urun').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                onChangeSlug(generatedSlug);
+              }}
+              style={{
+                background: 'rgba(201,162,39,0.15)',
+                border: '1px solid rgba(201,162,39,0.3)',
+                color: 'var(--gold-light, #f5d680)',
+                fontSize: '11px',
+                fontWeight: 600,
+                padding: '3px 9px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              title="Ürün adından otomatik URL adresi (slug) türet"
+            >
+              ✨ Otomatik Oluştur
+            </button>
+          </div>
           <input
             type="text"
             value={slug}
