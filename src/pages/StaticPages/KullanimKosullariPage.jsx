@@ -28,7 +28,7 @@ export default function KullanimKosullariPage() {
           <p className={s.textSecondary}>
             <strong>Vergi Numarası / Dairesi:</strong> 7890939339 / Şehitlik Vergi Dairesi<br />
             <strong>Adres:</strong> Akpıyar Mahallesi, 4094. Sokak, Karaköprü / Şanlıurfa<br />
-            <strong>İletişim:</strong> <a href="mailto:muhristan@gmail.com" style={{ color: 'var(--gold)' }}>muhristan@gmail.com</a> | 0542 790 68 63
+            <strong>İletişim:</strong> <a href="mailto:info@muhristan.com" style={{ color: 'var(--gold)' }}>info@muhristan.com</a> | 0542 790 68 63
           </p>
         </div>
 
@@ -42,7 +42,7 @@ export default function KullanimKosullariPage() {
         <div className={s.section}>
           <h2 className={s.sectionTitle}><FiShoppingCart style={{ marginRight: 8 }} /> 3. Sipariş ve Kullanım Kuralları</h2>
           <p className={s.text}>
-            Sitede sunulan tılsımlı takılar, vefk ve spiritüel ürünlerin siparişinde kullanıcılar sipariş özeti ve sözleşme koşullarını onaylarlar. Kişiye özel ürünlerde verilen ölçü ve kişiselleştirme bilgilerinin doğruluğu kullanıcının sorumluluğundadır.
+            Sitede sunulan özel tasarım takı, mühür, el sanatları ve aksesuar ürünlerinin siparişinde kullanıcılar sipariş özeti ve sözleşme koşullarını onaylarlar. Kişiye özel ürünlerde verilen ölçü ve kişiselleştirme bilgilerinin doğruluğu kullanıcının sorumluluğundadır.
           </p>
         </div>
 

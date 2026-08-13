@@ -28,7 +28,7 @@ export default function GizlilikPage() {
           <p className={s.textSecondary}>
             <strong>Vergi Numarası / Dairesi:</strong> 7890939339 / Şehitlik Vergi Dairesi<br />
             <strong>Adres:</strong> Akpıyar Mahallesi, 4094. Sokak, Karaköprü / Şanlıurfa<br />
-            <strong>E-posta:</strong> <a href="mailto:muhristan@gmail.com" style={{ color: 'var(--gold)' }}>muhristan@gmail.com</a><br />
+            <strong>E-posta:</strong> <a href="mailto:info@muhristan.com" style={{ color: 'var(--gold)' }}>info@muhristan.com</a><br />
             <strong>Telefon / WhatsApp:</strong> 0542 790 68 63
           </p>
         </div>

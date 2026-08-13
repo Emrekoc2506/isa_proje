@@ -46,7 +46,7 @@ export default function GarantiIptalPage() {
             Muhristan, ödeme işleminin tamamlanmasından itibaren <strong>1 saat içerisinde</strong>, sipariş henüz geri döndürülemeyecek şekilde üretim, kişiselleştirme veya hizmet ifası aşamasına alınmamışsa sipariş iptal talebinde bulunma imkânı sağlamaktadır.
           </p>
           <p className={s.textSecondary}>
-            İptal talebinizi <strong>WhatsApp (0542 790 68 63)</strong> veya <strong>e-posta (muhristan@gmail.com)</strong> üzerinden bize iletebilirsiniz. Bu 1 saatlik imkân, tüketicinin kanuni cayma hakkını kısıtlamaz.
+            İptal talebinizi <strong>WhatsApp (0542 790 68 63)</strong> veya <strong>e-posta (info@muhristan.com)</strong> üzerinden bize iletebilirsiniz. Bu 1 saatlik imkân, tüketicinin kanuni cayma hakkını kısıtlamaz.
           </p>
         </div>
 
@@ -56,14 +56,14 @@ export default function GarantiIptalPage() {
             Tüketici, mesafeli sözleşmelerde malın tesliminden itibaren <strong>14 gün içerisinde</strong> herhangi bir gerekçe göstermeksizin ve cezai şart ödemeksizin cayma hakkını kullanabilir.
           </p>
           <p className={s.textSecondary}>
-            Cayma bildiriminizi e-posta (<a href="mailto:muhristan@gmail.com" style={{ color: 'var(--gold)' }}>muhristan@gmail.com</a>) veya WhatsApp üzerinden iletebilirsiniz.
+            Cayma bildiriminizi e-posta (<a href="mailto:info@muhristan.com" style={{ color: 'var(--gold)' }}>info@muhristan.com</a>) veya WhatsApp üzerinden iletebilirsiniz.
           </p>
         </div>
 
         <div className={s.section}>
           <h2 className={s.sectionTitle}>Kişiye Özel Ürünler ve İstisnalar</h2>
           <p className={s.text}>
-            Tüketicinin özel istekleri veya kişisel ihtiyaçları doğrultusunda hazırlanan kişiye özel tılsımlı yüzükler, kişiselleştirilmiş kolyeler, özel ölçü ve isim içeren ürünlerde mevzuat gereği cayma hakkı istisnası uygulanabilir.
+            Tüketicinin özel istekleri veya kişisel ihtiyaçları doğrultusunda hazırlanan kişiye özel tasarım yüzükler, kişiselleştirilmiş kolyeler, mühürler, özel ölçü ve isim içeren ürünlerde mevzuat gereği cayma hakkı istisnası uygulanabilir.
           </p>
         </div>
 

@@ -29,7 +29,7 @@ export default function MesafeliSatisPage() {
             <strong>Vergi Numarası:</strong> 7890939339<br />
             <strong>Vergi Dairesi:</strong> Şehitlik Vergi Dairesi<br />
             <strong>Adres:</strong> Akpıyar Mahallesi, 4094. Sokak, Karaköprü / Şanlıurfa<br />
-            <strong>E-posta:</strong> <a href="mailto:muhristan@gmail.com" style={{ color: 'var(--gold)' }}>muhristan@gmail.com</a><br />
+            <strong>E-posta:</strong> <a href="mailto:info@muhristan.com" style={{ color: 'var(--gold)' }}>info@muhristan.com</a><br />
             <strong>Telefon / WhatsApp:</strong> 0542 790 68 63
           </p>
 
@@ -42,7 +42,7 @@ export default function MesafeliSatisPage() {
         <div className={s.section}>
           <h2 className={s.sectionTitle}>Madde 2 – Sözleşmenin Konusu</h2>
           <p className={s.text}>
-            İşbu Mesafeli Satış Sözleşmesi'nin konusu, ALICI'nın Muhristan internet sitesi üzerinden elektronik ortamda sipariş verdiği ürün veya hizmetlerin satışı, hazırlanması, ifası ve/veya teslimine ilişkin tarafların hak ve yükümlülüklerinin belirlenmesidir.
+            İşbu Mesafeli Satış Sözleşmesi'nin konusu, ALICI'nın Muhristan internet sitesi üzerinden elektronik ortamda sipariş verdiği özel tasarım takı, mühür, aksesuar ve el sanatları ürünlerinin satışı, hazırlanması, ifası ve/veya teslimine ilişkin tarafların hak ve yükümlülüklerinin belirlenmesidir.
           </p>
           <p className={s.textSecondary}>
             İşbu sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun, Mesafeli Sözleşmeler Yönetmeliği ve yürürlükte bulunan ilgili mevzuat hükümleri çerçevesinde uygulanır. Muhristan bünyesinde sunulan bazı ürün ve çalışmalar, ALICI'nın talebi ve kişisel ihtiyaçları doğrultusunda kişiye özel olarak hazırlanabilir.
@@ -84,12 +84,20 @@ export default function MesafeliSatisPage() {
         </div>
 
         <div className={s.section} style={{ borderColor: 'var(--gold-light)' }}>
+          <h2 className={s.sectionTitle}>Madde 7 – Kargo ve İade Koşulları</h2>
+          <p className={s.text}>
+            <strong>Anlaşmalı İade Kargo Firması:</strong> Yurtiçi Kargo / MNG Kargo / PTT Kargo<br />
+            ALICI, cayma hakkını kullandığı takdirde ürünleri SATICI'nın belirlediği anlaşmalı kargo firması vasıtasıyla ücretsiz veya sözleşmede belirtilen kargo şartlarıyla iade etmekle yükümlüdür.
+          </p>
+        </div>
+
+        <div className={s.section} style={{ borderColor: 'var(--gold-light)' }}>
           <h2 className={s.sectionTitle}>Madde 8 – Muhristan'ın Sunduğu 1 Saatlik İptal İmkânı</h2>
           <p className={s.text}>
             SATICI, ALICI'ya ödeme işleminin tamamlanmasından itibaren <strong>1 saat içerisinde</strong>, sipariş henüz üretim, kişiselleştirme veya hizmetin ifası aşamasına alınmamışsa sipariş iptali talebinde bulunma imkânı sağlar.
           </p>
           <p className={s.textSecondary}>
-            İptal talebinin <strong>WhatsApp (0542 790 68 63)</strong> veya <strong>e-posta (muhristan@gmail.com)</strong> üzerinden iletilmesi gerekir. Bu 1 saatlik iptal imkânı, tüketicinin kanuni 14 günlük cayma hakkını kısıtlamaz.
+            İptal talebininin <strong>WhatsApp (0542 790 68 63)</strong> veya <strong>e-posta (info@muhristan.com)</strong> üzerinden iletilmesi gerekir. Bu 1 saatlik iptal imkânı, tüketicinin kanuni 14 günlük cayma hakkını kısıtlamaz.
           </p>
         </div>
 
@@ -100,7 +108,7 @@ export default function MesafeliSatisPage() {
           </p>
           <h3 className={s.sectionSubtitle}>Kişiye Özel Ürün İstisnası</h3>
           <p className={s.textSecondary}>
-            Tüketicinin istekleri veya kişisel ihtiyaçları doğrultusunda özel olarak hazırlanan kişiye özel tılsımlı yüzükler, kolyeler ve kişiselleştirilmiş ürünlerde mevzuat gereği cayma hakkı istisnası uygulanabilir.
+            Tüketicinin istekleri veya kişisel ihtiyaçları doğrultusunda özel olarak hazırlanan kişiye özel tasarım yüzükler, mühürler, özel isim/harf işlenmiş kolyeler ve kişiselleştirilmiş ürünlerde mevzuat gereği cayma hakkı istisnası uygulanabilir.
           </p>
         </div>
 
