@@ -892,7 +892,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
 
               {/* Form Content */}
               <form
-                onSubmit={handleSave}
+                onSubmit={(e) => e.preventDefault()}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
                     e.preventDefault();
@@ -1445,7 +1445,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                       </button>
                     ) : (
                       <button 
-                        type="submit" 
+                        type="button" 
+                        onClick={handleSave}
                         className={styles.shopBtn}
                         style={{ padding: '10px 24px', fontSize: 13, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', borderRadius: 8, cursor: 'pointer', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}
                       >
