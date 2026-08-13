@@ -463,24 +463,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     }
   };
 
-  // Adım 5 (SEO Ayarları) ekranına gelindiğinde alanları ürün bilgilerinden otomatik ön doldur
-  useEffect(() => {
-    if (modalStep === 5 && name.trim()) {
-      if (!seoTitle.trim()) {
-        setSeoTitle(`${name.trim()} | Muhristan`);
-      }
-      if (!seoDescription.trim()) {
-        const rawDesc = shortDescription.trim() || (description || '').replace(/<[^>]*>?/gm, '').trim();
-        if (rawDesc) {
-          setSeoDescription(rawDesc.slice(0, 160));
-        }
-      }
-      if (!slug.trim()) {
-        const generatedSlug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-        if (generatedSlug) setSlug(generatedSlug);
-      }
-    }
-  }, [modalStep, name, shortDescription, description]);
+
 
   const handleDelete = async (id) => {
     if (!window.confirm("Bu ürün kalıcı olarak silinecektir. Bu işlem geri alınamaz. Devam etmek istediğinize emin misiniz?")) {
