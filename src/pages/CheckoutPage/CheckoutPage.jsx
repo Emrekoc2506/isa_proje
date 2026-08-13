@@ -419,6 +419,42 @@ export default function CheckoutPage() {
 
 
 
+          {/* KARGO FİRMASI VE ÜCRETİ BÖLÜMÜ */}
+          <div className={styles.sectionCard} style={{
+            background: 'rgba(201, 162, 39, 0.05)',
+            border: '1px solid rgba(201, 162, 39, 0.3)',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px'
+          }}>
+            <h3 className={styles.sectionTitle} style={{ fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--gold-light)', margin: '0 0 12px 0' }}>
+              <FiTruck style={{ color: 'var(--gold)' }} /> Kargo & Teslimat Firması
+            </h3>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justify: 'space-between',
+              padding: '12px 16px',
+              background: 'var(--bg-dark, #0f0a18)',
+              border: '1px solid rgba(201, 162, 39, 0.4)',
+              borderRadius: '10px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: '#e30613', color: '#fff', fontWeight: 900, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', letterSpacing: '-0.5px' }}>
+                  YK
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontWeight: 700, color: '#fff', fontSize: '14px' }}>Yurtiçi Kargo</span>
+                  <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)' }}>Tüm Türkiye'ye 1-3 iş günü içinde hızlı ve güvenli teslimat</span>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--gold-light)' }}>170.00 ₺</span>
+                <span style={{ display: 'block', fontSize: '10px', color: '#2ecc71', fontWeight: 600 }}>Sabit Ücret</span>
+              </div>
+            </div>
+          </div>
+
           {/* KİŞİSELLEŞTİRME BÖLÜMÜ */}
           <div className={styles.sectionCard} style={{
             background: 'linear-gradient(135deg, rgba(201, 162, 39, 0.08), rgba(20, 10, 32, 0.95))',
@@ -577,8 +613,8 @@ export default function CheckoutPage() {
               )}
 
               <div className={styles.totalsRow}>
-                <span>Kargo</span>
-                <span>{previewData?.shippingAmount === 0 ? 'Ücretsiz' : `${previewData?.shippingAmount || 0} ₺`}</span>
+                <span>Kargo (Yurtiçi Kargo)</span>
+                <span>{previewData?.shippingAmount === 0 ? 'Ücretsiz' : `${previewData?.shippingAmount || 170} ₺`}</span>
               </div>
 
               {previewData?.taxAmount > 0 && (

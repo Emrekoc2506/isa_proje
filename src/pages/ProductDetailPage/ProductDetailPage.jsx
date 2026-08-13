@@ -678,8 +678,8 @@ export default function ProductDetailPage() {
               <div className={styles.trustItem}>
                 <FiTruck className={styles.trustIcon} />
                 <div>
-                  <b>Ücretsiz Kargo</b>
-                  <span>500₺ üzeri siparişlerde</span>
+                  <b>Yurtiçi Kargo</b>
+                  <span>170 ₺ Sabit Kargo Ücreti</span>
                 </div>
               </div>
               <div className={styles.trustItem}>
