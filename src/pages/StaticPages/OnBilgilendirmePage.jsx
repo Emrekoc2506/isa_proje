@@ -42,7 +42,7 @@ export default function OnBilgilendirmePage() {
         <div className={s.section}>
           <h2 className={s.sectionTitle}>3. Ödeme, Teslimat ve İfa</h2>
           <p className={s.text}>
-            Ödeme, sitede sunulan güvenli yöntemlerle (Kredi Kartı / Havale / Kapıda Ödeme) yapılır. Fiziksel ürünler belirtilen teslimat adresine gönderilir. Kişiye özel ürünlerde hazırlık süresi sipariş öncesi bildirilir.
+            Ödeme, sitede sunulan güncel ve güvenli yöntemlerle (Banka Havalesi / EFT / Sitede Aktif Sunulan Ödeme Yöntemleri) yapılır. Fiziksel ürünler belirtilen teslimat adresine gönderilir. Kişiye özel ürünlerde hazırlık süresi sipariş öncesi bildirilir.
           </p>
         </div>
 

@@ -25,7 +25,7 @@ export default function CheckoutPage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
   const [paymentOptions, setPaymentOptions] = useState({
-    onlineCard: { enabled: false, provider: "Iyzico" },
+    onlineCard: { enabled: false, provider: "OnlineCard" },
     bankTransfer: { enabled: true },
     cashOnDelivery: { enabled: true },
   });
@@ -236,7 +236,7 @@ export default function CheckoutPage() {
       try {
         const paymentRes = await paymentApi.initializePayment({
           orderId,
-          provider: 'iyzico',
+          provider: 'online',
           returnUrl: window.location.origin + '/odeme/sonuc',
           idempotencyKey: globalThis.crypto?.randomUUID?.() || `idemp-${Date.now()}`
         });
