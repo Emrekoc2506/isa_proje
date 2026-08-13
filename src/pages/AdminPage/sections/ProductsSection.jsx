@@ -601,15 +601,15 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                           <td style={{ padding: 8 }}>
                             <img src={p.imageUrl || p.ImageUrl || p.image || p.Image || "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100"} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6, border: '1px solid rgba(201,162,39,0.3)' }} />
                           </td>
-                          <td style={{ padding: 8, color: '#fff' }}>
+                          <td style={{ padding: 8, color: isLight ? '#111827' : '#fff' }}>
                             <a
                               href={`/urun/${p.slug || p.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               title="Ürün sayfasına git (Yeni Sekmede Açılır)"
-                              style={{ color: '#ffffff', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }}
+                              style={{ color: isLight ? '#111827' : '#ffffff', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }}
                               onMouseEnter={e => e.currentTarget.style.color = 'var(--gold-light, #c9a227)'}
-                              onMouseLeave={e => e.currentTarget.style.color = '#ffffff'}
+                              onMouseLeave={e => e.currentTarget.style.color = isLight ? '#111827' : '#ffffff'}
                             >
                               {p.name}
                             </a>
