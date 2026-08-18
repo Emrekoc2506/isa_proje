@@ -27,6 +27,13 @@ export function mapServerCart(data) {
 
 export function getCartErrorMessage(codeOrMessage) {
   const code = typeof codeOrMessage === 'object' ? codeOrMessage?.code : codeOrMessage;
+  const status = typeof codeOrMessage === 'object' ? codeOrMessage?.status : null;
+  if (status === 404) {
+    return "Bu ürün silinmiş veya artık satışta değil.";
+  }
+  if (status === 400) {
+    return (typeof codeOrMessage === 'object' && codeOrMessage?.message) || "Bu ürün sepete eklenemiyor (geçersiz veya tükenmiş ürün).";
+  }
   switch (code) {
     case 'product_unavailable':
       return "Bu ürün artık satışta değil.";
