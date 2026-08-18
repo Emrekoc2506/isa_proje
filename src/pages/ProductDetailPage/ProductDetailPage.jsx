@@ -21,7 +21,7 @@ import { ProductDetailSkeleton } from '../../components/Skeleton/Skeleton';
 import ProductReviews from '../../components/ProductReviews/ProductReviews';
 import RecentlyViewed from '../../components/RecentlyViewed/RecentlyViewed';
 import StockNotifyModal from '../../components/StockNotifyModal/StockNotifyModal';
-import { addRecentlyViewed } from '../../utils/recentlyViewed';
+import { addRecentlyViewed, removeRecentlyViewed } from '../../utils/recentlyViewed';
 import { getSafeStockQuantity } from '../../utils/stockUtils';
 
 /* ─── Yıldız Bileşeni ────────────────────────────────────── */
@@ -82,6 +82,7 @@ export default function ProductDetailPage() {
         } catch (err) {
           if (err.status === 404 || err.code === 'not_found' || String(err.message).includes('404')) {
             isNotFound = true;
+            removeRecentlyViewed(id);
           }
         }
 

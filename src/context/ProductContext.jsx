@@ -264,6 +264,21 @@ export function ProductProvider({ children }) {
         setProducts(normalized || []);
         setCachedProducts(normalized || []);
         setError(null);
+
+        // Sunucudan gelen canlı listede olmayan silinmiş ürünleri son incelediklerinizden temizle
+        if (Array.isArray(normalized) && normalized.length > 0 && typeof window !== 'undefined') {
+          try {
+            const validIds = new Set(normalized.map(p => p.id));
+            const rvData = localStorage.getItem("isa_recently_viewed_products");
+            if (rvData) {
+              const rvList = JSON.parse(rvData);
+              if (Array.isArray(rvList)) {
+                const cleaned = rvList.filter(item => validIds.has(item.id));
+                localStorage.setItem("isa_recently_viewed_products", JSON.stringify(cleaned));
+              }
+            }
+          } catch (e) {}
+        }
       } else {
         const prodErr = prodResult.reason;
         console.error("Ürün yükleme hatası (retry sonrası):", prodErr);
