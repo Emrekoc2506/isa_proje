@@ -1,9 +1,10 @@
 import { request } from "./apiClient";
 
 // Kamu Ürün İstekleri
-export function getProducts(params = {}) {
+export function getProducts(params = {}, options = {}) {
   const query = new URLSearchParams(params);
-  return request(`/products?${query.toString()}`);
+  const qStr = query.toString();
+  return request(`/products${qStr ? `?${qStr}` : ''}`, options);
 }
 
 export function getProductById(id) {

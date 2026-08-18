@@ -85,6 +85,40 @@ function setCachedSlides(slidesData) {
   }
 }
 
+function getCachedProducts() {
+  try {
+    const raw = sessionStorage.getItem('muhristan_cached_products');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setCachedProducts(productsData) {
+  try {
+    sessionStorage.setItem('muhristan_cached_products', JSON.stringify(productsData));
+  } catch {
+    // Ignore storage error
+  }
+}
+
+function getCachedCategories() {
+  try {
+    const raw = sessionStorage.getItem('muhristan_cached_categories');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setCachedCategories(catData) {
+  try {
+    sessionStorage.setItem('muhristan_cached_categories', JSON.stringify(catData));
+  } catch {
+    // Ignore storage error
+  }
+}
+
 export function isTransientError(err) {
   if (!err) return false;
   const status = err.status || err.statusCode || err.response?.status;
@@ -132,14 +166,19 @@ export async function fetchProductsWithRetry(fetcher, maxAttempts = 3, delays = 
 }
 
 export function ProductProvider({ children }) {
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState(() => getCachedCategories());
+  const [products, setProducts] = useState(() => getCachedProducts());
   const [slides, setSlides] = useState(() => getCachedSlides());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    const cachedP = getCachedProducts();
+    return cachedP.length === 0;
+  });
   const [error, setError] = useState(null);
 
   const isMountedRef = useRef(true);
   const latestRequestIdRef = useRef(0);
+  const productsRef = useRef(products);
+  productsRef.current = products;
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -200,25 +239,30 @@ export function ProductProvider({ children }) {
 
     try {
       if (isMountedRef.current && typeof window !== 'undefined') {
-        setLoading(true);
+        if (productsRef.current.length === 0) {
+          setLoading(true);
+        }
         setError(null);
       }
 
-      // Kategori ve Ürün verilerini bağımsız paralel çek
+      // Kategori ve Ürün verilerini bağımsız paralel çek (ürünler için 4s hızlı zaman aşımı)
       const [catResult, prodResult] = await Promise.allSettled([
         getCategoryTree().catch(() => getCategories()),
-        fetchProductsWithRetry(() => getProducts({ pageSize: 1000 }))
+        fetchProductsWithRetry(() => getProducts({ pageSize: 1000 }, { timeout: 4000 }))
       ]);
 
       if (!isMountedRef.current || currentRequestId !== latestRequestIdRef.current || typeof window === 'undefined') return;
 
       if (catResult.status === 'fulfilled') {
-        setCategories(catResult.value || []);
+        const catVal = catResult.value || [];
+        setCategories(catVal);
+        setCachedCategories(catVal);
       }
 
       if (prodResult.status === 'fulfilled') {
         const normalized = normalizeProducts(prodResult.value);
         setProducts(normalized || []);
+        setCachedProducts(normalized || []);
         setError(null);
       } else {
         const prodErr = prodResult.reason;

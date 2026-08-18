@@ -7,7 +7,7 @@ import {
   FiShoppingCart, FiHeart, FiCheck, FiStar,
   FiChevronRight, FiTruck,
   FiShield, FiMinus, FiPlus, FiShare2,
-  FiZap, FiChevronDown, FiMessageCircle, FiBell
+  FiZap, FiChevronDown, FiMessageCircle, FiBell, FiZoomIn
 } from 'react-icons/fi';
 import { FaHeart, FaWhatsapp, FaInstagram } from 'react-icons/fa';
 import { useProducts } from '../../context/ProductContext';
@@ -114,8 +114,20 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState('description');
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [customNote, setCustomNote] = useState('');
+
+  // ESC tuşu ile Lightbox kapatma
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setLightboxOpen(false);
+    };
+    if (lightboxOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen]);
 
   // Auto-select first variant on load if exists
   useEffect(() => {
@@ -371,7 +383,33 @@ export default function ProductDetailPage() {
               className={`${styles.mainFrame} ${isZoomed ? styles.zoomed : ''}`}
               onMouseEnter={() => setIsZoomed(true)}
               onMouseLeave={() => setIsZoomed(false)}
+              onClick={() => setLightboxOpen(true)}
+              style={{ cursor: 'zoom-in' }}
+              title="Görseli büyütmek için tıklayın"
             >
+              {/* Görseli Büyüt Rozeti */}
+              <div style={{
+                position: 'absolute',
+                bottom: '14px',
+                right: '14px',
+                background: 'rgba(0, 0, 0, 0.65)',
+                color: 'var(--gold-light)',
+                borderRadius: '20px',
+                padding: '6px 14px',
+                fontSize: '12px',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                zIndex: 10,
+                pointerEvents: 'none',
+                backdropFilter: 'blur(4px)',
+                border: '1px solid rgba(201, 162, 39, 0.35)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
+              }}>
+                <FiZoomIn size={14} /> Büyüt
+              </div>
+
               {/* Badge'ler */}
               <div className={styles.frameBadges}>
                 {productDetail.isNew && <span className={`${styles.badge} ${styles.bNew}`}>YENİ</span>}
@@ -918,6 +956,155 @@ export default function ProductDetailPage() {
           onClose={() => setStockModalOpen(false)}
           product={productDetail || product}
         />
+
+        {/* ════ LIGHTBOX (GÖRSEL BÜYÜTME MODALI) ═════════════ */}
+        <AnimatePresence>
+          {lightboxOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 99999,
+                background: 'rgba(0, 0, 0, 0.92)',
+                backdropFilter: 'blur(10px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '24px'
+              }}
+              onClick={() => setLightboxOpen(false)}
+            >
+              {/* Kapat Butonu */}
+              <button
+                type="button"
+                onClick={() => setLightboxOpen(false)}
+                style={{
+                  position: 'absolute',
+                  top: '24px',
+                  right: '24px',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  color: '#fff',
+                  borderRadius: '50%',
+                  width: '48px',
+                  height: '48px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '22px',
+                  transition: 'all 0.2s',
+                  zIndex: 100000
+                }}
+                title="Kapat (ESC)"
+              >
+                ✕
+              </button>
+
+              {/* Görsel Sayacı */}
+              {mediaList.length > 1 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '28px',
+                  left: '28px',
+                  color: 'var(--gold-light)',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  letterSpacing: '0.05em',
+                  background: 'rgba(0,0,0,0.5)',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  border: '1px solid rgba(201,162,39,0.3)'
+                }}>
+                  {activeImg + 1} / {mediaList.length}
+                </div>
+              )}
+
+              {/* Sol Ok */}
+              {mediaList.length > 1 && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+                  style={{
+                    position: 'absolute',
+                    left: '24px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(0, 0, 0, 0.65)',
+                    border: '1px solid rgba(201, 162, 39, 0.4)',
+                    color: 'var(--gold-light)',
+                    width: '54px',
+                    height: '54px',
+                    borderRadius: '50%',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 100000,
+                    transition: 'all 0.2s'
+                  }}
+                  aria-label="Önceki Görsel"
+                >
+                  &#10094;
+                </button>
+              )}
+
+              {/* Büyük Görsel */}
+              <motion.img
+                key={activeImg}
+                src={mediaList[activeImg]?.src || "/ornek resim.jpg"}
+                alt={productDetail.name}
+                initial={{ scale: 0.92, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.92, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  maxWidth: '90vw',
+                  maxHeight: '85vh',
+                  objectFit: 'contain',
+                  borderRadius: '12px',
+                  boxShadow: '0 25px 60px rgba(0,0,0,0.9), 0 0 20px rgba(201,162,39,0.2)',
+                  border: '1px solid rgba(201,162,39,0.25)'
+                }}
+              />
+
+              {/* Sağ Ok */}
+              {mediaList.length > 1 && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                  style={{
+                    position: 'absolute',
+                    right: '24px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(0, 0, 0, 0.65)',
+                    border: '1px solid rgba(201, 162, 39, 0.4)',
+                    color: 'var(--gold-light)',
+                    width: '54px',
+                    height: '54px',
+                    borderRadius: '50%',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 100000,
+                    transition: 'all 0.2s'
+                  }}
+                  aria-label="Sonraki Görsel"
+                >
+                  &#10095;
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
     </MainLayout>
