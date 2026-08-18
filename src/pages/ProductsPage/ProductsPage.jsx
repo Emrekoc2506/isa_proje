@@ -31,13 +31,13 @@ export default function ProductsPage() {
   const [selectedSubcategory, setSelectedSubcategory] =
     useState(subcategoryParam);
   const [searchQuery, setSearchQuery] = useState(searchParam);
-  const [priceRange, setPriceRange] = useState(4000); // Max fiyat (₺)
+  const [priceRange, setPriceRange] = useState(100000); // Max fiyat (₺)
 
   // Geçici State'ler (Kullanıcı etkileşimde bulunurken anlık güncellenir)
   const [tempCategory, setTempCategory] = useState(categoryParam);
   const [tempSubcategory, setTempSubcategory] = useState(subcategoryParam);
   const [tempSearchQuery, setTempSearchQuery] = useState(searchParam);
-  const [tempPriceRange, setTempPriceRange] = useState(4000);
+  const [tempPriceRange, setTempPriceRange] = useState(100000);
 
   // Özel Dropdown Arayüzü State'leri
   const [catDropdownOpen, setCatDropdownOpen] = useState(false);
@@ -73,28 +73,60 @@ export default function ProductsPage() {
     (c) => !c.label?.endsWith(" [GİZLİ]") && !c.name?.endsWith(" [GİZLİ]"),
   );
 
+  // Fiyat ayrıştırma (Türkçe format, sayı, string uyumlu)
+  const parsePrice = (priceVal) => {
+    if (typeof priceVal === 'number') return priceVal;
+    if (!priceVal) return 0;
+    const str = String(priceVal).trim();
+    let clean = str.replace(/[^0-9.,]/g, '');
+    if (clean.includes('.') && clean.includes(',')) {
+      clean = clean.replace(/\./g, '').replace(',', '.');
+    } else if (clean.includes('.')) {
+      if (/\.\d{3}$/.test(clean)) {
+        clean = clean.replace(/\./g, '');
+      }
+    } else if (clean.includes(',')) {
+      clean = clean.replace(',', '.');
+    }
+    const val = parseFloat(clean);
+    return isNaN(val) ? 0 : val;
+  };
+
+  // Slug dönüştürücü
+  const toSlug = (str) =>
+    String(str || "")
+      .toLowerCase()
+      .trim()
+      .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
+      .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+
   // Kategori Eşleştirme (Slug, ID, DatabaseId, İsim ve Alt Kategorileri kapsar)
   const isProductInCategory = (product, targetCat, catList) => {
     if (!targetCat || targetCat === "hepsi") {
       return !isCategorySecret(product.categoryId);
     }
     const targetStr = String(targetCat).toLowerCase().trim();
+    const targetSlug = toSlug(targetCat);
 
     const matchedCats = catList.filter((c) =>
       String(c.id).toLowerCase() === targetStr ||
       String(c.databaseId || "").toLowerCase() === targetStr ||
       String(c.slug || "").toLowerCase() === targetStr ||
       String(c.name || "").toLowerCase() === targetStr ||
-      String(c.label || "").toLowerCase() === targetStr
+      String(c.label || "").toLowerCase() === targetStr ||
+      toSlug(c.slug || c.name || c.label) === targetSlug
     );
 
-    const validKeys = new Set([targetStr]);
+    const validKeys = new Set([targetStr, targetSlug]);
     matchedCats.forEach((c) => {
       if (c.id) validKeys.add(String(c.id).toLowerCase());
       if (c.databaseId) validKeys.add(String(c.databaseId).toLowerCase());
       if (c.slug) validKeys.add(String(c.slug).toLowerCase());
       if (c.name) validKeys.add(String(c.name).toLowerCase());
       if (c.label) validKeys.add(String(c.label).toLowerCase());
+      validKeys.add(toSlug(c.slug || c.name || c.label));
 
       if (Array.isArray(c.children)) {
         c.children.forEach((sub) => {
@@ -103,6 +135,7 @@ export default function ProductsPage() {
           if (sub.slug) validKeys.add(String(sub.slug).toLowerCase());
           if (sub.name) validKeys.add(String(sub.name).toLowerCase());
           if (sub.label) validKeys.add(String(sub.label).toLowerCase());
+          validKeys.add(toSlug(sub.slug || sub.name || sub.label));
         });
       }
     });
@@ -116,21 +149,63 @@ export default function ProductsPage() {
       validKeys.has(pCatId) ||
       validKeys.has(pSubCatId) ||
       validKeys.has(pCatName) ||
-      validKeys.has(pSubCatName)
+      validKeys.has(pSubCatName) ||
+      validKeys.has(toSlug(pCatName)) ||
+      validKeys.has(toSlug(pSubCatName))
     );
+  };
+
+  // Alt Kategori Eşleştirme (Slug, ID, DatabaseId, İsim, Label esnek uyumlu)
+  const isProductInSubcategory = (product, targetSub) => {
+    if (!targetSub) return true;
+    const targetStr = String(targetSub).toLowerCase().trim();
+    const targetSlug = toSlug(targetSub);
+
+    const pSubCatId = String(product.subcategoryId || "").toLowerCase().trim();
+    const pSubCatName = String(product.subcategory || product.subCategory || "").toLowerCase().trim();
+    const pSubCatSlug = toSlug(product.subcategory || product.subCategory || product.subcategoryId);
+
+    if (pSubCatId === targetStr || pSubCatName === targetStr || pSubCatSlug === targetSlug) {
+      return true;
+    }
+
+    for (const cat of categories) {
+      if (Array.isArray(cat.children)) {
+        for (const sub of cat.children) {
+          const subKeys = new Set([
+            String(sub.id || "").toLowerCase(),
+            String(sub.databaseId || "").toLowerCase(),
+            String(sub.slug || "").toLowerCase(),
+            String(sub.name || "").toLowerCase(),
+            String(sub.label || "").toLowerCase(),
+            toSlug(sub.slug || sub.name || sub.label)
+          ]);
+
+          if (subKeys.has(targetStr) || subKeys.has(targetSlug)) {
+            if (
+              subKeys.has(pSubCatId) ||
+              subKeys.has(pSubCatName) ||
+              subKeys.has(pSubCatSlug)
+            ) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+
+    return false;
   };
 
   // Filtrelenmiş Ürünler (Aktif/Uygulanmış filtrelere göre listelenenler)
   const filteredProducts = products.filter((p) => {
-    // Sadece aktif olan ürünler listelenebilir
     if (p.isActive === false) return false;
 
     // Kategoriye göre filtrele
     const matchCategory = isProductInCategory(p, selectedCategory, categories);
 
     // Alt Kategoriye göre filtrele
-    const matchSubcategory =
-      !selectedSubcategory || p.subcategory === selectedSubcategory;
+    const matchSubcategory = isProductInSubcategory(p, selectedSubcategory);
 
     // Arama kelimesine göre filtrele
     const matchSearch = p.name
@@ -138,9 +213,7 @@ export default function ProductsPage() {
       .includes(searchQuery.toLowerCase());
 
     // Fiyata göre filtrele
-    const priceNum = parseFloat(
-      p.price.replace(/[^0-9.,]/g, "").replace(",", "."),
-    );
+    const priceNum = parsePrice(p.price);
     const matchPrice = isNaN(priceNum) || priceNum <= priceRange;
 
     return matchCategory && matchSubcategory && matchSearch && matchPrice;
@@ -151,14 +224,11 @@ export default function ProductsPage() {
     if (p.isActive === false) return false;
 
     const matchCategory = isProductInCategory(p, tempCategory, categories);
-    const matchSubcategory =
-      !tempSubcategory || p.subcategory === tempSubcategory;
+    const matchSubcategory = isProductInSubcategory(p, tempSubcategory);
     const matchSearch = p.name
       .toLowerCase()
       .includes(tempSearchQuery.toLowerCase());
-    const priceNum = parseFloat(
-      p.price.replace(/[^0-9.,]/g, "").replace(",", "."),
-    );
+    const priceNum = parsePrice(p.price);
     const matchPrice = isNaN(priceNum) || priceNum <= tempPriceRange;
 
     return matchCategory && matchSubcategory && matchSearch && matchPrice;
@@ -398,7 +468,7 @@ export default function ProductsPage() {
                   <span>
                     {tempCategory === "hepsi"
                       ? `Tüm Kategoriler (${products.filter((p) => p.isActive !== false && !isCategorySecret(p.categoryId)).length})`
-                      : `${(categories.find((c) => c.id === tempCategory)?.label || "").replace(" [GİZLİ]", "")} (${products.filter((p) => p.categoryId === tempCategory && p.isActive !== false).length})`}
+                      : `${(categories.find((c) => c.id === tempCategory)?.label || "").replace(" [GİZLİ]", "")} (${products.filter((p) => p.isActive !== false && isProductInCategory(p, tempCategory, categories)).length})`}
                   </span>
                   <FiChevronDown
                     className={`${styles.triggerChevron} ${catDropdownOpen ? styles.chevronRotated : ""}`}
@@ -440,7 +510,7 @@ export default function ProductsPage() {
                           {
                             products.filter(
                               (p) =>
-                                p.categoryId === cat.id && p.isActive !== false,
+                                p.isActive !== false && isProductInCategory(p, cat.id, categories),
                             ).length
                           }
                           )
@@ -536,7 +606,7 @@ export default function ProductsPage() {
                                   Tüm Alt Kategoriler (
                                   {
                                     products.filter(
-                                      (p) => p.categoryId === tempCategory,
+                                      (p) => p.isActive !== false && isProductInCategory(p, tempCategory, categories),
                                     ).length
                                   }
                                   )
@@ -569,8 +639,9 @@ export default function ProductsPage() {
                                         {
                                           products.filter(
                                             (p) =>
-                                              p.categoryId === tempCategory &&
-                                              p.subcategory === sub.label,
+                                              p.isActive !== false &&
+                                              isProductInCategory(p, tempCategory, categories) &&
+                                              isProductInSubcategory(p, sub.label || sub.name || sub.id),
                                           ).length
                                         }
                                         )
