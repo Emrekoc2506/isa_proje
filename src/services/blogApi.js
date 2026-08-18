@@ -23,15 +23,15 @@ function normalizeDates(item) {
     }
   }
 
-  // Raw status parsing (Enum 1 = Published, 0 = Draft, 2 = Archived or string/boolean)
+  // Raw status parsing (Enum 1 = Published, 0 = Draft, 2 = Archived)
   const s = item.status;
   let statusStr = 'Draft';
-  if (s === 'Published' || s === 'published' || s === 1 || s === '1' || item.isActive === true) {
-    statusStr = 'Published';
+  if (s === 'Draft' || s === 'draft' || s === 0 || s === '0' || item.isActive === false) {
+    statusStr = 'Draft';
   } else if (s === 'Archived' || s === 'archived' || s === 2 || s === '2') {
     statusStr = 'Archived';
-  } else if (s === 'Draft' || s === 'draft' || s === 0 || s === '0') {
-    statusStr = 'Draft';
+  } else if (s === 'Published' || s === 'published' || s === 1 || s === '1' || item.isActive === true) {
+    statusStr = 'Published';
   }
 
   return {
@@ -69,7 +69,11 @@ export async function getBlogArticles(params = {}) {
   const query = new URLSearchParams({ page, pageSize, ...rest }).toString();
   try {
     const res = await request(`/blog?${query}`, { method: 'GET' });
-    return extractItems(res);
+    const parsed = extractItems(res);
+    return {
+      ...parsed,
+      items: parsed.items.filter(item => item.status === 'Published')
+    };
   } catch {
     return { items: [], totalCount: 0, page, pageSize };
   }
@@ -186,18 +190,29 @@ export function deleteAdminBlogArticle(id) {
  * status: "Published" | "Draft" | "Archived"
  */
 export async function updateAdminBlogArticleStatus(id, status, fullArticle = null) {
-  // isActive boolean gelirse dönüştür
-  const statusValue = typeof status === 'boolean'
-    ? (status ? 'Published' : 'Draft')
-    : status;
+  const isDraft = status === 'Draft' || status === 0 || status === '0' || status === false;
+  const statusString = isDraft ? 'Draft' : 'Published';
+  const statusInt = isDraft ? 0 : 1;
+  const isActiveBool = !isDraft;
+
+  const statusPayload = {
+    status: statusString,
+    statusValue: statusInt,
+    isActive: isActiveBool,
+    publishedAt: isDraft ? null : new Date().toISOString(),
+  };
+
   try {
     return await request(`/admin/blog/${id}/status`, {
       method: 'POST',
-      body: JSON.stringify({ status: statusValue, isActive: statusValue === 'Published' }),
+      body: JSON.stringify(statusPayload),
     });
   } catch (err) {
     if (fullArticle) {
-      return await updateAdminBlogArticle(id, { ...fullArticle, status: statusValue, isActive: statusValue === 'Published' });
+      return await updateAdminBlogArticle(id, {
+        ...fullArticle,
+        ...statusPayload
+      });
     }
     throw err;
   }
@@ -283,12 +298,11 @@ function buildBlogPayload(payload) {
     summary,
     content,
     blogCategoryId,
-    category,          // legacy fallback
     coverImageUrl,
     coverImageObjectKey,
     coverImageAltText,
     status,
-    isActive,          // legacy → status dönüşümü
+    isActive,
     publishedAt,
     seoTitle,
     seoDescription,
@@ -296,11 +310,12 @@ function buildBlogPayload(payload) {
     contentImages,
   } = payload;
 
-  // Durum belirleme: önce status, yoksa isActive
-  let resolvedStatus = status;
-  if (!resolvedStatus) {
-    resolvedStatus = (isActive === false) ? 'Draft' : 'Published';
-  }
+  const isDraft = status === 'Draft' || status === 0 || status === '0' || isActive === false;
+  const isArchived = status === 'Archived' || status === 2 || status === '2';
+
+  const statusString = isDraft ? 'Draft' : (isArchived ? 'Archived' : 'Published');
+  const statusInt = isDraft ? 0 : (isArchived ? 2 : 1);
+  const isActiveBool = !isDraft && !isArchived;
 
   // Slug üret (backend de üretir ama gönderiyoruz)
   const resolvedSlug = slug ||
@@ -315,7 +330,7 @@ function buildBlogPayload(payload) {
   const resolvedCategoryId = isGuid ? blogCategoryId : null;
 
   // Yayın tarihi — Yayında ise ve tarih yoksa şu anki ISO tarihini ver
-  const resolvedPublishedAt = publishedAt || (resolvedStatus === 'Published' ? new Date().toISOString() : null);
+  const resolvedPublishedAt = isActiveBool ? (publishedAt || new Date().toISOString()) : null;
 
   return {
     title:                  title || '',
@@ -326,7 +341,9 @@ function buildBlogPayload(payload) {
     coverImageUrl:          coverImageUrl || null,
     coverImageObjectKey:    coverImageObjectKey || null,
     coverImageAltText:      coverImageAltText || null,
-    status:                 resolvedStatus,
+    status:                 statusString,
+    statusValue:            statusInt,
+    isActive:               isActiveBool,
     publishedAt:            resolvedPublishedAt,
     seoTitle:               seoTitle || null,
     seoDescription:         seoDescription || null,
