@@ -38,6 +38,15 @@ export function addRecentlyViewed(product) {
   }
 }
 
+export function removeRecentlyViewed(productId) {
+  if (!productId || typeof window === "undefined") return;
+  try {
+    const list = getRecentlyViewed();
+    const filtered = list.filter(item => item.id !== productId && item.databaseId !== productId && item.slug !== productId);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+  } catch (e) {}
+}
+
 export function clearRecentlyViewed() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(STORAGE_KEY);
