@@ -69,14 +69,20 @@ export default function ProductDetailPage() {
     async function fetchDetail() {
       try {
         setLoadingDetail(true);
-        // id Guid mi kontrol et
         const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
         let detailData = null;
-        
-        if (isGuid) {
-          detailData = await getProductById(id).catch(() => null);
-        } else {
-          detailData = await getProductBySlug(id).catch(() => null);
+        let isNotFound = false;
+
+        try {
+          if (isGuid) {
+            detailData = await getProductById(id);
+          } else {
+            detailData = await getProductBySlug(id);
+          }
+        } catch (err) {
+          if (err.status === 404 || err.code === 'not_found' || String(err.message).includes('404')) {
+            isNotFound = true;
+          }
         }
 
         if (detailData) {
@@ -84,14 +90,14 @@ export default function ProductDetailPage() {
           addRecentlyViewed(detailData);
           const reviewsData = await getProductReviews(detailData.id).catch(() => []);
           setReviews(reviewsData || []);
-        } else if (product) {
+        } else if (!isNotFound && product) {
           setProductDetail(product);
+        } else {
+          setProductDetail(null);
         }
       } catch (err) {
         console.error("Detay yükleme hatası:", err);
-        if (product) {
-          setProductDetail(product);
-        }
+        setProductDetail(null);
       } finally {
         setLoadingDetail(false);
       }
