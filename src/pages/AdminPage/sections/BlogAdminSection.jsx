@@ -258,7 +258,7 @@ export default function BlogAdminSection() {
     setArticles(prev => prev.map(a => a.id === art.id ? { ...a, status: newStatus, isActive: newStatus === 'Published' } : a));
 
     try {
-      await updateAdminBlogArticleStatus(art.id, newStatus);
+      await updateAdminBlogArticleStatus(art.id, newStatus, art);
       await loadArticles();
     } catch (err) {
       setError(resolveErrorMsg(err));

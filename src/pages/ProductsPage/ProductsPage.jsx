@@ -73,16 +73,60 @@ export default function ProductsPage() {
     (c) => !c.label?.endsWith(" [GİZLİ]") && !c.name?.endsWith(" [GİZLİ]"),
   );
 
+  // Kategori Eşleştirme (Slug, ID, DatabaseId, İsim ve Alt Kategorileri kapsar)
+  const isProductInCategory = (product, targetCat, catList) => {
+    if (!targetCat || targetCat === "hepsi") {
+      return !isCategorySecret(product.categoryId);
+    }
+    const targetStr = String(targetCat).toLowerCase().trim();
+
+    const matchedCats = catList.filter((c) =>
+      String(c.id).toLowerCase() === targetStr ||
+      String(c.databaseId || "").toLowerCase() === targetStr ||
+      String(c.slug || "").toLowerCase() === targetStr ||
+      String(c.name || "").toLowerCase() === targetStr ||
+      String(c.label || "").toLowerCase() === targetStr
+    );
+
+    const validKeys = new Set([targetStr]);
+    matchedCats.forEach((c) => {
+      if (c.id) validKeys.add(String(c.id).toLowerCase());
+      if (c.databaseId) validKeys.add(String(c.databaseId).toLowerCase());
+      if (c.slug) validKeys.add(String(c.slug).toLowerCase());
+      if (c.name) validKeys.add(String(c.name).toLowerCase());
+      if (c.label) validKeys.add(String(c.label).toLowerCase());
+
+      if (Array.isArray(c.children)) {
+        c.children.forEach((sub) => {
+          if (sub.id) validKeys.add(String(sub.id).toLowerCase());
+          if (sub.databaseId) validKeys.add(String(sub.databaseId).toLowerCase());
+          if (sub.slug) validKeys.add(String(sub.slug).toLowerCase());
+          if (sub.name) validKeys.add(String(sub.name).toLowerCase());
+          if (sub.label) validKeys.add(String(sub.label).toLowerCase());
+        });
+      }
+    });
+
+    const pCatId = String(product.categoryId || "").toLowerCase();
+    const pSubCatId = String(product.subcategoryId || "").toLowerCase();
+    const pCatName = String(product.categoryName || product.category || "").toLowerCase();
+    const pSubCatName = String(product.subcategory || product.subCategory || "").toLowerCase();
+
+    return (
+      validKeys.has(pCatId) ||
+      validKeys.has(pSubCatId) ||
+      validKeys.has(pCatName) ||
+      validKeys.has(pSubCatName)
+    );
+  };
+
   // Filtrelenmiş Ürünler (Aktif/Uygulanmış filtrelere göre listelenenler)
   const filteredProducts = products.filter((p) => {
     // Sadece aktif olan ürünler listelenebilir
     if (p.isActive === false) return false;
 
-    // Kategoriye göre filtrele (Gizli kategoriye ait ürünler hepsi listesinde görünmez)
-    const matchCategory =
-      selectedCategory === "hepsi"
-        ? !isCategorySecret(p.categoryId)
-        : p.categoryId === selectedCategory;
+    // Kategoriye göre filtrele
+    const matchCategory = isProductInCategory(p, selectedCategory, categories);
 
     // Alt Kategoriye göre filtrele
     const matchSubcategory =
@@ -106,10 +150,7 @@ export default function ProductsPage() {
   const tempFilteredCount = products.filter((p) => {
     if (p.isActive === false) return false;
 
-    const matchCategory =
-      tempCategory === "hepsi"
-        ? !isCategorySecret(p.categoryId)
-        : p.categoryId === tempCategory;
+    const matchCategory = isProductInCategory(p, tempCategory, categories);
     const matchSubcategory =
       !tempSubcategory || p.subcategory === tempSubcategory;
     const matchSearch = p.name

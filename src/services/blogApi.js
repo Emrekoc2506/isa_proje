@@ -185,15 +185,22 @@ export function deleteAdminBlogArticle(id) {
  * Admin — Makale durumu değiştir (POST /{id}/status)
  * status: "Published" | "Draft" | "Archived"
  */
-export function updateAdminBlogArticleStatus(id, status) {
+export async function updateAdminBlogArticleStatus(id, status, fullArticle = null) {
   // isActive boolean gelirse dönüştür
   const statusValue = typeof status === 'boolean'
     ? (status ? 'Published' : 'Draft')
     : status;
-  return request(`/admin/blog/${id}/status`, {
-    method: 'POST',
-    body: JSON.stringify({ status: statusValue }),
-  });
+  try {
+    return await request(`/admin/blog/${id}/status`, {
+      method: 'POST',
+      body: JSON.stringify({ status: statusValue, isActive: statusValue === 'Published' }),
+    });
+  } catch (err) {
+    if (fullArticle) {
+      return await updateAdminBlogArticle(id, { ...fullArticle, status: statusValue, isActive: statusValue === 'Published' });
+    }
+    throw err;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────

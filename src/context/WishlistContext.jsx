@@ -37,9 +37,14 @@ export function WishlistProvider({ children }) {
         let localIds = prepareWishlistProductIds(localStored);
 
         if (localIds.length > 0) {
-          const productsData = await getProducts({ pageSize: 100 }).catch(() => ({ items: [] }));
-          const catalogData = productsData?.items || [];
-          const allCatalog = [...catalogData, ...newsProducts, ...saleProducts];
+          let cachedProducts = [];
+          try {
+            const raw = sessionStorage.getItem("muhristan_cached_products");
+            cachedProducts = raw ? JSON.parse(raw) : [];
+          } catch {
+            cachedProducts = [];
+          }
+          const allCatalog = [...cachedProducts, ...newsProducts, ...saleProducts];
 
           const mapped = localIds.map(id => {
             const foundInCatalog = allCatalog.find(p => String(p.id) === String(id) || String(p.productId) === String(id));
