@@ -124,7 +124,7 @@ export default function ProductReviews({ productId }) {
 
       {/* Action Bar */}
       <div className={styles.actionHeader}>
-        <h4 style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a" }}>Değerlendirmeler</h4>
+        <h4 style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--text-primary)" }}>Değerlendirmeler</h4>
         {!showForm && (
           <button className={styles.writeBtn} onClick={() => setShowForm(true)}>
             <FiEdit3 /> Yorum Yap
