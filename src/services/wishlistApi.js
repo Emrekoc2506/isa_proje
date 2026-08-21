@@ -12,10 +12,16 @@ export function addWishlistItem(productId) {
   });
 }
 
-export function removeWishlistItem(productId) {
-  return request(`/wishlist/${productId}`, {
-    method: "DELETE"
-  });
+export async function removeWishlistItem(productId) {
+  try {
+    return await request(`/wishlist/${productId}`, { method: "DELETE" });
+  } catch (e) {
+    try {
+      return await request(`/wishlist/${productId}`, { method: "PUT" });
+    } catch (e2) {
+      return await request(`/wishlist/${productId}/delete`, { method: "POST", body: JSON.stringify({ confirm: true }) });
+    }
+  }
 }
 
 export function mergeWishlist(productIds) {

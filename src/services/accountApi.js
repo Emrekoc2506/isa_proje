@@ -57,10 +57,16 @@ export function updateAddress(id, payload) {
   });
 }
 
-export function deleteAddress(id) {
-  return request(`/account/addresses/${id}`, {
-    method: "DELETE"
-  });
+export async function deleteAddress(id) {
+  try {
+    return await request(`/account/addresses/${id}`, { method: "DELETE" });
+  } catch (e) {
+    try {
+      return await request(`/account/addresses/${id}`, { method: "PUT" });
+    } catch (e2) {
+      return await request(`/account/addresses/${id}/delete`, { method: "POST", body: JSON.stringify({ confirm: true }) });
+    }
+  }
 }
 
 export function setDefaultShipping(id) {
