@@ -1,45 +1,8 @@
 import { request } from "./apiClient";
 import { safeGetJson, safeSetJson } from "../utils/storage";
 
-// Mock reviews fallback when backend does not return data yet
-const MOCK_REVIEWS = [
-  {
-    id: "rev-1",
-    productId: "p1",
-    userName: "Ayşe Y.",
-    rating: 5,
-    isVerified: true,
-    isApproved: true,
-    status: "approved",
-    title: "Harika kalitede bir ürün",
-    comment: "Çok zarif ve şık duruyor. Paketlemesi de çok özenliydi, kesinlikle tavsiye ederim!",
-    createdAt: "2026-07-15T10:30:00Z"
-  },
-  {
-    id: "rev-2",
-    productId: "p1",
-    userName: "Mehmet K.",
-    rating: 4,
-    isVerified: true,
-    isApproved: true,
-    status: "approved",
-    title: "Beklediğim gibi geldi",
-    comment: "Ürün görseldeki ile birebir aynı. Kargo 2 gün içinde teslim edildi.",
-    createdAt: "2026-07-10T14:20:00Z"
-  },
-  {
-    id: "rev-3",
-    productId: "p2",
-    userName: "Selin B.",
-    rating: 5,
-    isVerified: true,
-    isApproved: true,
-    status: "approved",
-    title: "Çok şık ve modern",
-    comment: "Fiyat performans açısından mükemmel bir alışveriş oldu. Teşekkürler!",
-    createdAt: "2026-07-18T09:15:00Z"
-  }
-];
+// Mock reviews fallback array (cleared of dummy data)
+const MOCK_REVIEWS = [];
 
 export async function getReviewsByProduct(productId) {
   try {

@@ -160,7 +160,7 @@ export default function ReviewsSection() {
                   </td>
                   <td>
                     <div style={{ maxWidth: 300 }}>
-                      {r.title && <div style={{ fontWeight: 600, color: '#fff', fontSize: 13, marginBottom: 2 }}>{r.title}</div>}
+                      {r.title && <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13, marginBottom: 2 }}>{r.title}</div>}
                       <div style={{ color: 'var(--text-muted)', fontSize: 12, lineHeight: 1.5 }}>{r.comment || r.body || '—'}</div>
                     </div>
                   </td>
