@@ -38,39 +38,52 @@ const MOCK_REVIEWS = [
 export async function getReviewsByProduct(productId) {
   try {
     const res = await request(`/products/${productId}/reviews`, { method: "GET" });
-    if (res && Array.isArray(res)) return res;
-    if (res && Array.isArray(res.items)) return res.items;
+    if (res && Array.isArray(res) && res.length > 0) return res;
+    if (res && Array.isArray(res.items) && res.items.length > 0) return res.items;
   } catch (e) {
     // Fallback to local storage or mock data if server endpoint returns error
   }
 
   const storedKey = `isa_reviews_${productId}`;
   const localList = safeGetJson(storedKey, []);
-  const defaultList = MOCK_REVIEWS.filter(r => r.productId === productId);
-  
-  return [...localList, ...defaultList];
+  const adminList = safeGetJson("isa_admin_all_reviews", []).filter(r => String(r.productId) === String(productId));
+  const defaultList = MOCK_REVIEWS.filter(r => String(r.productId) === String(productId));
+
+  const combined = [...localList, ...adminList, ...defaultList];
+  const uniqueMap = new Map();
+  combined.forEach(item => {
+    if (item && item.id && !uniqueMap.has(item.id)) {
+      uniqueMap.set(item.id, item);
+    }
+  });
+
+  return Array.from(uniqueMap.values());
 }
 
 export async function addReview(productId, reviewData) {
+  let created = null;
   try {
     const res = await request(`/products/${productId}/reviews`, {
       method: "POST",
       body: JSON.stringify(reviewData)
     });
-    if (res) return res;
+    if (res && res.id) created = res;
   } catch (e) {
     // Fallback local save
   }
 
-  const newReview = {
+  const newReview = created || {
     id: `rev-local-${Date.now()}`,
     productId,
+    productName: reviewData.productName || "Ürün",
     userName: reviewData.userName || "Kullanıcı",
     rating: reviewData.rating || 5,
     isVerified: true,
     title: reviewData.title || "",
-    comment: reviewData.comment || "",
-    createdAt: new Date().toISOString()
+    comment: reviewData.comment || reviewData.body || "",
+    createdAt: new Date().toISOString(),
+    status: 'pending',
+    isApproved: false
   };
 
   const storedKey = `isa_reviews_${productId}`;
@@ -78,23 +91,61 @@ export async function addReview(productId, reviewData) {
   localList.unshift(newReview);
   safeSetJson(storedKey, localList);
 
+  const adminKey = "isa_admin_all_reviews";
+  const adminList = safeGetJson(adminKey, []);
+  adminList.unshift(newReview);
+  safeSetJson(adminKey, adminList);
+
   return newReview;
 }
 
 /* ── Admin Review Moderation ──────────────────────────── */
 
-export function getPendingReviews() {
-  return request("/admin/reviews/pending");
+export async function getPendingReviews() {
+  try {
+    const res = await request("/admin/reviews/pending");
+    if (res && Array.isArray(res) && res.length > 0) return res;
+    if (res && Array.isArray(res.items) && res.items.length > 0) return res.items;
+  } catch (e) {
+    // Fallback
+  }
+
+  const adminList = safeGetJson("isa_admin_all_reviews", []);
+  return adminList;
 }
 
-export function approveReview(id) {
-  return request(`/admin/reviews/${id}/approve`, { method: "PUT" });
+export async function approveReview(id) {
+  try {
+    await request(`/admin/reviews/${id}/approve`, { method: "PUT" });
+  } catch (e) {}
+
+  const adminKey = "isa_admin_all_reviews";
+  const list = safeGetJson(adminKey, []);
+  const updated = list.map(r => r.id === id ? { ...r, isApproved: true, status: 'approved' } : r);
+  safeSetJson(adminKey, updated);
+  return { success: true };
 }
 
-export function rejectReview(id) {
-  return request(`/admin/reviews/${id}/reject`, { method: "PUT" });
+export async function rejectReview(id) {
+  try {
+    await request(`/admin/reviews/${id}/reject`, { method: "PUT" });
+  } catch (e) {}
+
+  const adminKey = "isa_admin_all_reviews";
+  const list = safeGetJson(adminKey, []);
+  const updated = list.map(r => r.id === id ? { ...r, isApproved: false, status: 'rejected' } : r);
+  safeSetJson(adminKey, updated);
+  return { success: true };
 }
 
-export function deleteAdminReview(id) {
-  return request(`/admin/reviews/${id}`, { method: "DELETE" });
+export async function deleteAdminReview(id) {
+  try {
+    await request(`/admin/reviews/${id}`, { method: "DELETE" });
+  } catch (e) {}
+
+  const adminKey = "isa_admin_all_reviews";
+  const list = safeGetJson(adminKey, []);
+  const updated = list.filter(r => r.id !== id);
+  safeSetJson(adminKey, updated);
+  return { success: true };
 }
