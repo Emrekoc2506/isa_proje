@@ -58,8 +58,8 @@ export default function HomePage() {
   return (
     <main id="main-content" className={styles.main}>
       <SEO 
-        title="Muhristan | Tılsımlı Takılar, Vefk ve Spiritüel Çalışmalar"
-        description="Muhristan ile özel tasarım tılsımlı takılar, vefk çalışmaları, gümüş kolyeler ve spiritüel ürünleri keşfedin. Güvenli alışveriş ve hızlı kargo fırsatıyla."
+        title="Muhristan | Takı Esans Dünyası"
+        description="Muhristan'da en kaliteli takı ve esansları bulun, ruhunuzu keşfedin."
         canonical="https://muhristan.com/"
         jsonLd={[orgSchema, websiteSchema]}
       />
