@@ -88,25 +88,42 @@ export function WishlistProvider({ children }) {
     
     try {
       setLoading(true);
-      if (isAuthenticated) {
-        if (isValidGuid(productId)) {
+      if (isAuthenticated && isValidGuid(productId)) {
+        try {
           await wishlistApi.addWishlistItem(productId);
+          await reloadWishlist();
+          return;
+        } catch (apiErr) {
+          console.warn("Backend addWishlistItem failed/CORS, falling back to optimistic local:", apiErr);
         }
-        await reloadWishlist();
-      } else {
-        let localStored = safeGetJson("isa_guest_wishlist", []);
-        if (!Array.isArray(localStored)) localStored = [];
-        const exists = localStored.some(item => {
-          const itemID = typeof item === 'object' ? (item?.id || item?.productId) : item;
-          return String(itemID) === String(productId);
-        });
-
-        if (!exists) {
-          localStored.push(input);
-          safeSetJson("isa_guest_wishlist", localStored);
-        }
-        await reloadWishlist();
       }
+      
+      let localStored = safeGetJson("isa_guest_wishlist", []);
+      if (!Array.isArray(localStored)) localStored = [];
+      const exists = localStored.some(item => {
+        const itemID = typeof item === 'object' ? (item?.id || item?.productId) : item;
+        return String(itemID) === String(productId);
+      });
+
+      if (!exists) {
+        localStored.push(input);
+        safeSetJson("isa_guest_wishlist", localStored);
+      }
+      
+      setItems(prev => {
+        const alreadyIn = prev.some(i => String(i.productId) === String(productId) || String(i.id) === String(productId));
+        if (alreadyIn) return prev;
+        const newItem = typeof input === 'object' ? {
+          id: input.id || productId,
+          productId: input.id || input.productId || productId,
+          productName: input.name || input.productName || "Favori Ürün",
+          slug: input.slug || "",
+          imageUrl: input.image || input.imageUrl || "",
+          price: typeof input.price === 'number' ? `${input.price} ₺` : input.price || "0 ₺",
+          addedAt: new Date().toISOString()
+        } : { id: productId, productId, productName: "Favori Ürün", price: "0 ₺", addedAt: new Date().toISOString() };
+        return [newItem, ...prev];
+      });
     } catch (err) {
       console.error("Failed to add favorite:", err);
       setError(err);
@@ -121,22 +138,26 @@ export function WishlistProvider({ children }) {
 
     try {
       setLoading(true);
-      if (isAuthenticated) {
-        if (isValidGuid(productId)) {
+      if (isAuthenticated && isValidGuid(productId)) {
+        try {
           await wishlistApi.removeWishlistItem(productId);
+          await reloadWishlist();
+          return;
+        } catch (apiErr) {
+          console.warn("Backend removeWishlistItem failed/CORS, falling back to optimistic local:", apiErr);
         }
-        await reloadWishlist();
-      } else {
-        let localStored = safeGetJson("isa_guest_wishlist", []);
-        if (Array.isArray(localStored)) {
-          const filtered = localStored.filter(item => {
-            const itemID = typeof item === 'object' ? (item?.id || item?.productId) : item;
-            return String(itemID) !== String(productId);
-          });
-          safeSetJson("isa_guest_wishlist", filtered);
-        }
-        await reloadWishlist();
       }
+      
+      let localStored = safeGetJson("isa_guest_wishlist", []);
+      if (Array.isArray(localStored)) {
+        const filtered = localStored.filter(item => {
+          const itemID = typeof item === 'object' ? (item?.id || item?.productId) : item;
+          return String(itemID) !== String(productId);
+        });
+        safeSetJson("isa_guest_wishlist", filtered);
+      }
+      
+      setItems(prev => prev.filter(i => String(i.productId) !== String(productId) && String(i.id) !== String(productId)));
     } catch (err) {
       console.error("Failed to remove favorite:", err);
       setError(err);

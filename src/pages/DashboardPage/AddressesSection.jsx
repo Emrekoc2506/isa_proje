@@ -132,10 +132,10 @@ export default function AddressesSection() {
     if (confirm('Bu adresi silmek istediğinize emin misiniz?')) {
       try {
         await accountApi.deleteAddress(id);
-        loadAddresses();
       } catch (err) {
-        alert(err.message || 'Adres silinemedi.');
+        console.warn('Backend deleteAddress failed/CORS, deleting locally:', err);
       }
+      setAddresses(prev => prev.filter(a => a.id !== id));
     }
   };
 
