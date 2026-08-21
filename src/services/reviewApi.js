@@ -9,6 +9,8 @@ const MOCK_REVIEWS = [
     userName: "Ayşe Y.",
     rating: 5,
     isVerified: true,
+    isApproved: true,
+    status: "approved",
     title: "Harika kalitede bir ürün",
     comment: "Çok zarif ve şık duruyor. Paketlemesi de çok özenliydi, kesinlikle tavsiye ederim!",
     createdAt: "2026-07-15T10:30:00Z"
@@ -19,6 +21,8 @@ const MOCK_REVIEWS = [
     userName: "Mehmet K.",
     rating: 4,
     isVerified: true,
+    isApproved: true,
+    status: "approved",
     title: "Beklediğim gibi geldi",
     comment: "Ürün görseldeki ile birebir aynı. Kargo 2 gün içinde teslim edildi.",
     createdAt: "2026-07-10T14:20:00Z"
@@ -29,6 +33,8 @@ const MOCK_REVIEWS = [
     userName: "Selin B.",
     rating: 5,
     isVerified: true,
+    isApproved: true,
+    status: "approved",
     title: "Çok şık ve modern",
     comment: "Fiyat performans açısından mükemmel bir alışveriş oldu. Teşekkürler!",
     createdAt: "2026-07-18T09:15:00Z"
@@ -41,7 +47,7 @@ export async function getReviewsByProduct(productId) {
     if (res && Array.isArray(res) && res.length > 0) return res;
     if (res && Array.isArray(res.items) && res.items.length > 0) return res.items;
   } catch (e) {
-    // Fallback to local storage or mock data if server endpoint returns error
+    // Fallback
   }
 
   const storedKey = `isa_reviews_${productId}`;
@@ -78,12 +84,12 @@ export async function addReview(productId, reviewData) {
     productName: reviewData.productName || "Ürün",
     userName: reviewData.userName || "Kullanıcı",
     rating: reviewData.rating || 5,
-    isVerified: true,
+    isVerified: false,
+    isApproved: false,
     title: reviewData.title || "",
     comment: reviewData.comment || reviewData.body || "",
     createdAt: new Date().toISOString(),
-    status: 'pending',
-    isApproved: false
+    status: 'pending'
   };
 
   const storedKey = `isa_reviews_${productId}`;
@@ -93,8 +99,11 @@ export async function addReview(productId, reviewData) {
 
   const adminKey = "isa_admin_all_reviews";
   const adminList = safeGetJson(adminKey, []);
-  adminList.unshift(newReview);
-  safeSetJson(adminKey, adminList);
+  const existsInAdmin = adminList.some(r => r.id === newReview.id);
+  if (!existsInAdmin) {
+    adminList.unshift(newReview);
+    safeSetJson(adminKey, adminList);
+  }
 
   return newReview;
 }
@@ -110,7 +119,11 @@ export async function getPendingReviews() {
     // Fallback
   }
 
-  const adminList = safeGetJson("isa_admin_all_reviews", []);
+  let adminList = safeGetJson("isa_admin_all_reviews", []);
+  if (!Array.isArray(adminList) || adminList.length === 0) {
+    adminList = [...MOCK_REVIEWS];
+    safeSetJson("isa_admin_all_reviews", adminList);
+  }
   return adminList;
 }
 
@@ -121,8 +134,23 @@ export async function approveReview(id) {
 
   const adminKey = "isa_admin_all_reviews";
   const list = safeGetJson(adminKey, []);
-  const updated = list.map(r => r.id === id ? { ...r, isApproved: true, status: 'approved' } : r);
+  let targetProdId = null;
+  const updated = list.map(r => {
+    if (r.id === id) {
+      targetProdId = r.productId;
+      return { ...r, isApproved: true, isVerified: true, status: 'approved' };
+    }
+    return r;
+  });
   safeSetJson(adminKey, updated);
+
+  if (targetProdId) {
+    const pKey = `isa_reviews_${targetProdId}`;
+    const pList = safeGetJson(pKey, []);
+    const pUpdated = pList.map(r => r.id === id ? { ...r, isApproved: true, isVerified: true, status: 'approved' } : r);
+    safeSetJson(pKey, pUpdated);
+  }
+
   return { success: true };
 }
 
@@ -133,19 +161,50 @@ export async function rejectReview(id) {
 
   const adminKey = "isa_admin_all_reviews";
   const list = safeGetJson(adminKey, []);
-  const updated = list.map(r => r.id === id ? { ...r, isApproved: false, status: 'rejected' } : r);
+  let targetProdId = null;
+  const updated = list.map(r => {
+    if (r.id === id) {
+      targetProdId = r.productId;
+      return { ...r, isApproved: false, isVerified: false, status: 'rejected' };
+    }
+    return r;
+  });
   safeSetJson(adminKey, updated);
+
+  if (targetProdId) {
+    const pKey = `isa_reviews_${targetProdId}`;
+    const pList = safeGetJson(pKey, []);
+    const pUpdated = pList.map(r => r.id === id ? { ...r, isApproved: false, isVerified: false, status: 'rejected' } : r);
+    safeSetJson(pKey, pUpdated);
+  }
+
   return { success: true };
 }
 
 export async function deleteAdminReview(id) {
   try {
     await request(`/admin/reviews/${id}`, { method: "DELETE" });
-  } catch (e) {}
+  } catch (e) {
+    try {
+      await request(`/admin/reviews/${id}`, { method: "PUT" });
+    } catch (e2) {}
+  }
 
   const adminKey = "isa_admin_all_reviews";
   const list = safeGetJson(adminKey, []);
-  const updated = list.filter(r => r.id !== id);
+  let targetProdId = null;
+  const updated = list.filter(r => {
+    if (r.id === id) targetProdId = r.productId;
+    return r.id !== id;
+  });
   safeSetJson(adminKey, updated);
+
+  if (targetProdId) {
+    const pKey = `isa_reviews_${targetProdId}`;
+    const pList = safeGetJson(pKey, []);
+    const pUpdated = pList.filter(r => r.id !== id);
+    safeSetJson(pKey, pUpdated);
+  }
+
   return { success: true };
 }

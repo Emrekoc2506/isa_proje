@@ -226,7 +226,7 @@ export default function ProductReviews({ productId }) {
                   <div>
                     <div className={styles.userNameRow}>
                       <span className={styles.userName}>{rev.userName || "Kullanıcı"}</span>
-                      {rev.isVerified && (
+                      {(rev.isApproved || rev.status === 'approved') && (
                         <span className={styles.verifiedBadge}>
                           <FiCheckCircle size={12} /> Onaylı Alıcı
                         </span>
