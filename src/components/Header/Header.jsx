@@ -18,6 +18,7 @@ import CategoryNav from "../CategoryNav/CategoryNav";
 import CartDrawer from "../CartDrawer/CartDrawer";
 import NotificationDropdown from "../NotificationDropdown/NotificationDropdown";
 import ThemeToggle from "../ThemeToggle";
+import BottomNav from "../BottomNav/BottomNav";
 import logoImage from "../../assets/images/logo-2.png";
 import { useCart } from "../../context/CartContext";
 import { useNotifications } from "../../context/NotificationContext";
@@ -322,6 +323,9 @@ export default function Header() {
 
       {/* ── Sepet Çekmecesi ─────────────────────────────────── */}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+
+      {/* ── Mobil Bottom Navigation Bar ────────────────────── */}
+      <BottomNav onMenuClick={() => setMobileMenuOpen((v) => !v)} />
     </>
   );
 }
