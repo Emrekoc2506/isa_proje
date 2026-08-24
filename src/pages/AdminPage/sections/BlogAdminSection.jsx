@@ -272,7 +272,7 @@ export default function BlogAdminSection() {
   return (
     <div style={{ padding: '24px', color: 'var(--text-light)' }}>
       {/* Başlık */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--gold-light)', margin: 0 }}>Blog Yönetimi</h2>
           {!loading && (

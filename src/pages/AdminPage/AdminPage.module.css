@@ -2684,5 +2684,128 @@
   background: rgba(0,0,0,0.06);
 }
 
+/* ============================================================
+   KAPSAMLI MOBİL & TABLET EKRAN DÜZELTMELERİ (RESPONSIVE FIX)
+   ============================================================ */
+
+/* 991px ve altı: Tablet / Mobil */
+@media (max-width: 991px) {
+  .page {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Sidebar gizli/açık geçişleri */
+  .sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    width: 280px !important;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+  }
+
+  .sidebarMobileOpen {
+    transform: translateX(0) !important;
+  }
+
+  /* Ana içerik alanının 280px margin'i sıfırlanır */
+  .main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Üst çubuk (TopBar) responsive düzenleme */
+  .topBar {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .hamburger {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pageTitle {
+    font-size: 15px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Ana içerik kabı padding & sığdırma */
+  .content {
+    padding: 12px !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Tablolar ve Kartlar için taşma engelleme */
+  .sectionCard,
+  .panelCard,
+  .gridContainer {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 14px !important;
+  }
+
+  .actionHeader {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .searchWrapper,
+  .searchInput {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .addBtn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* 576px ve altı: Dar Mobil Cihazlar */
+@media (max-width: 576px) {
+  .topBar {
+    padding: 8px 10px !important;
+  }
+
+  .pageTitle {
+    font-size: 14px !important;
+  }
+
+  .content {
+    padding: 8px !important;
+  }
+
+  .statCard {
+    padding: 12px !important;
+    gap: 12px !important;
+  }
+
+  .statCard h3 {
+    font-size: 20px !important;
+  }
+}
+
+
 
 

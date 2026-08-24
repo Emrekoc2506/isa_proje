@@ -525,8 +525,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
             {products.length} ürün • Mağazada listelenen tüm ürün kataloğunuz
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', minWidth: 260 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', width: '100%', maxWidth: '100%' }}>
+          <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: '100%' }}>
             <FiSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--gold-light)' }} />
             <input
               type="text"

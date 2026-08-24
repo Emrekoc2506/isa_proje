@@ -580,7 +580,7 @@ export default function BannersSection() {
   return (
     <div>
       {/* ── PAGE HEADER ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h3 style={{ color: 'var(--gold-light)', fontSize: 20, fontWeight: 700, margin: 0, fontFamily: 'var(--font-heading)' }}>
             Billboard Yönetimi

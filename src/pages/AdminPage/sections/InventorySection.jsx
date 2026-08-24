@@ -182,7 +182,8 @@ export default function InventorySection() {
         </div>
       </div>
 
-      <table className={styles.table} style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
+      <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+        <table className={styles.table} style={{ width: '100%', minWidth: 600, borderCollapse: 'collapse', marginTop: 16 }}>
         <thead>
           <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-gold)' }}>
             <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Görsel</th>
@@ -372,6 +373,7 @@ export default function InventorySection() {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

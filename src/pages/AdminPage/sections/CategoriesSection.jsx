@@ -56,7 +56,7 @@ const S = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 320px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
     gap: 20,
   },
   /* ─── Sol Panel: Ağaç ─── */

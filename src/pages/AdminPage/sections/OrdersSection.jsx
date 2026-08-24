@@ -52,7 +52,8 @@ export default function OrdersSection() {
         <p style={{ color: 'var(--text-secondary)' }}>Siparişler yükleniyor...</p>
       ) : (
         <>
-          <table className={styles.table} style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
+          <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+          <table className={styles.table} style={{ width: '100%', minWidth: 600, borderCollapse: 'collapse', marginTop: 16 }}>
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-gold)' }}>
                 <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Sipariş No</th>
@@ -68,25 +69,41 @@ export default function OrdersSection() {
               {orders.map(o => (
                 <tr key={o.id} style={{ borderBottom: isLight ? '1px solid var(--border-gold)' : '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: 8, color: 'var(--gold-light)', fontWeight: 600 }}>#{o.orderNumber || o.id.substring(0,8).toUpperCase()}</td>
-                  <td style={{ padding: 8, color: 'var(--text-primary)' }}>{o.customerName || 'Misafir Müşteri'}</td>
-                  <td style={{ padding: 8, color: 'var(--text-secondary)' }}>{o.createdAt ? new Date(o.createdAt).toLocaleDateString('tr-TR') : ''}</td>
-                  <td style={{ padding: 8, color: 'var(--text-primary)', fontWeight: 600 }}>{o.totalAmount || o.grandTotal} {o.currency || 'TRY'}</td>
-                  <td style={{ padding: 8, color: o.paymentStatus === 'Paid' ? '#2ecc71' : '#f1c40f', fontWeight: 600 }}>{o.paymentStatus === 'Paid' ? 'Ödendi' : 'Bekliyor'}</td>
-                  <td style={{ padding: 8, color: 'var(--gold)' }}>{o.statusText || 'Sipariş Verildi'}</td>
+                  <td style={{ padding: 8, color: 'var(--text-primary)' }}>{o.customerName || o.customerEmail || 'Müşteri'}</td>
+                  <td style={{ padding: 8, color: 'var(--text-secondary)' }}>{new Date(o.createdAt).toLocaleDateString('tr-TR')}</td>
+                  <td style={{ padding: 8, color: 'var(--gold-light)', fontWeight: 600 }}>{o.totalAmount} ₺</td>
                   <td style={{ padding: 8 }}>
-                    <button onClick={() => handleOpenDetail(o.id)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ 
+                      fontSize: 11, 
+                      padding: '2px 8px', 
+                      borderRadius: 4, 
+                      background: o.paymentStatus === 'Paid' || o.paymentStatus === 'Ödendi' ? 'rgba(46, 204, 113, 0.15)' : 'rgba(230, 126, 34, 0.15)',
+                      color: o.paymentStatus === 'Paid' || o.paymentStatus === 'Ödendi' ? '#2ecc71' : '#e67e22'
+                    }}>
+                      {o.paymentStatus || 'Bekliyor'}
+                    </span>
+                  </td>
+                  <td style={{ padding: 8 }}>
+                    <span style={{ 
+                      fontSize: 11, 
+                      padding: '2px 8px', 
+                      borderRadius: 4, 
+                      background: 'rgba(201, 162, 39, 0.15)',
+                      color: 'var(--gold-light)'
+                    }}>
+                      {o.status || 'İşleniyor'}
+                    </span>
+                  </td>
+                  <td style={{ padding: 8 }}>
+                    <button onClick={() => handleOpenDetail(o.id)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 4 }}>
                       <FiEye /> Detay
                     </button>
                   </td>
                 </tr>
               ))}
-              {orders.length === 0 && (
-                <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>Henüz sipariş bulunmamaktadır.</td>
-                </tr>
-              )}
             </tbody>
           </table>
+          </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
