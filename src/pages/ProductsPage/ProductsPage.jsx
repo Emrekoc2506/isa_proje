@@ -102,6 +102,23 @@ export default function ProductsPage() {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '');
 
+  // Kategori Etiketi Bulucu
+  const getCategoryLabel = (catId) => {
+    if (!catId || catId === "hepsi") return "Tüm Kategoriler";
+    const targetStr = String(catId).toLowerCase().trim();
+    const targetSlug = toSlug(catId);
+    const cat = categories.find(
+      (c) =>
+        String(c.id).toLowerCase() === targetStr ||
+        String(c.databaseId || "").toLowerCase() === targetStr ||
+        String(c.slug || "").toLowerCase() === targetStr ||
+        String(c.name || "").toLowerCase() === targetStr ||
+        String(c.label || "").toLowerCase() === targetStr ||
+        toSlug(c.slug || c.name || c.label) === targetSlug
+    );
+    return cat ? (cat.label || cat.name || "").replace(" [GİZLİ]", "") : String(catId);
+  };
+
   // Kategori Eşleştirme (Slug, ID, DatabaseId, İsim ve Alt Kategorileri kapsar)
   const isProductInCategory = (product, targetCat, catList) => {
     if (!targetCat || targetCat === "hepsi") {
@@ -110,7 +127,7 @@ export default function ProductsPage() {
     const targetStr = String(targetCat).toLowerCase().trim();
     const targetSlug = toSlug(targetCat);
 
-    const matchedCats = catList.filter((c) =>
+    const matchedCats = (catList || categories).filter((c) =>
       String(c.id).toLowerCase() === targetStr ||
       String(c.databaseId || "").toLowerCase() === targetStr ||
       String(c.slug || "").toLowerCase() === targetStr ||
@@ -119,78 +136,112 @@ export default function ProductsPage() {
       toSlug(c.slug || c.name || c.label) === targetSlug
     );
 
-    const validKeys = new Set([targetStr, targetSlug]);
+    const validKeys = new Set();
+    if (targetStr) validKeys.add(targetStr);
+    if (targetSlug) validKeys.add(targetSlug);
+
     matchedCats.forEach((c) => {
-      if (c.id) validKeys.add(String(c.id).toLowerCase());
-      if (c.databaseId) validKeys.add(String(c.databaseId).toLowerCase());
-      if (c.slug) validKeys.add(String(c.slug).toLowerCase());
-      if (c.name) validKeys.add(String(c.name).toLowerCase());
-      if (c.label) validKeys.add(String(c.label).toLowerCase());
-      validKeys.add(toSlug(c.slug || c.name || c.label));
+      if (c.id) validKeys.add(String(c.id).toLowerCase().trim());
+      if (c.databaseId) validKeys.add(String(c.databaseId).toLowerCase().trim());
+      if (c.slug) validKeys.add(String(c.slug).toLowerCase().trim());
+      if (c.name) validKeys.add(String(c.name).toLowerCase().trim());
+      if (c.label) validKeys.add(String(c.label).toLowerCase().trim());
+      const s = toSlug(c.slug || c.name || c.label);
+      if (s) validKeys.add(s);
 
       if (Array.isArray(c.children)) {
         c.children.forEach((sub) => {
-          if (sub.id) validKeys.add(String(sub.id).toLowerCase());
-          if (sub.databaseId) validKeys.add(String(sub.databaseId).toLowerCase());
-          if (sub.slug) validKeys.add(String(sub.slug).toLowerCase());
-          if (sub.name) validKeys.add(String(sub.name).toLowerCase());
-          if (sub.label) validKeys.add(String(sub.label).toLowerCase());
-          validKeys.add(toSlug(sub.slug || sub.name || sub.label));
+          if (sub.id) validKeys.add(String(sub.id).toLowerCase().trim());
+          if (sub.databaseId) validKeys.add(String(sub.databaseId).toLowerCase().trim());
+          if (sub.slug) validKeys.add(String(sub.slug).toLowerCase().trim());
+          if (sub.name) validKeys.add(String(sub.name).toLowerCase().trim());
+          if (sub.label) validKeys.add(String(sub.label).toLowerCase().trim());
+          const subS = toSlug(sub.slug || sub.name || sub.label);
+          if (subS) validKeys.add(subS);
         });
       }
     });
+    validKeys.delete("");
 
-    const pCatId = String(product.categoryId || "").toLowerCase();
-    const pSubCatId = String(product.subcategoryId || "").toLowerCase();
-    const pCatName = String(product.categoryName || product.category || "").toLowerCase();
-    const pSubCatName = String(product.subcategory || product.subCategory || "").toLowerCase();
+    const pCatId = String(product.categoryId || "").toLowerCase().trim();
+    const pSubCatId = String(product.subcategoryId || "").toLowerCase().trim();
+    const pCatName = String(product.categoryName || product.category || "").toLowerCase().trim();
+    const pSubCatName = String(product.subcategory || product.subCategory || "").toLowerCase().trim();
 
     return (
-      validKeys.has(pCatId) ||
-      validKeys.has(pSubCatId) ||
-      validKeys.has(pCatName) ||
-      validKeys.has(pSubCatName) ||
-      validKeys.has(toSlug(pCatName)) ||
-      validKeys.has(toSlug(pSubCatName))
+      (Boolean(pCatId) && validKeys.has(pCatId)) ||
+      (Boolean(pSubCatId) && validKeys.has(pSubCatId)) ||
+      (Boolean(pCatName) && validKeys.has(pCatName)) ||
+      (Boolean(pSubCatName) && validKeys.has(pSubCatName)) ||
+      (Boolean(pCatName) && validKeys.has(toSlug(pCatName))) ||
+      (Boolean(pSubCatName) && validKeys.has(toSlug(pSubCatName)))
     );
   };
 
   // Alt Kategori Eşleştirme (Slug, ID, DatabaseId, İsim, Label esnek uyumlu)
   const isProductInSubcategory = (product, targetSub) => {
-    if (!targetSub) return true;
+    if (!targetSub || targetSub === "hepsi") return true;
+
     const targetStr = String(targetSub).toLowerCase().trim();
     const targetSlug = toSlug(targetSub);
 
-    const pSubCatId = String(product.subcategoryId || "").toLowerCase().trim();
-    const pSubCatName = String(product.subcategory || product.subCategory || "").toLowerCase().trim();
-    const pSubCatSlug = toSlug(product.subcategory || product.subCategory || product.subcategoryId);
+    const targetKeys = new Set();
+    if (targetStr) targetKeys.add(targetStr);
+    if (targetSlug) targetKeys.add(targetSlug);
 
-    if (pSubCatId === targetStr || pSubCatName === targetStr || pSubCatSlug === targetSlug) {
-      return true;
-    }
-
+    // Categories ağacındaki alt kategorileri tara ve targetSub ile eşleşen alt kategorinin tüm tanımlayıcılarını targetKeys'e ekle
     for (const cat of categories) {
       if (Array.isArray(cat.children)) {
         for (const sub of cat.children) {
-          const subKeys = new Set([
-            String(sub.id || "").toLowerCase(),
-            String(sub.databaseId || "").toLowerCase(),
-            String(sub.slug || "").toLowerCase(),
-            String(sub.name || "").toLowerCase(),
-            String(sub.label || "").toLowerCase(),
-            toSlug(sub.slug || sub.name || sub.label)
-          ]);
+          const subAliases = new Set();
+          if (sub.id) subAliases.add(String(sub.id).toLowerCase().trim());
+          if (sub.databaseId) subAliases.add(String(sub.databaseId).toLowerCase().trim());
+          if (sub.slug) subAliases.add(String(sub.slug).toLowerCase().trim());
+          if (sub.name) subAliases.add(String(sub.name).toLowerCase().trim());
+          if (sub.label) subAliases.add(String(sub.label).toLowerCase().trim());
+          const subSlug = toSlug(sub.slug || sub.name || sub.label);
+          if (subSlug) subAliases.add(subSlug);
+          subAliases.delete("");
 
-          if (subKeys.has(targetStr) || subKeys.has(targetSlug)) {
-            if (
-              subKeys.has(pSubCatId) ||
-              subKeys.has(pSubCatName) ||
-              subKeys.has(pSubCatSlug)
-            ) {
-              return true;
-            }
+          // Eğer bu alt kategori aranan targetSub ile eşleşiyorsa tüm alias'larını targetKeys'e ekle
+          const isMatch = Array.from(subAliases).some((alias) => targetKeys.has(alias));
+          if (isMatch) {
+            subAliases.forEach((alias) => targetKeys.add(alias));
           }
         }
+      }
+    }
+    targetKeys.delete("");
+
+    // Şimdi ürünün alt kategori bilgilerini topla (sadece boş olmayan değerler)
+    const productSubKeys = new Set();
+
+    const pSubCatId = String(product.subcategoryId || "").toLowerCase().trim();
+    if (pSubCatId) productSubKeys.add(pSubCatId);
+
+    const pSubCatName = String(product.subcategory || product.subCategory || "").toLowerCase().trim();
+    if (pSubCatName) {
+      productSubKeys.add(pSubCatName);
+      const s = toSlug(pSubCatName);
+      if (s) productSubKeys.add(s);
+    }
+
+    const pCatId = String(product.categoryId || "").toLowerCase().trim();
+    if (pCatId) productSubKeys.add(pCatId);
+
+    const pCatName = String(product.categoryName || product.category || "").toLowerCase().trim();
+    if (pCatName) {
+      productSubKeys.add(pCatName);
+      const s = toSlug(pCatName);
+      if (s) productSubKeys.add(s);
+    }
+
+    productSubKeys.delete("");
+
+    // Ürünün tanımlayıcılarından herhangi biri targetKeys içinde var mı?
+    for (const key of productSubKeys) {
+      if (targetKeys.has(key)) {
+        return true;
       }
     }
 
@@ -293,8 +344,10 @@ export default function ProductsPage() {
   const matchedCategoryObj = categories.find(
     (c) =>
       String(c.id) === String(selectedCategory) ||
+      String(c.databaseId || "") === String(selectedCategory) ||
       c.slug === selectedCategory ||
-      c.name?.toLowerCase() === String(selectedCategory).toLowerCase(),
+      c.name?.toLowerCase() === String(selectedCategory).toLowerCase() ||
+      toSlug(c.slug || c.name || c.label) === toSlug(selectedCategory),
   );
 
   let pageTitle = "Tüm Ürünler | Muhristan";
@@ -378,9 +431,7 @@ export default function ProductsPage() {
                   setSearchParams({ kategori: selectedCategory });
                 }}
               >
-                {(
-                  categories.find((c) => c.id === selectedCategory)?.label || ""
-                ).replace(" [GİZLİ]", "")}
+                {getCategoryLabel(selectedCategory)}
               </a>
             </>
           )}
@@ -468,7 +519,7 @@ export default function ProductsPage() {
                   <span>
                     {tempCategory === "hepsi"
                       ? `Tüm Kategoriler (${products.filter((p) => p.isActive !== false && !isCategorySecret(p.categoryId)).length})`
-                      : `${(categories.find((c) => c.id === tempCategory)?.label || "").replace(" [GİZLİ]", "")} (${products.filter((p) => p.isActive !== false && isProductInCategory(p, tempCategory, categories)).length})`}
+                      : `${getCategoryLabel(tempCategory)} (${products.filter((p) => p.isActive !== false && isProductInCategory(p, tempCategory, categories)).length})`}
                   </span>
                   <FiChevronDown
                     className={`${styles.triggerChevron} ${catDropdownOpen ? styles.chevronRotated : ""}`}
@@ -506,7 +557,7 @@ export default function ProductsPage() {
                           className={`${styles.dropdownOption} ${tempCategory === cat.id ? styles.optionActive : ""}`}
                           onClick={() => handleCategoryChange(cat.id)}
                         >
-                          {(cat.label || "").replace(" [GİZLİ]", "")} (
+                          {(cat.label || cat.name || "").replace(" [GİZLİ]", "")} (
                           {
                             products.filter(
                               (p) =>
@@ -560,7 +611,12 @@ export default function ProductsPage() {
                       {/* Alt kategoriler var mı kontrol et */}
                       {(() => {
                         const activeCatObj = categories.find(
-                          (c) => c.id === tempCategory,
+                          (c) =>
+                            String(c.id) === String(tempCategory) ||
+                            String(c.databaseId || "") === String(tempCategory) ||
+                            c.slug === tempCategory ||
+                            c.name?.toLowerCase() === String(tempCategory).toLowerCase() ||
+                            toSlug(c.slug || c.name || c.label) === toSlug(tempCategory),
                         );
                         const subList = activeCatObj?.children || [];
 
@@ -615,33 +671,34 @@ export default function ProductsPage() {
 
                               {subList
                                 .filter((ch) =>
-                                  ch.label
+                                  (ch.label || ch.name || "")
                                     .toLowerCase()
                                     .includes(subSearchQuery.toLowerCase()),
                                 )
                                 .map((sub) => {
-                                  const isSel = tempSubcategory === sub.label;
+                                  const subLabel = sub.label || sub.name;
+                                  const isSel = tempSubcategory === subLabel || tempSubcategory === sub.id || tempSubcategory === sub.slug;
                                   return (
                                     <button
-                                      key={sub.label}
+                                      key={sub.id || subLabel}
                                       type="button"
                                       className={`${styles.dropdownOptionCheck} ${isSel ? styles.optionCheckActive : ""}`}
                                       onClick={() =>
                                         handleSubcategoryChange(
                                           tempCategory,
-                                          sub.label,
+                                          subLabel,
                                         )
                                       }
                                     >
                                       {isSel ? <FiCheckSquare /> : <FiSquare />}
                                       <span>
-                                        {sub.label} (
+                                        {subLabel} (
                                         {
                                           products.filter(
                                             (p) =>
                                               p.isActive !== false &&
                                               isProductInCategory(p, tempCategory, categories) &&
-                                              isProductInSubcategory(p, sub.label || sub.name || sub.id),
+                                              isProductInSubcategory(p, sub.id || sub.databaseId || subLabel),
                                           ).length
                                         }
                                         )
