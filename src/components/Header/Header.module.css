@@ -521,6 +521,10 @@
 /* ── Responsive ────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
+  .desktopOnly {
+    display: none !important;
+  }
+
   .searchWrapper {
     display: none;
   }

@@ -19,6 +19,7 @@ import CartDrawer from "../CartDrawer/CartDrawer";
 import NotificationDropdown from "../NotificationDropdown/NotificationDropdown";
 import ThemeToggle from "../ThemeToggle";
 import BottomNav from "../BottomNav/BottomNav";
+import MobileDrawer from "../MobileDrawer/MobileDrawer";
 import logoImage from "../../assets/images/logo-2.png";
 import { useCart } from "../../context/CartContext";
 import { useNotifications } from "../../context/NotificationContext";
@@ -143,8 +144,10 @@ export default function Header() {
 
           {/* Üst Aksiyonlar */}
           <div className={styles.actions}>
-            {/* Gece / Gündüz Modu Butonu */}
-            <ThemeToggle />
+            {/* Gece / Gündüz Modu Butonu (Masaüstü) */}
+            <div className={styles.desktopOnly}>
+              <ThemeToggle />
+            </div>
 
             {/* Mobil arama */}
             <button
@@ -155,12 +158,12 @@ export default function Header() {
               {searchOpen ? <FiX /> : <FiSearch />}
             </button>
 
-            {/* Kullanıcı Durumu (Panelim & Çıkış Yap) */}
+            {/* Kullanıcı Durumu (Panelim & Çıkış Yap - Masaüstü) */}
             {isAuthenticated ? (
               <>
                 <a
                   href={isAdmin ? "/admin" : "/panel"}
-                  className={styles.actionBtn}
+                  className={`${styles.actionBtn} ${styles.desktopOnly}`}
                   aria-label="Panelim"
                 >
                   <FiUser />
@@ -169,7 +172,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className={styles.actionBtn}
+                  className={`${styles.actionBtn} ${styles.desktopOnly}`}
                   style={{
                     background: "none",
                     border: "none",
@@ -184,7 +187,7 @@ export default function Header() {
             ) : (
               <a
                 href="/giris"
-                className={styles.actionBtn}
+                className={`${styles.actionBtn} ${styles.desktopOnly}`}
                 aria-label="Giriş Yap"
               >
                 <FiUser />
@@ -192,8 +195,8 @@ export default function Header() {
               </a>
             )}
 
-            {/* Favoriler */}
-            <div className={styles.wishlistWrapper}>
+            {/* Favoriler (Masaüstü) */}
+            <div className={`${styles.wishlistWrapper} ${styles.desktopOnly}`}>
               <a
                 href="/favorilerim"
                 className={styles.actionBtn}
@@ -323,6 +326,9 @@ export default function Header() {
 
       {/* ── Sepet Çekmecesi ─────────────────────────────────── */}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+
+      {/* ── Mobil Menü Çekmecesi (Tüm Sayfalarda Çalışır) ───── */}
+      <MobileDrawer open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
 
       {/* ── Mobil Bottom Navigation Bar ────────────────────── */}
       <BottomNav onMenuClick={() => setMobileMenuOpen((v) => !v)} />
