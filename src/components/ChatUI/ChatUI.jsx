@@ -1,7 +1,7 @@
 import styles from './ChatUI.module.css';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSend, FiSearch, FiCheckCircle, FiPlusCircle, FiTrash2, FiMessageCircle, FiCheck, FiRefreshCw } from 'react-icons/fi';
+import { FiSend, FiSearch, FiCheckCircle, FiPlusCircle, FiTrash2, FiMessageCircle, FiCheck, FiRefreshCw, FiArrowLeft } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -636,7 +636,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
   };
 
   return (
-    <div className={`${styles.chatContainer} ${isLight ? styles.chatContainerLight : ''}`}>
+    <div className={`${styles.chatContainer} ${isLight ? styles.chatContainerLight : ''} ${selectedConv ? styles.hasActiveConv : ''}`}>
 
       {/* ── BACKGROUND ANIMATIONS (GECE: AY+YILDIZ / GÜNDÜZ: GÜNEŞ+BULUT) ── */}
       <div className={styles.skyBackground}>
@@ -847,6 +847,16 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
             {/* Header */}
             <div className={styles.chatHeader}>
               <div className={styles.chatHeaderLeft}>
+                <button
+                  onClick={() => {
+                    setSelectedConv(null);
+                    setMessages([]);
+                  }}
+                  className={styles.mobileBackBtn}
+                  title="Sohbet Listesine Dön"
+                >
+                  <FiArrowLeft size={20} />
+                </button>
                 <div className={styles.headerAvatar}
                   style={{ fontSize: 14, background: selectedConv.isClosed ? 'rgba(224,85,148,0.2)' : undefined }}>
                   {selectedConv.initials}

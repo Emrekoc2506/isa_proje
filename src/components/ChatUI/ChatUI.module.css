@@ -829,3 +829,65 @@
   color: #ffffff !important;
 }
 
+/* ── WHATSAPP MOBİL GERİ DÖNME BUTONU ─────────────────────── */
+.mobileBackBtn {
+  background: none;
+  border: none;
+  color: var(--gold-light, #c9a227);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  margin-right: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.mobileBackBtn:hover {
+  background: rgba(201, 162, 39, 0.15);
+}
+
+/* ── MOBİL WHATSAPP TARZI SOHBET AKIŞI ────────────────────── */
+@media (max-width: 768px) {
+  .chatContainer {
+    height: calc(100vh - 120px);
+    min-height: 480px;
+    border-radius: 12px;
+  }
+
+  /* Varsayılan: Sadece Sohbet Listesi Görünür (WhatsApp Ana Ekran) */
+  .sidebar {
+    width: 100% !important;
+    display: flex !important;
+    flex: 1;
+  }
+
+  .chatArea {
+    display: none !important; /* Mobilde sohbet seçilmeden sohbet detay gizli */
+    width: 100% !important;
+  }
+
+  /* Sohbet seçildiğinde: Liste Gizlenir, Sohbet Detay Ekranı Açılır */
+  .hasActiveConv .sidebar {
+    display: none !important;
+  }
+
+  .hasActiveConv .chatArea {
+    display: flex !important;
+    width: 100% !important;
+    flex: 1;
+  }
+
+  .mobileBackBtn {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobileBackBtn {
+    display: none !important; /* Masaüstünde geri butonu gizlidir */
+  }
+}
+
+
