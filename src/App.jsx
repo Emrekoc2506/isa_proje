@@ -1,3 +1,4 @@
+import React, { lazy, Suspense } from "react";
 import "./index.css";
 import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
@@ -9,37 +10,39 @@ import { ThemeProvider } from "./context/ThemeContext";
 import MainLayout from "./layouts/MainLayout/MainLayout";
 import HomePage from "./pages/HomePage/HomePage";
 import AuthPage from "./pages/AuthPage/AuthPage";
-import DashboardPage from "./pages/DashboardPage/DashboardPage";
-import AdminPage from "./pages/AdminPage/AdminPage";
 import ProductsPage from "./pages/ProductsPage/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage/ProductDetailPage";
-import BlogPage from "./pages/BlogPage/BlogPage";
+
+// Lazy Loaded Heavy Pages (Code-Splitting for Optimal Bundle & Performance)
+const DashboardPage = lazy(() => import("./pages/DashboardPage/DashboardPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage/AdminPage"));
+const BlogPage = lazy(() => import("./pages/BlogPage/BlogPage"));
 
 // Guards
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
 import GuestRoute from "./routes/GuestRoute";
 
-// New Pages
-import EmailVerifyPage from "./pages/EmailVerifyPage/EmailVerifyPage";
-import EmailWaitingPage from "./pages/EmailVerifyPage/EmailWaitingPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ForgotPasswordPage/ResetPasswordPage";
-import CheckoutPage from "./pages/CheckoutPage/CheckoutPage";
-import PaymentResultPage from "./pages/CheckoutPage/PaymentResultPage";
+// New Pages (Lazy)
+const EmailVerifyPage = lazy(() => import("./pages/EmailVerifyPage/EmailVerifyPage"));
+const EmailWaitingPage = lazy(() => import("./pages/EmailVerifyPage/EmailWaitingPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ForgotPasswordPage/ResetPasswordPage"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage/CheckoutPage"));
+const PaymentResultPage = lazy(() => import("./pages/CheckoutPage/PaymentResultPage"));
 
-// Statik Sayfalar
-import HakkimizdaPage from "./pages/StaticPages/HakkimizdaPage";
-import IletisimPage from "./pages/StaticPages/IletisimPage";
-import KargoTeslimatPage from "./pages/StaticPages/KargoTeslimatPage";
-import IadeSikayetPage from "./pages/StaticPages/IadeSikayetPage";
-import GizlilikPage from "./pages/StaticPages/GizlilikPage";
-import KullanimKosullariPage from "./pages/StaticPages/KullanimKosullariPage";
-import MesafeliSatisPage from "./pages/StaticPages/MesafeliSatisPage";
-import KvkkAydinlatmaPage from "./pages/StaticPages/KvkkAydinlatmaPage";
-import GarantiIptalPage from "./pages/StaticPages/GarantiIptalPage";
-import OnBilgilendirmePage from "./pages/StaticPages/OnBilgilendirmePage";
-import CerezPolitikasiPage from "./pages/StaticPages/CerezPolitikasiPage";
+// Statik Sayfalar (Lazy)
+const HakkimizdaPage = lazy(() => import("./pages/StaticPages/HakkimizdaPage"));
+const IletisimPage = lazy(() => import("./pages/StaticPages/IletisimPage"));
+const KargoTeslimatPage = lazy(() => import("./pages/StaticPages/KargoTeslimatPage"));
+const IadeSikayetPage = lazy(() => import("./pages/StaticPages/IadeSikayetPage"));
+const GizlilikPage = lazy(() => import("./pages/StaticPages/GizlilikPage"));
+const KullanimKosullariPage = lazy(() => import("./pages/StaticPages/KullanimKosullariPage"));
+const MesafeliSatisPage = lazy(() => import("./pages/StaticPages/MesafeliSatisPage"));
+const KvkkAydinlatmaPage = lazy(() => import("./pages/StaticPages/KvkkAydinlatmaPage"));
+const GarantiIptalPage = lazy(() => import("./pages/StaticPages/GarantiIptalPage"));
+const OnBilgilendirmePage = lazy(() => import("./pages/StaticPages/OnBilgilendirmePage"));
+const CerezPolitikasiPage = lazy(() => import("./pages/StaticPages/CerezPolitikasiPage"));
 
 import SEO from "./components/SEO/SEO";
 
@@ -364,7 +367,13 @@ function App() {
               <WishlistProvider>
                 <CartProvider>
                   <NotificationProvider>
-                    <AppRoutes />
+                    <Suspense fallback={
+                      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid rgba(201,162,39,0.2)', borderTopColor: 'var(--gold-light, #c9a227)', animation: 'spin 0.8s linear infinite' }} />
+                      </div>
+                    }>
+                      <AppRoutes />
+                    </Suspense>
                   </NotificationProvider>
                 </CartProvider>
               </WishlistProvider>
