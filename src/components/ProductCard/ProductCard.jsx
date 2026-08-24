@@ -9,7 +9,8 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 
 export default function ProductCard({ product }) {
-  const { name, price, oldPrice, discount, unit, image, href, isNew, isSale, id } = product;
+  const { name, price, oldPrice, discount, unit, image, href, isNew, isSale, id, isFreeShipping, isFreeCargo } = product;
+  const freeShipping = isFreeShipping ?? isFreeCargo;
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
@@ -46,6 +47,9 @@ export default function ProductCard({ product }) {
         {isNew && <span className={styles.badge + ' ' + styles.badgeNew}>Yeni</span>}
         {isSale && discount && (
           <span className={styles.badge + ' ' + styles.badgeSale}>{discount}</span>
+        )}
+        {freeShipping && (
+          <span className={styles.badge} style={{ background: '#10b981', color: '#ffffff', fontWeight: 700 }}>Kargo Bedava</span>
         )}
       </div>
 

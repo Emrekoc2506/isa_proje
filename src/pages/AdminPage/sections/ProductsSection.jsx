@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   FiTrash2, FiEdit3, FiPlus, FiLock, FiUnlock,
-  FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText, FiX, FiSearch
+  FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText, FiX, FiSearch, FiTruck
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as productApi from '../../../services/productApi';
@@ -70,6 +70,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
   const [seoKeywords, setSeoKeywords] = useState('');
+  const [isFreeShipping, setIsFreeShipping] = useState(false);
+  const [shippingFee, setShippingFee] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [uploadingImg, setUploadingImg] = useState(false);
   const [modalStep, setModalStep] = useState(1); // Sihirbaz Adım Lojiği
@@ -194,6 +196,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setSeoTitle('');
     setSeoDescription('');
     setSeoKeywords('');
+    setIsFreeShipping(false);
+    setShippingFee('');
     setIsActive(true);
     setModalStep(1);
     setFieldErrors({});
@@ -264,6 +268,10 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     if (p.dimensions || p.Dimensions) setDimensions(p.dimensions || p.Dimensions || '');
     if (p.discount ?? p.Discount ?? p.discountRate ?? p.DiscountRate) setDiscount(p.discount ?? p.Discount ?? p.discountRate ?? p.DiscountRate ?? '');
     if (p.slug || p.Slug) setSlug(p.slug || p.Slug || '');
+
+    // Kargo Bilgileri
+    setIsFreeShipping(p.isFreeShipping ?? p.IsFreeShipping ?? p.isFreeCargo ?? p.IsFreeCargo ?? false);
+    setShippingFee(p.shippingFee ?? p.ShippingFee ?? p.cargoFee ?? p.CargoFee ?? '');
 
     // SEO Alanları
     if (p.seoTitle || p.SeoTitle) setSeoTitle(p.seoTitle || p.SeoTitle || '');
@@ -424,6 +432,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       dimensions: dimensions ? dimensions.trim() : null,
       discount: discount || null,
       slug: (slug || cleanName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ('urun-' + Date.now()),
+      isFreeShipping: Boolean(isFreeShipping),
+      shippingFee: isFreeShipping ? 0 : (shippingFee !== '' && shippingFee !== null ? parseFloat(shippingFee) || 0 : null),
       seoTitle: seoTitle ? seoTitle.trim() : null,
       seoDescription: seoDescription ? seoDescription.trim() : null,
       seoKeywords: seoKeywords ? seoKeywords.trim() : null,
@@ -1080,6 +1090,53 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                             <input type="number" required value={stockQuantity} onChange={e => { setStockQuantity(e.target.value); setFieldErrors(prev => ({ ...prev, stockQuantity: '' })); }} className={styles.fieldInput} placeholder="0" />
                             {fieldErrors.stockQuantity && <span style={{ color: '#e05594', fontSize: 11, marginTop: 4, display: 'block' }}>{fieldErrors.stockQuantity}</span>}
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Section 3: Kargo & Teslimat */}
+                      <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 20, marginTop: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                            <FiTruck size={16} />
+                          </div>
+                          <div>
+                            <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>Kargo & Gönderim Ayarları</span>
+                            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Ürüne özel kargo şartlarını belirleyin</span>
+                          </div>
+                        </div>
+
+                        <div className={styles.formGrid} style={{ gridTemplateColumns: '1fr', gap: 12 }}>
+                          <div className={styles.formField}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', userSelect: 'none', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '12px 16px' }}>
+                              <input 
+                                type="checkbox" 
+                                checked={isFreeShipping} 
+                                onChange={e => {
+                                  setIsFreeShipping(e.target.checked);
+                                  if (e.target.checked) setShippingFee('0');
+                                }}
+                                style={{ width: 18, height: 18, accentColor: '#10b981', cursor: 'pointer' }} 
+                              />
+                              <div>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', display: 'block' }}>🚚 Kargo Bedava (Ücretsiz Kargo)</span>
+                                <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>Bu ürün satın alındığında kargo ücreti alınmaz.</span>
+                              </div>
+                            </label>
+                          </div>
+
+                          {!isFreeShipping && (
+                            <div className={styles.formField}>
+                              <label className={styles.fieldLabel}>Özel Kargo Ücreti (₺ — İsteğe Bağlı)</label>
+                              <input 
+                                type="number" 
+                                step="0.01" 
+                                value={shippingFee} 
+                                onChange={e => setShippingFee(e.target.value)} 
+                                className={styles.fieldInput} 
+                                placeholder="Örn: 49.90 (Varsayılan genel kargo ücreti için boş bırakın)" 
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                     </motion.div>
