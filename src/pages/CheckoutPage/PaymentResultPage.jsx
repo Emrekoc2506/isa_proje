@@ -12,7 +12,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import * as orderApi from "../../services/orderApi";
 import * as paymentApi from "../../services/paymentApi";
-import logoImage from "../../assets/images/logo-2.png";
+const logoImage = "/logo.png";
 import { isManualOrderSuccess, shouldClearCart } from "./paymentFlow";
 import { createSecureRandomId } from "../../utils/guestSession";
 

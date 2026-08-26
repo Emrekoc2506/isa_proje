@@ -1,12 +1,17 @@
 import styles from './CartDrawer.module.css';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiTrash2, FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi';
 import { useCart } from '../../context/CartContext';
 
 export default function CartDrawer({ open, onClose }) {
-  const { items, updateQty, removeFromCart, clearCart, totalCount, totalPrice } = useCart();
+  const { items, updateQty, removeFromCart, clearCart, totalCount, totalPrice, refreshCart } = useCart();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (open) refreshCart();
+  }, [open, refreshCart]);
 
   const handleGoToCheckout = () => {
     onClose();
@@ -73,11 +78,11 @@ export default function CartDrawer({ open, onClose }) {
                         layout
                       >
                         <img
-                          src={item.image || item.imageUrl || '/ornek resim.jpg'}
+                          src={item.image || item.imageUrl || '/placeholder.png'}
                           alt={item.name}
                           className={styles.itemImg}
                           onError={(e) => {
-                            e.target.src = '/ornek resim.jpg';
+                            e.target.src = '/placeholder.png';
                           }}
                         />
                         <div className={styles.itemInfo}>

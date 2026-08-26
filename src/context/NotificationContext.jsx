@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import * as signalR from "@microsoft/signalr";
 import { getMyNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, deleteAllNotifications } from '../services/notificationApi';
 import { useAuth } from './AuthContext';
 import { safeGetItem } from '../utils/storage';
@@ -128,26 +127,19 @@ export function NotificationProvider({ children }) {
       return;
     }
 
-    let hubConn = new signalR.HubConnectionBuilder()
-      .withUrl(`${signalrUrl}/notifications`, {
-        accessTokenFactory: () => safeGetItem("accessToken") || ""
-      })
-      .withAutomaticReconnect()
-      .build();
+    let hubConn = null;
+    let disposed = false;
+    import('@microsoft/signalr').then(({ HubConnectionBuilder }) => {
+      if (disposed) return;
+      hubConn = new HubConnectionBuilder()
+        .withUrl(`${signalrUrl}/notifications`, {
+          accessTokenFactory: () => safeGetItem("accessToken") || ""
+        })
+        .withAutomaticReconnect()
+        .build();
 
-    hubConn.start()
-      .then(async () => {
-        setConnection(hubConn);
-
-        if (user && user.id) {
-          await hubConn.invoke("JoinMyNotifications", user.id).catch(() => null);
-        }
-      })
-      .catch(() => null);
-
-    // Real-time bildirim alıcısı
-    hubConn.on("ReceiveNotification", (notif) => {
-      if (notif) {
+      hubConn.on("ReceiveNotification", (notif) => {
+        if (!notif) return;
         const deletedIds = getDeletedIdsFromStorage();
         if (deletedIds.includes(notif.id)) return;
 
@@ -162,10 +154,18 @@ export function NotificationProvider({ children }) {
           icon: mapNotificationTypeToEmoji(notif.type)
         };
         setNotifications(prev => [newNotif, ...prev]);
-      }
-    });
+      });
+
+      return hubConn.start()
+        .then(async () => {
+          if (disposed) return;
+          setConnection(hubConn);
+          if (user?.id) await hubConn.invoke("JoinMyNotifications", user.id).catch(() => null);
+        });
+    }).catch(() => null);
 
     return () => {
+      disposed = true;
       if (hubConn) {
         hubConn.stop().catch(() => null);
       }

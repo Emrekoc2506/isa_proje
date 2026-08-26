@@ -38,12 +38,12 @@ export default function RecentlyViewed({ currentProductId }) {
           <Link key={prod.id} to={`/urun/${prod.id}`} className={styles.card}>
             <div className={styles.imageWrapper}>
               <img
-                src={prod.imageUrl || "/ornek resim.jpg"}
+                src={prod.imageUrl || "/placeholder.png"}
                 alt={prod.name}
                 className={styles.image}
                 loading="lazy"
                 onError={(e) => {
-                  e.target.src = "/ornek resim.jpg";
+                  e.target.src = "/placeholder.png";
                 }}
               />
             </div>

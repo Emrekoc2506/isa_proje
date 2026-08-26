@@ -9,7 +9,7 @@ export function stripHtml(html) {
 }
 
 export function toAbsoluteUrl(pathOrUrl) {
-  if (!pathOrUrl) return `${DOMAIN}/logo-2.png`;
+  if (!pathOrUrl) return `${DOMAIN}/logo.png`;
   if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
     return pathOrUrl;
   }

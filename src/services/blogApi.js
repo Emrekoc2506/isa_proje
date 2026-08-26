@@ -132,13 +132,8 @@ export async function getAdminBlogArticles(params = {}) {
   try {
     const res = await request(`/admin/blog?${query}`);
     return extractItems(res);
-  } catch (err) {
-    try {
-      const fallbackRes = await request(`/blog?${query}`);
-      return extractItems(fallbackRes);
-    } catch {
-      return { items: [], totalCount: 0, page, pageSize };
-    }
+  } catch {
+    return { items: [], totalCount: 0, page, pageSize };
   }
 }
 

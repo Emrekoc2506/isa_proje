@@ -9,7 +9,7 @@ import {
 
 const DEFAULT_TITLE = 'Muhristan | Takı Esans Dünyası';
 const DEFAULT_DESCRIPTION = "Muhristan'da en kaliteli takı ve esansları bulun, ruhunuzu keşfedin.";
-const DEFAULT_IMAGE = 'https://muhristan.com/logo-2.png';
+const DEFAULT_IMAGE = 'https://muhristan.com/logo.png';
 
 export default function SEO({
   title,

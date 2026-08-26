@@ -1243,7 +1243,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                                     src={url} 
                                     alt={`Görsel ${idx + 1}`} 
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                                    onError={(e) => { e.target.onerror = null; e.target.src = '/ornek resim.jpg'; }}
+                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }}
                                   />
                                   
                                   {/* Delete button */}

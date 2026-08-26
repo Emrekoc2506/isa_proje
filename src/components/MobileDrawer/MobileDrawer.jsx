@@ -15,7 +15,7 @@ import {
   FiBookOpen,
   FiShoppingCart,
 } from "react-icons/fi";
-import logoImage from "../../assets/images/logo-2.png";
+const logoImage = "/logo.png";
 import { useAuth } from "../../context/AuthContext";
 import { useProducts } from "../../context/ProductContext";
 import { useWishlist } from "../../context/WishlistContext";

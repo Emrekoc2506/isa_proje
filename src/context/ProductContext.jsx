@@ -48,7 +48,7 @@ function normalizeProducts(productsData) {
 
     return {
       ...p,
-      id: p.id || p.Id || p.databaseId,
+      id: p.databaseId || p.id || p.Id,
       name: p.name || p.Name || '',
       price: typeof priceVal === 'number' ? `₺${priceVal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` : String(priceVal),
       oldPrice: oldPriceVal ? (typeof oldPriceVal === 'number' ? `₺${oldPriceVal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` : String(oldPriceVal)) : null,
@@ -80,23 +80,6 @@ function getCachedSlides() {
 function setCachedSlides(slidesData) {
   try {
     sessionStorage.setItem('muhristan_cached_slides', JSON.stringify(slidesData));
-  } catch {
-    // Ignore storage error
-  }
-}
-
-function getCachedProducts() {
-  try {
-    const raw = sessionStorage.getItem('muhristan_cached_products');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function setCachedProducts(productsData) {
-  try {
-    sessionStorage.setItem('muhristan_cached_products', JSON.stringify(productsData));
   } catch {
     // Ignore storage error
   }
@@ -167,12 +150,10 @@ export async function fetchProductsWithRetry(fetcher, maxAttempts = 3, delays = 
 
 export function ProductProvider({ children }) {
   const [categories, setCategories] = useState(() => getCachedCategories());
-  const [products, setProducts] = useState(() => getCachedProducts());
+  // Ürün kataloğu sayfa bazlı yüklenir; uygulama açılışında tüm kataloğu çekmeyiz.
+  const [products, setProducts] = useState([]);
   const [slides, setSlides] = useState(() => getCachedSlides());
-  const [loading, setLoading] = useState(() => {
-    const cachedP = getCachedProducts();
-    return cachedP.length === 0;
-  });
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const isMountedRef = useRef(true);
@@ -239,16 +220,15 @@ export function ProductProvider({ children }) {
 
     try {
       if (isMountedRef.current && typeof window !== 'undefined') {
-        if (productsRef.current.length === 0) {
-          setLoading(true);
-        }
+        setLoading(false);
         setError(null);
       }
 
-      // Kategori ve Ürün verilerini bağımsız paralel çek (ürünler için 4s hızlı zaman aşımı)
+      // Kategori ve küçük bir ürün sayfasını bağımsız paralel çek. Eski tüm
+      // kataloğu (1000 kayıt) bootstrap etme davranışı bilinçli olarak kaldırıldı.
       const [catResult, prodResult] = await Promise.allSettled([
         getCategoryTree().catch(() => getCategories()),
-        fetchProductsWithRetry(() => getProducts({ pageSize: 1000 }, { timeout: 4000 }))
+        fetchProductsWithRetry(() => getProducts({ page: 1, pageSize: 20 }, { timeout: 4000 }))
       ]);
 
       if (!isMountedRef.current || currentRequestId !== latestRequestIdRef.current || typeof window === 'undefined') return;
@@ -262,33 +242,15 @@ export function ProductProvider({ children }) {
       if (prodResult.status === 'fulfilled') {
         const normalized = normalizeProducts(prodResult.value);
         setProducts(normalized || []);
-        setCachedProducts(normalized || []);
         setError(null);
-
-        // Sunucudan gelen canlı listede olmayan silinmiş ürünleri son incelediklerinizden temizle
-        if (Array.isArray(normalized) && normalized.length > 0 && typeof window !== 'undefined') {
-          try {
-            const validIds = new Set(normalized.map(p => p.id));
-            const rvData = localStorage.getItem("isa_recently_viewed_products");
-            if (rvData) {
-              const rvList = JSON.parse(rvData);
-              if (Array.isArray(rvList)) {
-                const cleaned = rvList.filter(item => validIds.has(item.id));
-                localStorage.setItem("isa_recently_viewed_products", JSON.stringify(cleaned));
-              }
-            }
-          } catch (e) {}
-        }
       } else {
-        const prodErr = prodResult.reason;
-        console.error("Ürün yükleme hatası (retry sonrası):", prodErr);
+        console.error("Ürün yükleme hatası (retry sonrası):", prodResult.reason);
         setError("Ürünler yüklenirken bir hata oluştu.");
-        // KULLANICI DENEYİMİ KORUMASI: Mevcut ürün listesi API geçici hatası nedeniyle silinmez!
       }
     } catch (err) {
       console.error("Veri yükleme hatası:", err);
       if (isMountedRef.current && currentRequestId === latestRequestIdRef.current && typeof window !== 'undefined') {
-        setError("Veriler yüklenirken bir hata oluştu.");
+        setError("Kategoriler yüklenirken bir hata oluştu.");
       }
     } finally {
       if (isMountedRef.current && currentRequestId === latestRequestIdRef.current && typeof window !== 'undefined') {

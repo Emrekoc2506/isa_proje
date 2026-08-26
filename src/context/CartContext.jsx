@@ -4,6 +4,12 @@ import * as cartApi from '../services/cartApi';
 
 const CartContext = createContext(null);
 
+function shouldRefreshAfterCartError(error) {
+  const status = error?.status || error?.statusCode || error?.response?.status;
+  const code = error?.code || error?.response?.data?.code;
+  return !status || status >= 500 || ['product_unavailable', 'product_variant_unavailable', 'not_found'].includes(code);
+}
+
 export function mapServerCart(data) {
   if (!data) return { cartData: null, items: [] };
   const items = (data.items || []).map(item => ({
@@ -16,8 +22,8 @@ export function mapServerCart(data) {
     customNote: item.customNote || item.personalizationNote || item.note || null,
     price: `${item.unitPrice} ₺`,
     unitPrice: item.unitPrice,
-    image: item.imageUrl || "/ornek resim.jpg",
-    imageUrl: item.imageUrl || "/ornek resim.jpg",
+    image: item.imageUrl || "/placeholder.png",
+    imageUrl: item.imageUrl || "/placeholder.png",
     name: item.productName || "Ürün",
     productName: item.productName || "Ürün",
     source: "server"
@@ -152,11 +158,12 @@ export function CartProvider({ children }) {
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false;
       prevAuthRef.current = isAuthenticated;
-      if (isAuthenticated) {
-        triggerGuestCartMerge();
-      } else {
-        refreshCart();
-      }
+        if (isAuthenticated) {
+          triggerGuestCartMerge();
+        } else {
+          // Misafir sepeti ürün ekleme öncesi de sunucudan senkronize edilir.
+          refreshCart();
+        }
       return;
     }
 
@@ -193,7 +200,7 @@ export function CartProvider({ children }) {
         applyServerCart(data);
         return { success: true, cart: data };
       } catch (err) {
-        await refreshCart();
+        if (shouldRefreshAfterCartError(err)) await refreshCart();
         const msg = getCartErrorMessage(err);
         setCartError(msg);
         return { success: false, code: err.code || "cart_error", message: msg };
@@ -223,8 +230,8 @@ export function CartProvider({ children }) {
         name: product.name || 'Ürün',
         price: typeof rawPrice === 'number' ? `${rawPrice} ₺` : rawPrice,
         unitPrice: numPrice,
-        imageUrl: product.image || product.imageUrl || "/ornek resim.jpg",
-        image: product.image || product.imageUrl || "/ornek resim.jpg",
+        imageUrl: product.image || product.imageUrl || "/placeholder.png",
+        image: product.image || product.imageUrl || "/placeholder.png",
         qty: quantity,
         quantity: quantity,
         customNote: customNote || null,
@@ -253,7 +260,7 @@ export function CartProvider({ children }) {
       }
       return { success: true };
     } catch (err) {
-      await refreshCart();
+      if (shouldRefreshAfterCartError(err)) await refreshCart();
       const msg = getCartErrorMessage(err) || "Ürün sepetten kaldırılamadı. Lütfen tekrar deneyin.";
       setCartError(msg);
       return { success: false, code: err.code || "cart_remove_failed", message: msg };
@@ -286,7 +293,7 @@ export function CartProvider({ children }) {
       }
       return { success: true, cart: data };
     } catch (err) {
-      await refreshCart();
+      if (shouldRefreshAfterCartError(err)) await refreshCart();
       const code = err.code || '';
       let msg = getCartErrorMessage(err);
       if (code === 'not_found' || code === 'product_unavailable' || code === 'product_variant_unavailable') {
@@ -312,7 +319,7 @@ export function CartProvider({ children }) {
       }
       return { success: true };
     } catch (err) {
-      await refreshCart();
+      if (shouldRefreshAfterCartError(err)) await refreshCart();
       const msg = getCartErrorMessage(err);
       setCartError(msg);
       return { success: false, code: err.code, message: msg };

@@ -2,7 +2,9 @@ import { request } from "./apiClient";
 
 // Kamu Ürün İstekleri
 export function getProducts(params = {}, options = {}) {
-  const query = new URLSearchParams(params);
+  const query = new URLSearchParams(
+    Object.entries(params).filter(([, value]) => value !== null && value !== undefined && value !== '')
+  );
   const qStr = query.toString();
   return request(`/products${qStr ? `?${qStr}` : ''}`, options);
 }
@@ -15,16 +17,19 @@ export function getProductBySlug(slug) {
   return request(`/products/by-slug/${encodeURIComponent(slug)}`);
 }
 
-export function getFeaturedProducts() {
-  return request("/products/featured");
+export function getFeaturedProducts(params = {}) {
+  const query = new URLSearchParams({ page: 1, pageSize: 8, ...params }).toString();
+  return request(`/products/featured?${query}`);
 }
 
-export function getNewProducts() {
-  return request("/products/new");
+export function getNewProducts(params = {}) {
+  const query = new URLSearchParams({ page: 1, pageSize: 8, ...params }).toString();
+  return request(`/products/new?${query}`);
 }
 
-export function getSaleProducts() {
-  return request("/products/sale");
+export function getSaleProducts(params = {}) {
+  const query = new URLSearchParams({ page: 1, pageSize: 8, ...params }).toString();
+  return request(`/products/sale?${query}`);
 }
 
 export function getProductReviews(productId) {

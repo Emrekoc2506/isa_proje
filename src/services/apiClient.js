@@ -23,24 +23,18 @@ let isRefreshing = false;
 let refreshQueue = [];
 let activeRefreshPromise = null;
 
-const PUBLIC_PREFIXES = [
-  "/products",
-  "/categories",
-  "/banners",
-  "/blog",
-  "/coupons/validate",
-];
-
-function isPublicEndpoint(path, method = "GET") {
-  const p = (path || "").toLowerCase();
-  const m = (method || "GET").toUpperCase();
-  if (p.includes("/admin/")) return false;
-  if (p.includes("/auth/me")) return false;
-  if (p.includes("/auth/")) return true;
-  if (m === "GET") {
-    return PUBLIC_PREFIXES.some((prefix) => p.startsWith(prefix) || p.includes(prefix));
-  }
-  return false;
+function isPublicGetRequest(path, method = "GET") {
+  const p = (path || "").toLowerCase().split("?", 1)[0];
+  if ((method || "GET").toUpperCase() !== "GET") return false;
+  if (p.includes("/admin/") || p.includes("/account/") || p === "/auth/me") return false;
+  return [
+    /^\/products(?:\/.*)?$/,
+    /^\/categories(?:\/.*)?$/,
+    /^\/banners$/,
+    /^\/blog(?:\/categories)?$/,
+    /^\/payment-methods\/bank-transfer$/,
+    /^\/checkout\/payment-options$/,
+  ].some((pattern) => pattern.test(p));
 }
 
 function subscribeTokenRefresh(resolve, reject) {
@@ -71,20 +65,20 @@ function dispatchSessionExpired() {
   }
 }
 
-async function request(path, options = {}) {
+async function requestInternal(path, options = {}) {
   let token = safeGetItem("accessToken");
-  const isPublic = isPublicEndpoint(path, options.method);
+  const isPublic = isPublicGetRequest(path, options.method);
   const isRetry = options._isRetry === true;
   const headers = new Headers(options.headers || {});
   const credentials = options.credentials ?? "include";
 
-  if (!(options.body instanceof FormData)) {
+  if (options.body && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
 
   // Guest Session Headers
   const guestSessionId = getGuestSessionId();
-  if (guestSessionId) {
+  if (guestSessionId && !isPublic) {
     headers.set("X-Guest-Session-Id", guestSessionId);
     headers.set("X-Guest-SessionId", guestSessionId); // Legacy compatibility
   }
@@ -95,7 +89,7 @@ async function request(path, options = {}) {
     token = null;
   }
 
-  if (token && !isRetry && (!isJwtExpired(token) || !isPublic)) {
+  if (token && !isRetry && !isPublic && !isJwtExpired(token)) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
@@ -127,16 +121,7 @@ async function request(path, options = {}) {
       path.includes("/auth/login") ||
       path.includes("/auth/register");
 
-    if (response.status === 401 && !isAuthPath && !isRetry) {
-      // If it's a public endpoint (e.g. GET /products), retry once WITHOUT Authorization header!
-      if (isPublic) {
-        const publicRetryOptions = { ...options, _isRetry: true };
-        const publicRetryHeaders = new Headers(options.headers || {});
-        publicRetryHeaders.delete("Authorization");
-        publicRetryOptions.headers = publicRetryHeaders;
-        return request(path, publicRetryOptions);
-      }
-
+    if (response.status === 401 && !isAuthPath && !isRetry && !isPublic) {
       // If token in localStorage changed while this request was in flight, retry with new token
       const currentToken = safeGetItem("accessToken");
       if (currentToken && currentToken !== token && !isJwtExpired(currentToken)) {
@@ -223,6 +208,24 @@ async function request(path, options = {}) {
       code: "network_error",
     });
   }
+}
+
+const publicGetInFlight = new Map();
+
+function request(path, options = {}) {
+  if (!isPublicGetRequest(path, options.method)) {
+    return requestInternal(path, options);
+  }
+
+  const key = `${(options.method || "GET").toUpperCase()}:${path}`;
+  const existing = publicGetInFlight.get(key);
+  if (existing) return existing;
+
+  const pending = requestInternal(path, options).finally(() => {
+    if (publicGetInFlight.get(key) === pending) publicGetInFlight.delete(key);
+  });
+  publicGetInFlight.set(key, pending);
+  return pending;
 }
 
 function refreshAccessToken() {

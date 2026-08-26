@@ -6,7 +6,7 @@ import BlogSection from '../../components/BlogSection/BlogSection';
 import CategoryNav from '../../components/CategoryNav/CategoryNav';
 import SEO from '../../components/SEO/SEO';
 import { MdOutlineLocalShipping } from 'react-icons/md';
-import { useProducts } from '../../context/ProductContext';
+import { getFeaturedProducts, getNewProducts, getSaleProducts } from '../../services/productApi';
 import { getBlogArticles } from '../../services/blogApi';
 import { blogArticles as mockArticles } from '../../data/index';
 
@@ -15,7 +15,7 @@ const orgSchema = {
   '@type': 'Organization',
   'name': 'Muhristan',
   'url': 'https://muhristan.com/',
-  'logo': 'https://muhristan.com/logo-2.png'
+  'logo': 'https://muhristan.com/logo.png'
 };
 
 const websiteSchema = {
@@ -31,29 +31,42 @@ const websiteSchema = {
 };
 
 export default function HomePage() {
-  const { products } = useProducts();
+  const [products, setProducts] = useState({ news: [], sale: [], featured: [] });
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
-    getBlogArticles()
-      .then(res => {
-        const list = Array.isArray(res) ? res : (res?.items || []);
-        if (list.length > 0) {
-          setArticles(list);
-        } else {
-          setArticles(mockArticles);
-        }
-      })
-      .catch(() => setArticles(mockArticles));
+    let active = true;
+    Promise.allSettled([
+      getNewProducts({ page: 1, pageSize: 8 }),
+      getSaleProducts({ page: 1, pageSize: 8 }),
+      getFeaturedProducts({ page: 1, pageSize: 8 }),
+    ]).then(([news, sale, featured]) => {
+      if (!active) return;
+      const items = (result) => result.status === 'fulfilled' ? result.value : { items: [] };
+      setProducts({ news: items(news), sale: items(sale), featured: items(featured) });
+    });
+    return () => { active = false; };
   }, []);
 
-  const newsProducts = products.filter(p => p.isNew);
-  const saleProducts = products.filter(p => p.isSale);
-  const featuredProducts = products.filter(p => p.isFeatured);
+  useEffect(() => {
+    const loadBlog = () => getBlogArticles()
+      .then(res => {
+        const list = Array.isArray(res) ? res : (res?.items || []);
+        setArticles(list.length > 0 ? list : mockArticles);
+      })
+      .catch(() => setArticles(mockArticles));
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(loadBlog, { timeout: 1500 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = setTimeout(loadBlog, 0);
+    return () => clearTimeout(id);
+  }, []);
 
-  const displayNews = newsProducts.length > 0 ? newsProducts : products.slice(0, 8);
-  const displaySale = saleProducts.length > 0 ? saleProducts : products.slice(0, 8);
-  const displayFeatured = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8);
+  const items = (value) => Array.isArray(value) ? value : (value?.items || value?.data || []);
+  const displayNews = items(products.news);
+  const displaySale = items(products.sale);
+  const displayFeatured = items(products.featured);
 
   return (
     <main id="main-content" className={styles.main}>

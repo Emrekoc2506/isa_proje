@@ -20,7 +20,7 @@ import {
   FiMessageSquare,
   FiLoader,
 } from "react-icons/fi";
-import logoImage from "../../assets/images/logo-2.png";
+const logoImage = "/logo.png";
 import { getMyOrders } from "../../services/orderApi";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";

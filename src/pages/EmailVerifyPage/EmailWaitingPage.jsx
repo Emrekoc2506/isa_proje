@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FiMail, FiLoader, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 import SEO from "../../components/SEO/SEO";
 import { resendVerification } from "../../services/authApi";
-import logoImage from "../../assets/images/logo-2.png";
+const logoImage = "/logo.png";
 
 export default function EmailWaitingPage() {
   const location = useLocation();
