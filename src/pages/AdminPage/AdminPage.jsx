@@ -19,7 +19,7 @@ import {
   FiBookOpen,
   FiStar,
 } from "react-icons/fi";
-import logoImage from "../../assets/images/logo-2.png";
+const logoImage = "/logo.png";
 import ChatUI from "../../components/ChatUI/ChatUI";
 import ThemeToggle from "../../components/ThemeToggle";
 import { useAuth } from "../../context/AuthContext";

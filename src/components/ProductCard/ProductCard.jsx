@@ -64,7 +64,7 @@ export default function ProductCard({ product }) {
 
       {/* ── Görsel ─────────────────────────────────────────── */}
       <a href={detailHref} className={styles.imgWrapper} tabIndex={-1} onClick={(e) => { e.preventDefault(); navigate(detailHref); }}>
-        <img src={image} alt={name} className={styles.img} loading="lazy" decoding="async" onError={(e) => { e.target.onerror = null; e.target.src = '/ornek resim.jpg'; }} />
+        <img src={image || '/placeholder.png'} alt={name} className={styles.img} loading="lazy" decoding="async" width="400" height="400" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }} />
         <div className={styles.imgOverlay} />
       </a>
 

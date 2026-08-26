@@ -115,8 +115,10 @@ export default function VideoBannerItem({
           src={posterSrc || slide.imageUrl}
           alt={slide.title || 'Banner'}
           className={className}
-          loading={isFirst ? 'eager' : 'lazy'}
+          width="1600"
+          height="600"
           fetchPriority={isFirst ? 'high' : 'auto'}
+          loading={isFirst ? 'eager' : 'lazy'}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       </picture>

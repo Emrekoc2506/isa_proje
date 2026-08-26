@@ -8,7 +8,7 @@ import {
   FiMail,
 } from "react-icons/fi";
 import { footerLinks } from "../../data/index";
-import logoImage from "../../assets/images/logo-2.png";
+const logoImage = "/logo.png";
 import { useProducts } from "../../context/ProductContext";
 
 export default function Footer() {

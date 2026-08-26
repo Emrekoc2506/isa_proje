@@ -169,7 +169,7 @@ export default function ProductDetailPage() {
     }
 
     if (urls.length === 0) {
-      urls = ['/ornek resim.jpg'];
+      urls = ['/placeholder.png'];
     }
 
     return urls.map(src => ({
@@ -302,7 +302,7 @@ export default function ProductDetailPage() {
   const productTitle = productDetail.seoTitle || `${productDetail.name} | Muhristan`;
   const productDesc = productDetail.seoDescription || productDetail.shortDescription || stripHtml(productDetail.description) || `${productDetail.name} özel tasarım takı ve aksesuar.`;
   const canonicalUrl = productDetail.canonicalUrl || `https://muhristan.com/urun/${productDetail.slug || productDetail.id}`;
-  const primaryImgUrl = toAbsoluteUrl(productDetail.imageUrl || mediaList[0]?.src || '/logo-2.png');
+  const primaryImgUrl = toAbsoluteUrl(productDetail.imageUrl || mediaList[0]?.src || '/logo.png');
   const rawPriceNum = typeof productDetail.price === 'number'
     ? productDetail.price
     : parseFloat(String(productDetail.price).replace(/[^0-9.]/g, '')) || 0;
@@ -451,10 +451,10 @@ export default function ProductDetailPage() {
                   transition={{ duration: 0.35 }}
                 >
                   <img
-                    src={mediaList[activeImg]?.src || "/ornek resim.jpg"}
+                    src={mediaList[activeImg]?.src || "/placeholder.png"}
                     alt={mediaList[activeImg]?.alt || productDetail.name}
                     className={styles.mainImg}
-                    onError={(e) => { e.target.onerror = null; e.target.src = '/ornek resim.jpg'; }}
+                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }}
                   />
                 </motion.div>
               </AnimatePresence>
@@ -508,7 +508,7 @@ export default function ProductDetailPage() {
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveImg(i); }}
                     aria-label={`Görsel ${i + 1}`}
                   >
-                    <img src={m.src} alt={m.alt} loading="lazy" onError={(e) => { e.target.onerror = null; e.target.src = '/ornek resim.jpg'; }} />
+                    <img src={m.src} alt={m.alt} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.png'; }} />
                   </button>
                 ))}
               </div>
@@ -1063,7 +1063,7 @@ export default function ProductDetailPage() {
               {/* Büyük Görsel */}
               <motion.img
                 key={activeImg}
-                src={mediaList[activeImg]?.src || "/ornek resim.jpg"}
+                src={mediaList[activeImg]?.src || "/placeholder.png"}
                 alt={productDetail.name}
                 initial={{ scale: 0.92, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}

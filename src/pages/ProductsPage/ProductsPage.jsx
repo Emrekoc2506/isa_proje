@@ -2,6 +2,7 @@ import styles from "./ProductsPage.module.css";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useProducts } from "../../context/ProductContext";
+import { getProducts } from "../../services/productApi";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import SEO from "../../components/SEO/SEO";
 import { ProductCardSkeleton } from "../../components/Skeleton/Skeleton";
@@ -18,7 +19,10 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProductsPage() {
-  const { products, categories, loading } = useProducts();
+  const { categories } = useProducts();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Arama parametrelerini oku
@@ -43,6 +47,37 @@ export default function ProductsPage() {
   const [catDropdownOpen, setCatDropdownOpen] = useState(false);
   const [subDropdownOpen, setSubDropdownOpen] = useState(false);
   const [subSearchQuery, setSubSearchQuery] = useState("");
+  const [page, setPage] = useState(Number(searchParams.get("sayfa") || 1));
+  const pageSize = 20;
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    getProducts({
+      page,
+      pageSize,
+      search: searchQuery.trim() || undefined,
+      category: selectedCategory !== "hepsi" ? selectedCategory : undefined,
+      subcategory: selectedSubcategory || undefined,
+      maxPrice: priceRange < 100000 ? priceRange : undefined,
+    }).then((result) => {
+      if (!active) return;
+      const raw = Array.isArray(result) ? result : (result?.items || result?.data || []);
+      setProducts(raw.map((p) => ({
+        ...p,
+        id: p.id || p.databaseId || p.Id,
+        name: p.name || p.Name || "",
+        image: p.image || p.imageUrl || p.Image || p.ImageUrl || "/placeholder.png",
+        imageUrl: p.imageUrl || p.image || p.ImageUrl || p.Image || "/placeholder.png",
+        price: typeof p.price === "number" ? `${p.price.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺` : p.price,
+        oldPrice: typeof p.oldPrice === "number" ? `${p.oldPrice.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺` : p.oldPrice,
+      })));
+      setTotalCount(result?.totalCount ?? result?.total ?? raw.length);
+    }).catch(() => {
+      if (active) { setProducts([]); setTotalCount(0); }
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [page, selectedCategory, selectedSubcategory, searchQuery, priceRange]);
 
   // URL parametreleri değişince state'i güncelle
   useEffect(() => {
@@ -72,25 +107,6 @@ export default function ProductsPage() {
   const publicCategories = categories.filter(
     (c) => !c.label?.endsWith(" [GİZLİ]") && !c.name?.endsWith(" [GİZLİ]"),
   );
-
-  // Fiyat ayrıştırma (Türkçe format, sayı, string uyumlu)
-  const parsePrice = (priceVal) => {
-    if (typeof priceVal === 'number') return priceVal;
-    if (!priceVal) return 0;
-    const str = String(priceVal).trim();
-    let clean = str.replace(/[^0-9.,]/g, '');
-    if (clean.includes('.') && clean.includes(',')) {
-      clean = clean.replace(/\./g, '').replace(',', '.');
-    } else if (clean.includes('.')) {
-      if (/\.\d{3}$/.test(clean)) {
-        clean = clean.replace(/\./g, '');
-      }
-    } else if (clean.includes(',')) {
-      clean = clean.replace(',', '.');
-    }
-    const val = parseFloat(clean);
-    return isNaN(val) ? 0 : val;
-  };
 
   // Slug dönüştürücü
   const toSlug = (str) =>
@@ -249,41 +265,10 @@ export default function ProductsPage() {
   };
 
   // Filtrelenmiş Ürünler (Aktif/Uygulanmış filtrelere göre listelenenler)
-  const filteredProducts = products.filter((p) => {
-    if (p.isActive === false) return false;
-
-    // Kategoriye göre filtrele
-    const matchCategory = isProductInCategory(p, selectedCategory, categories);
-
-    // Alt Kategoriye göre filtrele
-    const matchSubcategory = isProductInSubcategory(p, selectedSubcategory);
-
-    // Arama kelimesine göre filtrele
-    const matchSearch = p.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-
-    // Fiyata göre filtrele
-    const priceNum = parsePrice(p.price);
-    const matchPrice = isNaN(priceNum) || priceNum <= priceRange;
-
-    return matchCategory && matchSubcategory && matchSearch && matchPrice;
-  });
+  const filteredProducts = products;
 
   // Geçici Filtrelenmiş Ürün Sayısı (Butonun üstünde anlık gösterilecek)
-  const tempFilteredCount = products.filter((p) => {
-    if (p.isActive === false) return false;
-
-    const matchCategory = isProductInCategory(p, tempCategory, categories);
-    const matchSubcategory = isProductInSubcategory(p, tempSubcategory);
-    const matchSearch = p.name
-      .toLowerCase()
-      .includes(tempSearchQuery.toLowerCase());
-    const priceNum = parsePrice(p.price);
-    const matchPrice = isNaN(priceNum) || priceNum <= tempPriceRange;
-
-    return matchCategory && matchSubcategory && matchSearch && matchPrice;
-  }).length;
+  const tempFilteredCount = totalCount;
 
   const handleCategoryChange = (catId) => {
     setTempCategory(catId);
@@ -303,6 +288,7 @@ export default function ProductsPage() {
     setSelectedSubcategory(tempSubcategory);
     setSearchQuery(tempSearchQuery);
     setPriceRange(tempPriceRange);
+    setPage(1);
 
     setSearchParams((prev) => {
       if (tempCategory === "hepsi") {
@@ -336,6 +322,7 @@ export default function ProductsPage() {
     setSelectedSubcategory("");
     setSearchQuery("");
     setPriceRange(100);
+    setPage(1);
 
     setSearchParams({});
   };
@@ -354,7 +341,7 @@ export default function ProductsPage() {
   let pageDesc =
     "Muhristan koleksiyonundaki özel tasarım takı, vefk ve spiritüel ürünleri inceleyin.";
   let pageKeywords = null;
-  let pageImage = matchedCategoryObj?.imageUrl || "/logo-2.png";
+  let pageImage = matchedCategoryObj?.imageUrl || "/logo.png";
   let pageCanonical = matchedCategoryObj?.canonicalUrl || null;
   let pageJsonLd = null;
 
@@ -754,7 +741,7 @@ export default function ProductsPage() {
             <span>
               {loading
                 ? "Yükleniyor..."
-                : `${filteredProducts.length} ürün listeleniyor`}
+                : `${totalCount} ürün listeleniyor`}
             </span>
           </div>
 
@@ -782,6 +769,17 @@ export default function ProductsPage() {
                   <ProductCard product={p} />
                 </div>
               ))}
+            </div>
+          )}
+          {totalCount > pageSize && (
+            <div className={styles.pagination}>
+              <button type="button" disabled={page <= 1 || loading} onClick={() => setPage((current) => Math.max(1, current - 1))}>
+                Önceki
+              </button>
+              <span>{page} / {Math.ceil(totalCount / pageSize)}</span>
+              <button type="button" disabled={page >= Math.ceil(totalCount / pageSize) || loading} onClick={() => setPage((current) => current + 1)}>
+                Sonraki
+              </button>
             </div>
           )}
         </main>

@@ -20,7 +20,7 @@ describe('Technical SEO Helper Functions', () => {
     expect(toAbsoluteUrl('/images/logo.png')).toBe('https://muhristan.com/images/logo.png');
     expect(toAbsoluteUrl('images/logo.png')).toBe('https://muhristan.com/images/logo.png');
     expect(toAbsoluteUrl('https://othercdn.com/pic.jpg')).toBe('https://othercdn.com/pic.jpg');
-    expect(toAbsoluteUrl('')).toBe('https://muhristan.com/logo-2.png');
+    expect(toAbsoluteUrl('')).toBe('https://muhristan.com/logo.png');
   });
 
   it('cleanCanonicalUrl removes tracking query params and trailing slashes', () => {

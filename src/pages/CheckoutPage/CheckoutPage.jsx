@@ -16,7 +16,7 @@ import SEO from '../../components/SEO/SEO';
 
 export default function CheckoutPage() {
   const { isAuthenticated } = useAuth();
-  const { items: cartItems, clearCart } = useCart();
+  const { items: cartItems, clearCart, refreshCart } = useCart();
   const navigate = useNavigate();
 
   // Loading states
@@ -30,6 +30,10 @@ export default function CheckoutPage() {
     cashOnDelivery: { enabled: true },
   });
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS.BANK_TRANSFER);
+
+  useEffect(() => {
+    refreshCart();
+  }, [refreshCart]);
 
   // Selected values
   const [shippingAddressId, setShippingAddressId] = useState(null);

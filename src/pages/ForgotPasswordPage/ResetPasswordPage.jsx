@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FiLock, FiLoader, FiCheckCircle } from "react-icons/fi";
 import SEO from "../../components/SEO/SEO";
 import { resetPassword } from "../../services/authApi";
-import logoImage from "../../assets/images/logo-2.png";
+const logoImage = "/logo.png";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();

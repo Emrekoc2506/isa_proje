@@ -165,12 +165,15 @@ function ArticleCard({ article, index, view, onClick }) {
     >
       <div className={isGrid ? styles.cardImgWrapper : styles.cardListImgWrapper}>
         <img
-          src={article.image || `https://picsum.photos/seed/${article.slug || article.id}/700/400`}
+          src={article.image || '/placeholder.png'}
           alt={article.title}
           className={styles.cardImg}
           loading="lazy"
+          decoding="async"
+          width="700"
+          height="400"
           onError={(e) => {
-            e.target.src = `https://picsum.photos/seed/${article.id || 'blog'}/700/400`;
+            if (!e.currentTarget.src.endsWith('/placeholder.png')) e.currentTarget.src = '/placeholder.png';
           }}
         />
         <div className={styles.cardImgOverlay} />
@@ -263,7 +266,7 @@ export default function BlogPage() {
   // SEO Calculation
   let seoTitle = 'Muhristan Blog & Rehber | Muhristan';
   let seoDesc = 'Doğal taşlar, kristaller, meditasyon ve enerji ritüelleri hakkında uzman makaleler ve rehberler Muhristan blogda.';
-  let seoImage = '/logo-2.png';
+  let seoImage = '/logo.png';
   let seoType = 'website';
   let seoCanonical = 'https://muhristan.com/blog';
   let seoJsonLd = null;
@@ -272,7 +275,7 @@ export default function BlogPage() {
     const art = selectedArticle;
     seoTitle = art.seoTitle || `${art.title} | Muhristan`;
     seoDesc = art.seoDescription || art.summary || art.excerpt || stripHtml(art.content) || `${art.title} yazısını Muhristan blogda okuyun.`;
-    seoImage = art.coverImage || art.image || '/logo-2.png';
+    seoImage = art.coverImage || art.image || '/logo.png';
     seoType = 'article';
     seoCanonical = art.canonical || `https://muhristan.com/blog?article=${art.slug || art.id}`;
 
@@ -281,7 +284,7 @@ export default function BlogPage() {
       '@type': 'BlogPosting',
       'headline': art.title,
       'description': stripHtml(art.summary || art.excerpt || art.description || art.title).slice(0, 160),
-      'image': [toAbsoluteUrl(art.coverImage || art.image || '/logo-2.png')],
+      'image': [toAbsoluteUrl(art.coverImage || art.image || '/logo.png')],
       'datePublished': art.publishedAt || art.publishedDate || art.createdAt || art.date,
       'dateModified': art.modifiedAt || art.updatedAt || art.publishedAt || art.date,
       'author': {
@@ -293,7 +296,7 @@ export default function BlogPage() {
         'name': 'Muhristan',
         'logo': {
           '@type': 'ImageObject',
-          'url': 'https://muhristan.com/logo-2.png'
+          'url': 'https://muhristan.com/logo.png'
         }
       },
       'mainEntityOfPage': seoCanonical
@@ -467,10 +470,14 @@ export default function BlogPage() {
             >
               <div className={styles.featuredImgWrapper}>
                 <img
-                  src={featuredArticle.image || `https://picsum.photos/seed/${featuredArticle.id}/1200/600`}
+                  src={featuredArticle.image || '/placeholder.png'}
                   alt={featuredArticle.title}
                   className={styles.featuredImg}
-                  onError={(e) => { e.target.src = `https://picsum.photos/seed/${featuredArticle.id}/1200/600`; }}
+                  loading="lazy"
+                  decoding="async"
+                  width="1200"
+                  height="600"
+                  onError={(e) => { if (!e.currentTarget.src.endsWith('/placeholder.png')) e.currentTarget.src = '/placeholder.png'; }}
                 />
                 <div className={styles.featuredImgOverlay} />
                 <div className={styles.featuredBadge}>✦ Öne Çıkan</div>

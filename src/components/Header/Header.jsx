@@ -1,5 +1,5 @@
 import styles from "./Header.module.css";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -20,12 +20,12 @@ import NotificationDropdown from "../NotificationDropdown/NotificationDropdown";
 import ThemeToggle from "../ThemeToggle";
 import BottomNav from "../BottomNav/BottomNav";
 import MobileDrawer from "../MobileDrawer/MobileDrawer";
-import logoImage from "../../assets/images/logo-2.png";
+const logoImage = "/logo.png";
 import { useCart } from "../../context/CartContext";
 import { useNotifications } from "../../context/NotificationContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { useAuth } from "../../context/AuthContext";
-import { useProducts } from "../../context/ProductContext";
+import { getProducts } from "../../services/productApi";
 
 export default function Header() {
   const location = useLocation();
@@ -52,17 +52,26 @@ export default function Header() {
   const { totalCount, totalPrice } = useCart();
   const { unreadCount } = useNotifications();
   const { totalCount: wishlistCount } = useWishlist();
-  const productContext = useProducts();
-  const allProducts = productContext?.products || [];
+  const [searchResults, setSearchResults] = useState([]);
 
-  const searchResults =
-    searchQuery.trim().length >= 2
-      ? allProducts
-          .filter((p) =>
-            p.name?.toLowerCase().includes(searchQuery.toLowerCase().trim()),
-          )
-          .slice(0, 5)
-      : [];
+  useEffect(() => {
+    const term = searchQuery.trim();
+    if (term.length < 2) {
+      setSearchResults([]);
+      return undefined;
+    }
+    let active = true;
+    const timer = setTimeout(async () => {
+      try {
+        const result = await getProducts({ page: 1, pageSize: 5, search: term });
+        const items = Array.isArray(result) ? result : (result?.items || result?.data || []);
+        if (active) setSearchResults(items);
+      } catch {
+        if (active) setSearchResults([]);
+      }
+    }, 180);
+    return () => { active = false; clearTimeout(timer); };
+  }, [searchQuery]);
 
   return (
     <>
@@ -116,11 +125,11 @@ export default function Header() {
                       onClick={() => setSearchQuery("")}
                     >
                       <img
-                        src={item.imageUrl || item.image || "/ornek resim.jpg"}
+                        src={item.imageUrl || item.image || "/placeholder.png"}
                         alt={item.name}
                         className={styles.searchThumb}
                         onError={(e) => {
-                          e.target.src = "/ornek resim.jpg";
+                          e.currentTarget.src = "/placeholder.png";
                         }}
                       />
                       <div className={styles.searchInfo}>

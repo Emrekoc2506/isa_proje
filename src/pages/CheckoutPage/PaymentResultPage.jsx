@@ -12,8 +12,9 @@ import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import * as orderApi from "../../services/orderApi";
 import * as paymentApi from "../../services/paymentApi";
-import logoImage from "../../assets/images/logo-2.png";
+const logoImage = "/logo.png";
 import { isManualOrderSuccess, shouldClearCart } from "./paymentFlow";
+import { createSecureRandomId } from "../../utils/guestSession";
 
 import SEO from "../../components/SEO/SEO";
 
@@ -88,11 +89,7 @@ export default function PaymentResultPage() {
         orderId,
         provider: "online",
         returnUrl: window.location.origin + "/odeme/sonuc",
-        idempotencyKey: globalThis.crypto?.randomUUID?.() ||
-          "idemp-" +
-          Date.now() +
-          "-" +
-          Math.random().toString(36).substring(2, 7),
+        idempotencyKey: createSecureRandomId("idemp-"),
       });
       if (paymentRes?.redirectUrl) {
         window.location.assign(paymentRes.redirectUrl);
