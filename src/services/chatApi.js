@@ -112,3 +112,20 @@ export function initiateAdminConversation(userId, payload = {}) {
     })
   });
 }
+
+// Sohbet okundu işaretleme istekleri
+export function markConversationAsRead(id) {
+  const guestSessionId = getGuestSessionId();
+  return request(`/chat/conversations/${id}/read`, {
+    method: "PUT",
+    body: JSON.stringify({
+      guestSessionId: guestSessionId || null
+    })
+  });
+}
+
+export function markAdminConversationAsRead(id) {
+  return request(`/admin/chat/conversations/${id}/read`, {
+    method: "PUT"
+  });
+}

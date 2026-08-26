@@ -11,7 +11,7 @@ export function initializePayment(payload) {
     headers,
     body: JSON.stringify({
       orderId: payload.orderId,
-      provider: payload.provider || "iyzico",
+      provider: payload.provider || "online",
       returnUrl: payload.returnUrl,
       idempotencyKey: payload.idempotencyKey || null
     })

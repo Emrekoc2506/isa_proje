@@ -1,10 +1,8 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { 
   getProducts, 
   createAdminProduct, 
-  deleteAdminProduct, 
-  updateAdminProductPrice, 
-  updateAdminProductStatus 
+  deleteAdminProduct 
 } from '../services/productApi';
 import { 
   getCategories, 
@@ -15,20 +13,13 @@ import {
 import { 
   getBanners, 
   createAdminBanner, 
-  deleteAdminBanner, 
-  updateAdminBannerStatus 
+  deleteAdminBanner 
 } from '../services/bannerApi';
 import { 
   parseBannerContent 
 } from '../utils/bannerContent';
-import { 
-  newsProducts as mockNews, 
-  saleProducts as mockSale, 
-  featuredProducts as mockFeatured 
-} from '../data/index';
+import { getSafeStockQuantity } from '../utils/stockUtils';
 
-const MOCK_PRODUCTS = [...mockNews, ...mockSale, ...mockFeatured];
-const INITIAL_SLIDES = [];
 const ProductContext = createContext(null);
 
 function normalizeProducts(productsData) {
@@ -37,19 +28,23 @@ function normalizeProducts(productsData) {
     : (productsData?.items || productsData?.data || []);
 
   return rawList.map(p => {
-    const detailImageUrls = Array.isArray(p.images)
-      ? [...p.images]
-          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-          .map(image => image?.url)
-          .filter(Boolean)
-      : [];
-    const imageUrls = Array.isArray(p.imageUrls) && p.imageUrls.length > 0
+    const imagesList = Array.isArray(p.images) ? p.images : (Array.isArray(p.Images) ? p.Images : []);
+    const primaryObj = imagesList.find(i => i.isPrimary || i.IsPrimary);
+    const primaryUrl = primaryObj?.url || primaryObj?.Url || imagesList[0]?.url || imagesList[0]?.Url;
+
+    const imageUrlsArr = Array.isArray(p.imageUrls)
       ? p.imageUrls
-      : detailImageUrls;
-    const mainImg = imageUrls[0] || (p.imageUrl || p.ImageUrl || p.image || p.Image || '');
+      : (Array.isArray(p.ImageUrls)
+        ? p.ImageUrls
+        : (imagesList.length > 0
+          ? imagesList.map(i => (typeof i === 'string' ? i : (i.url || i.Url))).filter(Boolean)
+          : (p.imageUrl || p.ImageUrl || p.image || p.Image ? [p.imageUrl || p.ImageUrl || p.image || p.Image] : [])));
+
+    const mainImg = p.imageUrl || p.ImageUrl || primaryUrl || imageUrlsArr[0] || p.image || p.Image || '';
       
     const priceVal = p.price ?? p.Price ?? 0;
     const oldPriceVal = p.oldPrice ?? p.OldPrice ?? null;
+    const stockVal = getSafeStockQuantity(p);
 
     return {
       ...p,
@@ -59,9 +54,12 @@ function normalizeProducts(productsData) {
       oldPrice: oldPriceVal ? (typeof oldPriceVal === 'number' ? `₺${oldPriceVal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` : String(oldPriceVal)) : null,
       rawPrice: priceVal,
       rawOldPrice: oldPriceVal,
+      stockQuantity: stockVal,
+      stock: stockVal,
       image: mainImg,
       imageUrl: mainImg,
-      imageUrls: imageUrls.length > 0 ? imageUrls : (mainImg ? [mainImg] : []),
+      imageUrls: imageUrlsArr,
+      images: imagesList.length > 0 ? imagesList : imageUrlsArr.map((url, idx) => ({ url, isPrimary: idx === 0, sortOrder: idx })),
       isNew: Boolean(p.isNew ?? p.IsNew),
       isSale: Boolean(p.isSale ?? p.IsSale),
       isFeatured: Boolean(p.isFeatured ?? p.IsFeatured),
@@ -70,33 +68,132 @@ function normalizeProducts(productsData) {
   });
 }
 
+function getCachedSlides() {
+  try {
+    const raw = sessionStorage.getItem('muhristan_cached_slides');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setCachedSlides(slidesData) {
+  try {
+    sessionStorage.setItem('muhristan_cached_slides', JSON.stringify(slidesData));
+  } catch {
+    // Ignore storage error
+  }
+}
+
+function getCachedProducts() {
+  try {
+    const raw = sessionStorage.getItem('muhristan_cached_products');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setCachedProducts(productsData) {
+  try {
+    sessionStorage.setItem('muhristan_cached_products', JSON.stringify(productsData));
+  } catch {
+    // Ignore storage error
+  }
+}
+
+function getCachedCategories() {
+  try {
+    const raw = sessionStorage.getItem('muhristan_cached_categories');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setCachedCategories(catData) {
+  try {
+    sessionStorage.setItem('muhristan_cached_categories', JSON.stringify(catData));
+  } catch {
+    // Ignore storage error
+  }
+}
+
+export function isTransientError(err) {
+  if (!err) return false;
+  const status = err.status || err.statusCode || err.response?.status;
+  const code = err.code || err.name;
+
+  // Non-retryable status codes: 400, 401, 403, 404, 422
+  if (status === 400 || status === 401 || status === 403 || status === 404 || status === 422) {
+    return false;
+  }
+
+  // Transient status codes: 500, 502, 503, 504
+  if (status === 500 || status === 502 || status === 503 || status === 504) {
+    return true;
+  }
+
+  // Network errors, timeouts, abort errors
+  if (
+    code === 'network_error' ||
+    code === 'AbortError' ||
+    err.name === 'AbortError' ||
+    (err.message && String(err.message).includes('Zaman aşımı'))
+  ) {
+    return true;
+  }
+
+  return !status;
+}
+
+export async function fetchProductsWithRetry(fetcher, maxAttempts = 3, delays = [1000, 2000]) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fetcher();
+    } catch (err) {
+      lastError = err;
+      const canRetry = isTransientError(err);
+      if (!canRetry || attempt >= maxAttempts) {
+        throw err;
+      }
+      const delayMs = delays[attempt - 1] ?? 1000;
+      await new Promise((res) => setTimeout(res, delayMs));
+    }
+  }
+  throw lastError;
+}
+
 export function ProductProvider({ children }) {
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [slides, setSlides] = useState(INITIAL_SLIDES);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState(() => getCachedCategories());
+  const [products, setProducts] = useState(() => getCachedProducts());
+  const [slides, setSlides] = useState(() => getCachedSlides());
+  const [loading, setLoading] = useState(() => {
+    const cachedP = getCachedProducts();
+    return cachedP.length === 0;
+  });
   const [error, setError] = useState(null);
 
-  // Tüm kamu ve admin (varsa) verilerini yükleme
-  const loadInitialData = useCallback(async () => {
+  const isMountedRef = useRef(true);
+  const latestRequestIdRef = useRef(0);
+  const productsRef = useRef(products);
+  productsRef.current = products;
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Banner/Afiş verilerini anında (ürünleri beklemeden) ultra hızlı yükle
+  const fetchBannersFast = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
+      const bannersData = await getBanners();
+      if (!isMountedRef.current || !Array.isArray(bannersData)) return;
 
-      // Kategori ve Banner (Afiş) verileri her zaman public'tir
-      const [categoriesData, bannersData, productsData] = await Promise.all([
-        getCategoryTree().catch(() => getCategories().catch(() => [])),
-        getBanners().catch(() => []),
-        getProducts({ pageSize: 100 }).catch(() => [])
-      ]);
-
-      setCategories(categoriesData || []);
-
-      const normalized = normalizeProducts(productsData);
-      setProducts(normalized || []);
-      
-      // Slaytları/Bannerları map edelim (backend formatı -> frontend formatı)
-      const mappedSlides = (bannersData || [])
+      const mappedSlides = bannersData
         .map(b => {
           const parsedContent = parseBannerContent(b.contentJson);
           const videoUrl = b.videoUrl || parsedContent.videoUrl || "";
@@ -130,17 +227,80 @@ export function ProductProvider({ children }) {
         .sort((a, b) => a.sortOrder - b.sortOrder);
 
       setSlides(mappedSlides);
+      setCachedSlides(mappedSlides);
+    } catch (err) {
+      console.error("Banner yükleme hatası:", err);
+    }
+  }, []);
+
+  // Tüm kamu ve admin (varsa) verilerini yükleme (bağımsız & retry destekli)
+  const loadInitialData = useCallback(async () => {
+    const currentRequestId = ++latestRequestIdRef.current;
+
+    try {
+      if (isMountedRef.current && typeof window !== 'undefined') {
+        if (productsRef.current.length === 0) {
+          setLoading(true);
+        }
+        setError(null);
+      }
+
+      // Kategori ve Ürün verilerini bağımsız paralel çek (ürünler için 4s hızlı zaman aşımı)
+      const [catResult, prodResult] = await Promise.allSettled([
+        getCategoryTree().catch(() => getCategories()),
+        fetchProductsWithRetry(() => getProducts({ pageSize: 1000 }, { timeout: 4000 }))
+      ]);
+
+      if (!isMountedRef.current || currentRequestId !== latestRequestIdRef.current || typeof window === 'undefined') return;
+
+      if (catResult.status === 'fulfilled') {
+        const catVal = catResult.value || [];
+        setCategories(catVal);
+        setCachedCategories(catVal);
+      }
+
+      if (prodResult.status === 'fulfilled') {
+        const normalized = normalizeProducts(prodResult.value);
+        setProducts(normalized || []);
+        setCachedProducts(normalized || []);
+        setError(null);
+
+        // Sunucudan gelen canlı listede olmayan silinmiş ürünleri son incelediklerinizden temizle
+        if (Array.isArray(normalized) && normalized.length > 0 && typeof window !== 'undefined') {
+          try {
+            const validIds = new Set(normalized.map(p => p.id));
+            const rvData = localStorage.getItem("isa_recently_viewed_products");
+            if (rvData) {
+              const rvList = JSON.parse(rvData);
+              if (Array.isArray(rvList)) {
+                const cleaned = rvList.filter(item => validIds.has(item.id));
+                localStorage.setItem("isa_recently_viewed_products", JSON.stringify(cleaned));
+              }
+            }
+          } catch (e) {}
+        }
+      } else {
+        const prodErr = prodResult.reason;
+        console.error("Ürün yükleme hatası (retry sonrası):", prodErr);
+        setError("Ürünler yüklenirken bir hata oluştu.");
+        // KULLANICI DENEYİMİ KORUMASI: Mevcut ürün listesi API geçici hatası nedeniyle silinmez!
+      }
     } catch (err) {
       console.error("Veri yükleme hatası:", err);
-      setError("Veriler yüklenirken bir hata oluştu.");
+      if (isMountedRef.current && currentRequestId === latestRequestIdRef.current && typeof window !== 'undefined') {
+        setError("Veriler yüklenirken bir hata oluştu.");
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current && currentRequestId === latestRequestIdRef.current && typeof window !== 'undefined') {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
+    fetchBannersFast();
     loadInitialData();
-  }, [loadInitialData]);
+  }, [fetchBannersFast, loadInitialData]);
 
 
 
@@ -243,9 +403,7 @@ export function ProductProvider({ children }) {
         stockQuantity: productData.stockQuantity ? parseInt(productData.stockQuantity) : 10,
         shortDescription: productData.shortDescription || (productData.name + " şifa dolu mistik ürün."),
         description: productData.description || (productData.name + " şifa dolu mistik ürün."),
-        imageUrls: Array.isArray(productData.imageUrls) && productData.imageUrls.length > 0
-          ? productData.imageUrls
-          : (productData.imageUrl ? [productData.imageUrl] : (productData.image ? [productData.image] : [])),
+        imageUrls: productData.imageUrl ? [productData.imageUrl] : (productData.image ? [productData.image] : []),
         slug: slug,
         isActive: productData.isActive !== false,
         isNew: productData.isNew || false,
@@ -363,6 +521,8 @@ export function ProductProvider({ children }) {
       loading,
       error,
       refreshData: loadInitialData,
+      refreshProducts: loadInitialData,
+      retry: loadInitialData,
       addCategory,
       deleteCategory,
       addSubcategory,

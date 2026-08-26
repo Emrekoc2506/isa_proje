@@ -3,11 +3,15 @@ import { useTheme } from '../context/ThemeContext';
 import styles from './ThemeToggle.module.css';
 
 export default function ThemeToggle({ id = "theme-toggle" }) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, isAutoMode } = useTheme();
   const isLight = theme === 'light';
 
+  const tooltipText = isAutoMode
+    ? `Otomatik TR Saati Döngüsü: ${isLight ? 'Gündüz' : 'Gece'} Modu Aktif (Manuel değiştirmek için tıklayın)`
+    : (isLight ? "Gece Moduna Geç" : "Gündüz Moduna Geç");
+
   return (
-    <div className={styles.wrapper} title={isLight ? "Gece Moduna Geç" : "Gündüz Moduna Geç"}>
+    <div className={styles.wrapper} title={tooltipText}>
       <label className={styles.switch} htmlFor={id} aria-label="Gece/Gündüz Modu Değiştir">
         <input 
           type="checkbox" 

@@ -104,13 +104,8 @@ export default function HeroSlider() {
               onVideoEnd={next}
             />
 
-            {/* Overlay gradient (Yalnızca metin overlay açıkken uygulanır) */}
+            {/* Metin İçeriği (hideTextOverlay kapalıysa ve başlık varsa) */}
             {!slide.hideTextOverlay && (slide.title || slide.subtitle) && (
-              <div className={styles.slideOverlay} />
-            )}
-
-            {/* Metin İçeriği (Yazısız afiş seçeneği işaretli değilse ve metin varsa gösterilir) */}
-            {!slide.hideTextOverlay && (slide.title || slide.subtitle || (slide.cta && slide.cta !== 'Keşfet')) && (
               <motion.div
                 className={styles.slideContent}
                 initial={{ opacity: 0, y: 30 }}
@@ -119,12 +114,6 @@ export default function HeroSlider() {
               >
                 {slide.subtitle && <span className={styles.slideSubtitle}>{slide.subtitle}</span>}
                 {slide.title && <h1 className={styles.slideTitle}>{slide.title}</h1>}
-                {slide.cta && (
-                  <a href={slide.href || slide.linkUrl || '/urunler'} className={styles.slideCta}>
-                    {slide.cta}
-                    <span className={styles.ctaArrow}>→</span>
-                  </a>
-                )}
               </motion.div>
             )}
           </motion.div>
@@ -133,15 +122,17 @@ export default function HeroSlider() {
 
       {/* ── Önceki / Sonraki Butonları ─────────────────────── */}
       <button
+        type="button"
         className={`${styles.navBtn} ${styles.prevBtn}`}
-        onClick={prev}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); prev(); }}
         aria-label="Previous slide"
       >
         <FiChevronLeft />
       </button>
       <button
+        type="button"
         className={`${styles.navBtn} ${styles.nextBtn}`}
-        onClick={next}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); next(); }}
         aria-label="Next slide"
       >
         <FiChevronRight />
@@ -152,8 +143,9 @@ export default function HeroSlider() {
         {activeSlides.map((s, i) => (
           <button
             key={s.id}
+            type="button"
             className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}
-            onClick={() => goTo(i, i > current ? 1 : -1)}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); goTo(i, i > current ? 1 : -1); }}
             role="tab"
             aria-selected={i === current}
             aria-label={`Slide ${i + 1}`}

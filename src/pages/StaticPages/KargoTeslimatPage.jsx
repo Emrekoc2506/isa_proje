@@ -1,4 +1,5 @@
 import { FiTruck, FiPackage, FiCreditCard, FiCheckCircle } from 'react-icons/fi';
+import SEO from '../../components/SEO/SEO';
 import s from './StaticPage.module.css';
 
 const features = [
@@ -11,6 +12,11 @@ const features = [
 export default function KargoTeslimatPage() {
   return (
     <div className={s.page}>
+      <SEO
+        title="Kargo ve Teslimat | Muhristan"
+        description="Muhristan kargo ve teslimat politikası. 500 TL üzeri ücretsiz teslimat ve hızlı gönderim şartları."
+        canonical="https://muhristan.com/kargo-teslimat"
+      />
       <section className={s.hero}>
         <div className={s.heroContent}>
           <h1 className={s.heroTitle}>Kargo & Teslimat</h1>
@@ -36,22 +42,15 @@ export default function KargoTeslimatPage() {
         </div>
 
         <div className={s.section}>
-          <h2 className={s.sectionTitle}>Kargo Ücretleri</h2>
+          <h2 className={s.sectionTitle}>Anlaşmalı Kargo & Ücretler</h2>
+          <p className={s.text} style={{ marginBottom: 16 }}>
+            Siparişleriniz Türkiye'nin lider kargo firması <strong style={{ color: 'var(--gold-light)' }}>Yurtiçi Kargo</strong> güvencesiyle gönderilmektedir.
+          </p>
           <div className={s.grid}>
-            <div className={s.card}>
-              <h3 className={s.cardTitle}>Standart Teslimat</h3>
-              <p className={s.cardText} style={{ fontSize: 28, fontWeight: 700, color: 'var(--gold-light)', margin: '12px 0' }}>49.90 ₺</p>
-              <p className={s.cardText}>2-5 iş günü içinde teslimat</p>
-            </div>
-            <div className={s.card}>
-              <h3 className={s.cardTitle}>Ücretsiz Kargo</h3>
-              <p className={s.cardText} style={{ fontSize: 28, fontWeight: 700, color: 'var(--gold-light)', margin: '12px 0' }}>0 ₺</p>
-              <p className={s.cardText}>500 ₺ ve üzeri alışverişlerde ücretsiz kargo</p>
-            </div>
-            <div className={s.card}>
-              <h3 className={s.cardTitle}>Hızlı Teslimat</h3>
-              <p className={s.cardText} style={{ fontSize: 28, fontWeight: 700, color: 'var(--gold-light)', margin: '12px 0' }}>79.90 ₺</p>
-              <p className={s.cardText}>1-2 iş günü içinde teslimat</p>
+            <div className={s.card} style={{ gridColumn: 'span 2' }}>
+              <h3 className={s.cardTitle}>Yurtiçi Kargo (Sabit Gönderim Ücreti)</h3>
+              <p className={s.cardText} style={{ fontSize: 32, fontWeight: 700, color: 'var(--gold-light)', margin: '12px 0' }}>170.00 ₺</p>
+              <p className={s.cardText}>Tüm Türkiye geneline 1-3 iş günü içerisinde güvenli ve hızlı teslimat</p>
             </div>
           </div>
         </div>

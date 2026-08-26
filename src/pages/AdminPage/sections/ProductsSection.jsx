@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { 
-  FiTrash2, FiEdit3, FiPlus, FiGrid, FiList, FiAlertCircle, FiLock, FiUnlock,
-  FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText, FiX
+  FiTrash2, FiEdit3, FiPlus, FiLock, FiUnlock,
+  FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText, FiX, FiSearch, FiTruck
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as productApi from '../../../services/productApi';
 import * as categoryApi from '../../../services/categoryApi';
 import { uploadFile } from '../../../services/fileApi';
 import RichTextEditor from '../../../components/RichTextEditor/RichTextEditor';
+import AdminSEOSection from '../../../components/AdminSEOSection/AdminSEOSection';
 import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
+import { getSafeStockQuantity } from '../../../utils/stockUtils';
+import { useProducts } from '../../../context/ProductContext';
 import styles from '../AdminPage.module.css';
 import { useTheme } from '../../../context/ThemeContext';
 
@@ -16,36 +19,29 @@ const STEPS = [
   { id: 1, label: "Genel", icon: FiTag, color: "#6366f1" },
   { id: 2, label: "Fiyat & Stok", icon: FiDollarSign, color: "#16a34a" },
   { id: 3, label: "Görsel", icon: FiImage, color: "#10b981" },
-  { id: 4, label: "Detaylar", icon: FiSliders, color: "#f59e0b" }
+  { id: 4, label: "Detaylar", icon: FiSliders, color: "#f59e0b" },
+  { id: 5, label: "SEO", icon: FiSearch, color: "#3b82f6" }
 ];
-
-const MAX_PRODUCT_IMAGES = 7;
-
-function getProductImageUrls(product) {
-  const orderedImages = Array.isArray(product?.images)
-    ? [...product.images]
-        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-        .map(image => image?.url)
-    : [];
-  const imageUrls = Array.isArray(product?.imageUrls) ? product.imageUrls : [];
-  const fallback = product?.imageUrl || product?.image || '';
-
-  return [...orderedImages, ...imageUrls, fallback]
-    .filter(url => typeof url === 'string' && url.trim())
-    .map(url => url.trim())
-    .filter((url, index, urls) => urls.indexOf(url) === index)
-    .slice(0, MAX_PRODUCT_IMAGES);
-}
 
 export default function ProductsSection({ onSelectProductForVariants }) {
   const { theme } = useTheme();
   const isLight = theme === 'light';
+
+  let refreshProducts = null;
+  try {
+    const prodCtx = useProducts();
+    refreshProducts = prodCtx?.refreshProducts;
+  } catch {
+    // Isolated component testing fallback
+  }
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deletingId, setDeletingId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Edit / Create Modal States
   const [showModal, setShowModal] = useState(false);
@@ -61,15 +57,21 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [selectedMainCatId, setSelectedMainCatId] = useState('');
   const [selectedSubCatId, setSelectedSubCatId] = useState('');
   const [imageUrls, setImageUrls] = useState([]);
-  const [imageUrlInput, setImageUrlInput] = useState('');
   const [isNew, setIsNew] = useState(false);
   const [isSale, setIsSale] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
   const [shortDescription, setShortDescription] = useState('');
   const [description, setDescription] = useState('');
   const [unit, setUnit] = useState('adet');
+  const [weightGram, setWeightGram] = useState('');
+  const [dimensions, setDimensions] = useState('');
   const [discount, setDiscount] = useState('');
   const [slug, setSlug] = useState('');
+  const [seoTitle, setSeoTitle] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
+  const [seoKeywords, setSeoKeywords] = useState('');
+  const [isFreeShipping, setIsFreeShipping] = useState(false);
+  const [shippingFee, setShippingFee] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [uploadingImg, setUploadingImg] = useState(false);
   const [modalStep, setModalStep] = useState(1); // Sihirbaz Adım Lojiği
@@ -126,73 +128,21 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const handlePriceChange = (val) => {
     setPrice(val);
     setFieldErrors(prev => ({ ...prev, price: '' }));
-
-    const newVal = parseFloat(val);
-    const oldVal = parseFloat(oldPrice);
-    if (!isNaN(newVal) && !isNaN(oldVal) && oldVal > 0 && newVal > 0 && oldVal > newVal) {
-      const pct = Math.round(((oldVal - newVal) / oldVal) * 100);
-      if (pct > 0) {
-        setDiscount(`%${pct} İndirim`);
-      }
-    } else if (!isNaN(newVal) && !isNaN(oldVal) && newVal >= oldVal) {
-      setDiscount('');
-    }
   };
 
   const handleOldPriceChange = (val) => {
     setOldPrice(val);
     setFieldErrors(prev => ({ ...prev, oldPrice: '' }));
-
-    const oldVal = parseFloat(val);
-    const priceVal = parseFloat(price);
-
-    if (!isNaN(oldVal) && oldVal > 0) {
-      if (!isNaN(priceVal) && priceVal > 0 && oldVal > priceVal) {
-        const pct = Math.round(((oldVal - priceVal) / oldVal) * 100);
-        if (pct > 0) {
-          setDiscount(`%${pct} İndirim`);
-        }
-      } else if (discount) {
-        const match = discount.match(/(\d+(?:[.,]\d+)?)/);
-        if (match) {
-          const pct = parseFloat(match[1].replace(',', '.'));
-          if (pct > 0 && pct < 100) {
-            const computedPrice = (oldVal * (1 - pct / 100)).toFixed(2);
-            setPrice(String(parseFloat(computedPrice)));
-            setFieldErrors(prev => ({ ...prev, price: '' }));
-          }
-        }
-      }
-    }
   };
 
   const handleDiscountChange = (val) => {
     setDiscount(val);
-
-    const match = val.match(/(\d+(?:[.,]\d+)?)/);
-    if (match) {
-      const pct = parseFloat(match[1].replace(',', '.'));
-      if (pct > 0 && pct < 100) {
-        const oldVal = parseFloat(oldPrice);
-        const priceVal = parseFloat(price);
-
-        if (!isNaN(oldVal) && oldVal > 0) {
-          const computedPrice = (oldVal * (1 - pct / 100)).toFixed(2);
-          setPrice(String(parseFloat(computedPrice)));
-          setFieldErrors(prev => ({ ...prev, price: '' }));
-        } else if (!isNaN(priceVal) && priceVal > 0) {
-          const computedOldPrice = (priceVal / (1 - pct / 100)).toFixed(2);
-          setOldPrice(String(parseFloat(computedOldPrice)));
-          setFieldErrors(prev => ({ ...prev, oldPrice: '' }));
-        }
-      }
-    }
   };
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await productApi.getAdminProducts({ page, pageSize: 10 });
+      const res = await productApi.getAdminProducts({ page, pageSize: 500 });
       setProducts(res.items || []);
       setTotalPages(res.totalPages || 1);
     } catch (err) {
@@ -233,15 +183,21 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setSelectedSubCatId('');
     setCategoryId(firstCat);
     setImageUrls([]);
-    setImageUrlInput('');
     setIsNew(false);
     setIsSale(false);
     setIsFeatured(false);
     setShortDescription('');
     setDescription('');
     setUnit('adet');
+    setWeightGram('');
+    setDimensions('');
     setDiscount('');
     setSlug('');
+    setSeoTitle('');
+    setSeoDescription('');
+    setSeoKeywords('');
+    setIsFreeShipping(false);
+    setShippingFee('');
     setIsActive(true);
     setModalStep(1);
     setFieldErrors({});
@@ -249,22 +205,14 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setShowModal(true);
   };
 
-  const handleOpenEdit = async (p) => {
-    let product = p;
-    try {
-      product = await productApi.getAdminProductById(p.id);
-    } catch (err) {
-      console.error('Ürün detayları yüklenemedi:', err);
-    }
+  const populateFormFromProduct = (p) => {
+    if (!p) return;
+    setName(p.name || p.Name || '');
+    setPrice(p.price ?? p.Price ?? '');
+    setOldPrice(p.oldPrice ?? p.OldPrice ?? '');
+    setStockQuantity(getSafeStockQuantity(p));
 
-    setModalMode('edit');
-    setCurrentId(product.id);
-    setName(product.name || '');
-    setPrice(product.price || '');
-    setOldPrice(product.oldPrice || '');
-    setStockQuantity(product.stockQuantity || 0);
-
-    const targetCatId = product.categoryId || '';
+    const targetCatId = p.categoryId || p.CategoryId || '';
     setCategoryId(targetCatId);
 
     const allCats = flattenCategories(categories);
@@ -274,80 +222,142 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     if (parentIdOfCat) {
       setSelectedMainCatId(String(parentIdOfCat));
       setSelectedSubCatId(String(targetCatId));
-    } else {
+    } else if (targetCatId) {
       setSelectedMainCatId(String(targetCatId));
       setSelectedSubCatId('');
     }
 
-    setImageUrls(getProductImageUrls(product));
-    setImageUrlInput('');
-    setIsNew(product.isNew || false);
-    setIsSale(product.isSale || false);
-    setIsFeatured(product.isFeatured || false);
-    setShortDescription(product.shortDescription || '');
-    setDescription(product.description || '');
-    setUnit(product.unit || 'adet');
-    setDiscount(product.discount || '');
-    setSlug(product.slug || '');
-    setIsActive(product.isActive ?? true);
+    let initialUrls = [];
+    const imgs = p.images || p.Images;
+    const imgUrls = p.imageUrls || p.ImageUrls;
+    if (Array.isArray(imgs) && imgs.length > 0) {
+      const sorted = [...imgs].sort((a, b) => {
+        const aP = a.isPrimary || a.IsPrimary ? 1 : 0;
+        const bP = b.isPrimary || b.IsPrimary ? 1 : 0;
+        if (aP !== bP) return bP - aP;
+        return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+      });
+      initialUrls = sorted.map(i => (typeof i === 'string' ? i : (i.url || i.Url))).filter(Boolean);
+    } else if (Array.isArray(imgUrls) && imgUrls.length > 0) {
+      initialUrls = imgUrls.filter(Boolean);
+    } else if (p.imageUrl || p.ImageUrl || p.image || p.Image) {
+      initialUrls = [p.imageUrl || p.ImageUrl || p.image || p.Image];
+    }
+    if (initialUrls.length > 0) {
+      setImageUrls(initialUrls);
+    }
+
+    setIsNew(p.isNew ?? p.IsNew ?? false);
+    setIsSale(p.isSale ?? p.IsSale ?? false);
+    setIsFeatured(p.isFeatured ?? p.IsFeatured ?? false);
+    
+    // Açıklamalar (ShortDescription / Description / detailedDescription / shortDesc)
+    const shortDescVal = p.shortDescription || p.ShortDescription || p.shortDesc || p.ShortDesc;
+    if (shortDescVal !== undefined && shortDescVal !== null) {
+      setShortDescription(shortDescVal);
+    }
+    
+    const descVal = p.description || p.Description || p.detailedDescription || p.DetailedDescription || p.longDescription || p.LongDescription;
+    if (descVal !== undefined && descVal !== null) {
+      setDescription(descVal);
+    }
+
+    // Birim & Ölçüler & İndirim Notu
+    if (p.unit || p.Unit) setUnit(p.unit || p.Unit);
+    if (p.weightGram ?? p.WeightGram ?? p.weight ?? p.Weight) setWeightGram(p.weightGram ?? p.WeightGram ?? p.weight ?? p.Weight ?? '');
+    if (p.dimensions || p.Dimensions) setDimensions(p.dimensions || p.Dimensions || '');
+    if (p.discount ?? p.Discount ?? p.discountRate ?? p.DiscountRate) setDiscount(p.discount ?? p.Discount ?? p.discountRate ?? p.DiscountRate ?? '');
+    if (p.slug || p.Slug) setSlug(p.slug || p.Slug || '');
+
+    // Kargo Bilgileri
+    setIsFreeShipping(p.isFreeShipping ?? p.IsFreeShipping ?? p.isFreeCargo ?? p.IsFreeCargo ?? false);
+    setShippingFee(p.shippingFee ?? p.ShippingFee ?? p.cargoFee ?? p.CargoFee ?? '');
+
+    // SEO Alanları
+    if (p.seoTitle || p.SeoTitle) setSeoTitle(p.seoTitle || p.SeoTitle || '');
+    if (p.seoDescription || p.SeoDescription) setSeoDescription(p.seoDescription || p.SeoDescription || '');
+    if (p.seoKeywords || p.SeoKeywords) setSeoKeywords(p.seoKeywords || p.SeoKeywords || '');
+
+    setIsActive(p.isActive ?? p.IsActive ?? true);
+  };
+
+  const handleOpenEdit = (p) => {
+    setModalMode('edit');
+    setCurrentId(p.id);
     setModalStep(1);
     setFieldErrors({});
     setFormGeneralError('');
+
+    // 1. Önce listedeki mevcut özet veriyle formu doldur
+    populateFormFromProduct(p);
     setShowModal(true);
+
+    // 2. Arka planda backend'den tüm detaylı ürün verisini çekip formu güncelle
+    const fetchFullDetails = async () => {
+      try {
+        let fullData = null;
+        try {
+          fullData = await productApi.getAdminProductById(p.id);
+        } catch {
+          fullData = await productApi.getProductById(p.id).catch(() => null);
+        }
+        if (fullData) {
+          const detailObj = fullData.data || fullData.product || fullData;
+          populateFormFromProduct(detailObj);
+        }
+      } catch (err) {
+        console.warn("Detaylı ürün bilgileri çekilemedi, özet veri kullanılıyor:", err);
+      }
+    };
+
+    fetchFullDetails();
   };
 
   const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files || []);
-    e.target.value = '';
-    if (!files.length) return;
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
 
-    const remainingSlots = MAX_PRODUCT_IMAGES - imageUrls.length;
-    if (remainingSlots <= 0 || files.length > remainingSlots) {
-      alert('Bir ürüne en fazla 7 fotoğraf ekleyebilirsiniz.');
+    if (imageUrls.length >= 7) {
+      alert("Bir ürüne en fazla 7 fotoğraf ekleyebilirsiniz.");
+      if (e.target) e.target.value = '';
       return;
+    }
+
+    let allowedFiles = selectedFiles;
+    if (imageUrls.length + selectedFiles.length > 7) {
+      alert("Bir ürüne en fazla 7 fotoğraf ekleyebilirsiniz.");
+      allowedFiles = selectedFiles.slice(0, 7 - imageUrls.length);
     }
 
     try {
       setUploadingImg(true);
-      for (const file of files) {
-        const response = await uploadFile(file, 'product');
-        const url = response?.url || response?.fileUrl || response?.imageUrl;
-        if (!url) {
-          throw new Error('Sunucu görsel adresi döndürmedi.');
-        }
-        setImageUrls(previous => [...previous, url].slice(0, MAX_PRODUCT_IMAGES));
-      }
+      const uploadPromises = allowedFiles.map(file => uploadFile(file, 'product'));
+      const responses = await Promise.all(uploadPromises);
+      const newUrls = responses.map(res => res?.url || res?.publicUrl || (typeof res === 'string' ? res : '')).filter(Boolean);
+
+      setImageUrls(prev => {
+        const combined = [...prev, ...newUrls];
+        return combined.slice(0, 7);
+      });
     } catch (err) {
-      alert("Görsel yüklenemedi: " + err.message);
+      alert("Görsel yüklenemedi: " + (err.message || "Bir hata oluştu"));
     } finally {
       setUploadingImg(false);
+      if (e.target) e.target.value = '';
     }
-  };
-
-  const handleAddImageUrl = () => {
-    const url = imageUrlInput.trim();
-    if (!url) return;
-    if (imageUrls.length >= MAX_PRODUCT_IMAGES) {
-      alert('Bir ürüne en fazla 7 fotoğraf ekleyebilirsiniz.');
-      return;
-    }
-    if (imageUrls.some(existingUrl => existingUrl.toLowerCase() === url.toLowerCase())) {
-      setImageUrlInput('');
-      return;
-    }
-    setImageUrls(previous => [...previous, url].slice(0, MAX_PRODUCT_IMAGES));
-    setImageUrlInput('');
-  };
-
-  const handleRemoveImage = (index) => {
-    setImageUrls(previous => previous.filter((_, imageIndex) => imageIndex !== index));
   };
 
   const handleSetPrimaryImage = (index) => {
-    setImageUrls(previous => {
-      if (index <= 0 || index >= previous.length) return previous;
-      return [previous[index], ...previous.slice(0, index), ...previous.slice(index + 1)];
+    if (index === 0) return;
+    setImageUrls(prev => {
+      const targetUrl = prev[index];
+      const remaining = prev.filter((_, idx) => idx !== index);
+      return [targetUrl, ...remaining];
     });
+  };
+
+  const handleDeleteImage = (index) => {
+    setImageUrls(prev => prev.filter((_, idx) => idx !== index));
   };
 
   const validateForm = () => {
@@ -383,6 +393,20 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     if (e && e.preventDefault) e.preventDefault();
     setFormGeneralError('');
 
+    // Adım 5 (SEO Ayarları) öncesinde Enter tuşuna basılırsa ürünü erken kaydetme, bir sonraki adıma geç
+    if (modalStep < 5) {
+      if (modalStep === 1 && !name.trim()) {
+        alert("Lütfen ürün adını doldurun.");
+        return;
+      }
+      if (modalStep === 2 && (price === "" || price == null || isNaN(parseFloat(price)))) {
+        alert("Lütfen geçerli bir fiyat girin.");
+        return;
+      }
+      setModalStep(s => s + 1);
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
@@ -396,15 +420,23 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       oldPrice: oldPrice ? parseFloat(oldPrice) : null,
       stockQuantity: stockQuantity ? parseInt(stockQuantity, 10) : 0,
       categoryId: categoryId,
-      imageUrls: imageUrls.filter(Boolean),
+      imageUrl: imageUrls[0] || null,
+      imageUrls: imageUrls,
       isNew,
       isSale,
       isFeatured,
       shortDescription: shortDescription.trim(),
       description: description.trim(),
       unit: unit || 'adet',
+      weightGram: weightGram !== '' && weightGram !== null ? parseFloat(weightGram) || weightGram : null,
+      dimensions: dimensions ? dimensions.trim() : null,
       discount: discount || null,
       slug: (slug || cleanName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ('urun-' + Date.now()),
+      isFreeShipping: Boolean(isFreeShipping),
+      shippingFee: isFreeShipping ? 0 : (shippingFee !== '' && shippingFee !== null ? parseFloat(shippingFee) || 0 : null),
+      seoTitle: seoTitle ? seoTitle.trim() : null,
+      seoDescription: seoDescription ? seoDescription.trim() : null,
+      seoKeywords: seoKeywords ? seoKeywords.trim() : null,
       isActive
     };
 
@@ -417,6 +449,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       }
       setShowModal(false);
       fetchProducts();
+      refreshProducts?.();
       alert(modalMode === 'create' ? "Ürün başarıyla oluşturuldu!" : "Ürün başarıyla güncellendi!");
     } catch (err) {
       console.error("Ürün kaydetme hatası:", err);
@@ -440,6 +473,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     }
   };
 
+
+
   const handleDelete = async (id) => {
     if (!window.confirm("Bu ürün kalıcı olarak silinecektir. Bu işlem geri alınamaz. Devam etmek istediğinize emin misiniz?")) {
       return;
@@ -454,6 +489,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       } else {
         fetchProducts();
       }
+      refreshProducts?.();
       alert("Ürün başarıyla silindi.");
     } catch (err) {
       alert(getHardDeleteErrorMessage(err, "Ürün"));
@@ -468,6 +504,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       const nextActive = !product.isActive;
       await productApi.updateAdminProductStatus(product.id, nextActive);
       fetchProducts();
+      refreshProducts?.();
     } catch (err) {
       alert("Ürün gizlilik durumu değiştirilemedi: " + err.message);
     } finally {
@@ -478,6 +515,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   return (
     <div>
       {/* ── PAGE HEADER ── */}
+      {/* ── PAGE HEADER ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h3 style={{ color: 'var(--gold-light)', fontSize: 20, fontWeight: 700, margin: 0, fontFamily: 'var(--font-heading)' }}>
@@ -487,12 +525,44 @@ export default function ProductsSection({ onSelectProductForVariants }) {
             {products.length} ürün • Mağazada listelenen tüm ürün kataloğunuz
           </p>
         </div>
-        <button
-          onClick={handleOpenCreate}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', border: 'none', borderRadius: 10, padding: '12px 22px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)', transition: 'transform 0.15s ease' }}
-        >
-          <FiPlus size={18} /> Yeni Ürün Ekle
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', width: '100%', maxWidth: '100%' }}>
+          <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: '100%' }}>
+            <FiSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--gold-light)' }} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Ürün adı veya SKU ara..."
+              style={{
+                width: '100%',
+                padding: '8px 32px 8px 36px',
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid var(--border-gold, rgba(201, 162, 39, 0.3))',
+                borderRadius: 8,
+                color: '#fff',
+                fontSize: 13,
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                title="Aramayı Temizle"
+              >
+                <FiX size={14} />
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={handleOpenCreate}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, var(--gold-light, #c9a227), var(--gold-dark, #a07820))', color: '#000', border: 'none', borderRadius: 10, padding: '12px 22px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 4px 20px rgba(201,162,39,0.4)', transition: 'transform 0.15s ease' }}
+          >
+            <FiPlus size={18} /> Yeni Ürün Ekle
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -513,33 +583,56 @@ export default function ProductsSection({ onSelectProductForVariants }) {
         </div>
       ) : (
         <>
-          <div style={{ overflowX: 'auto' }}>
-            <table className={styles.table} style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
-              <thead>
-                <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-gold)' }}>
-                  <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Görsel</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Ürün Adı</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Fiyat</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Stok</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>İşlemler</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map(p => (
-                  <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <td style={{ padding: 8 }}>
-                      <img src={p.imageUrl || "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100"} alt="" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
-                    </td>
-                    <td style={{ padding: 8, color: '#fff' }}>
-                      {p.name}
-                      <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                        {p.isNew && <span style={{ fontSize: 9, background: 'rgba(52,152,219,0.15)', color: '#3498db', padding: '2px 6px', borderRadius: 4 }}>YENİ</span>}
-                        {p.isSale && <span style={{ fontSize: 9, background: 'rgba(224,85,148,0.15)', color: '#e05594', padding: '2px 6px', borderRadius: 4 }}>İNDİRİM</span>}
-                      </div>
-                    </td>
-                    <td style={{ padding: 8, color: 'var(--gold-light)' }}>{p.price} ₺</td>
-                    <td style={{ padding: 8, color: p.stockQuantity <= 3 ? '#e05594' : '#2ecc71' }}>{p.stockQuantity} Adet</td>
-                    <td style={{ padding: 8 }}>
+          {(() => {
+            const displayedProducts = products.filter(p => {
+              if (!searchQuery.trim()) return true;
+              const q = searchQuery.toLowerCase().trim();
+              const nameMatch = (p.name || p.Name || '').toLowerCase().includes(q);
+              const skuMatch = (p.sku || p.Sku || '').toLowerCase().includes(q);
+              const idMatch = String(p.id || '').toLowerCase().includes(q);
+              return nameMatch || skuMatch || idMatch;
+            });
+
+            return (
+              <div style={{ overflowX: 'auto' }}>
+                <table className={styles.table} style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-gold)' }}>
+                      <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Görsel</th>
+                      <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Ürün Adı</th>
+                      <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Fiyat</th>
+                      <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Stok</th>
+                      <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>İşlemler</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayedProducts.map(p => {
+                      const stockVal = getSafeStockQuantity(p);
+                      return (
+                        <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td style={{ padding: 8 }}>
+                            <img src={p.imageUrl || p.ImageUrl || p.image || p.Image || "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100"} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6, border: '1px solid rgba(201,162,39,0.3)' }} />
+                          </td>
+                          <td style={{ padding: 8, color: isLight ? '#111827' : '#fff' }}>
+                            <a
+                              href={`/urun/${p.slug || p.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Ürün sayfasına git (Yeni Sekmede Açılır)"
+                              style={{ color: isLight ? '#111827' : '#ffffff', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }}
+                              onMouseEnter={e => e.currentTarget.style.color = 'var(--gold-light, #c9a227)'}
+                              onMouseLeave={e => e.currentTarget.style.color = isLight ? '#111827' : '#ffffff'}
+                            >
+                              {p.name}
+                            </a>
+                            <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                              {p.isNew && <span style={{ fontSize: 9, background: 'rgba(52,152,219,0.15)', color: '#3498db', padding: '2px 6px', borderRadius: 4 }}>YENİ</span>}
+                              {p.isSale && <span style={{ fontSize: 9, background: 'rgba(224,85,148,0.15)', color: '#e05594', padding: '2px 6px', borderRadius: 4 }}>İNDİRİM</span>}
+                            </div>
+                          </td>
+                          <td style={{ padding: 8, color: 'var(--gold-light)' }}>{p.price} ₺</td>
+                          <td style={{ padding: 8, color: stockVal <= 3 ? '#e05594' : '#2ecc71' }}>{stockVal} Adet</td>
+                      <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button 
                           onClick={() => handleToggleProductStatus(p)} 
@@ -575,10 +668,13 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                       </div>
                     </td>
                   </tr>
-                ))}
+                );
+              })}
               </tbody>
-            </table>
-          </div>
+                </table>
+              </div>
+            );
+          })()}
 
           {/* Pagination */}
           {totalPages > 1 && (
@@ -805,7 +901,27 @@ export default function ProductsSection({ onSelectProductForVariants }) {
               </div>
 
               {/* Form Content */}
-              <form onSubmit={handleSave} style={{ padding: 24 }} className={styles.profileForm}>
+              <form
+                onSubmit={(e) => e.preventDefault()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                    e.preventDefault();
+                    if (modalStep < 5) {
+                      if (modalStep === 1 && !name.trim()) {
+                        alert("Lütfen ürün adını doldurun.");
+                        return;
+                      }
+                      if (modalStep === 2 && (price === "" || price == null || isNaN(parseFloat(price)))) {
+                        alert("Lütfen geçerli bir fiyat girin.");
+                        return;
+                      }
+                      setModalStep(s => Math.min(s + 1, 5));
+                    }
+                  }
+                }}
+                style={{ padding: 24 }}
+                className={styles.profileForm}
+              >
                 
                 {formGeneralError && (
                   <div style={{ background: 'rgba(224, 85, 148, 0.15)', border: '1px solid #e05594', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#ff6b9d', fontSize: 13 }}>
@@ -904,6 +1020,14 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                             <label className={styles.fieldLabel}>Takma Ad (Slug)</label>
                             <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className={styles.fieldInput} placeholder="Boş bırakılırsa otomatik üretilir" />
                           </div>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>⚖️ Ürün Ağırlığı (Gram — İsteğe Bağlı)</label>
+                            <input type="number" step="0.1" value={weightGram} onChange={e => setWeightGram(e.target.value)} className={styles.fieldInput} placeholder="Örn: 45 (veya 45.5)" />
+                          </div>
+                          <div className={styles.formField}>
+                            <label className={styles.fieldLabel}>📏 Ürün Ölçüsü / Boyutu (İsteğe Bağlı)</label>
+                            <input type="text" value={dimensions} onChange={e => setDimensions(e.target.value)} className={styles.fieldInput} placeholder="Örn: 2.5 x 4 cm veya Ø 30 mm" />
+                          </div>
                         </div>
                       </div>
                     </motion.div>
@@ -968,6 +1092,53 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                           </div>
                         </div>
                       </div>
+
+                      {/* Section 3: Kargo & Teslimat */}
+                      <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 20, marginTop: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                            <FiTruck size={16} />
+                          </div>
+                          <div>
+                            <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>Kargo & Gönderim Ayarları</span>
+                            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Ürüne özel kargo şartlarını belirleyin</span>
+                          </div>
+                        </div>
+
+                        <div className={styles.formGrid} style={{ gridTemplateColumns: '1fr', gap: 12 }}>
+                          <div className={styles.formField}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', userSelect: 'none', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '12px 16px' }}>
+                              <input 
+                                type="checkbox" 
+                                checked={isFreeShipping} 
+                                onChange={e => {
+                                  setIsFreeShipping(e.target.checked);
+                                  if (e.target.checked) setShippingFee('0');
+                                }}
+                                style={{ width: 18, height: 18, accentColor: '#10b981', cursor: 'pointer' }} 
+                              />
+                              <div>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', display: 'block' }}>🚚 Kargo Bedava (Ücretsiz Kargo)</span>
+                                <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>Bu ürün satın alındığında kargo ücreti alınmaz.</span>
+                              </div>
+                            </label>
+                          </div>
+
+                          {!isFreeShipping && (
+                            <div className={styles.formField}>
+                              <label className={styles.fieldLabel}>Özel Kargo Ücreti (₺ — İsteğe Bağlı)</label>
+                              <input 
+                                type="number" 
+                                step="0.01" 
+                                value={shippingFee} 
+                                onChange={e => setShippingFee(e.target.value)} 
+                                className={styles.fieldInput} 
+                                placeholder="Örn: 49.90 (Varsayılan genel kargo ücreti için boş bırakın)" 
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </motion.div>
                   )}
 
@@ -981,43 +1152,172 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                       transition={{ duration: 0.2 }}
                     >
                       <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 20 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(201, 162, 39, 0.1)', border: '1px solid rgba(201, 162, 39, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold-light)' }}>
-                            <FiImage size={16} />
-                          </div>
-                          <div>
-                            <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>Ürün Görseli</span>
-                            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Müşterilerin liste sayfalarında göreceği ana resim</span>
-                          </div>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12, marginBottom: 16 }}>
-                          {imageUrls.map((url, index) => (
-                            <div key={`${url}-${index}`} style={{ position: 'relative', border: index === 0 ? '2px solid var(--gold)' : '1px solid rgba(201, 162, 39, 0.2)', borderRadius: 10, padding: 8, background: 'rgba(0, 0, 0, 0.3)' }}>
-                              <img src={url} alt={`Ürün görseli ${index + 1}`} style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 7, background: 'rgba(0,0,0,0.1)' }} />
-                              <button type="button" onClick={() => handleRemoveImage(index)} aria-label={`Görsel ${index + 1} sil`} style={{ position: 'absolute', top: 4, right: 4, background: '#e05594', color: '#fff', border: 'none', width: 25, height: 25, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>✕</button>
-                              <button type="button" onClick={() => handleSetPrimaryImage(index)} disabled={index === 0} style={{ width: '100%', marginTop: 7, border: 'none', borderRadius: 6, padding: '6px 4px', cursor: index === 0 ? 'default' : 'pointer', background: index === 0 ? 'rgba(201, 162, 39, 0.2)' : 'rgba(255,255,255,0.08)', color: index === 0 ? 'var(--gold-light)' : 'var(--text-secondary)', fontSize: 10, fontWeight: 700 }}>{index === 0 ? 'Ana Fotoğraf' : 'Ana Yap'}</button>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(201, 162, 39, 0.1)', border: '1px solid rgba(201, 162, 39, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold-light)' }}>
+                              <FiImage size={16} />
                             </div>
-                          ))}
+                            <div>
+                              <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fff' }}>Ürün Görselleri</span>
+                              <span style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Maksimum 7 görsel ekleyebilirsiniz. İlk görsel ana fotoğraf olarak kullanılır.</span>
+                            </div>
+                          </div>
+                          <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: imageUrls.length >= 7 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(201, 162, 39, 0.15)', color: imageUrls.length >= 7 ? '#ef4444' : 'var(--gold-light)', border: '1px solid rgba(201, 162, 39, 0.3)' }}>
+                            {imageUrls.length} / 7 Görsel
+                          </span>
                         </div>
 
-                        <div style={{ border: '2px dashed rgba(201, 162, 39, 0.25)', borderRadius: 12, padding: '28px 20px', textAlign: 'center', background: 'rgba(0, 0, 0, 0.2)', cursor: imageUrls.length >= MAX_PRODUCT_IMAGES ? 'not-allowed' : 'pointer', position: 'relative', transition: 'border-color 0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, opacity: imageUrls.length >= MAX_PRODUCT_IMAGES ? 0.65 : 1 }} onClick={() => { if (imageUrls.length >= MAX_PRODUCT_IMAGES) { alert('Bir ürüne en fazla 7 fotoğraf ekleyebilirsiniz.'); return; } document.getElementById('imageFileInput').click(); }}>
-                          <input id="imageFileInput" type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} />
-                          <FiUploadCloud size={36} style={{ color: 'var(--gold-light)' }} />
-                          <div>
-                            <span style={{ color: 'var(--text-secondary)', fontSize: 13, display: 'block', fontWeight: 600 }}>{imageUrls.length >= MAX_PRODUCT_IMAGES ? 'Maksimum görsel sayısına ulaşıldı' : 'Bir veya daha fazla görsel yüklemek için tıklayın'}</span>
-                            <span style={{ color: 'var(--text-muted)', fontSize: 11, display: 'block', marginTop: 4 }}>{imageUrls.length}/{MAX_PRODUCT_IMAGES} görsel • Kare (1:1) JPG, PNG, WEBP önerilir</span>
-                          </div>
-                          {uploadingImg && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(18,9,31,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12 }}><span style={{ color: 'var(--gold-light)', fontSize: 13, fontWeight: 'bold' }}>Görseller Yükleniyor...</span></div>}
-                        </div>
+                        {/* Dropzone for Multi-file Upload */}
+                        {imageUrls.length < 7 && (
+                          <div 
+                            style={{
+                              border: '2px dashed rgba(201, 162, 39, 0.25)',
+                              borderRadius: 12,
+                              padding: '30px 20px',
+                              textAlign: 'center',
+                              background: 'rgba(0, 0, 0, 0.2)',
+                              cursor: uploadingImg ? 'not-allowed' : 'pointer',
+                              position: 'relative',
+                              transition: 'border-color 0.2s',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: 10,
+                              marginBottom: 20
+                            }}
+                            onClick={() => !uploadingImg && document.getElementById('imageFileInput').click()}
+                            onMouseEnter={e => !uploadingImg && (e.currentTarget.style.borderColor = 'var(--gold)')}
+                            onMouseLeave={e => !uploadingImg && (e.currentTarget.style.borderColor = 'rgba(201, 162, 39, 0.25)')}
+                          >
+                            <input 
+                              id="imageFileInput"
+                              type="file" 
+                              accept="image/*"
+                              multiple
+                              onChange={handleImageUpload} 
+                              style={{ display: 'none' }} 
+                              disabled={uploadingImg}
+                            />
+                            <FiUploadCloud size={32} style={{ color: 'var(--gold-light)' }} />
+                            <div>
+                              <span style={{ color: 'var(--text-secondary)', fontSize: 13, display: 'block', fontWeight: 600 }}>
+                                {uploadingImg ? 'Görseller Yükleniyor...' : 'Görsel yüklemek için tıklayın (Birden fazla dosya seçebilirsiniz)'}
+                              </span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: 11, display: 'block', marginTop: 4 }}>
+                                JPG, PNG, WEBP — En fazla 7 adet fotoğraf yükleyebilirsiniz
+                              </span>
+                            </div>
 
-                        <div style={{ marginTop: 20 }}>
-                          <label className={styles.fieldLabel}>Alternatif: Görsel Web Adresi (URL)</label>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <input type="text" value={imageUrlInput} onChange={e => setImageUrlInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddImageUrl(); } }} className={styles.fieldInput} placeholder="Örn: https://example.com/resim.jpg" />
-                            <button type="button" onClick={handleAddImageUrl} className={styles.seeAllBtn} style={{ whiteSpace: 'nowrap' }}>Ekle</button>
+                            {uploadingImg && (
+                              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(18,9,31,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12 }}>
+                                <span style={{ color: 'var(--gold-light)', fontSize: 13, fontWeight: 'bold' }}>Görseller Yükleniyor...</span>
+                              </div>
+                            )}
                           </div>
-                        </div>
+                        )}
+
+                        {imageUrls.length >= 7 && (
+                          <div style={{ background: 'rgba(201, 162, 39, 0.1)', border: '1px solid rgba(201, 162, 39, 0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, color: 'var(--gold-light)', fontSize: 12, textAlign: 'center' }}>
+                            🔒 Bir ürüne en fazla 7 fotoğraf ekleyebilirsiniz. Yeni fotoğraf eklemek için mevcut fotoğraflardan birini silin.
+                          </div>
+                        )}
+
+                        {/* Uploaded Images Gallery Grid */}
+                        {imageUrls.length > 0 && (
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
+                            {imageUrls.map((url, idx) => (
+                              <div 
+                                key={idx} 
+                                style={{ 
+                                  position: 'relative', 
+                                  background: 'rgba(0,0,0,0.4)', 
+                                  borderRadius: 10, 
+                                  border: idx === 0 ? '2px solid var(--gold-light)' : '1px solid rgba(255,255,255,0.1)',
+                                  overflow: 'hidden',
+                                  display: 'flex',
+                                  flexDirection: 'column'
+                                }}
+                              >
+                                <div style={{ position: 'relative', width: '100%', height: 110 }}>
+                                  <img 
+                                    src={url} 
+                                    alt={`Görsel ${idx + 1}`} 
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                    onError={(e) => { e.target.onerror = null; e.target.src = '/ornek resim.jpg'; }}
+                                  />
+                                  
+                                  {/* Delete button */}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteImage(idx); }}
+                                    title="Görseli Sil"
+                                    style={{
+                                      position: 'absolute',
+                                      top: 6,
+                                      right: 6,
+                                      width: 26,
+                                      height: 26,
+                                      borderRadius: '50%',
+                                      background: 'rgba(239, 68, 68, 0.9)',
+                                      color: '#fff',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      boxShadow: '0 2px 6px rgba(0,0,0,0.4)'
+                                    }}
+                                  >
+                                    <FiX size={14} />
+                                  </button>
+
+                                  {/* Primary Badge */}
+                                  {idx === 0 && (
+                                    <span style={{
+                                      position: 'absolute',
+                                      bottom: 6,
+                                      left: 6,
+                                      background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))',
+                                      color: '#12091f',
+                                      fontSize: 10,
+                                      fontWeight: 800,
+                                      padding: '2px 7px',
+                                      borderRadius: 4,
+                                      boxShadow: '0 2px 4px rgba(0,0,0,0.4)'
+                                    }}>
+                                      ★ Ana Görsel
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Set as primary button */}
+                                {idx !== 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSetPrimaryImage(idx)}
+                                    style={{
+                                      background: 'rgba(201, 162, 39, 0.15)',
+                                      color: 'var(--gold-light)',
+                                      border: 'none',
+                                      borderTop: '1px solid rgba(201, 162, 39, 0.2)',
+                                      padding: '6px 8px',
+                                      fontSize: 11,
+                                      fontWeight: 600,
+                                      cursor: 'pointer',
+                                      transition: 'background 0.2s',
+                                      width: '100%',
+                                      textAlign: 'center'
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(201, 162, 39, 0.35)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(201, 162, 39, 0.15)'}
+                                  >
+                                    Ana Görsel Yap
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   )}
@@ -1127,6 +1427,32 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                       </div>
                     </motion.div>
                   )}
+
+                  {/* ADIM 5: SEO AYARLARI */}
+                  {modalStep === 5 && (
+                    <motion.div
+                      key="step5"
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 15 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <AdminSEOSection
+                        seoTitle={seoTitle}
+                        onChangeSeoTitle={setSeoTitle}
+                        seoDescription={seoDescription}
+                        onChangeSeoDescription={setSeoDescription}
+                        seoKeywords={seoKeywords}
+                        onChangeSeoKeywords={setSeoKeywords}
+                        slug={slug}
+                        onChangeSlug={setSlug}
+                        fallbackTitle={name}
+                        fallbackDescription={shortDescription || description}
+                        baseUrl="https://muhristan.com/urun/"
+                        typeLabel="ürün"
+                      />
+                    </motion.div>
+                  )}
                 </AnimatePresence>
 
                 {/* Sihirbaz Navigasyon Butonları */}
@@ -1153,9 +1479,9 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                     )}
                   </div>
 
-                  {/* Sağ Taraf: İleri (Adım 1-3) veya Ürünü Kaydet (Yalnızca Adım 4) */}
+                  {/* Sağ Taraf: İleri (Adım 1-4) veya Ürünü Kaydet (Adım 5) */}
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    {modalStep < 4 ? (
+                    {modalStep < 5 ? (
                       <button 
                         type="button" 
                         onClick={() => {
@@ -1176,7 +1502,8 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                       </button>
                     ) : (
                       <button 
-                        type="submit" 
+                        type="button" 
+                        onClick={handleSave}
                         className={styles.shopBtn}
                         style={{ padding: '10px 24px', fontSize: 13, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, var(--gold-light), var(--gold-dark))', color: '#000', borderRadius: 8, cursor: 'pointer', boxShadow: '0 4px 15px rgba(201,162,39,0.3)' }}
                       >

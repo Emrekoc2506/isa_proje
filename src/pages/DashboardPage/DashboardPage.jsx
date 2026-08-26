@@ -1,6 +1,7 @@
 import styles from "./DashboardPage.module.css";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import SEO from "../../components/SEO/SEO";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiGrid,
@@ -176,11 +177,15 @@ export default function DashboardPage({ activeTab = "overview" }) {
       await reloadUser();
       setProfileSuccess(true);
     } catch (err) {
-      let errorMessage = err.message || "Profil güncellenemedi.";
-      if (err.errors) {
+      let errorMessage;
+      if (err.status === 405 || err.message?.includes('405') || err.message?.includes('ERR_FAILED') || err.message?.includes('NetworkError') || err.message?.toLowerCase().includes('failed to fetch')) {
+        errorMessage = "Sunucu bu isteği şu an kabul etmiyor (405). Lütfen backend ekibinin Nginx/CORS yapılandırmasını kontrol etmesini isteyin.";
+      } else if (err.errors) {
         errorMessage = Object.entries(err.errors)
           .map(([key, value]) => `${key}: ${value.join(", ")}`)
           .join(" | ");
+      } else {
+        errorMessage = err.message || "Profil güncellenemedi. Lütfen daha sonra tekrar deneyin.";
       }
       setProfileError(errorMessage);
     } finally {
@@ -216,11 +221,17 @@ export default function DashboardPage({ activeTab = "overview" }) {
       setNewPass("");
       setConfPass("");
     } catch (err) {
-      let errorMessage = err.message || "Şifre değiştirilemedi.";
-      if (err.errors) {
+      let errorMessage;
+      if (err.status === 405 || err.message?.includes('405') || err.message?.includes('ERR_FAILED') || err.message?.toLowerCase().includes('failed to fetch')) {
+        errorMessage = "Sunucu bu isteği şu an kabul etmiyor (405). Lütfen backend ekibinin Nginx/CORS yapılandırmasını kontrol etmesini isteyin.";
+      } else if (err.status === 401 || err.message?.includes('401')) {
+        errorMessage = "Mevcut şifreniz hatalı.";
+      } else if (err.errors) {
         errorMessage = Object.entries(err.errors)
           .map(([key, value]) => `${key}: ${value.join(", ")}`)
           .join(" | ");
+      } else {
+        errorMessage = err.message || "Şifre değiştirilemedi. Lütfen daha sonra tekrar deneyin.";
       }
       setPassError(errorMessage);
     } finally {
@@ -262,11 +273,17 @@ export default function DashboardPage({ activeTab = "overview" }) {
       setNewEmail("");
       setEmailConfirmPassword("");
     } catch (err) {
-      let errorMessage = err.message || "E-posta adresi güncellenemedi.";
-      if (err.errors) {
+      let errorMessage;
+      if (err.status === 404 || err.status === 405 || err.message?.includes('404') || err.message?.includes('405') || err.message?.includes('ERR_FAILED') || err.message?.toLowerCase().includes('failed to fetch')) {
+        errorMessage = "E-posta değiştirme özelliği şu an sunucuda aktif değil. Lütfen destek ekibiyle iletişime geçin.";
+      } else if (err.status === 401 || err.message?.includes('401')) {
+        errorMessage = "Mevcut şifreniz hatalı.";
+      } else if (err.errors) {
         errorMessage = Object.entries(err.errors)
           .map(([key, value]) => `${key}: ${value.join(", ")}`)
           .join(" | ");
+      } else {
+        errorMessage = err.message || "E-posta adresi güncellenemedi. Lütfen daha sonra tekrar deneyin.";
       }
       setEmailError(errorMessage);
     } finally {
@@ -296,6 +313,7 @@ export default function DashboardPage({ activeTab = "overview" }) {
 
   return (
     <div className={styles.page}>
+      <SEO title="Hesabım | Muhristan" noindex={true} />
       {/* MOBİL SIDEBAR OVERLAY */}
       <AnimatePresence>
         {sidebarOpen && (

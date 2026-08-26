@@ -11,7 +11,8 @@ import * as couponApi from '../../services/couponApi';
 import * as orderApi from '../../services/orderApi';
 import * as paymentApi from '../../services/paymentApi';
 import { isManualPayment, shouldInitializePayment, PAYMENT_METHODS } from './paymentFlow';
-import { createSecureRandomId } from '../../utils/guestSession';
+
+import SEO from '../../components/SEO/SEO';
 
 export default function CheckoutPage() {
   const { isAuthenticated } = useAuth();
@@ -24,7 +25,7 @@ export default function CheckoutPage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
   const [paymentOptions, setPaymentOptions] = useState({
-    onlineCard: { enabled: false, provider: "Iyzico" },
+    onlineCard: { enabled: false, provider: "OnlineCard" },
     bankTransfer: { enabled: true },
     cashOnDelivery: { enabled: true },
   });
@@ -50,6 +51,7 @@ export default function CheckoutPage() {
   const [couponApplied, setCouponApplied] = useState('');
   const [couponError, setCouponError] = useState('');
   const [couponSuccess, setCouponSuccess] = useState('');
+  const [orderCustomNote, setOrderCustomNote] = useState('');
 
   const [previewData, setPreviewData] = useState(null);
   const [previewError, setPreviewError] = useState('');
@@ -165,7 +167,8 @@ export default function CheckoutPage() {
 
     const payload = {
       shippingMethodCode,
-      couponCode: couponApplied || null
+      couponCode: couponApplied || null,
+      customerNote: orderCustomNote.trim() || null
     };
 
     if (isAuthenticated) {
@@ -221,10 +224,6 @@ export default function CheckoutPage() {
       if (orderRes.orderNumber) {
         sessionStorage.setItem('pendingOrderNumber', orderRes.orderNumber);
       }
-      const emailVal = isAuthenticated ? '' : guestShipping.email;
-      if (emailVal) {
-        sessionStorage.setItem('pendingOrderEmail', emailVal);
-      }
 
       // Manual payments are complete orders and must never call the online payment endpoint.
       if (isManualPayment(paymentMethod)) {
@@ -237,9 +236,9 @@ export default function CheckoutPage() {
       try {
         const paymentRes = await paymentApi.initializePayment({
           orderId,
-          provider: 'iyzico',
+          provider: 'online',
           returnUrl: window.location.origin + '/odeme/sonuc',
-          idempotencyKey: createSecureRandomId('idemp-')
+          idempotencyKey: globalThis.crypto?.randomUUID?.() || `idemp-${Date.now()}`
         });
 
         if (paymentRes?.redirectUrl) {
@@ -305,6 +304,7 @@ export default function CheckoutPage() {
 
   return (
     <div className={styles.page}>
+      <SEO title="Ödeme ve Sipariş | Muhristan" noindex={true} />
       <div className={styles.container}>
         <div className={styles.leftColumn}>
           {/* 1. ADRES SEÇİMİ */}
@@ -417,27 +417,101 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          {/* 2. KARGO YÖNTEMİ */}
-          <div className={styles.sectionCard}>
-            <h3 className={styles.sectionTitle}><FiTruck /> Kargo Yöntemi</h3>
-            <div className={styles.shippingMethods}>
-              {previewData?.shippingMethods?.map(method => (
-                <div 
-                  key={method.code} 
-                  className={`${styles.shippingMethodCard} ${shippingMethodCode === method.code ? styles.selectedCard : ''}`}
-                  onClick={() => setShippingMethodCode(method.code)}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                    <div>
-                      <p className={styles.methodName}>{method.name}</p>
-                      <p className={styles.methodDesc}>{method.code === 'standard' ? '3-5 iş günü teslimat' : method.code === 'express' ? '1-2 iş günü teslimat' : 'Mağazadan teslim alma'}</p>
-                    </div>
-                    <span className={styles.methodPrice}>
-                      {method.amount === 0 ? 'Ücretsiz' : `${method.amount} ₺`}
-                    </span>
-                  </div>
+
+
+          {/* KARGO FİRMASI VE ÜCRETİ BÖLÜMÜ */}
+          <div className={styles.sectionCard} style={{
+            background: 'rgba(201, 162, 39, 0.05)',
+            border: '1px solid rgba(201, 162, 39, 0.3)',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px'
+          }}>
+            <h3 className={styles.sectionTitle} style={{ fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--gold-light)', margin: '0 0 12px 0' }}>
+              <FiTruck style={{ color: 'var(--gold)' }} /> Kargo & Teslimat Firması
+            </h3>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justify: 'space-between',
+              padding: '12px 16px',
+              background: 'var(--bg-dark, #0f0a18)',
+              border: '1px solid rgba(201, 162, 39, 0.4)',
+              borderRadius: '10px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: '#e30613', color: '#fff', fontWeight: 900, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', letterSpacing: '-0.5px' }}>
+                  YK
                 </div>
-              ))}
+                <div>
+                  <span style={{ display: 'block', fontWeight: 700, color: '#fff', fontSize: '14px' }}>Yurtiçi Kargo</span>
+                  <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)' }}>Tüm Türkiye'ye 1-3 iş günü içinde hızlı ve güvenli teslimat</span>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--gold-light)' }}>170.00 ₺</span>
+                <span style={{ display: 'block', fontSize: '10px', color: '#2ecc71', fontWeight: 600 }}>Sabit Ücret</span>
+              </div>
+            </div>
+          </div>
+
+          {/* KİŞİSELLEŞTİRME BÖLÜMÜ */}
+          <div className={styles.sectionCard} style={{
+            background: 'linear-gradient(135deg, rgba(201, 162, 39, 0.08), rgba(20, 10, 32, 0.95))',
+            border: '1.5px solid var(--gold, #c9a227)',
+            boxShadow: '0 4px 16px rgba(201, 162, 39, 0.15)'
+          }}>
+            <div style={{
+              fontSize: '14px',
+              fontWeight: 700,
+              color: 'var(--gold-light, #f5d680)',
+              marginBottom: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span>✨</span> Kişiye Özel Tılsım & İsim Hazırlığı (İsteğe Bağlı)
+            </div>
+            <p style={{
+              fontSize: '12px',
+              color: 'var(--text-secondary, #cbd5e1)',
+              lineHeight: '1.5',
+              marginBottom: '12px'
+            }}>
+              Ürününüzün size özel niyet ve ebced vefki ile hazırlanması için lütfen ürünü takacak kişinin <strong>Tam Adı</strong> ve <strong>Anne Adı</strong> bilgilerini yazın (Bilgileriniz tamamen gizli tutulmaktadır).
+            </p>
+            <div style={{ position: 'relative' }}>
+              <textarea
+                rows={3}
+                maxLength={250}
+                value={orderCustomNote}
+                onChange={(e) => setOrderCustomNote(e.target.value)}
+                placeholder="Örn: Ahmet oğlu Mehmet, Anne Adı: Ayşe — Özel tılsım notu..."
+                style={{
+                  width: '100%',
+                  padding: '12px 14px 28px 14px',
+                  background: 'var(--bg-dark, #0f0a18)',
+                  border: '1px solid rgba(201, 162, 39, 0.4)',
+                  borderRadius: '10px',
+                  color: 'var(--text-primary, #fff)',
+                  fontSize: '13px',
+                  outline: 'none',
+                  resize: 'none',
+                  fontFamily: 'inherit',
+                  lineHeight: 1.5,
+                  boxSizing: 'border-box'
+                }}
+              />
+              <div style={{
+                position: 'absolute',
+                bottom: '8px',
+                right: '12px',
+                fontSize: '11px',
+                color: 'var(--text-muted, #94a3b8)',
+                fontWeight: 600
+              }}>
+                {orderCustomNote.length}/250
+              </div>
             </div>
           </div>
 
@@ -481,6 +555,11 @@ export default function CheckoutPage() {
                   <img src={item.image} alt={item.name} className={styles.cartItemImg} />
                   <div className={styles.cartItemInfo}>
                     <p className={styles.cartItemName}>{item.name}</p>
+                    {item.customNote && (
+                      <p style={{ fontSize: 11, color: 'var(--gold-light, #f5d680)', margin: '2px 0 4px 0' }}>
+                        ✨ Kişiselleştirme: {item.customNote}
+                      </p>
+                    )}
                     <p className={styles.cartItemMeta}>{item.qty} adet × {item.price}</p>
                   </div>
                 </div>
@@ -534,8 +613,8 @@ export default function CheckoutPage() {
               )}
 
               <div className={styles.totalsRow}>
-                <span>Kargo</span>
-                <span>{previewData?.shippingAmount === 0 ? 'Ücretsiz' : `${previewData?.shippingAmount || 0} ₺`}</span>
+                <span>Kargo (Yurtiçi Kargo)</span>
+                <span>{previewData?.shippingAmount === 0 ? 'Ücretsiz' : `${previewData?.shippingAmount || 170} ₺`}</span>
               </div>
 
               {previewData?.taxAmount > 0 && (

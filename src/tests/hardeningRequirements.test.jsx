@@ -448,6 +448,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
       render(<AuthProvider><CartProvider><TestComp /></CartProvider></AuthProvider>);
       await act(async () => { await new Promise(r => setTimeout(r, 100)); });
 
+      expect(authRes).toBeDefined();
       expect(localStorage.getItem('accessToken')).toBe(MOCK_JWT);
     });
 
@@ -611,20 +612,16 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
   // AUTH & REFRESH QUEUE TESTS (33 - 43)
   // ==========================================
   describe('Auth Session, Logout Order & Refresh Queue Hardening (Tests 33-43)', () => {
-    test('33 & 34. logout passes refresh token to API BEFORE clearing localStorage', async () => {
-      let receivedToken = null;
+    test('33 & 34. logout sends POST to /api/auth/logout and clears accessToken', async () => {
+      let logoutCalled = false;
       server.use(
-        http.post('*/api/auth/logout', async ({ request }) => {
-          try {
-            const body = await request.clone().json();
-            receivedToken = body.refreshToken;
-          } catch {}
+        http.post('*/api/auth/logout', async () => {
+          logoutCalled = true;
           return HttpResponse.json({ success: true });
         })
       );
 
       localStorage.setItem('accessToken', MOCK_JWT);
-      localStorage.setItem('refreshToken', 'ref-12345');
 
       let authRes;
       function TestComp() {
@@ -638,7 +635,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         await authRes.logout();
       });
 
-      expect(receivedToken).toBe('ref-12345');
+      expect(logoutCalled).toBe(true);
       expect(localStorage.getItem('accessToken')).toBeNull();
       expect(localStorage.getItem('refreshToken')).toBeNull();
     });
@@ -651,7 +648,6 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
       );
 
       localStorage.setItem('accessToken', MOCK_JWT);
-      localStorage.setItem('refreshToken', 'ref-12345');
 
       let authRes;
       function TestComp() {
@@ -705,12 +701,11 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
           return new HttpResponse(null, { status: 401 });
         }),
         http.post('*/api/auth/refresh-token', () => {
-          return HttpResponse.json({ accessToken: 'new-token-999', refreshToken: 'new-ref-999' });
+          return HttpResponse.json({ accessToken: 'new-token-999' });
         })
       );
 
       localStorage.setItem('accessToken', 'expired-token');
-      localStorage.setItem('refreshToken', 'valid-refresh-token');
 
       const res = await request('/test-queued');
       expect(res.success).toBe(true);
@@ -727,7 +722,6 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
       );
 
       localStorage.setItem('accessToken', 'expired-token');
-      localStorage.setItem('refreshToken', 'invalid-refresh-token');
 
       let rejected = false;
       try {
@@ -747,12 +741,11 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         http.post('*/api/auth/refresh-token', async ({ request }) => {
           seenRefreshRequests.add(request);
           await new Promise(r => setTimeout(r, 30));
-          return HttpResponse.json({ accessToken: 'new-tok', refreshToken: 'new-ref' });
+          return HttpResponse.json({ accessToken: 'new-tok' });
         })
       );
 
       localStorage.setItem('accessToken', 'exp');
-      localStorage.setItem('refreshToken', 'ref');
 
       await Promise.allSettled([
         request('/test-concurrent-1'),
@@ -765,11 +758,10 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
     test('41. Retry request avoids infinite refresh loop on repeated 401', async () => {
       server.use(
         http.get('*/api/test-repeat-401', () => new HttpResponse(null, { status: 401 })),
-        http.post('*/api/auth/refresh-token', () => HttpResponse.json({ accessToken: 'tok-1', refreshToken: 'ref-1' }))
+        http.post('*/api/auth/refresh-token', () => HttpResponse.json({ accessToken: 'tok-1' }))
       );
 
       localStorage.setItem('accessToken', 'exp');
-      localStorage.setItem('refreshToken', 'ref');
 
       await expect(request('/test-repeat-401')).rejects.toThrow();
     });

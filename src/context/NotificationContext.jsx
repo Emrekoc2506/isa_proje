@@ -7,6 +7,51 @@ import { safeGetItem } from '../utils/storage';
 const NotificationContext = createContext(null);
 const signalrUrl = import.meta.env.VITE_SIGNALR_BASE_URL ?? "https://localhost:7148/hubs";
 
+export function getNotificationLink(n, user) {
+  const type = String(n?.type || '').toLowerCase();
+  const title = String(n?.title || '').toLowerCase();
+  const body = String(n?.body || n?.message || '').toLowerCase();
+  const isAdmin = user?.roles?.includes('Admin') || user?.roles?.includes('SuperAdmin') || user?.role === 'Admin';
+
+  if (n?.targetUrl) return n.targetUrl;
+  if (n?.link && n.link !== '/panel' && n.link !== '/admin') return n.link;
+
+  if (isAdmin) {
+    if (type === 'chat' || type === 'message' || title.includes('mesaj') || body.includes('mesaj')) {
+      return '/admin?tab=messages';
+    }
+    if (type === 'order' || title.includes('sipariş') || body.includes('sipariş')) {
+      return '/admin?tab=orders';
+    }
+    if (type === 'review' || title.includes('yorum') || title.includes('değerlendirme') || body.includes('yorum')) {
+      return '/admin?tab=reviews';
+    }
+    if (type === 'stock' || type === 'inventory' || title.includes('stok') || body.includes('stok')) {
+      return '/admin?tab=inventory';
+    }
+    if (type === 'product' || title.includes('ürün') || body.includes('ürün')) {
+      return '/admin?tab=products';
+    }
+    return '/admin';
+  }
+
+  // Customer
+  if (type === 'chat' || type === 'message' || title.includes('mesaj') || body.includes('mesaj')) {
+    return '/panel';
+  }
+  if (type === 'order' || title.includes('sipariş') || body.includes('sipariş')) {
+    return '/siparislerim';
+  }
+  if (type === 'stock' || title.includes('stok') || body.includes('stok')) {
+    return n?.link || '/urunler';
+  }
+  if (type === 'promo' || type === 'campaign' || title.includes('indirim') || title.includes('kupon')) {
+    return '/urunler';
+  }
+
+  return '/panel';
+}
+
 export function NotificationProvider({ children }) {
   const { isAuthenticated, user } = useAuth();
   const [notifications, setNotifications] = useState([]);
@@ -51,7 +96,7 @@ export function NotificationProvider({ children }) {
             body: n.body || n.message || '',
             time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : 'Şimdi',
             read: n.isRead ?? false,
-            link: n.link || '/panel',
+            link: getNotificationLink(n, user),
             icon: mapNotificationTypeToEmoji(n.type)
           }));
         setNotifications(mapped);
@@ -59,7 +104,7 @@ export function NotificationProvider({ children }) {
     } catch {
       // Ignore network errors
     }
-  }, [isAuthenticated, getDeletedIdsFromStorage]);
+  }, [isAuthenticated, user, getDeletedIdsFromStorage]);
 
   const mapNotificationTypeToEmoji = (type) => {
     const t = String(type).toLowerCase();
@@ -113,7 +158,7 @@ export function NotificationProvider({ children }) {
           body: notif.body || notif.message || '',
           time: 'Şimdi',
           read: false,
-          link: notif.link || '/panel',
+          link: getNotificationLink(notif, user),
           icon: mapNotificationTypeToEmoji(notif.type)
         };
         setNotifications(prev => [newNotif, ...prev]);
@@ -170,11 +215,39 @@ export function NotificationProvider({ children }) {
     }
   }, [notifications, addDeletedIdToStorage]);
 
+  const markChatNotificationsRead = useCallback(async () => {
+    setNotifications(prev => prev.map(n => {
+      const type = String(n.type || '').toLowerCase();
+      const title = String(n.title || '').toLowerCase();
+      const body = String(n.body || n.message || '').toLowerCase();
+      if (type === 'chat' || type === 'message' || title.includes('mesaj') || body.includes('mesaj')) {
+        return { ...n, read: true };
+      }
+      return n;
+    }));
+
+    const chatNotifs = notifications.filter(n => {
+      const type = String(n.type || '').toLowerCase();
+      const title = String(n.title || '').toLowerCase();
+      const body = String(n.body || n.message || '').toLowerCase();
+      return !n.read && (type === 'chat' || type === 'message' || title.includes('mesaj') || body.includes('mesaj'));
+    });
+
+    if (chatNotifs.length > 0) {
+      try {
+        await Promise.all(chatNotifs.map(n => markNotificationAsRead(n.id).catch(() => null)));
+      } catch {
+        // Ignore error
+      }
+    }
+  }, [notifications]);
+
   const value = {
     notifications,
     unreadCount,
     markRead,
     markAllRead,
+    markChatNotificationsRead,
     deleteSingle,
     clearAll,
     refreshNotifications: fetchNotifications

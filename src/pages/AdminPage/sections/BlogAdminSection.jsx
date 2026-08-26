@@ -14,6 +14,7 @@ import {
 } from '../../../services/blogApi';
 import { uploadFile } from '../../../services/fileApi';
 import RichTextEditor from '../../../components/RichTextEditor/RichTextEditor';
+import AdminSEOSection from '../../../components/AdminSEOSection/AdminSEOSection';
 
 // ── Hata kodu → Türkçe mesaj ──────────────────────────────
 function resolveErrorMsg(err) {
@@ -56,6 +57,9 @@ const STATUS_COLORS = {
   Published: { bg: 'rgba(39,174,96,0.15)', color: '#27ae60', label: 'Yayında' },
   Draft:     { bg: 'rgba(201,162,39,0.15)', color: '#c9a227', label: 'Taslak' },
   Archived:  { bg: 'rgba(127,140,141,0.15)', color: '#7f8c8d', label: 'Arşiv' },
+  1:         { bg: 'rgba(39,174,96,0.15)', color: '#27ae60', label: 'Yayında' },
+  0:         { bg: 'rgba(201,162,39,0.15)', color: '#c9a227', label: 'Taslak' },
+  2:         { bg: 'rgba(127,140,141,0.15)', color: '#7f8c8d', label: 'Arşiv' }
 };
 
 function StatusBadge({ status }) {
@@ -245,14 +249,20 @@ export default function BlogAdminSection() {
   // ── Durum toggle (Published ↔ Draft) ──────────────────
   const handleToggleStatus = async (art) => {
     if (togglingId) return;
-    const newStatus = art.status === 'Published' ? 'Draft' : 'Published';
+    const isCurrentlyPublished = art.status === 'Published' || art.status === 1 || art.status === '1' || art.isActive === true;
+    const newStatus = isCurrentlyPublished ? 'Draft' : 'Published';
     setTogglingId(art.id);
     setError('');
+
+    // Anında canlı arayüz güncellemesi (Optimistic UI)
+    setArticles(prev => prev.map(a => a.id === art.id ? { ...a, status: newStatus, isActive: newStatus === 'Published' } : a));
+
     try {
-      await updateAdminBlogArticleStatus(art.id, newStatus);
+      await updateAdminBlogArticleStatus(art.id, newStatus, art);
       await loadArticles();
     } catch (err) {
       setError(resolveErrorMsg(err));
+      await loadArticles();
     } finally {
       setTogglingId(null);
     }
@@ -262,7 +272,7 @@ export default function BlogAdminSection() {
   return (
     <div style={{ padding: '24px', color: 'var(--text-light)' }}>
       {/* Başlık */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--gold-light)', margin: 0 }}>Blog Yönetimi</h2>
           {!loading && (
@@ -374,26 +384,32 @@ export default function BlogAdminSection() {
                   </button>
 
                   {/* Yayın Toggle */}
-                  <button
-                    id={`btn-status-blog-${art.id}`}
-                    onClick={() => handleToggleStatus(art)}
-                    disabled={togglingId === art.id}
-                    style={{
-                      background: art.status === 'Published' ? 'rgba(127,140,141,0.1)' : 'rgba(39,174,96,0.1)',
-                      color: art.status === 'Published' ? '#7f8c8d' : '#27ae60',
-                      border: `1px solid ${art.status === 'Published' ? 'rgba(127,140,141,0.3)' : 'rgba(39,174,96,0.3)'}`,
-                      padding: '6px 12px', borderRadius: '6px', cursor: togglingId === art.id ? 'not-allowed' : 'pointer', fontSize: '13px',
-                      display: 'flex', alignItems: 'center', gap: '5px', opacity: togglingId === art.id ? 0.7 : 1,
-                    }}
-                    title={art.status === 'Published' ? 'Taslağa al' : 'Yayınla'}
-                  >
-                    {togglingId === art.id ? (
-                      <FiLoader size={13} style={{ animation: 'spin 1s linear infinite' }} />
-                    ) : (
-                      art.status === 'Published' ? <FiEyeOff size={13} /> : <FiEye size={13} />
-                    )}
-                    {togglingId === art.id ? 'İşleniyor...' : (art.status === 'Published' ? 'Gizle' : 'Yayınla')}
-                  </button>
+                  {(() => {
+                    const isPub = art.status === 'Published' || art.status === 1 || art.status === '1' || art.isActive === true;
+                    return (
+                      <button
+                        id={`btn-status-blog-${art.id}`}
+                        onClick={() => handleToggleStatus(art)}
+                        disabled={togglingId === art.id}
+                        style={{
+                          background: isPub ? 'rgba(127,140,141,0.1)' : 'rgba(39,174,96,0.15)',
+                          color: isPub ? '#7f8c8d' : '#27ae60',
+                          border: `1px solid ${isPub ? 'rgba(127,140,141,0.3)' : 'rgba(39,174,96,0.4)'}`,
+                          padding: '6px 12px', borderRadius: '6px', cursor: togglingId === art.id ? 'not-allowed' : 'pointer', fontSize: '13px',
+                          display: 'flex', alignItems: 'center', gap: '5px', opacity: togglingId === art.id ? 0.7 : 1,
+                          fontWeight: isPub ? 500 : 700
+                        }}
+                        title={isPub ? 'Taslağa al' : 'Yayınla'}
+                      >
+                        {togglingId === art.id ? (
+                          <FiLoader size={13} style={{ animation: 'spin 1s linear infinite' }} />
+                        ) : (
+                          isPub ? <FiEyeOff size={13} /> : <FiEye size={13} />
+                        )}
+                        {togglingId === art.id ? 'İşleniyor...' : (isPub ? 'Gizle (Taslağa Al)' : 'Yayınla')}
+                      </button>
+                    );
+                  })()}
 
                   {/* Sil */}
                   <button
@@ -612,26 +628,21 @@ export default function BlogAdminSection() {
                 />
               </div>
 
-              {/* SEO Alanları (Opsiyonel — daraltılmış) */}
-              <details style={{ marginBottom: '20px' }}>
-                <summary style={{ cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 600, marginBottom: '12px' }}>
-                  SEO Ayarları (Opsiyonel)
-                </summary>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
-                  <div>
-                    <label style={labelStyle}>SEO Başlığı</label>
-                    <input type="text" value={form.seoTitle} onChange={e => setField('seoTitle', e.target.value)} placeholder="Arama motorları için başlık" style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>SEO Açıklaması</label>
-                    <textarea value={form.seoDescription} onChange={e => setField('seoDescription', e.target.value)} placeholder="Arama motorları için kısa açıklama" rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>SEO Anahtar Kelimeler</label>
-                    <input type="text" value={form.seoKeywords} onChange={e => setField('seoKeywords', e.target.value)} placeholder="kelime1, kelime2, kelime3" style={inputStyle} />
-                  </div>
-                </div>
-              </details>
+              {/* SEO Ayarları */}
+              <AdminSEOSection
+                seoTitle={form.seoTitle || ''}
+                onChangeSeoTitle={(val) => setField('seoTitle', val)}
+                seoDescription={form.seoDescription || ''}
+                onChangeSeoDescription={(val) => setField('seoDescription', val)}
+                seoKeywords={form.seoKeywords || ''}
+                onChangeSeoKeywords={(val) => setField('seoKeywords', val)}
+                slug={form.slug || ''}
+                onChangeSlug={(val) => setField('slug',val)}
+                fallbackTitle={form.title}
+                fallbackDescription={form.summary || form.content}
+                baseUrl="https://muhristan.com/blog?article="
+                typeLabel="blog yazısı"
+              />
 
               {/* Form Butonları */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>

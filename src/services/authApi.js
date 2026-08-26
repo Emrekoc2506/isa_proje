@@ -4,15 +4,12 @@ import { safeGetItem, safeSetItem } from "../utils/storage";
 export async function login(payload) {
   const result = await request("/auth/login", {
     method: "POST",
+    credentials: "include",
     body: JSON.stringify(payload)
   });
 
   if (result?.accessToken) {
     safeSetItem("accessToken", result.accessToken);
-  }
-
-  if (result?.refreshToken) {
-    safeSetItem("refreshToken", result.refreshToken);
   }
 
   return result;
@@ -22,6 +19,7 @@ export function register(payload) {
   // Register returns { userId, email, emailConfirmed, message }, does not return tokens
   return request("/auth/register", {
     method: "POST",
+    credentials: "include",
     body: JSON.stringify(payload)
   });
 }
@@ -30,13 +28,11 @@ export function me() {
   return request("/auth/me");
 }
 
-export async function logout(refreshTokenVal) {
-  const tokenToUse = refreshTokenVal ?? safeGetItem("refreshToken");
-
+export async function logout() {
   try {
     return await request("/auth/logout", { 
       method: "POST",
-      body: JSON.stringify({ refreshToken: tokenToUse })
+      credentials: "include"
     });
   } catch (err) {
     return null;
@@ -46,17 +42,18 @@ export async function logout(refreshTokenVal) {
 export async function logoutAll() {
   try {
     return await request("/auth/logout-all", { 
-      method: "POST"
+      method: "POST",
+      credentials: "include"
     });
   } catch (err) {
     return null;
   }
 }
 
-export function refreshToken(token) {
+export function refreshToken() {
   return request("/auth/refresh-token", {
     method: "POST",
-    body: JSON.stringify({ refreshToken: token })
+    credentials: "include"
   });
 }
 

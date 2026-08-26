@@ -4,55 +4,75 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import * as authApi from "../services/authApi";
 import { safeGetItem, safeSetItem, safeRemoveItem } from "../utils/storage";
+import { isJwtExpired } from "../utils/jwt";
 
+export { isJwtExpired };
 const AuthContext = createContext(null);
-
-export function isJwtExpired(token) {
-  if (!token) return true;
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return true;
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-    if (!payload.exp) return false;
-    return payload.exp * 1000 < Date.now();
-  } catch (e) {
-    return true;
-  }
-}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [roles, setRoles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const safeSetState = useCallback((setter, val) => {
+    if (isMountedRef.current && typeof window !== 'undefined') {
+      setter(val);
+    }
+  }, []);
+
   const reloadUser = useCallback(async () => {
-    const token = safeGetItem("accessToken");
-    if (!token) {
-      setUser(null);
-      setRoles([]);
-      setIsLoading(false);
-      return null;
+    let token = safeGetItem("accessToken");
+    if (!token || isJwtExpired(token)) {
+      if (token) {
+        safeRemoveItem("accessToken");
+      }
+      try {
+        const refreshRes = await authApi.refreshToken();
+        if (refreshRes?.accessToken) {
+          safeSetItem("accessToken", refreshRes.accessToken);
+          token = refreshRes.accessToken;
+        } else {
+          safeSetState(setUser, null);
+          safeSetState(setRoles, []);
+          safeSetState(setIsLoading, false);
+          return null;
+        }
+      } catch {
+        safeSetState(setUser, null);
+        safeSetState(setRoles, []);
+        safeSetState(setIsLoading, false);
+        return null;
+      }
     }
 
     try {
-      setIsLoading(true);
+      safeSetState(setIsLoading, true);
       const res = await authApi.me();
       if (res && safeGetItem("accessToken")) {
-        setUser(res);
-        setRoles(res.roles || []);
+        safeSetState(setUser, res);
+        safeSetState(setRoles, res.roles || []);
         return res;
       }
     } catch (err) {
-      setUser(null);
-      setRoles([]);
+      safeSetState(setUser, null);
+      safeSetState(setRoles, []);
     } finally {
-      setIsLoading(false);
+      safeSetState(setIsLoading, false);
     }
     return null;
-  }, []);
+  }, [safeSetState]);
 
   useEffect(() => {
     reloadUser();
@@ -60,7 +80,6 @@ export function AuthProvider({ children }) {
     if (typeof window === "undefined") return;
     const handleSessionExpired = () => {
       safeRemoveItem("accessToken");
-      safeRemoveItem("refreshToken");
       setUser(null);
       setRoles([]);
     };
@@ -91,16 +110,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
-    const refreshTokenVal = safeGetItem("refreshToken");
     try {
-      if (refreshTokenVal) {
-        await authApi.logout(refreshTokenVal);
-      }
+      await authApi.logout();
     } catch (err) {
-      console.warn("Backend logout request error:", err);
+      // Ignore logout errors
     } finally {
       safeRemoveItem("accessToken");
-      safeRemoveItem("refreshToken");
       setUser(null);
       setRoles([]);
     }
@@ -110,37 +125,28 @@ export function AuthProvider({ children }) {
     try {
       await authApi.logoutAll();
     } catch (err) {
-      console.warn("Backend logoutAll request error:", err);
+      // Ignore logout errors
     } finally {
       safeRemoveItem("accessToken");
-      safeRemoveItem("refreshToken");
       setUser(null);
       setRoles([]);
     }
   }, []);
 
   const refreshSession = useCallback(async () => {
-    const rToken = safeGetItem("refreshToken");
-    if (!rToken) {
-      setUser(null);
-      setRoles([]);
-      return null;
-    }
     try {
-      const res = await authApi.refreshToken(rToken);
-      if (res.accessToken) {
+      const res = await authApi.refreshToken();
+      if (res?.accessToken) {
         safeSetItem("accessToken", res.accessToken);
-        if (res.refreshToken) {
-          safeSetItem("refreshToken", res.refreshToken);
-        }
         return await reloadUser();
       }
     } catch (err) {
-      console.error("Failed to refresh session:", err);
-      await logout();
+      safeRemoveItem("accessToken");
+      setUser(null);
+      setRoles([]);
     }
     return null;
-  }, [reloadUser, logout]);
+  }, [reloadUser]);
 
   const isAuthenticated = !!user;
   const isAdmin = roles.some(r => ['Admin', 'SuperAdmin', 'admin', 'superadmin'].includes(r)) || user?.role === 'Admin' || user?.role === 'SuperAdmin';

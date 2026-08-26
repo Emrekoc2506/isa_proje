@@ -4,6 +4,8 @@ import {
   ApiError,
   translateErrorMessage,
 } from "../api/apiError";
+import { isJwtExpired } from "../utils/jwt";
+import { safeGetItem, safeSetItem, safeRemoveItem } from "../utils/storage";
 
 let apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7148/api";
@@ -21,6 +23,26 @@ let isRefreshing = false;
 let refreshQueue = [];
 let activeRefreshPromise = null;
 
+const PUBLIC_PREFIXES = [
+  "/products",
+  "/categories",
+  "/banners",
+  "/blog",
+  "/coupons/validate",
+];
+
+function isPublicEndpoint(path, method = "GET") {
+  const p = (path || "").toLowerCase();
+  const m = (method || "GET").toUpperCase();
+  if (p.includes("/admin/")) return false;
+  if (p.includes("/auth/me")) return false;
+  if (p.includes("/auth/")) return true;
+  if (m === "GET") {
+    return PUBLIC_PREFIXES.some((prefix) => p.startsWith(prefix) || p.includes(prefix));
+  }
+  return false;
+}
+
 function subscribeTokenRefresh(resolve, reject) {
   refreshQueue.push({ resolve, reject });
 }
@@ -37,17 +59,24 @@ function rejectRefreshQueue(error) {
   queue.forEach((item) => item.reject(error));
 }
 
-import { safeGetItem, safeSetItem, safeRemoveItem } from "../utils/storage";
+let isSessionExpiredDispatched = false;
 
 function dispatchSessionExpired() {
+  if (isSessionExpiredDispatched) return;
+  isSessionExpiredDispatched = true;
+  setTimeout(() => { isSessionExpiredDispatched = false; }, 5000);
+
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("auth:session-expired"));
   }
 }
 
 async function request(path, options = {}) {
-  const token = safeGetItem("accessToken");
+  let token = safeGetItem("accessToken");
+  const isPublic = isPublicEndpoint(path, options.method);
+  const isRetry = options._isRetry === true;
   const headers = new Headers(options.headers || {});
+  const credentials = options.credentials ?? "include";
 
   if (!(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
@@ -60,7 +89,13 @@ async function request(path, options = {}) {
     headers.set("X-Guest-SessionId", guestSessionId); // Legacy compatibility
   }
 
-  if (token) {
+  // Handle expired tokens before sending request
+  if (token && isJwtExpired(token)) {
+    safeRemoveItem("accessToken");
+    token = null;
+  }
+
+  if (token && !isRetry && (!isJwtExpired(token) || !isPublic)) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
@@ -73,6 +108,7 @@ async function request(path, options = {}) {
   try {
     const response = await fetch(`${apiBaseUrl}${path}`, {
       ...options,
+      credentials,
       headers,
       signal: controller.signal,
     });
@@ -86,28 +122,24 @@ async function request(path, options = {}) {
     }
 
     // Handle 401 Unauthorized
-    const isRetry = options._isRetry === true;
     const isAuthPath =
       path.includes("/auth/refresh-token") ||
       path.includes("/auth/login") ||
       path.includes("/auth/register");
 
     if (response.status === 401 && !isAuthPath && !isRetry) {
-      const refreshTokenVal = safeGetItem("refreshToken");
-
-      if (!refreshTokenVal) {
-        dispatchSessionExpired();
-        handleLogoutRedirect();
-        throw new ApiError({
-          message: "Oturum süresi doldu.",
-          status: 401,
-          code: "unauthorized",
-        });
+      // If it's a public endpoint (e.g. GET /products), retry once WITHOUT Authorization header!
+      if (isPublic) {
+        const publicRetryOptions = { ...options, _isRetry: true };
+        const publicRetryHeaders = new Headers(options.headers || {});
+        publicRetryHeaders.delete("Authorization");
+        publicRetryOptions.headers = publicRetryHeaders;
+        return request(path, publicRetryOptions);
       }
 
       // If token in localStorage changed while this request was in flight, retry with new token
       const currentToken = safeGetItem("accessToken");
-      if (currentToken && currentToken !== token) {
+      if (currentToken && currentToken !== token && !isJwtExpired(currentToken)) {
         const retryOptions = { ...options, _isRetry: true };
         const retryHeaders = new Headers(options.headers || {});
         if (!(options.body instanceof FormData)) {
@@ -124,7 +156,7 @@ async function request(path, options = {}) {
 
       if (!isRefreshing) {
         isRefreshing = true;
-        refreshAccessToken(refreshTokenVal)
+        refreshAccessToken()
           .then((newAccessToken) => {
             isRefreshing = false;
             resolveRefreshQueue(newAccessToken);
@@ -146,7 +178,6 @@ async function request(path, options = {}) {
       return new Promise((resolve, reject) => {
         subscribeTokenRefresh(
           (newAccessToken) => {
-            // Retry once with _isRetry flag
             const newOptions = { ...options, _isRetry: true };
             const newHeaders = new Headers(options.headers || {});
             if (!(options.body instanceof FormData)) {
@@ -194,16 +225,16 @@ async function request(path, options = {}) {
   }
 }
 
-function refreshAccessToken(refreshTokenVal) {
+function refreshAccessToken() {
   if (activeRefreshPromise) return activeRefreshPromise;
 
   activeRefreshPromise = (async () => {
     const response = await fetch(`${apiBaseUrl}/auth/refresh-token`, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ refreshToken: refreshTokenVal }),
     });
 
     if (!response.ok) {
@@ -211,9 +242,8 @@ function refreshAccessToken(refreshTokenVal) {
     }
 
     const data = await response.json();
-    if (data.accessToken && data.refreshToken) {
+    if (data && data.accessToken) {
       safeSetItem("accessToken", data.accessToken);
-      safeSetItem("refreshToken", data.refreshToken);
       return data.accessToken;
     }
     throw new Error("Invalid token response");
@@ -225,18 +255,19 @@ function refreshAccessToken(refreshTokenVal) {
 }
 
 function handleLogoutRedirect() {
-  const hadToken = safeGetItem("accessToken") || safeGetItem("refreshToken");
+  const hadToken = Boolean(safeGetItem("accessToken"));
   safeRemoveItem("accessToken");
-  safeRemoveItem("refreshToken");
 
-  // Only force redirect to login if the user was actually authenticated before
-  if (
-    hadToken &&
-    typeof window !== "undefined" &&
-    window.location.pathname !== "/giris" &&
-    window.location.pathname !== "/uye-ol"
-  ) {
-    window.location.href = "/giris";
+  const protectedRoutes = [
+    "/admin", "/panel", "/odeme", "/siparislerim", "/adreslerim", "/profil", "/hesabim"
+  ];
+
+  if (hadToken && typeof window !== "undefined") {
+    const currentPath = window.location.pathname.toLowerCase();
+    const isProtectedRoute = protectedRoutes.some(route => currentPath.startsWith(route));
+    if (isProtectedRoute && currentPath !== "/giris" && currentPath !== "/uye-ol") {
+      window.location.href = "/giris";
+    }
   }
 }
 

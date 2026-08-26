@@ -1,6 +1,6 @@
 import styles from "./AdminPage.module.css";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiGrid,
@@ -24,11 +24,11 @@ import ChatUI from "../../components/ChatUI/ChatUI";
 import ThemeToggle from "../../components/ThemeToggle";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import SEO from "../../components/SEO/SEO";
 
 // Import modular sections
 import DashboardSection from "./sections/DashboardSection";
 import ProductsSection from "./sections/ProductsSection";
-import VariantsSection from "./sections/VariantsSection";
 import CategoriesSection from "./sections/CategoriesSection";
 import BannersSection from "./sections/BannersSection";
 import CouponsSection from "./sections/CouponsSection";
@@ -55,19 +55,38 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminPage() {
-  const [active, setActive] = useState("overview");
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+
+  const [active, setActive] = useState(() => {
+    if (tabParam && NAV_ITEMS.some(n => n.id === tabParam)) {
+      return tabParam;
+    }
+    return "overview";
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedChatUser, setSelectedChatUser] = useState(null); // { id, name }
+  const [selectedProductForVariants, setSelectedProductForVariants] = useState(null);
+  const [selectedChatUser, setSelectedChatUser] = useState(null);
 
   const { logout } = useAuth();
   const { theme } = useTheme();
   const isLight = theme === "light";
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (tabParam && NAV_ITEMS.some(n => n.id === tabParam)) {
+      setActive(tabParam);
+    }
+  }, [tabParam]);
+
   const handleLogoutClick = async () => {
     await logout();
     navigate("/giris");
+  };
+
+  const handleSelectProductForVariants = (product) => {
+    setSelectedProductForVariants(product);
+    setActive("variants");
   };
 
   const contentVariants = {
@@ -82,6 +101,7 @@ export default function AdminPage() {
 
   return (
     <div className={styles.page}>
+      <SEO title="Yönetim Paneli | Muhristan" noindex={true} />
       {/* Mobil Sidebar Overlay */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -309,7 +329,8 @@ export default function AdminPage() {
               exit="exit"
               style={{ height: active === "messages" ? "100%" : "auto" }}
             >
-              {active === "overview" && <DashboardSection />}
+              {active === "overview" && <DashboardSection onNavigate={setActive} />}
+
 
               {active === "products" && <ProductsSection />}
 

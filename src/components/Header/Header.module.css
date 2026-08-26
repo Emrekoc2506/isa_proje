@@ -72,6 +72,87 @@
   padding: 9px var(--space-md);
 }
 
+/* ── SubBar (Kategoriler & Ücretsiz Teslimat Bandı) ───────────── */
+.subBar {
+  border-top: 1px solid rgba(201, 162, 39, 0.15);
+  background: var(--bg-dark);
+  transition: all 0.3s ease;
+}
+
+.subBarInner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subBarStacked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.announcementRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  padding: 6px var(--space-md);
+  border-bottom: 1px solid rgba(201, 162, 39, 0.15);
+  background: rgba(201, 162, 39, 0.04);
+}
+
+.announcementRow strong {
+  color: var(--gold-light);
+}
+
+.announcementIcon {
+  font-size: 16px;
+  color: var(--gold);
+}
+
+.categoryRow {
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:global([data-theme="light"]) .header {
+  background: #FAF7F2 !important;
+}
+
+:global([data-theme="light"]) .subBar {
+  background: #F4EFE6 !important;
+  border-top-color: rgba(184, 134, 11, 0.2) !important;
+}
+
+:global([data-theme="light"]) .announcementRow {
+  color: #63527D !important;
+  border-bottom-color: rgba(184, 134, 11, 0.15) !important;
+  background: rgba(184, 134, 11, 0.06) !important;
+}
+
+:global([data-theme="light"]) .announcementRow strong {
+  color: #8b6508 !important;
+}
+
+@media (max-width: 768px) {
+  .announcementSub {
+    display: none;
+  }
+}
+
 /* ── Logo ──────────────────────────────────────────────────── */
 
 .logo {
@@ -440,6 +521,10 @@
 /* ── Responsive ────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
+  .desktopOnly {
+    display: none !important;
+  }
+
   .searchWrapper {
     display: none;
   }

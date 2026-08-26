@@ -1,9 +1,10 @@
 import { request } from "./apiClient";
 
 // Kamu Ürün İstekleri
-export function getProducts(params = {}) {
+export function getProducts(params = {}, options = {}) {
   const query = new URLSearchParams(params);
-  return request(`/products?${query.toString()}`);
+  const qStr = query.toString();
+  return request(`/products${qStr ? `?${qStr}` : ''}`, options);
 }
 
 export function getProductById(id) {
@@ -41,7 +42,7 @@ export function createProductReview(productId, payload) {
 export function getAdminProducts(params = {}) {
   const query = new URLSearchParams();
   if (params.page) query.append("page", params.page);
-  if (params.pageSize) query.append("pageSize", params.pageSize);
+  query.append("pageSize", params.pageSize || 500);
   return request(`/admin/products?${query.toString()}`);
 }
 
@@ -50,16 +51,36 @@ export function getAdminProductById(id) {
 }
 
 export function createAdminProduct(payload) {
+  const backendPayload = { ...payload };
+  if (payload.imageUrls !== undefined || payload.imageUrl !== undefined) {
+    backendPayload.imageUrls = Array.isArray(payload.imageUrls)
+      ? payload.imageUrls
+      : (payload.imageUrl ? [payload.imageUrl] : []);
+  }
+  if (payload.weightGram != null && payload.weightGram !== '') {
+    backendPayload.weight = parseFloat(payload.weightGram);
+    backendPayload.weightUnit = 'gr';
+  }
   return request("/admin/products", {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: JSON.stringify(backendPayload)
   });
 }
 
 export function updateAdminProduct(id, payload) {
+  const backendPayload = { ...payload };
+  if (payload.imageUrls !== undefined || payload.imageUrl !== undefined) {
+    backendPayload.imageUrls = Array.isArray(payload.imageUrls)
+      ? payload.imageUrls
+      : (payload.imageUrl ? [payload.imageUrl] : []);
+  }
+  if (payload.weightGram != null && payload.weightGram !== '') {
+    backendPayload.weight = parseFloat(payload.weightGram);
+    backendPayload.weightUnit = 'gr';
+  }
   return request(`/admin/products/${id}/update`, {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: JSON.stringify(backendPayload)
   });
 }
 
@@ -85,11 +106,13 @@ export function updateAdminProductPrice(id, price) {
 }
 
 export function updateAdminProductStock(id, payload) {
+  const stockQuantity = typeof payload === 'object' ? payload.stockQuantity : payload;
+  const note = (typeof payload === 'object' && payload.note) || "Admin stok güncellemesi";
   return request(`/admin/products/${id}/stock`, {
-    method: "PATCH",
+    method: "POST",
     body: JSON.stringify({
-      stockQuantity: payload.stockQuantity,
-      note: payload.note || "Admin stok guncellemesi"
+      stockQuantity,
+      note
     })
   });
 }
@@ -134,11 +157,13 @@ export function deleteAdminProductVariant(productId, variantId) {
 }
 
 export function updateAdminProductVariantStock(productId, variantId, payload) {
+  const stockQuantity = typeof payload === 'object' ? payload.stockQuantity : payload;
+  const note = (typeof payload === 'object' && payload.note) || "Admin varyant stok güncellemesi";
   return request(`/admin/products/${productId}/variants/${variantId}/stock`, {
-    method: "PATCH",
+    method: "POST",
     body: JSON.stringify({
-      stockQuantity: payload.stockQuantity,
-      note: payload.note || "Admin varyant stok guncellemesi"
+      stockQuantity,
+      note
     })
   });
 }

@@ -99,7 +99,7 @@ export default function CouponsSection() {
   const [code, setCode] = useState('');
   const [discountAmount, setDiscountAmount] = useState('');
   const [discountPercentage, setDiscountPercentage] = useState('');
-  const [isPercentage, setIsPercentage] = useState(true);
+  const [discountTypeMode, setDiscountTypeMode] = useState('percent'); // 'percent' | 'amount' | 'freeshipping'
   const [expiryDate, setExpiryDate] = useState('');
   const [maxUses, setMaxUses] = useState('');
 
@@ -123,7 +123,7 @@ export default function CouponsSection() {
     setCode('');
     setDiscountAmount('');
     setDiscountPercentage('');
-    setIsPercentage(true);
+    setDiscountTypeMode('percent');
     setExpiryDate('');
     setMaxUses('');
     setModalStep(1);
@@ -136,30 +136,45 @@ export default function CouponsSection() {
       alert('Lütfen kupon kodunu yazın.');
       return;
     }
-    if (isPercentage && !discountPercentage) {
-      alert('Lütfen indirim yüzdesini yazın.');
-      return;
-    }
-    if (!isPercentage && !discountAmount) {
-      alert('Lütfen indirim tutarını yazın.');
-      return;
+
+    let dType = 0;
+    let val = 0;
+    if (discountTypeMode === 'freeshipping') {
+      dType = 2;
+      val = 0;
+    } else if (discountTypeMode === 'percent') {
+      dType = 0;
+      val = parseFloat(discountPercentage) || 0;
+      if (!discountPercentage) {
+        alert('Lütfen indirim yüzdesini yazın.');
+        return;
+      }
+    } else {
+      dType = 1;
+      val = parseFloat(discountAmount) || 0;
+      if (!discountAmount) {
+        alert('Lütfen indirim tutarını yazın.');
+        return;
+      }
     }
 
     setSaving(true);
     try {
       await couponApi.createAdminCoupon({
         code: code.toUpperCase().trim(),
-        discountAmount: isPercentage ? 0 : parseFloat(discountAmount) || 0,
-        discountPercentage: isPercentage ? parseFloat(discountPercentage) || 0 : 0,
-        isPercentage,
+        name: `${code.toUpperCase().trim()} Kuponu`,
+        discountType: dType,
+        discountValue: val,
+        isPercentage: dType === 0,
+        isFreeShipping: dType === 2,
         expiryDate: expiryDate ? new Date(expiryDate).toISOString() : null,
-        maxUses: maxUses ? parseInt(maxUses) : null,
+        totalUsageLimit: maxUses ? parseInt(maxUses) : null,
         isActive: true
       });
       setShowModal(false);
-      fetchCoupons();
+      await fetchCoupons();
     } catch (err) {
-      alert("Kupon oluşturulamadı: " + err.message);
+      alert("Kupon oluşturulamadı: " + (err.message || "Lütfen kupon bilgilerini kontrol edin."));
     } finally {
       setSaving(false);
     }
@@ -169,7 +184,7 @@ export default function CouponsSection() {
     if (confirm("Bu kuponu silmek istediğinize emin misiniz?")) {
       try {
         await couponApi.deleteAdminCoupon(id);
-        fetchCoupons();
+        await fetchCoupons();
       } catch (err) {
         alert("Kupon silinemedi: " + err.message);
       }
@@ -179,10 +194,24 @@ export default function CouponsSection() {
   const handleToggleStatus = async (id, currentStatus) => {
     try {
       await couponApi.updateAdminCouponStatus(id, !currentStatus);
-      fetchCoupons();
+      await fetchCoupons();
     } catch (err) {
       alert("Kupon durumu güncellenemedi: " + err.message);
     }
+  };
+
+  const getDiscountTypeLabel = (c) => {
+    const dt = c.discountType ?? (c.isFreeShipping ? 2 : (c.isPercentage ? 0 : 1));
+    if (dt === 2 || c.isFreeShipping) return 'Ücretsiz Kargo';
+    if (dt === 0 || c.isPercentage) return 'Yüzdelik';
+    return 'Sabit Tutar';
+  };
+
+  const getDiscountValueDisplay = (c) => {
+    const dt = c.discountType ?? (c.isFreeShipping ? 2 : (c.isPercentage ? 0 : 1));
+    if (dt === 2 || c.isFreeShipping) return 'Ücretsiz Kargo';
+    if (dt === 0 || c.isPercentage) return `%${c.discountPercentage || c.discountValue || 0}`;
+    return `${c.discountAmount || c.discountValue || 0} ₺`;
   };
 
   if (loading) return (
@@ -194,7 +223,7 @@ export default function CouponsSection() {
   return (
     <div>
       {/* ── PAGE HEADER ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h3 style={{ color: isLight ? '#0c1929' : 'var(--gold-light)', fontSize: 20, fontWeight: 700, margin: 0, fontFamily: 'var(--font-heading)' }}>
             Kupon Yönetimi
@@ -230,8 +259,8 @@ export default function CouponsSection() {
             {coupons.map(c => (
               <tr key={c.id} style={{ borderBottom: isLight ? '1px solid #f1f5f9' : '1px solid rgba(255,255,255,0.05)' }}>
                 <td style={{ padding: '12px 16px', color: isLight ? '#0c1929' : '#fff', fontWeight: 700 }}>{c.code}</td>
-                <td style={{ padding: '12px 16px', color: isLight ? '#334155' : 'var(--text-secondary)' }}>{c.isPercentage ? 'Yüzdelik' : 'Tutar'}</td>
-                <td style={{ padding: '12px 16px', color: isLight ? '#0284c7' : 'var(--gold-light)', fontWeight: 700 }}>{c.isPercentage ? `%${c.discountPercentage}` : `${c.discountAmount} ₺`}</td>
+                <td style={{ padding: '12px 16px', color: isLight ? '#334155' : 'var(--text-secondary)' }}>{getDiscountTypeLabel(c)}</td>
+                <td style={{ padding: '12px 16px', color: isLight ? '#0284c7' : 'var(--gold-light)', fontWeight: 700 }}>{getDiscountValueDisplay(c)}</td>
                 <td style={{ padding: '12px 16px', color: isLight ? '#475569' : 'var(--text-secondary)' }}>{c.expiryDate ? new Date(c.expiryDate).toLocaleDateString('tr-TR') : 'Sınırsız'}</td>
                 <td style={{ padding: '12px 16px', color: isLight ? '#475569' : 'var(--text-secondary)' }}>{c.maxUses || 'Sınırsız'}</td>
                 <td style={{ padding: '12px 16px' }}>
@@ -467,13 +496,13 @@ export default function CouponsSection() {
                       <FormField
                         label="İndirim Türü"
                         isLight={isLight}
-                        icon={isPercentage ? FiPercent : FiDollarSign}
+                        icon={discountTypeMode === 'percent' ? FiPercent : (discountTypeMode === 'freeshipping' ? FiTag : FiDollarSign)}
                       >
                         {(inputId, commonStyle, setFocused) => (
                           <select
                             id={inputId}
-                            value={isPercentage ? "percent" : "amount"}
-                            onChange={e => setIsPercentage(e.target.value === 'percent')}
+                            value={discountTypeMode}
+                            onChange={e => setDiscountTypeMode(e.target.value)}
                             style={{
                               ...commonStyle,
                               paddingLeft: 38,
@@ -484,11 +513,12 @@ export default function CouponsSection() {
                           >
                             <option value="percent" style={{ color: '#0c1929', background: '#ffffff' }}>Yüzdelik İndirim (%)</option>
                             <option value="amount" style={{ color: '#0c1929', background: '#ffffff' }}>Sabit Tutar İndirimi (₺)</option>
+                            <option value="freeshipping" style={{ color: '#0c1929', background: '#ffffff' }}>Ücretsiz Kargo</option>
                           </select>
                         )}
                       </FormField>
 
-                      {isPercentage ? (
+                      {discountTypeMode === 'percent' && (
                         <FormField
                           label="İndirim Yüzdesi (%)"
                           type="number"
@@ -501,7 +531,9 @@ export default function CouponsSection() {
                           isLight={isLight}
                           icon={FiPercent}
                         />
-                      ) : (
+                      )}
+
+                      {discountTypeMode === 'amount' && (
                         <FormField
                           label="İndirim Tutarı (₺)"
                           type="number"
@@ -514,6 +546,12 @@ export default function CouponsSection() {
                           isLight={isLight}
                           icon={FiDollarSign}
                         />
+                      )}
+
+                      {discountTypeMode === 'freeshipping' && (
+                        <div style={{ background: 'rgba(201, 162, 39, 0.1)', border: '1px solid rgba(201, 162, 39, 0.3)', borderRadius: 8, padding: '12px 14px', marginBottom: 16, color: 'var(--gold-light)', fontSize: 13 }}>
+                          🚚 Bu kupon tanımlandığında siparişlerde kargo ücreti sıfırlanır.
+                        </div>
                       )}
                     </motion.div>
                   )}
@@ -578,8 +616,8 @@ export default function CouponsSection() {
                         type="button"
                         onClick={() => {
                           if (!code.trim()) { alert('Lütfen kupon kodunu yazın.'); return; }
-                          if (isPercentage && !discountPercentage) { alert('Lütfen indirim yüzdesini yazın.'); return; }
-                          if (!isPercentage && !discountAmount) { alert('Lütfen indirim tutarını yazın.'); return; }
+                          if (discountTypeMode === 'percent' && !discountPercentage) { alert('Lütfen indirim yüzdesini yazın.'); return; }
+                          if (discountTypeMode === 'amount' && !discountAmount) { alert('Lütfen indirim tutarını yazın.'); return; }
                           setModalStep(2);
                         }}
                         style={{

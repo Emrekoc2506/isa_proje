@@ -16,6 +16,8 @@ import logoImage from "../../assets/images/logo-2.png";
 import { isManualOrderSuccess, shouldClearCart } from "./paymentFlow";
 import { createSecureRandomId } from "../../utils/guestSession";
 
+import SEO from "../../components/SEO/SEO";
+
 export default function PaymentResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -32,7 +34,6 @@ export default function PaymentResultPage() {
     "";
   const email =
     searchParams.get("email") ||
-    sessionStorage.getItem("pendingOrderEmail") ||
     "";
 
   const [loading, setLoading] = useState(true);
@@ -86,7 +87,7 @@ export default function PaymentResultPage() {
     try {
       const paymentRes = await paymentApi.initializePayment({
         orderId,
-        provider: "iyzico",
+        provider: "online",
         returnUrl: window.location.origin + "/odeme/sonuc",
         idempotencyKey: createSecureRandomId("idemp-"),
       });
@@ -146,6 +147,7 @@ export default function PaymentResultPage() {
       className={styles.emptyContainer}
       style={{ minHeight: "100vh", padding: "120px 20px" }}
     >
+      <SEO title="Sipariş Sonucu | Muhristan" noindex={true} />
       <div className={styles.wrapper} style={{ maxWidth: 500, width: "100%" }}>
         <a href="/" className={styles.logoLink} style={{ marginBottom: 20 }}>
           <img src={logoImage} alt="muhristan" className={styles.logoImg} />

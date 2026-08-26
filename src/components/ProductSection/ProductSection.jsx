@@ -36,38 +36,34 @@ export default function ProductSection({ title, viewAllHref = '#', products = []
       <div className={styles.track}>
         {/* Sol Ok */}
         <button
+          type="button"
           className={`${styles.scrollBtn} ${styles.scrollPrev}`}
-          onClick={() => scroll(-1)}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); scroll(-1); }}
           aria-label="Sola kaydır"
         >
           <FiChevronLeft />
         </button>
 
         {/* Kaydırılabilir Liste */}
-        <motion.div
-          key={products.map(p => p.id || p.name).join('-') || 'empty-list'}
+        <div
           className={styles.list}
           ref={scrollRef}
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ amount: 0.05 }}
         >
           {products.map((product) => (
-            <motion.div
-              key={product.id || product.name}
+            <div
+              key={product.id || product.databaseId || product.name}
               className={styles.cardWrapper}
-              variants={staggerItem}
             >
               <ProductCard product={product} />
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* Sağ Ok */}
         <button
+          type="button"
           className={`${styles.scrollBtn} ${styles.scrollNext}`}
-          onClick={() => scroll(1)}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); scroll(1); }}
           aria-label="Sağa kaydır"
         >
           <FiChevronRight />

@@ -8,3 +8,11 @@
 .mainContent {
   flex: 1;
 }
+
+/* Mobil Alt Gezinme Barı (BottomNav) İçin Güvenli Alt Boşluk */
+@media (max-width: 768px) {
+  .layout {
+    padding-bottom: 82px;
+  }
+}
+

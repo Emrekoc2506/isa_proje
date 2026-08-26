@@ -2,6 +2,7 @@ import styles from "./AuthPage.module.css";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import SEO from "../../components/SEO/SEO";
 import {
   FiUser,
   FiLock,
@@ -124,7 +125,7 @@ export default function AuthPage() {
 
     try {
       setLoginLoading(true);
-      const res = await login({ email: loginEmail, password: loginPassword });
+      await login({ email: loginEmail, password: loginPassword });
 
       // Beni hatırla kaydı
       if (rememberMe) {
@@ -274,6 +275,10 @@ export default function AuthPage() {
 
   return (
     <div className={styles.page}>
+      <SEO
+        title={isLogin ? "Giriş Yap | Muhristan" : "Kayıt Ol | Muhristan"}
+        noindex={true}
+      />
       <div className={styles.bgOrb1} aria-hidden="true" />
       <div className={styles.bgOrb2} aria-hidden="true" />
       <div className={styles.bgOrb3} aria-hidden="true" />

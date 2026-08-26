@@ -1,5 +1,6 @@
 import styles from "./Header.module.css";
 import { useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSearch,
@@ -17,6 +18,8 @@ import CategoryNav from "../CategoryNav/CategoryNav";
 import CartDrawer from "../CartDrawer/CartDrawer";
 import NotificationDropdown from "../NotificationDropdown/NotificationDropdown";
 import ThemeToggle from "../ThemeToggle";
+import BottomNav from "../BottomNav/BottomNav";
+import MobileDrawer from "../MobileDrawer/MobileDrawer";
 import logoImage from "../../assets/images/logo-2.png";
 import { useCart } from "../../context/CartContext";
 import { useNotifications } from "../../context/NotificationContext";
@@ -25,7 +28,14 @@ import { useAuth } from "../../context/AuthContext";
 import { useProducts } from "../../context/ProductContext";
 
 export default function Header() {
-  const { isSticky } = useStickyHeader(60);
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
+  const isProductPage =
+    location.pathname === "/urunler" ||
+    location.pathname.startsWith("/urun/") ||
+    location.pathname.startsWith("/kategori/");
+
+  const { isSticky } = useStickyHeader(120, 40);
   const { isAuthenticated, isAdmin, logout } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,17 +66,7 @@ export default function Header() {
 
   return (
     <>
-      {/* ── Ücretsiz Teslimat Bandı ─────────────────────────── */}
-      <div
-        className={`${styles.announcement} ${isSticky ? styles.announcementScrolled : ""}`}
-      >
-        <MdOutlineLocalShipping className={styles.announcementIcon} />
-        <span>
-          <strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat
-        </span>
-      </div>
-
-      {/* ── Ana Header ─────────────────────────────────────── */}
+      {/* ── Ana Header (Sayfanın En Üstünde) ─────────────────── */}
       <header className={`${styles.header} ${isSticky ? styles.sticky : ""}`}>
         <div className={styles.inner}>
           {/* Logo */}
@@ -144,8 +144,10 @@ export default function Header() {
 
           {/* Üst Aksiyonlar */}
           <div className={styles.actions}>
-            {/* Gece / Gündüz Modu Butonu */}
-            <ThemeToggle />
+            {/* Gece / Gündüz Modu Butonu (Masaüstü) */}
+            <div className={styles.desktopOnly}>
+              <ThemeToggle />
+            </div>
 
             {/* Mobil arama */}
             <button
@@ -156,12 +158,12 @@ export default function Header() {
               {searchOpen ? <FiX /> : <FiSearch />}
             </button>
 
-            {/* Kullanıcı Durumu (Panelim & Çıkış Yap) */}
+            {/* Kullanıcı Durumu (Panelim & Çıkış Yap - Masaüstü) */}
             {isAuthenticated ? (
               <>
                 <a
                   href={isAdmin ? "/admin" : "/panel"}
-                  className={styles.actionBtn}
+                  className={`${styles.actionBtn} ${styles.desktopOnly}`}
                   aria-label="Panelim"
                 >
                   <FiUser />
@@ -170,7 +172,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className={styles.actionBtn}
+                  className={`${styles.actionBtn} ${styles.desktopOnly}`}
                   style={{
                     background: "none",
                     border: "none",
@@ -185,7 +187,7 @@ export default function Header() {
             ) : (
               <a
                 href="/giris"
-                className={styles.actionBtn}
+                className={`${styles.actionBtn} ${styles.desktopOnly}`}
                 aria-label="Giriş Yap"
               >
                 <FiUser />
@@ -193,8 +195,8 @@ export default function Header() {
               </a>
             )}
 
-            {/* Favoriler */}
-            <div className={styles.wishlistWrapper}>
+            {/* Favoriler (Masaüstü) */}
+            <div className={`${styles.wishlistWrapper} ${styles.desktopOnly}`}>
               <a
                 href="/favorilerim"
                 className={styles.actionBtn}
@@ -292,15 +294,44 @@ export default function Header() {
           )}
         </AnimatePresence>
 
-        {/* ── Kategori Navigasyonu (Header ile tam birleşmiş) ── */}
-        <CategoryNav
-          mobileOpen={mobileMenuOpen}
-          onMobileClose={() => setMobileMenuOpen(false)}
-        />
+        {/* ── Alt Bar (Sadece İç Sayfalarda Header Altında Gösterilir) ── */}
+        {!isHomePage && (
+          <div className={styles.subBar}>
+            {isProductPage ? (
+              <div className={styles.subBarStacked}>
+                <div className={styles.announcementRow}>
+                  <MdOutlineLocalShipping className={styles.announcementIcon} />
+                  <span>
+                    <strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat
+                  </span>
+                </div>
+                <div className={styles.categoryRow}>
+                  <CategoryNav
+                    mobileOpen={mobileMenuOpen}
+                    onMobileClose={() => setMobileMenuOpen(false)}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className={styles.subBarInner}>
+                <CategoryNav
+                  mobileOpen={mobileMenuOpen}
+                  onMobileClose={() => setMobileMenuOpen(false)}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       {/* ── Sepet Çekmecesi ─────────────────────────────────── */}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+
+      {/* ── Mobil Menü Çekmecesi (Tüm Sayfalarda Çalışır) ───── */}
+      <MobileDrawer open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+
+      {/* ── Mobil Bottom Navigation Bar ────────────────────── */}
+      <BottomNav onMenuClick={() => setMobileMenuOpen((v) => !v)} />
     </>
   );
 }

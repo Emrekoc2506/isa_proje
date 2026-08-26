@@ -18,20 +18,29 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock alert and confirm
+window.alert = window.alert || vi.fn();
+window.confirm = window.confirm || vi.fn().mockReturnValue(true);
+window.HTMLElement.prototype.scrollIntoView = window.HTMLElement.prototype.scrollIntoView || vi.fn();
+
 // Mock SignalR
 vi.mock('@microsoft/signalr', () => {
-  return {
-    HubConnectionBuilder: vi.fn().mockImplementation(() => ({
-      withUrl: vi.fn().mockReturnThis(),
-      withAutomaticReconnect: vi.fn().mockReturnThis(),
-      build: vi.fn().mockImplementation(() => ({
+  class HubConnectionBuilder {
+    withUrl() { return this; }
+    withAutomaticReconnect() { return this; }
+    build() {
+      return {
         start: vi.fn().mockResolvedValue(null),
         stop: vi.fn().mockResolvedValue(null),
         on: vi.fn(),
         off: vi.fn(),
         invoke: vi.fn().mockResolvedValue(null),
-      })),
-    })),
+        state: 'Connected'
+      };
+    }
+  }
+  return {
+    HubConnectionBuilder,
     HubConnectionState: {
       Connected: 'Connected',
       Disconnected: 'Disconnected',

@@ -9,7 +9,8 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 
 export default function ProductCard({ product }) {
-  const { name, price, oldPrice, discount, unit, image, href, isNew, isSale, id } = product;
+  const { name, price, oldPrice, discount, unit, image, href, isNew, isSale, id, isFreeShipping, isFreeCargo } = product;
+  const freeShipping = isFreeShipping ?? isFreeCargo;
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
@@ -47,6 +48,9 @@ export default function ProductCard({ product }) {
         {isSale && discount && (
           <span className={styles.badge + ' ' + styles.badgeSale}>{discount}</span>
         )}
+        {freeShipping && (
+          <span className={styles.badge} style={{ background: '#10b981', color: '#ffffff', fontWeight: 700 }}>Kargo Bedava</span>
+        )}
       </div>
 
       {/* ── Wishlist Butonu ────────────────────────────────── */}
@@ -60,7 +64,7 @@ export default function ProductCard({ product }) {
 
       {/* ── Görsel ─────────────────────────────────────────── */}
       <a href={detailHref} className={styles.imgWrapper} tabIndex={-1} onClick={(e) => { e.preventDefault(); navigate(detailHref); }}>
-        <img src={image} alt={name} className={styles.img} loading="lazy" />
+        <img src={image} alt={name} className={styles.img} loading="lazy" decoding="async" onError={(e) => { e.target.onerror = null; e.target.src = '/ornek resim.jpg'; }} />
         <div className={styles.imgOverlay} />
       </a>
 

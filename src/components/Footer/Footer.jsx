@@ -9,8 +9,27 @@ import {
 } from "react-icons/fi";
 import { footerLinks } from "../../data/index";
 import logoImage from "../../assets/images/logo-2.png";
+import { useProducts } from "../../context/ProductContext";
 
 export default function Footer() {
+  let dynamicCategories = [];
+  try {
+    const prodCtx = useProducts();
+    dynamicCategories = prodCtx?.categories || [];
+  } catch {
+    // Isolated component environment fallback
+  }
+
+  const categoryItems = (Array.isArray(dynamicCategories) && dynamicCategories.length > 0)
+    ? [
+        ...dynamicCategories.slice(0, 8).map(c => ({
+          label: c.name || c.label,
+          href: `/urunler?kategori=${c.id}`
+        })),
+        { label: 'Blog', href: '/blog' }
+      ]
+    : footerLinks.categories;
+
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>
@@ -22,9 +41,7 @@ export default function Footer() {
               <span className={styles.brandName}>muhristan</span>
             </a>
             <p className={styles.tagline}>
-              Ezoterizmin gizemli dünyasını keşfedin. Yüksek kaliteli ezoterik
-              ürünler, uçucu yağlar, tütsüler, kristaller, tarot ve çok daha
-              fazlası.
+              Mühristan'ın eşsiz dünyasını keşfedin. Yüksek kaliteli özel tasarım mühürler, gümüş yüzükler, kolyeler ve el sanatları ürünleri.
             </p>
 
             {/* Sosyal Medya */}
@@ -49,10 +66,9 @@ export default function Footer() {
 
           {/* Newsletter */}
           <div className={styles.newsletter}>
-            <h4 className={styles.newsletterTitle}>Mistik Çemberde Kalın</h4>
+            <h4 className={styles.newsletterTitle}>Mühristan Ailesine Katılın</h4>
             <p className={styles.newsletterDesc}>
-              Özel teklifler, ezoterik içgörüler ve yeni ürünlerden e-posta ile
-              haberdar olun.
+              Özel teklifler, yeni tasarımlar ve kampanyalardan e-posta ile haberdar olun.
             </p>
             <form
               className={styles.newsletterForm}
@@ -116,7 +132,7 @@ export default function Footer() {
           <div className={styles.linkCol}>
             <h5 className={styles.colTitle}>Kategoriler</h5>
             <ul className={styles.linkList}>
-              {footerLinks.categories.map((l) => (
+              {categoryItems.map((l) => (
                 <li key={l.label}>
                   <Link
                     to={l.href}
@@ -134,14 +150,34 @@ export default function Footer() {
         {/* ── Divider ─────────────────────────────────────────── */}
         <div className={styles.divider} />
 
-        {/* ── Alt: Copyright ────────────────────────────────── */}
-        <div className={styles.bottom}>
-          <p className={styles.copyright}>
-            © {new Date().getFullYear()} muhristan — Tüm hakları saklıdır.
-          </p>
-          <p className={styles.poweredBy}>
-            Powered by <span className={styles.highlight}>IdoSell</span>
-          </p>
+        {/* ── Alt: Güvenlik / Ödeme Rozetleri ve Copyright ── */}
+        <div className={styles.bottom} style={{ flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap', opacity: 0.9 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.03)', padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.06)' }}>
+              🔒 256-Bit SSL Güvenli Ödeme
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: 1, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.08)' }}>
+              VISA
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: 1, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.08)' }}>
+              mastercard
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: 1, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.08)' }}>
+              troy
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold-light)', background: 'rgba(201,162,39,0.1)', padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(201,162,39,0.25)' }}>
+              %100 Güvenli Alışveriş
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <p className={styles.copyright}>
+              © {new Date().getFullYear()} muhristan — Tüm hakları saklıdır. (İsa Şahap Şahıs İşletmesi)
+            </p>
+            <p className={styles.poweredBy}>
+              Powered by <span className={styles.highlight}>IdoSell</span>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

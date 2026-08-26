@@ -1,16 +1,18 @@
 import styles from './ChatUI.module.css';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSend, FiSearch, FiCheckCircle, FiPlusCircle, FiTrash2, FiMessageCircle, FiCheck, FiRefreshCw } from 'react-icons/fi';
+import { FiSend, FiSearch, FiCheckCircle, FiPlusCircle, FiTrash2, FiMessageCircle, FiCheck, FiRefreshCw, FiArrowLeft } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useNotifications } from '../../context/NotificationContext';
 import {
   startChatConnection,
   getChatConnection,
   joinConversationLive,
   leaveConversationLive,
   sendTypingLive,
-  adminJoinSupportPanelLive
+  adminJoinSupportPanelLive,
+  markConversationReadLive
 } from '../../services/chatService';
 import {
   getMyConversations,
@@ -26,12 +28,24 @@ import {
   deleteConversation,
   deleteAdminConversation,
   deleteMessages,
-  deleteAdminMessages
+  deleteAdminMessages,
+  markConversationAsRead,
+  markAdminConversationAsRead
 } from '../../services/chatApi';
 
 export default function ChatUI({ isAdmin = false, initialUserId = null, initialUserName = null }) {
   const { theme } = useTheme();
   const isLight = theme === 'light';
+
+  let refreshNotifications = null;
+  let markChatNotificationsRead = null;
+  try {
+    const notifCtx = useNotifications();
+    refreshNotifications = notifCtx?.refreshNotifications;
+    markChatNotificationsRead = notifCtx?.markChatNotificationsRead;
+  } catch {
+    // Isolated component testing fallback
+  }
 
   const [conversations, setConversations]   = useState([]);
   const [selectedConv, setSelectedConv]     = useState(null); // { id, name, initials, isClosed, isOnline, lastSeenAt }
@@ -51,6 +65,32 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
   selectedConvRef.current = selectedConv;
   const lastSelfTypingTimeRef = useRef(0);
   const typingTimeoutRef = useRef(null);
+
+  const handleOpenConversation = useCallback((conv) => {
+    if (!conv) return;
+    setSelectedConv(conv);
+    setSelectionMode(false);
+    setSelectedMsgIds([]);
+
+    // Clear unread count on conversation item
+    setConversations(previous =>
+      previous.map(item => String(item.id) === String(conv.id) ? { ...item, unreadCount: 0 } : item)
+    );
+
+    // Synchronize header notification bell
+    if (markChatNotificationsRead) markChatNotificationsRead().catch(() => null);
+    if (refreshNotifications) refreshNotifications().catch(() => null);
+
+    // Call REST mark as read
+    if (isAdmin) {
+      markAdminConversationAsRead(conv.id).catch(() => null);
+    } else {
+      markConversationAsRead(conv.id).catch(() => null);
+    }
+
+    // Trigger SignalR MarkAsRead live event
+    markConversationReadLive(conv.id).catch(() => null);
+  }, [isAdmin, markChatNotificationsRead, refreshNotifications]);
 
   // ── Dedup Helper: Mesaj listesinden duplikeleri temizle ─────────
   const deduplicateMessages = useCallback((msgList) => {
@@ -239,13 +279,22 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
           })));
         }
         await joinConversationLive(selectedConv.id);
+
+        if (isAdmin) {
+          markAdminConversationAsRead(selectedConv.id).catch(() => null);
+        } else {
+          markConversationAsRead(selectedConv.id).catch(() => null);
+        }
+        markConversationReadLive(selectedConv.id).catch(() => null);
+        if (markChatNotificationsRead) markChatNotificationsRead().catch(() => null);
+        if (refreshNotifications) refreshNotifications().catch(() => null);
       } catch (err) {
         console.error('Mesajlar yüklenemedi:', err);
       }
     };
     fetchMessages();
     return () => { leaveConversationLive(selectedConv.id).catch(() => null); };
-  }, [selectedConv, isAdmin]);
+  }, [selectedConv, isAdmin, markChatNotificationsRead, refreshNotifications]);
 
   // ── Input odaklan ─────────────────────────────────────────────────
   useEffect(() => {
@@ -275,11 +324,12 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
       conn.off('ConversationClosed');
       conn.off('MarkAsRead');
 
-      const handleNew = (conversationId, msgObj) => {
+      const handleNew = (msgObj) => {
         if (!msgObj) return;
         setIsTyping(false);
 
         // SignalR C# (PascalCase) veya JS (camelCase) veri tiplerini normalize et
+        const conversationId = msgObj.conversationId || msgObj.ConversationId;
         const id = msgObj.id || msgObj.Id || msgObj.ID;
         const clientMessageId = msgObj.clientMessageId || msgObj.ClientMessageId;
         const senderId = msgObj.senderId || msgObj.SenderId;
@@ -353,7 +403,12 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
         }
       };
 
-      const handleMarkAsRead = () => {};
+      const handleMarkAsRead = (conversationId) => {
+        if (!conversationId) return;
+        setConversations(previous =>
+          previous.map(item => String(item.id) === String(conversationId) ? { ...item, unreadCount: 0 } : item)
+        );
+      };
 
       conn.on('NewMessage', handleNew);
       conn.on('NotifyNewMessage', handleNew);
@@ -581,7 +636,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
   };
 
   return (
-    <div className={`${styles.chatContainer} ${isLight ? styles.chatContainerLight : ''}`}>
+    <div className={`${styles.chatContainer} ${isLight ? styles.chatContainerLight : ''} ${selectedConv ? styles.hasActiveConv : ''}`}>
 
       {/* ── BACKGROUND ANIMATIONS (GECE: AY+YILDIZ / GÜNDÜZ: GÜNEŞ+BULUT) ── */}
       <div className={styles.skyBackground}>
@@ -673,7 +728,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
               <div
                 key={conv.id}
                 className={`${styles.convItem} ${isActive ? styles.convItemActive : ''} group-conv`}
-                onClick={() => { setSelectedConv(conv); setSelectionMode(false); setSelectedMsgIds([]); }}
+                onClick={() => handleOpenConversation(conv)}
                 style={{
                   borderLeft: isTarget ? '3px solid var(--gold)' : '3px solid transparent',
                   position: 'relative',
@@ -792,6 +847,16 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
             {/* Header */}
             <div className={styles.chatHeader}>
               <div className={styles.chatHeaderLeft}>
+                <button
+                  onClick={() => {
+                    setSelectedConv(null);
+                    setMessages([]);
+                  }}
+                  className={styles.mobileBackBtn}
+                  title="Sohbet Listesine Dön"
+                >
+                  <FiArrowLeft size={20} />
+                </button>
                 <div className={styles.headerAvatar}
                   style={{ fontSize: 14, background: selectedConv.isClosed ? 'rgba(224,85,148,0.2)' : undefined }}>
                   {selectedConv.initials}

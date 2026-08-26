@@ -2241,4 +2241,571 @@
   background: rgba(28, 15, 53, 0.4) !important;
 }
 
+/* ================================================================
+   DASHBOARD - Canli Kontrol Paneli Stilleri
+   ================================================================ */
+
+.dashboardRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 32px;
+}
+
+.dashHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.dashTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.dashUpdated {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.dashRefreshBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(201,162,39,0.12);
+  border: 1px solid rgba(201,162,39,0.3);
+  border-radius: 8px;
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.dashRefreshBtn:hover:not(:disabled) {
+  background: rgba(201,162,39,0.22);
+  border-color: var(--gold);
+}
+.dashRefreshBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+/* --- 6 Metrik Karti Gridi ---------------------------------- */
+.dashMetricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.dashMetricCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: var(--bg-card, rgba(20,10,40,0.5));
+  border: 1px solid var(--border-gold, rgba(201,162,39,0.2));
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+.dashMetricCard::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--mc-color, #C9A227);
+  border-radius: 3px 0 0 3px;
+}
+.dashMetricCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+}
+
+.dashMetricIcon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashMetricContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashMetricValue {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.dashMetricLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.dashMetricSub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.dashSkeleton {
+  display: inline-block;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 4px;
+  height: 24px;
+}
+
+/* --- 2 Kolon Satir ----------------------------------------- */
+.dashRow2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .dashRow2 { grid-template-columns: 1fr; }
+  .dashMetricsGrid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .dashMetricsGrid { grid-template-columns: 1fr; }
+}
+
+/* --- Kart -------------------------------------------------- */
+.dashCard {
+  background: var(--bg-card, rgba(20,10,40,0.45));
+  border: 1px solid var(--border-gold, rgba(201,162,39,0.15));
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dashCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dashCardTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-light, #E5B93A);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dashViewAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+.dashViewAll:hover { color: var(--gold-light); }
+
+.dashEmpty {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 20px 0;
+  margin: 0;
+}
+
+/* --- En Cok Satanlar --------------------------------------- */
+.dashTopList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dashTopRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.02);
+  transition: background 0.15s;
+}
+.dashTopRow:hover { background: rgba(255,255,255,0.05); }
+
+.dashTopRank {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #000;
+}
+
+.dashTopName {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashTopStat {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.dashTopRevenue {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-light, #E5B93A);
+  white-space: nowrap;
+}
+
+/* --- Siparis / Uye Listesi --------------------------------- */
+.dashOrderList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dashOrderRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  transition: background 0.15s;
+}
+.dashOrderRow:hover { background: rgba(255,255,255,0.05); }
+
+.dashOrderAvatar {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(201,162,39,0.18);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.dashOrderInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashOrderName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashOrderMeta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.dashOrderRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.dashOrderAmount {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-light, #E5B93A);
+}
+
+.dashOrderTime {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dashOrderStatus {
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* --- Aktivite Akisi ---------------------------------------- */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.dashLiveBadge {
+  font-size: 11px;
+  color: #ef4444;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.dashActivityList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dashActivityRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+}
+
+.dashActivityIcon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashActivityContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashActivityText {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.dashActivitySub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.dashActivityTime {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* --- Uyari Listesi ----------------------------------------- */
+.dashAlertList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashAlert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+/* --- Tema uyumu: Acik tema --------------------------------- */
+:global([data-theme="light"]) .dashMetricCard {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(201,162,39,0.25);
+}
+:global([data-theme="light"]) .dashCard {
+  background: rgba(255,255,255,0.8);
+  border-color: rgba(201,162,39,0.2);
+}
+:global([data-theme="light"]) .dashRefreshBtn {
+  background: rgba(201,162,39,0.08);
+}
+:global([data-theme="light"]) .dashTopRow,
+:global([data-theme="light"]) .dashOrderRow,
+:global([data-theme="light"]) .dashActivityRow {
+  background: rgba(0,0,0,0.03);
+}
+:global([data-theme="light"]) .dashTopRow:hover,
+:global([data-theme="light"]) .dashOrderRow:hover {
+  background: rgba(0,0,0,0.06);
+}
+
+/* ============================================================
+   KAPSAMLI MOBİL & TABLET EKRAN DÜZELTMELERİ (RESPONSIVE FIX)
+   ============================================================ */
+
+/* 991px ve altı: Tablet / Mobil */
+@media (max-width: 991px) {
+  .page {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Sidebar gizli/açık geçişleri */
+  .sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    width: 280px !important;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+  }
+
+  .sidebarMobileOpen {
+    transform: translateX(0) !important;
+  }
+
+  /* Ana içerik alanının 280px margin'i sıfırlanır */
+  .main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Üst çubuk (TopBar) responsive düzenleme */
+  .topBar {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .hamburger {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pageTitle {
+    font-size: 15px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Ana içerik kabı padding & sığdırma */
+  .content {
+    padding: 12px !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Tablolar ve Kartlar için taşma engelleme */
+  .sectionCard,
+  .panelCard,
+  .gridContainer {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 14px !important;
+  }
+
+  .actionHeader {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .searchWrapper,
+  .searchInput {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .addBtn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* 576px ve altı: Dar Mobil Cihazlar */
+@media (max-width: 576px) {
+  .topBar {
+    padding: 8px 10px !important;
+  }
+
+  .pageTitle {
+    font-size: 14px !important;
+  }
+
+  .content {
+    padding: 8px !important;
+  }
+
+  .statCard {
+    padding: 12px !important;
+    gap: 12px !important;
+  }
+
+  .statCard h3 {
+    font-size: 20px !important;
+  }
+}
+
+
+
 

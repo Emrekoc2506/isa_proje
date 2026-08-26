@@ -6,6 +6,67 @@
   min-height: 100vh;
 }
 
+/* ── Billboard Altı: Ücretsiz Teslimat Bandı (Üstte) & Kategoriler (Altta) ── */
+.belowBillboardSection {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 25px; /* Billboard ile arasında tam 25px mesafe */
+  background: var(--bg-dark);
+  border-top: none;
+  border-bottom: 1px solid var(--border-gold);
+  margin-bottom: var(--space-xl);
+}
+
+.announcementBar {
+  background: linear-gradient(90deg, var(--bg-dark), var(--bg-mid), var(--bg-dark));
+  border-bottom: 1px solid var(--border-gold);
+  color: var(--text-secondary);
+  font-size: var(--text-xs, 12px);
+  text-align: center;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.05em;
+  width: 100%;
+}
+
+.categoryNavWrapper {
+  width: 100%;
+  background: var(--bg-dark);
+}
+
+.announcementBar strong {
+  color: var(--gold-light);
+}
+
+.announcementIcon {
+  color: var(--gold);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+:global([data-theme="light"]) .belowBillboardSection {
+  background: #FAF7F2 !important;
+  border-color: rgba(184, 134, 11, 0.3) !important;
+}
+
+:global([data-theme="light"]) .categoryNavWrapper {
+  background: #FAF7F2 !important;
+}
+
+:global([data-theme="light"]) .announcementBar {
+  background: #F4EFE6 !important;
+  border-top-color: rgba(184, 134, 11, 0.25) !important;
+  color: #63527D !important;
+}
+
+:global([data-theme="light"]) .announcementBar strong {
+  color: #B8860B !important;
+}
+
 /* Sale bölümü için farklı arka plan */
 .saleSection {
   background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-mid) 50%, var(--bg-dark) 100%);

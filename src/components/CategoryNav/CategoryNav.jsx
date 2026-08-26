@@ -7,7 +7,7 @@ import { useProducts } from '../../context/ProductContext';
 import { dropdownVariants } from '../../animations/variants';
 
 // Dropdown portal bileşeni — overflow kısıtlamasından kaçmak için
-function DropdownPortal({ anchorRect, children, onClose }) {
+function DropdownPortal({ anchorRect, children, onClose, onMouseEnter, onMouseLeave }) {
   if (!anchorRect) return null;
 
   const style = {
@@ -19,7 +19,7 @@ function DropdownPortal({ anchorRect, children, onClose }) {
   };
 
   return createPortal(
-    <div style={style} onMouseLeave={onClose}>
+    <div style={style} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave || onClose}>
       {children}
     </div>,
     document.body
@@ -34,6 +34,42 @@ export default function CategoryNav({ mobileOpen, onMobileClose }) {
   const navRef  = useRef(null);
   const listRef = useRef(null);
   const itemRefs = useRef({});
+  const leaveTimerRef = useRef(null);
+
+  const clearLeaveTimer = () => {
+    if (leaveTimerRef.current) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+  };
+
+  const closeDropdown = useCallback(() => {
+    clearLeaveTimer();
+    setActiveDropdown(null);
+  }, []);
+
+  const handleMouseEnter = useCallback((catId, hasChildren) => {
+    clearLeaveTimer();
+    if (!hasChildren) {
+      setActiveDropdown(null);
+      return;
+    }
+    const el = itemRefs.current[catId];
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setActiveDropdown({ id: catId, rect });
+  }, []);
+
+  const handleMouseLeaveItem = useCallback(() => {
+    clearLeaveTimer();
+    leaveTimerRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 200);
+  }, []);
+
+  const handlePortalMouseEnter = useCallback(() => {
+    clearLeaveTimer();
+  }, []);
 
   // Scroll pozisyonuna göre ok göstergelerini güncelle
   const updateArrows = useCallback(() => {
@@ -92,26 +128,34 @@ export default function CategoryNav({ mobileOpen, onMobileClose }) {
     };
   }, [updateArrows]);
 
-  // ESC ile kapat
+  // ESC, dışarı tıklama ve kaydırma durumunda dropdown'ı kapat
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setActiveDropdown(null);
+      if (e.key === 'Escape') closeDropdown();
     };
+    const handleScroll = () => {
+      closeDropdown();
+    };
+    const handleClickOutside = (e) => {
+      if (
+        navRef.current &&
+        !navRef.current.contains(e.target) &&
+        !e.target.closest('[role="menu"]')
+      ) {
+        closeDropdown();
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('mousedown', handleClickOutside);
 
-  const handleMouseEnter = useCallback((catId, hasChildren) => {
-    if (!hasChildren) return;
-    const el = itemRefs.current[catId];
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    setActiveDropdown({ id: catId, rect });
-  }, []);
-
-  const closeDropdown = useCallback(() => {
-    setActiveDropdown(null);
-  }, []);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [closeDropdown]);
 
   // Ok butonuyla scroll
   const scrollBy = (dir) => {
@@ -121,7 +165,12 @@ export default function CategoryNav({ mobileOpen, onMobileClose }) {
   return (
     <>
       {/* ── Desktop Nav ────────────────────────────────────── */}
-      <nav className={styles.nav} ref={navRef} aria-label="Main categories">
+      <nav 
+        className={styles.nav} 
+        ref={navRef} 
+        aria-label="Main categories"
+        onMouseLeave={handleMouseLeaveItem}
+      >
         <div className={styles.scrollWrapper}>
 
           {/* Sol gradient + geri oku */}
@@ -161,10 +210,12 @@ export default function CategoryNav({ mobileOpen, onMobileClose }) {
                   className={styles.item}
                   ref={(el) => { itemRefs.current[cat.id] = el; }}
                   onMouseEnter={() => handleMouseEnter(cat.id, hasChildren)}
+                  onMouseLeave={handleMouseLeaveItem}
                 >
                   <a
                     href={`/urunler?kategori=${cat.id}`}
                     className={`${styles.link} ${isActive ? styles.active : ''}`}
+                    onClick={closeDropdown}
                   >
                     {catName}
                     {hasChildren && (
@@ -177,8 +228,8 @@ export default function CategoryNav({ mobileOpen, onMobileClose }) {
               );
             })}
             {/* Blog Linki */}
-            <li className={styles.item}>
-              <a href="/blog" className={styles.link} style={{ color: 'var(--gold-light)', fontWeight: 600 }}>
+            <li className={styles.item} onMouseEnter={() => closeDropdown()}>
+              <a href="/blog" className={styles.link} onClick={closeDropdown} style={{ color: 'var(--gold-light)', fontWeight: 600 }}>
                 ✦ Blog
               </a>
             </li>
@@ -195,6 +246,8 @@ export default function CategoryNav({ mobileOpen, onMobileClose }) {
             <DropdownPortal
               key={activeDropdown.id}
               anchorRect={activeDropdown.rect}
+              onMouseEnter={handlePortalMouseEnter}
+              onMouseLeave={closeDropdown}
               onClose={closeDropdown}
             >
               <motion.ul

@@ -10,29 +10,32 @@ export function addCartItem(payload) {
     body: JSON.stringify({
       productId: payload.productId,
       productVariantId: payload.productVariantId || null,
-      quantity: payload.quantity || 1
+      quantity: payload.quantity || 1,
+      customNote: payload.customNote || payload.note || null,
+      note: payload.customNote || payload.note || null
     })
   });
 }
 
 export function updateCartItem(itemId, payload) {
-  return request(`/cart/items/${itemId}`, {
-    method: "PATCH",
+  const qty = typeof payload === 'object' && payload !== null ? payload.quantity : payload;
+  return request(`/cart/items/${itemId}/update`, {
+    method: "POST",
     body: JSON.stringify({
-      quantity: payload.quantity
+      quantity: qty
     })
   });
 }
 
 export function removeCartItem(itemId) {
-  return request(`/cart/items/${itemId}`, {
-    method: "DELETE"
+  return request(`/cart/items/${itemId}/delete`, {
+    method: "POST"
   });
 }
 
 export function clearCart() {
-  return request("/cart", {
-    method: "DELETE"
+  return request("/cart/clear", {
+    method: "POST"
   });
 }
 

@@ -3,18 +3,26 @@ import { Link } from "react-router-dom";
 import { FiClock, FiShoppingCart } from "react-icons/fi";
 import { getRecentlyViewed } from "../../utils/recentlyViewed";
 import { useCart } from "../../context/CartContext";
+import { useProducts } from "../../context/ProductContext";
 import styles from "./RecentlyViewed.module.css";
 
 export default function RecentlyViewed({ currentProductId }) {
   const [items, setItems] = useState([]);
   const { addToCart } = useCart();
+  const { products } = useProducts();
 
   useEffect(() => {
     const list = getRecentlyViewed();
-    // Exclude currently viewed product from list
-    const filtered = list.filter(item => item.id !== currentProductId);
+    // Şu anki ürünü ve canlı ürün listesinde bulunmayan silinmiş ürünleri filtrele
+    const filtered = list.filter(item => {
+      if (item.id === currentProductId) return false;
+      if (Array.isArray(products) && products.length > 0) {
+        return products.some(p => p.id === item.id || p.databaseId === item.id || p.slug === item.id);
+      }
+      return true;
+    });
     setItems(filtered);
-  }, [currentProductId]);
+  }, [currentProductId, products]);
 
   if (items.length === 0) return null;
 

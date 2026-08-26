@@ -116,6 +116,7 @@ export default function VideoBannerItem({
           alt={slide.title || 'Banner'}
           className={className}
           loading={isFirst ? 'eager' : 'lazy'}
+          fetchPriority={isFirst ? 'high' : 'auto'}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       </picture>

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Helmet } from 'react-helmet-async';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { getBlogArticles, getBlogArticleBySlug } from '../../services/blogApi';
+import SEO from '../../components/SEO/SEO';
+import { toAbsoluteUrl, stripHtml } from '../../utils/seoHelpers';
 import styles from './BlogPage.module.css';
 import {
   FiSearch, FiClock, FiCalendar, FiArrowRight, FiX, FiBookOpen, FiGrid, FiList
@@ -203,7 +204,6 @@ function ArticleCard({ article, index, view, onClick }) {
     </motion.article>
   );
 }
-
 export default function BlogPage() {
   const [articles, setArticles] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -260,12 +260,77 @@ export default function BlogPage() {
   const featuredArticle = filtered[0] || null;
   const restArticles = filtered.slice(1);
 
+  // SEO Calculation
+  let seoTitle = 'Muhristan Blog & Rehber | Muhristan';
+  let seoDesc = 'Doğal taşlar, kristaller, meditasyon ve enerji ritüelleri hakkında uzman makaleler ve rehberler Muhristan blogda.';
+  let seoImage = '/logo-2.png';
+  let seoType = 'website';
+  let seoCanonical = 'https://muhristan.com/blog';
+  let seoJsonLd = null;
+
+  if (selectedArticle) {
+    const art = selectedArticle;
+    seoTitle = art.seoTitle || `${art.title} | Muhristan`;
+    seoDesc = art.seoDescription || art.summary || art.excerpt || stripHtml(art.content) || `${art.title} yazısını Muhristan blogda okuyun.`;
+    seoImage = art.coverImage || art.image || '/logo-2.png';
+    seoType = 'article';
+    seoCanonical = art.canonical || `https://muhristan.com/blog?article=${art.slug || art.id}`;
+
+    const blogPostingSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      'headline': art.title,
+      'description': stripHtml(art.summary || art.excerpt || art.description || art.title).slice(0, 160),
+      'image': [toAbsoluteUrl(art.coverImage || art.image || '/logo-2.png')],
+      'datePublished': art.publishedAt || art.publishedDate || art.createdAt || art.date,
+      'dateModified': art.modifiedAt || art.updatedAt || art.publishedAt || art.date,
+      'author': {
+        '@type': 'Person',
+        'name': art.author || 'Muhristan Editör'
+      },
+      'publisher': {
+        '@type': 'Organization',
+        'name': 'Muhristan',
+        'logo': {
+          '@type': 'ImageObject',
+          'url': 'https://muhristan.com/logo-2.png'
+        }
+      },
+      'mainEntityOfPage': seoCanonical
+    };
+
+    const breadcrumbSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      'itemListElement': [
+        { '@type': 'ListItem', 'position': 1, 'name': 'Ana Sayfa', 'item': 'https://muhristan.com/' },
+        { '@type': 'ListItem', 'position': 2, 'name': 'Blog', 'item': 'https://muhristan.com/blog' },
+        { '@type': 'ListItem', 'position': 3, 'name': art.title, 'item': seoCanonical }
+      ]
+    };
+
+    seoJsonLd = [blogPostingSchema, breadcrumbSchema];
+  } else {
+    seoJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      'itemListElement': [
+        { '@type': 'ListItem', 'position': 1, 'name': 'Ana Sayfa', 'item': 'https://muhristan.com/' },
+        { '@type': 'ListItem', 'position': 2, 'name': 'Blog', 'item': 'https://muhristan.com/blog' }
+      ]
+    };
+  }
+
   return (
     <>
-      <Helmet>
-        <title>Blog — Muhristan</title>
-        <meta name="description" content="Doğal taşlar, kristaller, meditasyon ve enerji ritüelleri hakkında uzman makaleler ve rehberler." />
-      </Helmet>
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        image={seoImage}
+        type={seoType}
+        canonical={seoCanonical}
+        jsonLd={seoJsonLd}
+      />
 
       <div className={styles.page}>
 
@@ -297,7 +362,7 @@ export default function BlogPage() {
               <FiBookOpen className={styles.heroIcon} />
             </motion.div>
             <h1 className={styles.heroTitle}>
-              <span className={styles.heroTitleGold}>Mistik</span> Blog
+              <span className={styles.heroTitleGold}>Muhristan</span> Blog
             </h1>
             <p className={styles.heroSubtitle}>
               Doğal taşlar, kristaller ve enerji ritüelleri dünyasını keşfedin

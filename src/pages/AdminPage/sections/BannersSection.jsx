@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   FiPlus, FiTrash2, FiToggleLeft, FiToggleRight, FiTag, FiImage,
   FiSliders, FiCheck, FiUploadCloud, FiChevronLeft, FiChevronRight,
-  FiFileText, FiStar, FiGrid, FiVideo, FiDollarSign, FiEdit2,
-  FiAlignLeft, FiList, FiEye, FiX
+  FiGrid, FiVideo, FiEdit2,
+  FiEye, FiX
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as bannerApi from '../../../services/bannerApi';
@@ -375,31 +375,31 @@ export default function BannersSection() {
   };
 
   // ── Feature list ──────────────────────────────────────────────────────────────
-  const addFeature = () => setForm(f => ({ ...f, features: [...f.features, { title: '', desc: '' }] }));
-  const updateFeature = (i, key, val) => setForm(f => {
+  const _addFeature = () => setForm(f => ({ ...f, features: [...f.features, { title: '', desc: '' }] }));
+  const _updateFeature = (i, key, val) => setForm(f => {
     const copy = [...f.features];
     copy[i] = { ...copy[i], [key]: val };
     return { ...f, features: copy };
   });
-  const removeFeature = (i) => setForm(f => ({ ...f, features: f.features.filter((_, idx) => idx !== i) }));
+  const _removeFeature = (i) => setForm(f => ({ ...f, features: f.features.filter((_, idx) => idx !== i) }));
 
   // ── Specs table ───────────────────────────────────────────────────────────────
-  const addSpec = () => setForm(f => ({ ...f, specs: [...f.specs, { key: '', value: '' }] }));
-  const updateSpec = (i, key, val) => setForm(f => {
+  const _addSpec = () => setForm(f => ({ ...f, specs: [...f.specs, { key: '', value: '' }] }));
+  const _updateSpec = (i, key, val) => setForm(f => {
     const copy = [...f.specs];
     copy[i] = { ...copy[i], [key]: val };
     return { ...f, specs: copy };
   });
-  const removeSpec = (i) => setForm(f => ({ ...f, specs: f.specs.filter((_, idx) => idx !== i) }));
+  const _removeSpec = (i) => setForm(f => ({ ...f, specs: f.specs.filter((_, idx) => idx !== i) }));
 
   // ── Sections ─────────────────────────────────────────────────────────────────
-  const addSection = () => setForm(f => ({ ...f, sections: [...f.sections, { title: '', body: '' }] }));
-  const updateSection = (i, key, val) => setForm(f => {
+  const _addSection = () => setForm(f => ({ ...f, sections: [...f.sections, { title: '', body: '' }] }));
+  const _updateSection = (i, key, val) => setForm(f => {
     const copy = [...f.sections];
     copy[i] = { ...copy[i], [key]: val };
     return { ...f, sections: copy };
   });
-  const removeSection = (i) => setForm(f => ({ ...f, sections: f.sections.filter((_, idx) => idx !== i) }));
+  const _removeSection = (i) => setForm(f => ({ ...f, sections: f.sections.filter((_, idx) => idx !== i) }));
 
   // ── Submit ────────────────────────────────────────────────────────────────────
   const handleAdd = async (e) => {
@@ -580,7 +580,7 @@ export default function BannersSection() {
   return (
     <div>
       {/* ── PAGE HEADER ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h3 style={{ color: 'var(--gold-light)', fontSize: 20, fontWeight: 700, margin: 0, fontFamily: 'var(--font-heading)' }}>
             Billboard Yönetimi
@@ -986,7 +986,7 @@ export default function BannersSection() {
                             {(form.themeMode === 'all' || form.themeMode === 'light') && (
                               <SectionBlock icon={FiImage} title="☀️ Gündüz Modu Görselleri (Açık Tema)" sub={form.themeMode === 'light' ? "Yalnızca Gündüz teması aktifken slaytta gösterilir." : "Gündüz modunda gösterilir. Gece görseli yüklenmezse her iki temada da bu görsel kullanılır."}>
                                 <UploadDropzone
-                                  label="☀️ Gündüz Masaüstü Görseli (1920x600 px Önerilir) *"
+                                  label="☀️ Gündüz Masaüstü Görseli (1920x660 px Önerilir) *"
                                   value={form.image}
                                   onFile={(e) => handleImageUpload(e, 'desktop')}
                                   onClear={() => setVal('image', '')}
@@ -994,7 +994,7 @@ export default function BannersSection() {
                                   id="desktopImg"
                                 />
                                 <UploadDropzone
-                                  label="📱 Gündüz Mobil Görseli (İsteğe Bağlı - 800x600 px)"
+                                  label="📱 Gündüz Mobil Görseli (İsteğe Bağlı - 1080x1080 px Kare Önerilir)"
                                   value={form.imageMobile}
                                   onFile={(e) => handleImageUpload(e, 'mobile')}
                                   onClear={() => setVal('imageMobile', '')}
@@ -1008,7 +1008,7 @@ export default function BannersSection() {
                             {(form.themeMode === 'all' || form.themeMode === 'dark') && (
                               <SectionBlock icon={FiImage} title="🌙 Gece Modu Görselleri (Karanlık Tema)" sub={form.themeMode === 'dark' ? "Yalnızca Gece teması aktifken slaytta gösterilir." : "Gece modunda farklı bir görsel göstermek isterseniz buraya yükleyin (Boş bırakılırsa Gündüz görseli kullanılır)."}>
                                 <UploadDropzone
-                                  label="🌙 Gece Masaüstü Görseli (1920x600 px Önerilir)"
+                                  label="🌙 Gece Masaüstü Görseli (1920x660 px Önerilir)"
                                   value={form.themeMode === 'dark' ? (form.imageDark || form.image) : form.imageDark}
                                   onFile={(e) => handleImageUpload(e, form.themeMode === 'dark' ? 'desktop' : 'desktopDark')}
                                   onClear={() => { setVal('imageDark', ''); if (form.themeMode === 'dark') setVal('image', ''); }}
@@ -1016,7 +1016,7 @@ export default function BannersSection() {
                                   id="desktopDarkImg"
                                 />
                                 <UploadDropzone
-                                  label="📱 Gece Mobil Görseli (İsteğe Bağlı - 800x600 px)"
+                                  label="📱 Gece Mobil Görseli (İsteğe Bağlı - 1080x1080 px Kare Önerilir)"
                                   value={form.themeMode === 'dark' ? (form.imageMobileDark || form.imageMobile) : form.imageMobileDark}
                                   onFile={(e) => handleImageUpload(e, form.themeMode === 'dark' ? 'mobile' : 'mobileDark')}
                                   onClear={() => { setVal('imageMobileDark', ''); if (form.themeMode === 'dark') setVal('imageMobile', ''); }}
