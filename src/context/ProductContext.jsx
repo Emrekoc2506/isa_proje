@@ -247,28 +247,63 @@ export function ProductProvider({ children }) {
     }
   }, []);
 
-  // Kategori ve Afişleri anında ultra hızlı yükle (Full 1000 ürün indirme kaldırıldı)
+  // Kategori ve Ürün verilerini yükleme (bağımsız paralel & retry destekli)
   const loadInitialData = useCallback(async () => {
     const currentRequestId = ++latestRequestIdRef.current;
 
     try {
       if (isMountedRef.current && typeof window !== 'undefined') {
+        if (productsRef.current.length === 0) {
+          setLoading(true);
+        }
         setError(null);
       }
 
-      // Sadece Kategori Ağacını çek (Hafif ve hızlı)
-      const catVal = await getCategoryTree().catch(() => getCategories());
+      // Kategori ve Ürün verilerini bağımsız paralel çek
+      const [catResult, prodResult] = await Promise.allSettled([
+        getCategoryTree().catch(() => getCategories()),
+        fetchProductsWithRetry(() => getProducts({}, { timeout: 6000 }))
+      ]);
 
       if (!isMountedRef.current || currentRequestId !== latestRequestIdRef.current || typeof window === 'undefined') return;
 
-      if (catVal) {
-        setCategories(catVal || []);
-        setCachedCategories(catVal || []);
+      if (catResult.status === 'fulfilled') {
+        const catVal = catResult.value || [];
+        setCategories(catVal);
+        setCachedCategories(catVal);
+      } else {
+        console.error("Kategori veri yükleme hatası:", catResult.reason);
+      }
+
+      if (prodResult.status === 'fulfilled') {
+        const normalized = normalizeProducts(prodResult.value);
+        setProducts(normalized || []);
+        setCachedProducts(normalized || []);
+        setError(null);
+
+        // Sunucudan gelen canlı listede olmayan silinmiş ürünleri son incelediklerinizden temizle
+        if (Array.isArray(normalized) && normalized.length > 0 && typeof window !== 'undefined') {
+          try {
+            const validIds = new Set(normalized.map(p => p.id));
+            const rvData = localStorage.getItem("isa_recently_viewed_products");
+            if (rvData) {
+              const rvList = JSON.parse(rvData);
+              if (Array.isArray(rvList)) {
+                const cleaned = rvList.filter(item => validIds.has(item.id));
+                localStorage.setItem("isa_recently_viewed_products", JSON.stringify(cleaned));
+              }
+            }
+          } catch (e) {}
+        }
+      } else {
+        const prodErr = prodResult.reason;
+        console.error("Ürün yükleme hatası (retry sonrası):", prodErr);
+        setError("Ürünler yüklenirken bir hata oluştu.");
       }
     } catch (err) {
-      console.error("Kategori veri yükleme hatası:", err);
+      console.error("Veri yükleme hatası:", err);
       if (isMountedRef.current && currentRequestId === latestRequestIdRef.current && typeof window !== 'undefined') {
-        setError("Kategoriler yüklenirken bir hata oluştu.");
+        setError("Veriler yüklenirken bir hata oluştu.");
       }
     } finally {
       if (isMountedRef.current && currentRequestId === latestRequestIdRef.current && typeof window !== 'undefined') {
