@@ -382,7 +382,9 @@ export function CartProvider ({ children }) {
         if (err.status === 409 || err.code === 'cart_concurrency_conflict') {
           await new Promise(r => setTimeout(r, 350))
           try {
-            const retryData = await cartApi.updateCartItem(itemId, { quantity: qty })
+            const retryData = await cartApi.updateCartItem(itemId, {
+              quantity: qty
+            })
             if (retryData && (retryData.items || retryData.cartData)) {
               applyServerCart(retryData)
             } else {
@@ -393,7 +395,11 @@ export function CartProvider ({ children }) {
             await refreshCart()
             const msg = getCartErrorMessage(retryErr)
             setCartError(msg)
-            return { success: false, code: retryErr.code || 'cart_error', message: msg }
+            return {
+              success: false,
+              code: retryErr.code || 'cart_error',
+              message: msg
+            }
           }
         }
         await refreshCart()

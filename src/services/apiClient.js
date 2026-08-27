@@ -245,6 +245,13 @@ function refreshAccessToken() {
     const data = await response.json();
     if (data && data.accessToken) {
       safeSetItem("accessToken", data.accessToken);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("auth:token-refreshed", {
+            detail: { token: data.accessToken },
+          })
+        );
+      }
       return data.accessToken;
     }
     throw new Error("Invalid token response");
@@ -272,4 +279,4 @@ function handleLogoutRedirect() {
   }
 }
 
-export { apiBaseUrl, request };
+export { apiBaseUrl, request, refreshAccessToken };

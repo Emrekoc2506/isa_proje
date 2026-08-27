@@ -9,7 +9,7 @@ import {
 } from 'react'
 import * as authApi from '../services/authApi'
 import { safeGetItem, safeSetItem, safeRemoveItem } from '../utils/storage'
-import { isJwtExpired } from '../utils/jwt'
+import { isJwtExpired, getJwtRemainingTimeMs } from '../utils/jwt'
 
 const AuthContext = createContext(null)
 
@@ -89,6 +89,72 @@ export function AuthProvider ({ children }) {
       window.removeEventListener('auth:session-expired', handleSessionExpired)
     }
   }, [reloadUser])
+
+  // Proaktif Sessiz Token Yenileme (Silent Token Refresh)
+  useEffect(() => {
+    let refreshTimer = null
+
+    const scheduleTokenRefresh = () => {
+      if (refreshTimer) {
+        clearTimeout(refreshTimer)
+        refreshTimer = null
+      }
+
+      const token = safeGetItem('accessToken')
+      if (!token || !user) return
+
+      const remainingMs = getJwtRemainingTimeMs(token)
+      if (remainingMs <= 0) return
+
+      // Token süresi bitmeden 2 dakika (120 sn) önce yenile (maksimum 32-bit integer sınırıyla)
+      const refreshBufferMs = 2 * 60 * 1000
+      const delay = Math.min(2147483647, Math.max(10000, remainingMs - refreshBufferMs))
+
+      refreshTimer = setTimeout(async () => {
+        try {
+          const refreshRes = await authApi.refreshToken()
+          if (refreshRes?.accessToken) {
+            safeSetItem('accessToken', refreshRes.accessToken)
+            scheduleTokenRefresh()
+          }
+        } catch {
+          // Ignore background refresh failure
+        }
+      }, delay)
+    }
+
+    scheduleTokenRefresh()
+
+    // Kullanıcı sekmeye geri döndüğünde süresi azalan token'ı derhal yenile
+    if (typeof window === 'undefined') return
+
+    const handleVisibilityOrFocus = async () => {
+      if (document.visibilityState === 'visible') {
+        const currentToken = safeGetItem('accessToken')
+        if (currentToken && user) {
+          const remMs = getJwtRemainingTimeMs(currentToken)
+          if (remMs > 0 && remMs < 2 * 60 * 1000) {
+            try {
+              const res = await authApi.refreshToken()
+              if (res?.accessToken) {
+                safeSetItem('accessToken', res.accessToken)
+              }
+            } catch {}
+          }
+          scheduleTokenRefresh()
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus)
+    window.addEventListener('focus', handleVisibilityOrFocus)
+
+    return () => {
+      if (refreshTimer) clearTimeout(refreshTimer)
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus)
+      window.removeEventListener('focus', handleVisibilityOrFocus)
+    }
+  }, [user])
 
   const login = useCallback(
     async credentials => {
