@@ -29,7 +29,7 @@ export default function CheckoutPage () {
   const [loadingAddresses, setLoadingAddresses] = useState(false)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [orderLoading, setOrderLoading] = useState(false)
-  const paymentMethod = PAYMENT_METHODS.BANK_TRANSFER;
+  const paymentMethod = PAYMENT_METHODS.BANK_TRANSFER
 
   // Selected values
   const [shippingAddressId, setShippingAddressId] = useState(null)
@@ -69,8 +69,6 @@ export default function CheckoutPage () {
 
   const [previewData, setPreviewData] = useState(null)
   const [previewError, setPreviewError] = useState('')
-
-
 
   // Fetch addresses if authenticated
   useEffect(() => {
@@ -837,7 +835,8 @@ export default function CheckoutPage () {
                     lineHeight: 1.4
                   }}
                 >
-                  Siparişinizi tamamladıktan sonra banka hesap bilgilerimiz (IBAN) ve sipariş numaranız ekranda görüntülenecektir.
+                  Siparişinizi tamamladıktan sonra banka hesap bilgilerimiz
+                  (IBAN) ve sipariş numaranız ekranda görüntülenecektir.
                 </span>
               </div>
             </div>

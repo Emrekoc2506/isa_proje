@@ -1,5 +1,5 @@
 import styles from "./ProductsPage.module.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useProducts } from "../../context/ProductContext";
 import ProductCard from "../../components/ProductCard/ProductCard";
@@ -9,6 +9,7 @@ import {
   FiSearch,
   FiSliders,
   FiChevronRight,
+  FiChevronLeft,
   FiChevronDown,
   FiBook,
   FiFolder,
@@ -21,6 +22,9 @@ export default function ProductsPage() {
   const { products, categories, loading, loadProducts } = useProducts();
   const [loadingProductsPage, setLoadingProductsPage] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const productsAreaRef = useRef(null);
+
+  const ITEMS_PER_PAGE = 16;
 
   useEffect(() => {
     if (products.length === 0 && typeof loadProducts === 'function') {
@@ -35,6 +39,8 @@ export default function ProductsPage() {
   const categoryParam = searchParams.get("kategori") || "hepsi";
   const subcategoryParam = searchParams.get("alt") || "";
   const searchParam = searchParams.get("ara") || "";
+  const pageParam = parseInt(searchParams.get("sayfa") || "1", 10);
+  const currentPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
   // Filtre State'leri (Bu filtreler "Ara" butonuna basınca uygulanacak)
   const [selectedCategory, setSelectedCategory] = useState(categoryParam);
@@ -295,6 +301,34 @@ export default function ProductsPage() {
     return matchCategory && matchSubcategory && matchSearch && matchPrice;
   }).length;
 
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) || 1;
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validCurrentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const scrollToProductsTop = () => {
+    if (productsAreaRef.current) {
+      const yOffset = -90;
+      const y = productsAreaRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages || newPage === validCurrentPage) return;
+    setSearchParams((prev) => {
+      if (newPage === 1) {
+        prev.delete("sayfa");
+      } else {
+        prev.set("sayfa", String(newPage));
+      }
+      return prev;
+    });
+    scrollToProductsTop();
+  };
+
   const handleCategoryChange = (catId) => {
     setTempCategory(catId);
     setTempSubcategory("");
@@ -315,6 +349,7 @@ export default function ProductsPage() {
     setPriceRange(tempPriceRange);
 
     setSearchParams((prev) => {
+      prev.delete("sayfa");
       if (tempCategory === "hepsi") {
         prev.delete("kategori");
       } else {
@@ -334,6 +369,7 @@ export default function ProductsPage() {
       }
       return prev;
     });
+    scrollToProductsTop();
   };
 
   const handleResetAll = () => {
@@ -348,6 +384,7 @@ export default function ProductsPage() {
     setPriceRange(100);
 
     setSearchParams({});
+    scrollToProductsTop();
   };
 
   // Category SEO & Schema Calculation
@@ -759,12 +796,12 @@ export default function ProductsPage() {
         </aside>
 
         {/* ── SAĞ TARAF: ÜRÜN GRİDİ ──────────────────────────────── */}
-        <main className={styles.productsArea}>
+        <main className={styles.productsArea} ref={productsAreaRef}>
           <div className={styles.resultsInfoRow}>
             <span>
               {isPageLoading
                 ? "Yükleniyor..."
-                : `${filteredProducts.length} ürün listeleniyor`}
+                : `${filteredProducts.length} ürün listeleniyor (Sayfa ${validCurrentPage} / ${totalPages})`}
             </span>
           </div>
 
@@ -786,13 +823,73 @@ export default function ProductsPage() {
               </button>
             </div>
           ) : (
-            <div className={styles.productsGrid}>
-              {filteredProducts.map((p) => (
-                <div key={p.id} className={styles.cardWrapper}>
-                  <ProductCard product={p} />
-                </div>
-              ))}
-            </div>
+            <>
+              <div className={styles.productsGrid}>
+                {paginatedProducts.map((p) => (
+                  <div key={p.id} className={styles.cardWrapper}>
+                    <ProductCard product={p} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Sayfalama Kontrolleri */}
+              {totalPages > 1 && (
+                <nav className={styles.paginationContainer} aria-label="Ürün Sayfalama">
+                  <div className={styles.paginationButtons}>
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      onClick={() => handlePageChange(validCurrentPage - 1)}
+                      disabled={validCurrentPage <= 1}
+                      aria-label="Önceki Sayfa"
+                    >
+                      <FiChevronLeft /> Önceki
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, idx) => idx + 1)
+                      .filter((page) => {
+                        return (
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= validCurrentPage - 2 && page <= validCurrentPage + 2)
+                        );
+                      })
+                      .map((page, index, array) => {
+                        const prevPage = array[index - 1];
+                        const showEllipsis = prevPage && page - prevPage > 1;
+
+                        return (
+                          <div key={page} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {showEllipsis && <span className={styles.pageEllipsis}>...</span>}
+                            <button
+                              type="button"
+                              className={`${styles.pageBtn} ${page === validCurrentPage ? styles.pageBtnActive : ""}`}
+                              onClick={() => handlePageChange(page)}
+                              aria-current={page === validCurrentPage ? "page" : undefined}
+                              aria-label={`Sayfa ${page}`}
+                            >
+                              {page}
+                            </button>
+                          </div>
+                        );
+                      })}
+
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      onClick={() => handlePageChange(validCurrentPage + 1)}
+                      disabled={validCurrentPage >= totalPages}
+                      aria-label="Sonraki Sayfa"
+                    >
+                      Sonraki <FiChevronRight />
+                    </button>
+                  </div>
+                  <span className={styles.paginationSummary}>
+                    Sayfa {validCurrentPage} / {totalPages} (Toplam {filteredProducts.length} ürün)
+                  </span>
+                </nav>
+              )}
+            </>
           )}
         </main>
       </div>

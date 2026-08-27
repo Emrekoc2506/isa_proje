@@ -356,7 +356,44 @@
 
 @media (max-width: 768px) {
   .nav {
-    display: none;
+    display: block;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .list {
+    padding: 8px 12px;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .link {
+    padding: 7px 14px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(201, 162, 39, 0.25);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    border-bottom: 1px solid rgba(201, 162, 39, 0.25);
+  }
+
+  .link:hover,
+  .link.active {
+    background: rgba(201, 162, 39, 0.18);
+    border-color: var(--gold);
+    color: var(--gold-light);
+  }
+
+  .fadeLeft,
+  .fadeRight {
+    width: 48px;
+  }
+
+  .scrollArrowBtn {
+    width: 24px;
+    height: 24px;
+    font-size: 13px;
   }
 }
 
