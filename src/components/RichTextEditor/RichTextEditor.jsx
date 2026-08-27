@@ -1,7 +1,7 @@
-import { Editor } from '@tinymce/tinymce-react';
-import { uploadFile } from '../../services/fileApi';
+import { Editor } from '@tinymce/tinymce-react'
+import { uploadFile } from '../../services/fileApi'
 
-const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY || 'no-api-key';
+const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY || 'no-api-key'
 
 /**
  * Admin paneli için TinyMCE Rich Text Editor bileşeni.
@@ -11,28 +11,39 @@ const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY || 'no-api-key';
  *  - onChange: (html: string) => void
  *  - placeholder: string (opsiyonel)
  */
-export default function RichTextEditor({ value, onChange, placeholder = 'Açıklamayı buraya yazın...' }) {
-
+export default function RichTextEditor ({
+  value,
+  onChange,
+  placeholder = 'Açıklamayı buraya yazın...'
+}) {
   /**
    * TinyMCE görsel yükleme handler'ı.
    * Editörden gelen dosyayı uploadFile servisi üzerinden /admin/files/upload endpoint'ine gönderir.
    */
-  const handleImageUpload = async (blobInfo) => {
+  const handleImageUpload = async blobInfo => {
     try {
-      const file = new File([blobInfo.blob()], blobInfo.filename(), { type: blobInfo.blob().type });
-      const res = await uploadFile(file, 'Blog');
-      return res.url || res.fileUrl || res.imageUrl || res.location || '';
+      const file = new File([blobInfo.blob()], blobInfo.filename(), {
+        type: blobInfo.blob().type
+      })
+      const res = await uploadFile(file, 'Blog')
+      return res.url || res.fileUrl || res.imageUrl || res.location || ''
     } catch (err) {
-      throw new Error(err.message || 'Görsel yüklenemedi');
+      throw new Error(err.message || 'Görsel yüklenemedi')
     }
-  };
+  }
 
   return (
-    <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+    <div
+      style={{
+        borderRadius: 10,
+        overflow: 'hidden',
+        border: '1px solid rgba(255,255,255,0.1)'
+      }}
+    >
       <Editor
-        tinymceScriptSrc="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"
+        tinymceScriptSrc='https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js'
         value={value}
-        onEditorChange={(content) => onChange(content)}
+        onEditorChange={content => onChange(content)}
         init={{
           height: 460,
           menubar: true,
@@ -40,9 +51,21 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Açıkl
           content_css: 'dark',
           placeholder,
           plugins: [
-            'anchor', 'autolink', 'charmap', 'codesample', 'code', 'link', 'lists',
-            'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
-            'image', 'quickbars', 'emoticons'
+            'anchor',
+            'autolink',
+            'charmap',
+            'codesample',
+            'code',
+            'link',
+            'lists',
+            'media',
+            'searchreplace',
+            'table',
+            'visualblocks',
+            'wordcount',
+            'image',
+            'quickbars',
+            'emoticons'
           ],
           toolbar:
             'undo redo | styles | bold italic underline strikethrough | ' +
@@ -61,7 +84,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Açıkl
             { title: 'Tam Genişlik', value: 'rte-full' },
             { title: 'Ortalanmış', value: 'rte-center' },
             { title: 'Sola Hizalı', value: 'rte-left' },
-            { title: 'Sağa Hizalı', value: 'rte-right' },
+            { title: 'Sağa Hizalı', value: 'rte-right' }
           ],
 
           // Video embed (YouTube, Vimeo, Google Drive)
@@ -70,17 +93,15 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Açıkl
           media_poster: false,
           media_url_resolver: (data, resolve) => {
             if (data.url && data.url.includes('drive.google.com')) {
-              let driveId = '';
-              if (data.url.includes('/file/d/')) {
-                driveId = data.url.split('/file/d/')[1]?.split('/')[0]?.split('?')[0];
-              }
-              if (driveId) {
-                const embedHtml = `<iframe src="https://drive.google.com/file/d/${driveId}/preview" width="100%" height="360" frameborder="0" allow="autoplay" allowfullscreen></iframe>`;
-                resolve({ html: embedHtml });
-                return;
+              const match = data.url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)
+              if (match && match[1]) {
+                const safeId = encodeURIComponent(match[1])
+                const embedHtml = `<iframe src="https://drive.google.com/file/d/${safeId}/preview" width="100%" height="360" frameborder="0" allow="autoplay" allowfullscreen></iframe>`
+                resolve({ html: embedHtml })
+                return
               }
             }
-            resolve({ html: '' });
+            resolve({ html: '' })
           },
 
           // Güvenlik — relative URL dönüşümü engelle
@@ -134,9 +155,9 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Açıkl
           // Hızlı erişim menüsü
           quickbars_selection_toolbar: 'bold italic | quicklink | blockquote',
           quickbars_image_toolbar:
-            'alignleft aligncenter alignright | rotateleft rotateright | flipv fliph | imageoptions',
+            'alignleft aligncenter alignright | rotateleft rotateright | flipv fliph | imageoptions'
         }}
       />
     </div>
-  );
+  )
 }

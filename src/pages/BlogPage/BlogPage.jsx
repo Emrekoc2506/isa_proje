@@ -1,31 +1,51 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams, useLocation } from 'react-router-dom';
-import { getBlogArticles, getBlogArticleBySlug } from '../../services/blogApi';
-import SEO from '../../components/SEO/SEO';
-import { toAbsoluteUrl, stripHtml } from '../../utils/seoHelpers';
-import styles from './BlogPage.module.css';
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useSearchParams, useLocation } from 'react-router-dom'
+import DOMPurify from 'dompurify'
+import { getBlogArticles, getBlogArticleBySlug } from '../../services/blogApi'
+import SEO from '../../components/SEO/SEO'
+import { toAbsoluteUrl, stripHtml } from '../../utils/seoHelpers'
+import styles from './BlogPage.module.css'
 import {
-  FiSearch, FiClock, FiCalendar, FiArrowRight, FiX, FiBookOpen, FiGrid, FiList
-} from 'react-icons/fi';
+  FiSearch,
+  FiClock,
+  FiCalendar,
+  FiArrowRight,
+  FiX,
+  FiBookOpen,
+  FiGrid,
+  FiList
+} from 'react-icons/fi'
 
-const CATEGORIES = ['Tümü', 'Doğal Taşlar', 'Kristaller & Meditasyon', 'Kristaller & Ritüeller', 'Bakım & Arınma', 'Rehber', 'Genel'];
+const CATEGORIES = [
+  'Tümü',
+  'Doğal Taşlar',
+  'Kristaller & Meditasyon',
+  'Kristaller & Ritüeller',
+  'Bakım & Arınma',
+  'Rehber',
+  'Genel'
+]
 
 const cardVariants = {
   hidden: { opacity: 0, y: 40 },
-  visible: (i) => ({
+  visible: i => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }
+    transition: {
+      delay: i * 0.08,
+      duration: 0.5,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    }
   })
-};
+}
 
 const heroVariants = {
   hidden: { opacity: 0, y: -30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } }
-};
+}
 
-function ArticleSkeleton() {
+function ArticleSkeleton () {
   return (
     <div className={styles.skeletonCard}>
       <div className={styles.skeletonImg} />
@@ -36,45 +56,47 @@ function ArticleSkeleton() {
         <div className={styles.skeletonLine} style={{ width: '70%' }} />
       </div>
     </div>
-  );
+  )
 }
 
-function ArticleModal({ article, onClose }) {
-  const [data, setData] = useState(article);
-  const [loadingContent, setLoadingContent] = useState(false);
+function ArticleModal ({ article, onClose }) {
+  const [data, setData] = useState(article)
+  const [loadingContent, setLoadingContent] = useState(false)
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
+    document.body.style.overflow = 'hidden'
+    const handler = e => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handler)
     return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handler);
-    };
-  }, [onClose]);
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', handler)
+    }
+  }, [onClose])
 
   useEffect(() => {
-    setData(article);
-    const slugOrId = article?.slug || article?.id;
+    setData(article)
+    const slugOrId = article?.slug || article?.id
     if (slugOrId) {
-      setLoadingContent(!article?.content || article.content.trim() === '');
+      setLoadingContent(!article?.content || article.content.trim() === '')
       getBlogArticleBySlug(slugOrId)
-        .then((detail) => {
+        .then(detail => {
           if (detail) {
-            setData((prev) => ({
+            setData(prev => ({
               ...prev,
               ...detail,
-              content: detail.content || prev?.content,
-            }));
+              content: detail.content || prev?.content
+            }))
           }
         })
-        .finally(() => setLoadingContent(false));
+        .finally(() => setLoadingContent(false))
     }
-  }, [article]);
+  }, [article])
 
-  if (!article) return null;
+  if (!article) return null
 
-  const current = data || article;
+  const current = data || article
 
   return (
     <AnimatePresence>
@@ -91,18 +113,28 @@ function ArticleModal({ article, onClose }) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 40 }}
           transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
-          <button className={styles.modalClose} onClick={onClose} aria-label="Kapat">
+          <button
+            className={styles.modalClose}
+            onClick={onClose}
+            aria-label='Kapat'
+          >
             <FiX />
           </button>
 
           {current.image && (
             <div className={styles.modalHero}>
-              <img src={current.image} alt={current.title} className={styles.modalHeroImg} />
+              <img
+                src={current.image}
+                alt={current.title}
+                className={styles.modalHeroImg}
+              />
               <div className={styles.modalHeroOverlay} />
               {current.category && (
-                <span className={styles.modalCategoryBadge}>{current.category}</span>
+                <span className={styles.modalCategoryBadge}>
+                  {current.category}
+                </span>
               )}
             </div>
           )}
@@ -129,48 +161,70 @@ function ArticleModal({ article, onClose }) {
 
             {loadingContent ? (
               <div style={{ padding: '24px 0' }}>
-                <div className={styles.skeletonLine} style={{ marginBottom: 14 }} />
-                <div className={styles.skeletonLine} style={{ marginBottom: 14, width: '92%' }} />
-                <div className={styles.skeletonLine} style={{ marginBottom: 14, width: '84%' }} />
+                <div
+                  className={styles.skeletonLine}
+                  style={{ marginBottom: 14 }}
+                />
+                <div
+                  className={styles.skeletonLine}
+                  style={{ marginBottom: 14, width: '92%' }}
+                />
+                <div
+                  className={styles.skeletonLine}
+                  style={{ marginBottom: 14, width: '84%' }}
+                />
                 <div className={styles.skeletonLine} style={{ width: '60%' }} />
               </div>
             ) : current.content ? (
               <div
                 className={styles.modalBody}
-                dangerouslySetInnerHTML={{ __html: current.content }}
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(current.content || '')
+                }}
               />
             ) : (
               <div className={styles.modalBody}>
-                <p>{current.summary || current.description || 'Makale içeriği hazırlanıyor...'}</p>
+                <p>
+                  {current.summary ||
+                    current.description ||
+                    'Makale içeriği hazırlanıyor...'}
+                </p>
               </div>
             )}
           </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
-  );
+  )
 }
 
-function ArticleCard({ article, index, view, onClick }) {
-  const isGrid = view === 'grid';
+function ArticleCard ({ article, index, view, onClick }) {
+  const isGrid = view === 'grid'
   return (
     <motion.article
       className={isGrid ? styles.card : styles.cardList}
       custom={index}
       variants={cardVariants}
-      initial="hidden"
-      animate="visible"
+      initial='hidden'
+      animate='visible'
       whileHover={{ y: isGrid ? -6 : -2, transition: { duration: 0.25 } }}
       onClick={() => onClick(article)}
     >
-      <div className={isGrid ? styles.cardImgWrapper : styles.cardListImgWrapper}>
+      <div
+        className={isGrid ? styles.cardImgWrapper : styles.cardListImgWrapper}
+      >
         <img
-          src={article.image || `https://picsum.photos/seed/${article.slug || article.id}/700/400`}
+          src={
+            article.image ||
+            `https://picsum.photos/seed/${article.slug || article.id}/700/400`
+          }
           alt={article.title}
           className={styles.cardImg}
-          loading="lazy"
-          onError={(e) => {
-            e.target.src = `https://picsum.photos/seed/${article.id || 'blog'}/700/400`;
+          loading='lazy'
+          onError={e => {
+            e.target.src = `https://picsum.photos/seed/${
+              article.id || 'blog'
+            }/700/400`
           }}
         />
         <div className={styles.cardImgOverlay} />
@@ -194,131 +248,178 @@ function ArticleCard({ article, index, view, onClick }) {
         </div>
 
         <h2 className={styles.cardTitle}>{article.title}</h2>
-        <p className={styles.cardDesc}>{article.summary || article.description}</p>
+        <p className={styles.cardDesc}>
+          {article.summary || article.description}
+        </p>
 
-        <button className={styles.cardReadMore} aria-label={`${article.title} - Devamını oku`}>
+        <button
+          className={styles.cardReadMore}
+          aria-label={`${article.title} - Devamını oku`}
+        >
           <span>Devamını oku</span>
           <FiArrowRight className={styles.cardArrow} />
         </button>
       </div>
     </motion.article>
-  );
+  )
 }
-export default function BlogPage() {
-  const [articles, setArticles] = useState([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('Tümü');
-  const [view, setView] = useState('grid');
-  const [selectedArticle, setSelectedArticle] = useState(null);
-  const searchRef = useRef(null);
-  const [searchParams] = useSearchParams();
-  const location = useLocation();
+export default function BlogPage () {
+  const [articles, setArticles] = useState([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [activeCategory, setActiveCategory] = useState('Tümü')
+  const [view, setView] = useState('grid')
+  const [selectedArticle, setSelectedArticle] = useState(null)
+  const searchRef = useRef(null)
+  const [searchParams] = useSearchParams()
+  const location = useLocation()
 
   useEffect(() => {
-    async function load() {
-      setLoading(true);
+    async function load () {
+      setLoading(true)
       try {
-        const res = await getBlogArticles({ page: 1, pageSize: 50 });
-        const list = Array.isArray(res) ? res : (res?.items || []);
-        setArticles(list);
-        setTotalCount(res?.totalCount || list.length);
+        const res = await getBlogArticles({ page: 1, pageSize: 50 })
+        const list = Array.isArray(res) ? res : res?.items || []
+        setArticles(list)
+        setTotalCount(res?.totalCount || list.length)
 
-        const targetSlug = searchParams.get('article') || searchParams.get('slug');
+        const targetSlug =
+          searchParams.get('article') || searchParams.get('slug')
         if (location.state?.article) {
-          setSelectedArticle(location.state.article);
+          setSelectedArticle(location.state.article)
         } else if (targetSlug) {
-          const found = list.find((a) => a.slug === targetSlug || a.id === targetSlug);
+          const found = list.find(
+            a => a.slug === targetSlug || a.id === targetSlug
+          )
           if (found) {
-            setSelectedArticle(found);
+            setSelectedArticle(found)
           } else {
-            getBlogArticleBySlug(targetSlug).then((detail) => {
-              if (detail) setSelectedArticle(detail);
-            });
+            getBlogArticleBySlug(targetSlug).then(detail => {
+              if (detail) setSelectedArticle(detail)
+            })
           }
         }
       } catch {
-        setArticles([]);
-        setTotalCount(0);
+        setArticles([])
+        setTotalCount(0)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-    load();
-  }, [searchParams, location.state]);
+    load()
+  }, [searchParams, location.state])
 
-  const filtered = articles.filter((a) => {
-    const matchCat = activeCategory === 'Tümü' || a.category === activeCategory;
-    const matchSearch = !search || (
+  const filtered = articles.filter(a => {
+    const matchCat = activeCategory === 'Tümü' || a.category === activeCategory
+    const matchSearch =
+      !search ||
       (a.title || '').toLowerCase().includes(search.toLowerCase()) ||
-      (a.summary || a.description || '').toLowerCase().includes(search.toLowerCase())
-    );
-    return matchCat && matchSearch;
-  });
+      (a.summary || a.description || '')
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    return matchCat && matchSearch
+  })
 
-  const featuredArticle = filtered[0] || null;
-  const restArticles = filtered.slice(1);
+  const featuredArticle = filtered[0] || null
+  const restArticles = filtered.slice(1)
 
   // SEO Calculation
-  let seoTitle = 'Muhristan Blog & Rehber | Muhristan';
-  let seoDesc = 'Doğal taşlar, kristaller, meditasyon ve enerji ritüelleri hakkında uzman makaleler ve rehberler Muhristan blogda.';
-  let seoImage = '/logo-2.png';
-  let seoType = 'website';
-  let seoCanonical = 'https://muhristan.com/blog';
-  let seoJsonLd = null;
+  let seoTitle = 'Muhristan Blog & Rehber | Muhristan'
+  let seoDesc =
+    'Doğal taşlar, kristaller, meditasyon ve enerji ritüelleri hakkında uzman makaleler ve rehberler Muhristan blogda.'
+  let seoImage = '/logo-2.png'
+  let seoType = 'website'
+  let seoCanonical = 'https://muhristan.com/blog'
+  let seoJsonLd = null
 
   if (selectedArticle) {
-    const art = selectedArticle;
-    seoTitle = art.seoTitle || `${art.title} | Muhristan`;
-    seoDesc = art.seoDescription || art.summary || art.excerpt || stripHtml(art.content) || `${art.title} yazısını Muhristan blogda okuyun.`;
-    seoImage = art.coverImage || art.image || '/logo-2.png';
-    seoType = 'article';
-    seoCanonical = art.canonical || `https://muhristan.com/blog?article=${art.slug || art.id}`;
+    const art = selectedArticle
+    seoTitle = art.seoTitle || `${art.title} | Muhristan`
+    seoDesc =
+      art.seoDescription ||
+      art.summary ||
+      art.excerpt ||
+      stripHtml(art.content) ||
+      `${art.title} yazısını Muhristan blogda okuyun.`
+    seoImage = art.coverImage || art.image || '/logo-2.png'
+    seoType = 'article'
+    seoCanonical =
+      art.canonical ||
+      `https://muhristan.com/blog?article=${art.slug || art.id}`
 
     const blogPostingSchema = {
       '@context': 'https://schema.org',
       '@type': 'BlogPosting',
-      'headline': art.title,
-      'description': stripHtml(art.summary || art.excerpt || art.description || art.title).slice(0, 160),
-      'image': [toAbsoluteUrl(art.coverImage || art.image || '/logo-2.png')],
-      'datePublished': art.publishedAt || art.publishedDate || art.createdAt || art.date,
-      'dateModified': art.modifiedAt || art.updatedAt || art.publishedAt || art.date,
-      'author': {
+      headline: art.title,
+      description: stripHtml(
+        art.summary || art.excerpt || art.description || art.title
+      ).slice(0, 160),
+      image: [toAbsoluteUrl(art.coverImage || art.image || '/logo-2.png')],
+      datePublished:
+        art.publishedAt || art.publishedDate || art.createdAt || art.date,
+      dateModified:
+        art.modifiedAt || art.updatedAt || art.publishedAt || art.date,
+      author: {
         '@type': 'Person',
-        'name': art.author || 'Muhristan Editör'
+        name: art.author || 'Muhristan Editör'
       },
-      'publisher': {
+      publisher: {
         '@type': 'Organization',
-        'name': 'Muhristan',
-        'logo': {
+        name: 'Muhristan',
+        logo: {
           '@type': 'ImageObject',
-          'url': 'https://muhristan.com/logo-2.png'
+          url: 'https://muhristan.com/logo-2.png'
         }
       },
-      'mainEntityOfPage': seoCanonical
-    };
+      mainEntityOfPage: seoCanonical
+    }
 
     const breadcrumbSchema = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      'itemListElement': [
-        { '@type': 'ListItem', 'position': 1, 'name': 'Ana Sayfa', 'item': 'https://muhristan.com/' },
-        { '@type': 'ListItem', 'position': 2, 'name': 'Blog', 'item': 'https://muhristan.com/blog' },
-        { '@type': 'ListItem', 'position': 3, 'name': art.title, 'item': seoCanonical }
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Ana Sayfa',
+          item: 'https://muhristan.com/'
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Blog',
+          item: 'https://muhristan.com/blog'
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: art.title,
+          item: seoCanonical
+        }
       ]
-    };
+    }
 
-    seoJsonLd = [blogPostingSchema, breadcrumbSchema];
+    seoJsonLd = [blogPostingSchema, breadcrumbSchema]
   } else {
     seoJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      'itemListElement': [
-        { '@type': 'ListItem', 'position': 1, 'name': 'Ana Sayfa', 'item': 'https://muhristan.com/' },
-        { '@type': 'ListItem', 'position': 2, 'name': 'Blog', 'item': 'https://muhristan.com/blog' }
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Ana Sayfa',
+          item: 'https://muhristan.com/'
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Blog',
+          item: 'https://muhristan.com/blog'
+        }
       ]
-    };
+    }
   }
 
   return (
@@ -333,23 +434,26 @@ export default function BlogPage() {
       />
 
       <div className={styles.page}>
-
         {/* ── Hero Banner ────────────────────────────────── */}
         <motion.section
           className={styles.hero}
           variants={heroVariants}
-          initial="hidden"
-          animate="visible"
+          initial='hidden'
+          animate='visible'
         >
-          <div className={styles.heroParticles} aria-hidden="true">
+          <div className={styles.heroParticles} aria-hidden='true'>
             {[...Array(20)].map((_, i) => (
-              <span key={i} className={styles.particle} style={{
-                left: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 6}s`,
-                animationDuration: `${4 + Math.random() * 6}s`,
-                width: `${2 + Math.random() * 4}px`,
-                height: `${2 + Math.random() * 4}px`,
-              }} />
+              <span
+                key={i}
+                className={styles.particle}
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 6}s`,
+                  animationDuration: `${4 + Math.random() * 6}s`,
+                  width: `${2 + Math.random() * 4}px`,
+                  height: `${2 + Math.random() * 4}px`
+                }}
+              />
             ))}
           </div>
 
@@ -373,19 +477,22 @@ export default function BlogPage() {
               <FiSearch className={styles.searchIcon} />
               <input
                 ref={searchRef}
-                type="text"
-                placeholder="Makale ara..."
+                type='text'
+                placeholder='Makale ara...'
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={e => setSearch(e.target.value)}
                 className={styles.searchInput}
-                id="blog-search"
-                aria-label="Blog makalesi ara"
+                id='blog-search'
+                aria-label='Blog makalesi ara'
               />
               {search && (
                 <button
                   className={styles.searchClear}
-                  onClick={() => { setSearch(''); searchRef.current?.focus(); }}
-                  aria-label="Aramayı temizle"
+                  onClick={() => {
+                    setSearch('')
+                    searchRef.current?.focus()
+                  }}
+                  aria-label='Aramayı temizle'
                 >
                   <FiX size={16} />
                 </button>
@@ -395,15 +502,20 @@ export default function BlogPage() {
         </motion.section>
 
         <div className={styles.container}>
-
           {/* ── Filtreler ──────────────────────────────────── */}
           <div className={styles.toolbar}>
-            <div className={styles.categories} role="list" aria-label="Blog kategorileri">
-              {CATEGORIES.map((cat) => (
+            <div
+              className={styles.categories}
+              role='list'
+              aria-label='Blog kategorileri'
+            >
+              {CATEGORIES.map(cat => (
                 <button
                   key={cat}
-                  role="listitem"
-                  className={`${styles.catBtn} ${activeCategory === cat ? styles.catBtnActive : ''}`}
+                  role='listitem'
+                  className={`${styles.catBtn} ${
+                    activeCategory === cat ? styles.catBtnActive : ''
+                  }`}
                   onClick={() => setActiveCategory(cat)}
                   aria-pressed={activeCategory === cat}
                 >
@@ -412,18 +524,22 @@ export default function BlogPage() {
               ))}
             </div>
 
-            <div className={styles.viewToggle} aria-label="Görünüm seçimi">
+            <div className={styles.viewToggle} aria-label='Görünüm seçimi'>
               <button
-                className={`${styles.viewBtn} ${view === 'grid' ? styles.viewBtnActive : ''}`}
+                className={`${styles.viewBtn} ${
+                  view === 'grid' ? styles.viewBtnActive : ''
+                }`}
                 onClick={() => setView('grid')}
-                aria-label="Izgara görünüm"
+                aria-label='Izgara görünüm'
               >
                 <FiGrid size={16} />
               </button>
               <button
-                className={`${styles.viewBtn} ${view === 'list' ? styles.viewBtnActive : ''}`}
+                className={`${styles.viewBtn} ${
+                  view === 'list' ? styles.viewBtnActive : ''
+                }`}
                 onClick={() => setView('list')}
-                aria-label="Liste görünüm"
+                aria-label='Liste görünüm'
               >
                 <FiList size={16} />
               </button>
@@ -433,7 +549,9 @@ export default function BlogPage() {
           {/* ── Yükleniyor ────────────────────────────────── */}
           {loading && (
             <div className={styles.skeletonGrid}>
-              {[...Array(6)].map((_, i) => <ArticleSkeleton key={i} />)}
+              {[...Array(6)].map((_, i) => (
+                <ArticleSkeleton key={i} />
+              ))}
             </div>
           )}
 
@@ -447,9 +565,17 @@ export default function BlogPage() {
               <span className={styles.emptyIcon}>✦</span>
               <h3 className={styles.emptyTitle}>Makale bulunamadı</h3>
               <p className={styles.emptyDesc}>
-                {search ? `"${search}" için sonuç yok.` : 'Bu kategoride henüz makale eklenmemiş.'}
+                {search
+                  ? `"${search}" için sonuç yok.`
+                  : 'Bu kategoride henüz makale eklenmemiş.'}
               </p>
-              <button className={styles.emptyReset} onClick={() => { setSearch(''); setActiveCategory('Tümü'); }}>
+              <button
+                className={styles.emptyReset}
+                onClick={() => {
+                  setSearch('')
+                  setActiveCategory('Tümü')
+                }}
+              >
                 Filtreleri Temizle
               </button>
             </motion.div>
@@ -467,10 +593,15 @@ export default function BlogPage() {
             >
               <div className={styles.featuredImgWrapper}>
                 <img
-                  src={featuredArticle.image || `https://picsum.photos/seed/${featuredArticle.id}/1200/600`}
+                  src={
+                    featuredArticle.image ||
+                    `https://picsum.photos/seed/${featuredArticle.id}/1200/600`
+                  }
                   alt={featuredArticle.title}
                   className={styles.featuredImg}
-                  onError={(e) => { e.target.src = `https://picsum.photos/seed/${featuredArticle.id}/1200/600`; }}
+                  onError={e => {
+                    e.target.src = `https://picsum.photos/seed/${featuredArticle.id}/1200/600`
+                  }}
                 />
                 <div className={styles.featuredImgOverlay} />
                 <div className={styles.featuredBadge}>✦ Öne Çıkan</div>
@@ -478,18 +609,28 @@ export default function BlogPage() {
 
               <div className={styles.featuredContent}>
                 {featuredArticle.category && (
-                  <span className={styles.featuredCategory}>{featuredArticle.category}</span>
+                  <span className={styles.featuredCategory}>
+                    {featuredArticle.category}
+                  </span>
                 )}
                 <div className={styles.featuredMeta}>
                   {featuredArticle.date && (
-                    <span><FiCalendar size={13} /> {featuredArticle.date}</span>
+                    <span>
+                      <FiCalendar size={13} /> {featuredArticle.date}
+                    </span>
                   )}
                   {featuredArticle.readTime && (
-                    <span><FiClock size={13} /> {featuredArticle.readTime}</span>
+                    <span>
+                      <FiClock size={13} /> {featuredArticle.readTime}
+                    </span>
                   )}
                 </div>
-                <h2 className={styles.featuredTitle}>{featuredArticle.title}</h2>
-                <p className={styles.featuredDesc}>{featuredArticle.summary || featuredArticle.description}</p>
+                <h2 className={styles.featuredTitle}>
+                  {featuredArticle.title}
+                </h2>
+                <p className={styles.featuredDesc}>
+                  {featuredArticle.summary || featuredArticle.description}
+                </p>
                 <button className={styles.featuredBtn}>
                   Makaleyi Oku <FiArrowRight />
                 </button>
@@ -528,8 +669,11 @@ export default function BlogPage() {
 
       {/* ── Makale Modal ─────────────────────────────────── */}
       {selectedArticle && (
-        <ArticleModal article={selectedArticle} onClose={() => setSelectedArticle(null)} />
+        <ArticleModal
+          article={selectedArticle}
+          onClose={() => setSelectedArticle(null)}
+        />
       )}
     </>
-  );
+  )
 }

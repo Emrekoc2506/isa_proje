@@ -2,9 +2,18 @@ import { apiBaseUrl, request } from "./apiClient";
 import { getGuestSessionId } from "../utils/guestSession";
 import { safeGetItem } from "../utils/storage";
 
-export function uploadFile(file, purpose = "Product", ownerId = null, onProgress = null) {
+export function uploadFile(
+  file,
+  purpose = "Product",
+  ownerId = null,
+  onProgress = null,
+) {
   let purposeValue = "Product";
-  if (purpose === "bannerVideo" || purpose === "BannerVideo" || purpose === "bannervideo") {
+  if (
+    purpose === "bannerVideo" ||
+    purpose === "BannerVideo" ||
+    purpose === "bannervideo"
+  ) {
     purposeValue = "BannerVideo";
   } else if (purpose === "banner" || purpose === "Banner" || purpose === 2) {
     purposeValue = "Banner";
@@ -18,24 +27,37 @@ export function uploadFile(file, purpose = "Product", ownerId = null, onProgress
     purposeValue = "Blog";
   }
 
+  const isChat = purposeValue === "Chat";
+  const guestSessionId = getGuestSessionId();
+  const endpoint = isChat ? "/chat/files/upload" : "/admin/files/upload";
+
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("purpose", purposeValue);
-  if (ownerId) {
-    formData.append("ownerId", ownerId);
+
+  if (isChat) {
+    if (ownerId) {
+      formData.append("conversationId", ownerId);
+    }
+    if (guestSessionId) {
+      formData.append("guestSessionId", guestSessionId);
+    }
+  } else {
+    formData.append("purpose", purposeValue);
+    if (ownerId) {
+      formData.append("ownerId", ownerId);
+    }
   }
 
   if (onProgress && typeof XMLHttpRequest !== "undefined") {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${apiBaseUrl}/admin/files/upload`);
+      xhr.open("POST", `${apiBaseUrl}${endpoint}`);
 
       const token = safeGetItem("accessToken");
       if (token) {
         xhr.setRequestHeader("Authorization", `Bearer ${token}`);
       }
 
-      const guestSessionId = getGuestSessionId();
       if (guestSessionId) {
         xhr.setRequestHeader("X-Guest-Session-Id", guestSessionId);
         xhr.setRequestHeader("X-Guest-SessionId", guestSessionId);
@@ -61,7 +83,9 @@ export function uploadFile(file, purpose = "Product", ownerId = null, onProgress
         } else {
           try {
             const errData = JSON.parse(xhr.responseText);
-            reject(new Error(errData.message || `Yükleme başarısız (${xhr.status})`));
+            reject(
+              new Error(errData.message || `Yükleme başarısız (${xhr.status})`),
+            );
           } catch {
             reject(new Error(`Yükleme başarısız (${xhr.status})`));
           }
@@ -73,9 +97,8 @@ export function uploadFile(file, purpose = "Product", ownerId = null, onProgress
     });
   }
 
-  return request("/admin/files/upload", {
+  return request(endpoint, {
     method: "POST",
-    body: formData
+    body: formData,
   });
 }
-

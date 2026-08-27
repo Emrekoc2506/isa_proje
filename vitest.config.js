@@ -1,12 +1,16 @@
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'jsdom',
+    environment: "jsdom",
     globals: true,
-    setupFiles: './src/tests/setup.js',
+    setupFiles: "./src/tests/setup.js",
     fileParallelism: false,
+    pool: "threads",
+    threads: {
+      singleThread: true,
+    },
   },
 });
