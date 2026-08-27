@@ -29,6 +29,7 @@ const PUBLIC_PREFIXES = [
   "/banners",
   "/blog",
   "/coupons/validate",
+  "/payment-methods",
 ];
 
 function isPublicEndpoint(path, method = "GET") {

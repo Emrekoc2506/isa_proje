@@ -10,6 +10,10 @@ export default function ProductSection({ title, viewAllHref = '#', products = []
   const scrollRef = useRef(null);
   const sectionRef = useScrollReveal();
 
+  if (!products || products.length === 0) {
+    return null;
+  }
+
   const scroll = (dir) => {
     if (!scrollRef.current) return;
     const amount = scrollRef.current.offsetWidth * 0.75;

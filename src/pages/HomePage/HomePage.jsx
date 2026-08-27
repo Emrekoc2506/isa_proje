@@ -6,9 +6,9 @@ import BlogSection from '../../components/BlogSection/BlogSection';
 import CategoryNav from '../../components/CategoryNav/CategoryNav';
 import SEO from '../../components/SEO/SEO';
 import { MdOutlineLocalShipping } from 'react-icons/md';
-import { useProducts } from '../../context/ProductContext';
+import { getNewProducts, getSaleProducts, getFeaturedProducts } from '../../services/productApi';
+import { normalizeProducts } from '../../context/ProductContext';
 import { getBlogArticles } from '../../services/blogApi';
-import { blogArticles as mockArticles } from '../../data/index';
 
 const orgSchema = {
   '@context': 'https://schema.org',
@@ -31,29 +31,48 @@ const websiteSchema = {
 };
 
 export default function HomePage() {
-  const { products } = useProducts();
   const [articles, setArticles] = useState([]);
+  const [newsProducts, setNewsProducts] = useState([]);
+  const [saleProducts, setSaleProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
 
   useEffect(() => {
-    getBlogArticles()
-      .then(res => {
-        const list = Array.isArray(res) ? res : (res?.items || []);
-        if (list.length > 0) {
+    let isMounted = true;
+
+    // Ana sayfa için sadece 8'er adet hafif ürün verisini paralel çek (1000 ürün indirilmez)
+    Promise.allSettled([
+      getNewProducts({ page: 1, pageSize: 8 }),
+      getSaleProducts({ page: 1, pageSize: 8 }),
+      getFeaturedProducts({ page: 1, pageSize: 8 })
+    ]).then(([newRes, saleRes, featRes]) => {
+      if (!isMounted) return;
+      if (newRes.status === 'fulfilled') {
+        setNewsProducts(normalizeProducts(newRes.value).filter(p => p.isActive !== false));
+      }
+      if (saleRes.status === 'fulfilled') {
+        setSaleProducts(normalizeProducts(saleRes.value).filter(p => p.isActive !== false));
+      }
+      if (featRes.status === 'fulfilled') {
+        setFeaturedProducts(normalizeProducts(featRes.value).filter(p => p.isActive !== false));
+      }
+    }).catch(err => console.error("Home vitrin yükleme hatası:", err));
+
+    // Blog içeriklerini defer ederek arka planda çek
+    const timer = setTimeout(() => {
+      getBlogArticles()
+        .then(res => {
+          if (!isMounted) return;
+          const list = Array.isArray(res) ? res : (res?.items || []);
           setArticles(list);
-        } else {
-          setArticles(mockArticles);
-        }
-      })
-      .catch(() => setArticles(mockArticles));
+        })
+        .catch(() => {});
+    }, 100);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
   }, []);
-
-  const newsProducts = products.filter(p => p.isNew);
-  const saleProducts = products.filter(p => p.isSale);
-  const featuredProducts = products.filter(p => p.isFeatured);
-
-  const displayNews = newsProducts.length > 0 ? newsProducts : products.slice(0, 8);
-  const displaySale = saleProducts.length > 0 ? saleProducts : products.slice(0, 8);
-  const displayFeatured = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8);
 
   return (
     <main id="main-content" className={styles.main}>
@@ -83,27 +102,33 @@ export default function HomePage() {
       </div>
 
       {/* ── Haberler / Yeni Gelenler ─────────────────────────── */}
-      <ProductSection
-        title="Yeni Gelenler"
-        viewAllHref="/urunler"
-        products={displayNews}
-      />
+      {newsProducts.length > 0 && (
+        <ProductSection
+          title="Yeni Gelenler"
+          viewAllHref="/urunler"
+          products={newsProducts}
+        />
+      )}
 
       {/* ── Satış (Sale) ─────────────────────────────────── */}
-      <section className={styles.saleSection}>
-        <ProductSection
-          title="İndirimdekiler"
-          viewAllHref="/urunler"
-          products={displaySale}
-        />
-      </section>
+      {saleProducts.length > 0 && (
+        <section className={styles.saleSection}>
+          <ProductSection
+            title="İndirimdekiler"
+            viewAllHref="/urunler"
+            products={saleProducts}
+          />
+        </section>
+      )}
 
       {/* ── Öne Çıkan Ürünler (Featured) ─────────────────── */}
-      <ProductSection
-        title="Öne Çıkan Ürünler"
-        viewAllHref="/urunler"
-        products={displayFeatured}
-      />
+      {featuredProducts.length > 0 && (
+        <ProductSection
+          title="Öne Çıkan Ürünler"
+          viewAllHref="/urunler"
+          products={featuredProducts}
+        />
+      )}
 
       {/* ── Blog ─────────────────────────────────────────── */}
       <BlogSection articles={articles} />

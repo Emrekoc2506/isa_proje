@@ -5,7 +5,6 @@ import { getProducts } from '../services/productApi';
 import { safeGetJson, safeSetJson, safeRemoveItem } from '../utils/storage';
 import { isValidGuid, prepareWishlistProductIds } from '../utils/wishlist';
 
-import { newsProducts, saleProducts } from '../data/index';
 
 const WishlistContext = createContext(null);
 
@@ -44,7 +43,7 @@ export function WishlistProvider({ children }) {
           } catch {
             cachedProducts = [];
           }
-          const allCatalog = [...cachedProducts, ...newsProducts, ...saleProducts];
+          const allCatalog = cachedProducts;
 
           const mapped = localIds.map(id => {
             const foundInCatalog = allCatalog.find(p => String(p.id) === String(id) || String(p.productId) === String(id));

@@ -1257,6 +1257,48 @@ function OrderRow({ order, compact, initialOpen = false }) {
                 </div>
               </div>
             ))}
+            {order.paymentMethod === "BankTransfer" && (
+              <div style={{
+                marginTop: 10,
+                padding: "8px 12px",
+                borderRadius: 6,
+                background: "rgba(201,162,39,0.08)",
+                border: "1px solid var(--border-gold)",
+                fontSize: 12,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8
+              }}>
+                <div>
+                  <span style={{ color: "var(--gold-light)", fontWeight: 600 }}>Ödeme Yöntemi:</span> Banka Havalesi / EFT &nbsp;•&nbsp;
+                  <span style={{ color: "var(--text-secondary)" }}>
+                    Ödeme Durumu: <strong style={{ color: String(order.paymentStatus).toLowerCase() === "paid" ? "#2ecc71" : "#e67e22" }}>
+                      {String(order.paymentStatus).toLowerCase() === "paid" ? "Ödeme Alındı" : String(order.paymentStatus).toLowerCase() === "pendingverification" ? "Kontrol Ediliyor" : "Ödeme Bekleniyor"}
+                    </strong>
+                  </span>
+                </div>
+
+                {String(order.paymentStatus).toLowerCase() !== "paid" && (
+                  <a
+                    href={`/odeme/sonuc?orderId=${encodeURIComponent(order.id)}&orderNumber=${encodeURIComponent(order.orderNumber || "")}`}
+                    style={{
+                      background: "linear-gradient(135deg, var(--gold-light), var(--gold-dark))",
+                      color: "var(--bg-dark)",
+                      padding: "4px 10px",
+                      borderRadius: 4,
+                      textDecoration: "none",
+                      fontWeight: 700,
+                      fontSize: 11
+                    }}
+                  >
+                    Dekont Yükle / Bilgileri Gör
+                  </a>
+                )}
+              </div>
+            )}
+
             <div
               style={{
                 padding: "8px 0",

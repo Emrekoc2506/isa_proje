@@ -9,11 +9,11 @@ import { ProductProvider } from "./context/ProductContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import MainLayout from "./layouts/MainLayout/MainLayout";
 import HomePage from "./pages/HomePage/HomePage";
-import AuthPage from "./pages/AuthPage/AuthPage";
-import ProductsPage from "./pages/ProductsPage/ProductsPage";
-import ProductDetailPage from "./pages/ProductDetailPage/ProductDetailPage";
 
 // Lazy Loaded Heavy Pages (Code-Splitting for Optimal Bundle & Performance)
+const AuthPage = lazy(() => import("./pages/AuthPage/AuthPage"));
+const ProductsPage = lazy(() => import("./pages/ProductsPage/ProductsPage"));
+const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage/ProductDetailPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage/DashboardPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage/AdminPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage/BlogPage"));

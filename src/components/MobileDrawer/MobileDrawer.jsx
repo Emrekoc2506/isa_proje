@@ -83,7 +83,11 @@ export default function MobileDrawer({ open, onClose }) {
                 className={styles.brand}
                 onClick={() => handleLinkClick("/")}
               >
-                <img src={logoImage} alt="muhristan" className={styles.logoImg} />
+                <img
+                  src={logoImage}
+                  alt="muhristan"
+                  className={styles.logoImg}
+                />
                 <span className={styles.brandTitle}>muhristan</span>
               </Link>
               <button
@@ -135,7 +139,9 @@ export default function MobileDrawer({ open, onClose }) {
                   >
                     <FiUser className={styles.loginIcon} />
                     <div className={styles.loginText}>
-                      <span className={styles.loginTitle}>Giriş Yap / Üye Ol</span>
+                      <span className={styles.loginTitle}>
+                        Giriş Yap / Üye Ol
+                      </span>
                       <span className={styles.loginSub}>
                         Fırsatlardan yararlanmak için hemen giriş yapın
                       </span>
@@ -168,7 +174,15 @@ export default function MobileDrawer({ open, onClose }) {
 
                 <button
                   className={styles.quickItem}
-                  onClick={() => handleLinkClick(isAuthenticated ? (isAdmin ? "/admin" : "/panel") : "/giris")}
+                  onClick={() =>
+                    handleLinkClick(
+                      isAuthenticated
+                        ? isAdmin
+                          ? "/admin"
+                          : "/panel"
+                        : "/giris",
+                    )
+                  }
                 >
                   <div className={styles.quickIconWrapper}>
                     <FiBell className={styles.quickIcon} />
@@ -238,7 +252,11 @@ export default function MobileDrawer({ open, onClose }) {
                                 onClick={() => toggleCategory(cat.id)}
                                 aria-label={`${catName} alt kategorilerini göster`}
                               >
-                                {isOpen ? <FiChevronDown /> : <FiChevronRight />}
+                                {isOpen ? (
+                                  <FiChevronDown />
+                                ) : (
+                                  <FiChevronRight />
+                                )}
                               </button>
                             )}
                           </div>
@@ -285,7 +303,7 @@ export default function MobileDrawer({ open, onClose }) {
                                               className={styles.level3Link}
                                               onClick={() =>
                                                 handleLinkClick(
-                                                  `/urunler?kategori=${sub.id}`
+                                                  `/urunler?kategori=${sub.id}`,
                                                 )
                                               }
                                             >
@@ -306,11 +324,6 @@ export default function MobileDrawer({ open, onClose }) {
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Alt Footer Bilgisi */}
-            <div className={styles.footer}>
-              <span>MADE WITH ❤️ IN TÜRKİYE</span>
             </div>
           </motion.div>
         </>

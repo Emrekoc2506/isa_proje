@@ -4,7 +4,7 @@ import {
   toAbsoluteUrl, 
   cleanCanonicalUrl, 
   isTestEnv, 
-  safeJsonLdStringify 
+  safeJsonLdStringify
 } from '../../utils/seoHelpers';
 
 const DEFAULT_TITLE = 'Muhristan | Takı Esans Dünyası';

@@ -18,8 +18,18 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProductsPage() {
-  const { products, categories, loading } = useProducts();
+  const { products, categories, loading, loadProducts } = useProducts();
+  const [loadingProductsPage, setLoadingProductsPage] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (products.length === 0 && typeof loadProducts === 'function') {
+      setLoadingProductsPage(true);
+      loadProducts({ pageSize: 500 }).finally(() => setLoadingProductsPage(false));
+    }
+  }, [products.length, loadProducts]);
+
+  const isPageLoading = loading || loadingProductsPage;
 
   // Arama parametrelerini oku
   const categoryParam = searchParams.get("kategori") || "hepsi";
@@ -752,13 +762,13 @@ export default function ProductsPage() {
         <main className={styles.productsArea}>
           <div className={styles.resultsInfoRow}>
             <span>
-              {loading
+              {isPageLoading
                 ? "Yükleniyor..."
                 : `${filteredProducts.length} ürün listeleniyor`}
             </span>
           </div>
 
-          {loading ? (
+          {isPageLoading ? (
             <div className={styles.productsGrid}>
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <ProductCardSkeleton key={i} />

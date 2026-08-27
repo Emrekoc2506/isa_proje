@@ -22,7 +22,7 @@ import { getSafeStockQuantity } from '../utils/stockUtils';
 
 const ProductContext = createContext(null);
 
-function normalizeProducts(productsData) {
+export function normalizeProducts(productsData) {
   const rawList = Array.isArray(productsData)
     ? productsData
     : (productsData?.items || productsData?.data || []);
@@ -233,62 +233,42 @@ export function ProductProvider({ children }) {
     }
   }, []);
 
-  // Tüm kamu ve admin (varsa) verilerini yükleme (bağımsız & retry destekli)
+  // Ürünleri talep üzerine (on-demand / admin vb.) yükleme
+  const loadProducts = useCallback(async (params = {}) => {
+    try {
+      const prodsData = await getProducts({ pageSize: params.pageSize || 100, ...params });
+      const normalized = normalizeProducts(prodsData);
+      setProducts(normalized || []);
+      setCachedProducts(normalized || []);
+      return normalized;
+    } catch (err) {
+      console.error("Ürün yükleme hatası:", err);
+      return [];
+    }
+  }, []);
+
+  // Kategori ve Afişleri anında ultra hızlı yükle (Full 1000 ürün indirme kaldırıldı)
   const loadInitialData = useCallback(async () => {
     const currentRequestId = ++latestRequestIdRef.current;
 
     try {
       if (isMountedRef.current && typeof window !== 'undefined') {
-        if (productsRef.current.length === 0) {
-          setLoading(true);
-        }
         setError(null);
       }
 
-      // Kategori ve Ürün verilerini bağımsız paralel çek (ürünler için 4s hızlı zaman aşımı)
-      const [catResult, prodResult] = await Promise.allSettled([
-        getCategoryTree().catch(() => getCategories()),
-        fetchProductsWithRetry(() => getProducts({ pageSize: 1000 }, { timeout: 4000 }))
-      ]);
+      // Sadece Kategori Ağacını çek (Hafif ve hızlı)
+      const catVal = await getCategoryTree().catch(() => getCategories());
 
       if (!isMountedRef.current || currentRequestId !== latestRequestIdRef.current || typeof window === 'undefined') return;
 
-      if (catResult.status === 'fulfilled') {
-        const catVal = catResult.value || [];
-        setCategories(catVal);
-        setCachedCategories(catVal);
-      }
-
-      if (prodResult.status === 'fulfilled') {
-        const normalized = normalizeProducts(prodResult.value);
-        setProducts(normalized || []);
-        setCachedProducts(normalized || []);
-        setError(null);
-
-        // Sunucudan gelen canlı listede olmayan silinmiş ürünleri son incelediklerinizden temizle
-        if (Array.isArray(normalized) && normalized.length > 0 && typeof window !== 'undefined') {
-          try {
-            const validIds = new Set(normalized.map(p => p.id));
-            const rvData = localStorage.getItem("isa_recently_viewed_products");
-            if (rvData) {
-              const rvList = JSON.parse(rvData);
-              if (Array.isArray(rvList)) {
-                const cleaned = rvList.filter(item => validIds.has(item.id));
-                localStorage.setItem("isa_recently_viewed_products", JSON.stringify(cleaned));
-              }
-            }
-          } catch (e) {}
-        }
-      } else {
-        const prodErr = prodResult.reason;
-        console.error("Ürün yükleme hatası (retry sonrası):", prodErr);
-        setError("Ürünler yüklenirken bir hata oluştu.");
-        // KULLANICI DENEYİMİ KORUMASI: Mevcut ürün listesi API geçici hatası nedeniyle silinmez!
+      if (catVal) {
+        setCategories(catVal || []);
+        setCachedCategories(catVal || []);
       }
     } catch (err) {
-      console.error("Veri yükleme hatası:", err);
+      console.error("Kategori veri yükleme hatası:", err);
       if (isMountedRef.current && currentRequestId === latestRequestIdRef.current && typeof window !== 'undefined') {
-        setError("Veriler yüklenirken bir hata oluştu.");
+        setError("Kategoriler yüklenirken bir hata oluştu.");
       }
     } finally {
       if (isMountedRef.current && currentRequestId === latestRequestIdRef.current && typeof window !== 'undefined') {
@@ -470,19 +450,7 @@ export function ProductProvider({ children }) {
         isActive: true
       });
 
-      // Yenile
-      const bannersData = await getBanners();
-      const mappedSlides = (bannersData || []).map(b => ({
-        id: b.id,
-        title: b.title || b.cta || "Kampanya",
-        subtitle: b.subtitle || "",
-        cta: b.cta || "Keşfet",
-        href: b.href || "/urunler",
-        image: b.image || "https://www.aromantra.com/data/include/img/links/1774962684_rwd_desktop.jpg",
-        imageMobile: b.imageMobile || b.image || "https://www.aromantra.com/data/include/img/links/1774962684_rwd_desktop.jpg",
-        isActive: b.isActive ?? true
-      }));
-      setSlides(mappedSlides);
+      await fetchBannersFast();
     } catch (err) {
       console.error("Afiş eklenemedi:", err);
       throw err;
@@ -493,20 +461,7 @@ export function ProductProvider({ children }) {
   const deleteSlide = async (id) => {
     try {
       await deleteAdminBanner(id);
-      
-      // Yenile
-      const bannersData = await getBanners();
-      const mappedSlides = (bannersData || []).map(b => ({
-        id: b.id,
-        title: b.title || b.cta || "Kampanya",
-        subtitle: b.subtitle || "",
-        cta: b.cta || "Keşfet",
-        href: b.href || "/urunler",
-        image: b.image || "https://www.aromantra.com/data/include/img/links/1774962684_rwd_desktop.jpg",
-        imageMobile: b.imageMobile || b.image || "https://www.aromantra.com/data/include/img/links/1774962684_rwd_desktop.jpg",
-        isActive: b.isActive ?? true
-      }));
-      setSlides(mappedSlides);
+      await fetchBannersFast();
     } catch (err) {
       console.error("Afiş silinemedi:", err);
       throw err;
@@ -520,8 +475,9 @@ export function ProductProvider({ children }) {
       slides,
       loading,
       error,
+      loadProducts,
       refreshData: loadInitialData,
-      refreshProducts: loadInitialData,
+      refreshProducts: loadProducts,
       retry: loadInitialData,
       addCategory,
       deleteCategory,

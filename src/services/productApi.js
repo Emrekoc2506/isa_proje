@@ -15,16 +15,22 @@ export function getProductBySlug(slug) {
   return request(`/products/by-slug/${encodeURIComponent(slug)}`);
 }
 
-export function getFeaturedProducts() {
-  return request("/products/featured");
+export function getFeaturedProducts(params = {}, options = {}) {
+  const query = new URLSearchParams(params);
+  const qStr = query.toString();
+  return request(`/products/featured${qStr ? `?${qStr}` : ''}`, options);
 }
 
-export function getNewProducts() {
-  return request("/products/new");
+export function getNewProducts(params = {}, options = {}) {
+  const query = new URLSearchParams(params);
+  const qStr = query.toString();
+  return request(`/products/new${qStr ? `?${qStr}` : ''}`, options);
 }
 
-export function getSaleProducts() {
-  return request("/products/sale");
+export function getSaleProducts(params = {}, options = {}) {
+  const query = new URLSearchParams(params);
+  const qStr = query.toString();
+  return request(`/products/sale${qStr ? `?${qStr}` : ''}`, options);
 }
 
 export function getProductReviews(productId) {
