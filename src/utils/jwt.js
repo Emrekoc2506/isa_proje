@@ -7,17 +7,25 @@ export function getJwtPayload(token) {
     while (base64.length % 4 !== 0) {
       base64 += '=';
     }
-    let jsonStr;
-    try {
-      const binary = atob(base64);
-      const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-      jsonStr = new TextDecoder().decode(bytes);
-    } catch {
-      jsonStr = atob(base64);
-    }
+    const jsonStr = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
     return JSON.parse(jsonStr);
   } catch {
-    return null;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4 !== 0) {
+        base64 += '=';
+      }
+      return JSON.parse(atob(base64));
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -37,3 +45,9 @@ export function getJwtRemainingTimeMs(token) {
   const expMs = payload.exp > 100000000000 ? payload.exp : payload.exp * 1000;
   return Math.max(0, expMs - Date.now());
 }
+
+export default {
+  getJwtPayload,
+  isJwtExpired,
+  getJwtRemainingTimeMs,
+};
