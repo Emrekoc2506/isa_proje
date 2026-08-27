@@ -13,15 +13,9 @@ import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import LocationSelects from '../../components/LocationSelect/LocationSelects'
 import * as accountApi from '../../services/accountApi'
-import * as checkoutApi from '../../services/checkoutApi'
 import * as couponApi from '../../services/couponApi'
 import * as orderApi from '../../services/orderApi'
-import * as paymentApi from '../../services/paymentApi'
-import {
-  isManualPayment,
-  shouldInitializePayment,
-  PAYMENT_METHODS
-} from './paymentFlow'
+import { PAYMENT_METHODS } from './paymentFlow'
 
 import SEO from '../../components/SEO/SEO'
 
@@ -35,13 +29,7 @@ export default function CheckoutPage () {
   const [loadingAddresses, setLoadingAddresses] = useState(false)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [orderLoading, setOrderLoading] = useState(false)
-  const [paymentOptions, setPaymentOptions] = useState({
-    onlineCard: { enabled: false, provider: 'OnlineCard' },
-    bankTransfer: { enabled: true }
-  })
-  const [paymentMethod, setPaymentMethod] = useState(
-    PAYMENT_METHODS.BANK_TRANSFER
-  )
+  const paymentMethod = PAYMENT_METHODS.BANK_TRANSFER;
 
   // Selected values
   const [shippingAddressId, setShippingAddressId] = useState(null)
@@ -82,29 +70,7 @@ export default function CheckoutPage () {
   const [previewData, setPreviewData] = useState(null)
   const [previewError, setPreviewError] = useState('')
 
-  useEffect(() => {
-    checkoutApi
-      .getPaymentOptions()
-      .then(data => {
-        if (!data) return
-        setPaymentOptions(data)
-        if (!data.onlineCard?.enabled) {
-          setPaymentMethod(current =>
-            current === PAYMENT_METHODS.ONLINE_CARD
-              ? PAYMENT_METHODS.BANK_TRANSFER
-              : current
-          )
-        }
-      })
-      .catch(() => {
-        // Manual methods remain available when the optional capability endpoint is unavailable.
-        setPaymentMethod(current =>
-          current === PAYMENT_METHODS.ONLINE_CARD
-            ? PAYMENT_METHODS.BANK_TRANSFER
-            : current
-        )
-      })
-  }, [])
+
 
   // Fetch addresses if authenticated
   useEffect(() => {
@@ -314,43 +280,12 @@ export default function CheckoutPage () {
         sessionStorage.setItem('pendingOrderNumber', orderRes.orderNumber)
       }
 
-      // Manual payments are complete orders and must never call the online payment endpoint.
-      if (isManualPayment(paymentMethod)) {
-        await clearCart()
-        navigate(
-          `/odeme/sonuc?orderId=${encodeURIComponent(
-            orderId
-          )}&orderNumber=${encodeURIComponent(orderRes.orderNumber || '')}`
-        )
-        return
-      }
-
-      // OnlineCard owns exactly one payment initialization attempt for this submit.
-      try {
-        const paymentRes = await paymentApi.initializePayment({
-          orderId,
-          provider: 'online',
-          returnUrl: window.location.origin + '/odeme/sonuc',
-          idempotencyKey:
-            globalThis.crypto?.randomUUID?.() || `idemp-${Date.now()}`
-        })
-
-        if (paymentRes?.redirectUrl) {
-          window.location.assign(paymentRes.redirectUrl)
-        } else {
-          throw new Error('Online ödeme yönlendirme bağlantısı alınamadı.')
-        }
-      } catch (err) {
-        sessionStorage.setItem(
-          'paymentInitError',
-          err.message || 'Online ödeme başlatılamadı.'
-        )
-        navigate(
-          `/odeme/sonuc?orderId=${encodeURIComponent(
-            orderId
-          )}&orderNumber=${encodeURIComponent(orderRes.orderNumber || '')}`
-        )
-      }
+      await clearCart()
+      navigate(
+        `/odeme/sonuc?orderId=${encodeURIComponent(
+          orderId
+        )}&orderNumber=${encodeURIComponent(orderRes.orderNumber || '')}`
+      )
     } catch (err) {
       let errorMessage =
         err.message || 'Sipariş oluşturulurken bir hata oluştu.'
@@ -858,49 +793,53 @@ export default function CheckoutPage () {
           <div className={styles.sectionCard}>
             <h3 className={styles.sectionTitle}>Ödeme Yöntemi</h3>
             <div
-              role='radiogroup'
-              aria-label='Ödeme Yöntemi'
-              style={{ display: 'grid', gap: 10 }}
+              style={{
+                padding: '16px 20px',
+                borderRadius: '10px',
+                background: 'rgba(245, 214, 128, 0.08)',
+                border: '1px solid rgba(245, 214, 128, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px'
+              }}
             >
-              <label
+              <div
                 style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: '50%',
+                  background: 'rgba(245, 214, 128, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 10,
-                  opacity: paymentOptions.onlineCard?.enabled ? 1 : 0.6
+                  justifyContent: 'center',
+                  color: 'var(--gold-light, #f5d680)',
+                  fontSize: '20px',
+                  flexShrink: 0
                 }}
               >
-                <input
-                  type='radio'
-                  name='paymentMethod'
-                  value={PAYMENT_METHODS.ONLINE_CARD}
-                  checked={paymentMethod === PAYMENT_METHODS.ONLINE_CARD}
-                  disabled={!paymentOptions.onlineCard?.enabled}
-                  onChange={() => setPaymentMethod(PAYMENT_METHODS.ONLINE_CARD)}
-                />
-                <span>
-                  Kredi / Banka Kartı
-                  {!paymentOptions.onlineCard?.enabled && (
-                    <small
-                      style={{ display: 'block', color: 'var(--text-muted)' }}
-                    >
-                      Şu anda kullanılamıyor
-                    </small>
-                  )}
+                🏦
+              </div>
+              <div>
+                <strong
+                  style={{
+                    display: 'block',
+                    color: 'var(--gold-light, #f5d680)',
+                    fontSize: '15px',
+                    marginBottom: '3px'
+                  }}
+                >
+                  Banka Havalesi / EFT (IBAN ile Ödeme)
+                </strong>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    color: 'var(--text-secondary, #94a3b8)',
+                    lineHeight: 1.4
+                  }}
+                >
+                  Siparişinizi tamamladıktan sonra banka hesap bilgilerimiz (IBAN) ve sipariş numaranız ekranda görüntülenecektir.
                 </span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <input
-                  type='radio'
-                  name='paymentMethod'
-                  value={PAYMENT_METHODS.BANK_TRANSFER}
-                  checked={paymentMethod === PAYMENT_METHODS.BANK_TRANSFER}
-                  onChange={() =>
-                    setPaymentMethod(PAYMENT_METHODS.BANK_TRANSFER)
-                  }
-                />
-                <span>Havale / EFT</span>
-              </label>
+              </div>
             </div>
           </div>
         </div>
@@ -1066,9 +1005,7 @@ export default function CheckoutPage () {
                   }}
                 />
               )}
-              {shouldInitializePayment(paymentMethod)
-                ? 'Siparişi Tamamla & Öde'
-                : 'Siparişi Tamamla'}
+              <span>Siparişi Tamamla</span>
             </button>
           </div>
         </div>
