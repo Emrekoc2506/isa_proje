@@ -224,6 +224,28 @@ export function CartProvider ({ children }) {
           applyServerCart(data)
           return { success: true, cart: data }
         } catch (err) {
+          if (err.status === 409 || err.code === 'cart_concurrency_conflict') {
+            await new Promise(r => setTimeout(r, 350))
+            try {
+              const retryData = await cartApi.addCartItem({
+                productId: rawId,
+                productVariantId: variantId,
+                quantity,
+                customNote: customNote || null
+              })
+              applyServerCart(retryData)
+              return { success: true, cart: retryData }
+            } catch (retryErr) {
+              await refreshCart()
+              const msg = getCartErrorMessage(retryErr)
+              setCartError(msg)
+              return {
+                success: false,
+                code: retryErr.code || 'cart_error',
+                message: msg
+              }
+            }
+          }
           await refreshCart()
           const msg = getCartErrorMessage(err)
           setCartError(msg)
@@ -357,6 +379,23 @@ export function CartProvider ({ children }) {
         }
         return { success: true, cart: data }
       } catch (err) {
+        if (err.status === 409 || err.code === 'cart_concurrency_conflict') {
+          await new Promise(r => setTimeout(r, 350))
+          try {
+            const retryData = await cartApi.updateCartItem(itemId, { quantity: qty })
+            if (retryData && (retryData.items || retryData.cartData)) {
+              applyServerCart(retryData)
+            } else {
+              await refreshCart()
+            }
+            return { success: true, cart: retryData }
+          } catch (retryErr) {
+            await refreshCart()
+            const msg = getCartErrorMessage(retryErr)
+            setCartError(msg)
+            return { success: false, code: retryErr.code || 'cart_error', message: msg }
+          }
+        }
         await refreshCart()
         const code = err.code || ''
         let msg = getCartErrorMessage(err)

@@ -214,7 +214,9 @@
 .triggerChevron {
   font-size: 16px;
   color: var(--text-muted);
-  transition: transform 0.2s, color 0.2s;
+  transition:
+    transform 0.2s,
+    color 0.2s;
 }
 
 .selectTrigger:hover .triggerChevron {
@@ -523,7 +525,11 @@
 }
 
 .pageBtnActive {
-  background: linear-gradient(135deg, var(--gold-light), var(--gold-dark)) !important;
+  background: linear-gradient(
+    135deg,
+    var(--gold-light),
+    var(--gold-dark)
+  ) !important;
   color: var(--bg-dark) !important;
   border-color: var(--gold) !important;
   font-weight: 700;
@@ -553,7 +559,7 @@
   .shopContent {
     flex-direction: column;
   }
-  
+
   .filterSidebar {
     width: 100%;
     position: static;

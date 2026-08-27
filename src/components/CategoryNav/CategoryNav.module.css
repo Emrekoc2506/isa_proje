@@ -54,7 +54,8 @@
   right: 0;
   bottom: 0;
   width: 120px;
-  background: linear-gradient(to left,
+  background: linear-gradient(
+    to left,
     var(--bg-dark) 0%,
     var(--bg-dark) 30%,
     rgba(28, 15, 53, 0.7) 70%,
@@ -81,7 +82,8 @@
   left: 0;
   bottom: 0;
   width: 120px;
-  background: linear-gradient(to right,
+  background: linear-gradient(
+    to right,
     var(--bg-dark) 0%,
     var(--bg-dark) 30%,
     rgba(28, 15, 53, 0.7) 70%,
@@ -115,7 +117,10 @@
   cursor: pointer;
   color: var(--gold);
   font-size: 16px;
-  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    transform 0.15s,
+    box-shadow 0.2s;
   flex-shrink: 0;
 }
 
@@ -127,14 +132,24 @@
 
 /* Sağa titreşim animasyonu */
 @keyframes nudgeRight {
-  0%, 100% { transform: translateX(0); }
-  50%       { transform: translateX(3px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
 }
 
 /* Sola titreşim animasyonu */
 @keyframes nudgeLeft {
-  0%, 100% { transform: translateX(0); }
-  50%       { transform: translateX(-3px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-3px);
+  }
 }
 
 .fadeRight .scrollArrowBtn {
@@ -199,7 +214,9 @@
   border: 1px solid var(--border-gold);
   border-top: 2px solid var(--gold);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(201,162,39,0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(201, 162, 39, 0.1);
   overflow: hidden;
   list-style: none;
   padding: 0;
@@ -234,7 +251,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   z-index: calc(var(--z-overlay) - 1);
   backdrop-filter: blur(4px);
 }
