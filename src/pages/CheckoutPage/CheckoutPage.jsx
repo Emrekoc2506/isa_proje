@@ -1,13 +1,14 @@
 import styles from './CheckoutPage.module.css'
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
-  FiMapPin,
-  FiTruck,
-  FiShoppingBag,
   FiCheck,
   FiLoader,
-  FiAlertTriangle
+  FiAlertTriangle,
+  FiCopy,
+  FiLock,
+  FiShoppingBag,
+  FiX
 } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
@@ -15,32 +16,52 @@ import LocationSelects from '../../components/LocationSelect/LocationSelects'
 import * as accountApi from '../../services/accountApi'
 import * as couponApi from '../../services/couponApi'
 import * as orderApi from '../../services/orderApi'
+import * as checkoutApi from '../../services/checkoutApi'
+import * as bankTransferApi from '../../services/bankTransferApi'
 import { PAYMENT_METHODS } from './paymentFlow'
-
+import logoImage from '../../assets/images/logo-2.png'
 import SEO from '../../components/SEO/SEO'
 
 export default function CheckoutPage () {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const { items: cartItems, clearCart } = useCart()
   const navigate = useNavigate()
+
+  // Stepper State: 1 = Adres, 2 = Kargo, 3 = Ödeme
+  const [editingStep, setEditingStep] = useState(null)
 
   // Loading states
   const [addresses, setAddresses] = useState([])
   const [loadingAddresses, setLoadingAddresses] = useState(false)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [orderLoading, setOrderLoading] = useState(false)
-  const paymentMethod = PAYMENT_METHODS.BANK_TRANSFER
+
+  // Payment Method Selection
+  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS.BANK_TRANSFER)
+
+  // Bank transfer info
+  const [bankInfo, setBankInfo] = useState({
+    bankName: 'Enpara',
+    accountHolder: 'İsa Şahap',
+    iban: 'TR09 0015 7000 0000 0136 3203 61',
+    phone: '0555 890 68 63'
+  })
+  const [copiedIban, setCopiedIban] = useState(false)
 
   // Selected values
   const [shippingAddressId, setShippingAddressId] = useState(null)
   const [billingAddressId, setBillingAddressId] = useState(null)
   const [sameAddress, setSameAddress] = useState(true)
+  const [agreedToTerms, setAgreedToTerms] = useState(true)
+
+  // Modal states for contracts
+  const [activeModal, setActiveModal] = useState(null)
 
   // Guest Address states
   const [guestShipping, setGuestShipping] = useState({
-    fullName: '',
-    email: '',
-    phoneNumber: '',
+    fullName: user?.fullName || '',
+    email: user?.email || '',
+    phoneNumber: user?.phoneNumber || '',
     city: '',
     district: '',
     neighborhood: '',
@@ -48,6 +69,7 @@ export default function CheckoutPage () {
     postalCode: '',
     country: 'TR'
   })
+
   const [guestBilling, setGuestBilling] = useState({
     fullName: '',
     email: '',
@@ -60,15 +82,32 @@ export default function CheckoutPage () {
     country: 'TR'
   })
 
-  const [shippingMethodCode, setShippingMethodCode] = useState('standard')
+  const [shippingMethodCode] = useState('standard')
   const [couponCode, setCouponCode] = useState('')
   const [couponApplied, setCouponApplied] = useState('')
   const [couponError, setCouponError] = useState('')
   const [couponSuccess, setCouponSuccess] = useState('')
-  const [orderCustomNote, setOrderCustomNote] = useState('')
+  const [showCouponInput, setShowCouponInput] = useState(false)
+  const [orderCustomNote] = useState('')
 
   const [previewData, setPreviewData] = useState(null)
   const [previewError, setPreviewError] = useState('')
+
+  // Load Bank Transfer info
+  useEffect(() => {
+    bankTransferApi.getBankTransferInfo()
+      .then(res => {
+        if (res && res.iban) {
+          setBankInfo(prev => ({
+            ...prev,
+            bankName: res.bankName || 'Enpara',
+            accountHolder: res.accountHolder || 'İsa Şahap',
+            iban: res.iban || 'TR09 0015 7000 0000 0136 3203 61'
+          }))
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Fetch addresses if authenticated
   useEffect(() => {
@@ -78,7 +117,6 @@ export default function CheckoutPage () {
         .getAddresses()
         .then(data => {
           setAddresses(data || [])
-          // Set default shipping/billing
           const defShipping = data?.find(a => a.isDefaultShipping)
           const defBilling = data?.find(a => a.isDefaultBilling)
           if (defShipping) setShippingAddressId(defShipping.id)
@@ -106,7 +144,7 @@ export default function CheckoutPage () {
     }
 
     if (isAuthenticated) {
-      if (shippingAddressId && shippingAddressId.trim() !== '') {
+      if (shippingAddressId && String(shippingAddressId).trim() !== '') {
         payload.shippingAddressId = shippingAddressId
         payload.billingAddressId = sameAddress
           ? shippingAddressId
@@ -186,9 +224,51 @@ export default function CheckoutPage () {
     setCouponError('')
   }
 
-  // Submit Order and Proceed to Payment
+  // Copy IBAN
+  const handleCopyIban = () => {
+    if (!navigator.clipboard) return
+    navigator.clipboard.writeText(bankInfo.iban.replace(/\s+/g, '')).then(() => {
+      setCopiedIban(true)
+      setTimeout(() => setCopiedIban(false), 2000)
+    }).catch(console.error)
+  }
+
+  const formatPhone = val => {
+    let digits = val.replace(/\D/g, '')
+    if (digits.startsWith('0')) digits = digits.substring(1)
+    digits = digits.substring(0, 10)
+    let res = ''
+    if (digits.length > 0) res += digits.substring(0, 3)
+    if (digits.length > 3) res += ' ' + digits.substring(3, 6)
+    if (digits.length > 6) res += ' ' + digits.substring(6, 8)
+    if (digits.length > 8) res += ' ' + digits.substring(8, 10)
+    return res
+  }
+
+  const handleGuestShippingChange = (field, val) => {
+    let value = val
+    if (field === 'phoneNumber') {
+      value = formatPhone(val)
+    }
+    setGuestShipping(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleGuestBillingChange = (field, val) => {
+    let value = val
+    if (field === 'phoneNumber') {
+      value = formatPhone(val)
+    }
+    setGuestBilling(prev => ({ ...prev, [field]: value }))
+  }
+
+  // Submit Order and Proceed to Confirmation
   const handleSubmitOrder = async () => {
     if (cartItems.length === 0) return
+
+    if (!agreedToTerms) {
+      alert('Lütfen Gizlilik ve Satış Sözleşmesini onaylayınız.')
+      return
+    }
 
     setOrderLoading(true)
 
@@ -202,6 +282,7 @@ export default function CheckoutPage () {
     if (isAuthenticated) {
       if (!shippingAddressId) {
         alert('Lütfen teslimat adresi seçin.')
+        setEditingStep(1)
         setOrderLoading(false)
         return
       }
@@ -217,19 +298,18 @@ export default function CheckoutPage () {
         !s.phoneNumber ||
         !s.city ||
         !s.district ||
-        !s.neighborhood ||
-        !s.addressLine ||
-        !s.postalCode
+        !s.addressLine
       ) {
         alert('Lütfen tüm adres ve iletişim alanlarını doldurun.')
+        setEditingStep(1)
         setOrderLoading(false)
         return
       }
 
-      // E-posta format validasyonu
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(s.email)) {
         alert('Lütfen geçerli bir e-posta adresi girin.')
+        setEditingStep(1)
         setOrderLoading(false)
         return
       }
@@ -262,7 +342,6 @@ export default function CheckoutPage () {
     }
 
     try {
-      // 1. Create order
       let orderRes
       if (isAuthenticated) {
         orderRes = await orderApi.createOrder(payload)
@@ -271,18 +350,35 @@ export default function CheckoutPage () {
       }
 
       const orderId = orderRes.id
+      const orderNumber = orderRes.orderNumber || ''
+      const customerEmail = guestShipping.email || user?.email || ''
 
-      // Store pending order details
       sessionStorage.setItem('pendingOrderId', orderId)
-      if (orderRes.orderNumber) {
-        sessionStorage.setItem('pendingOrderNumber', orderRes.orderNumber)
+      if (orderNumber) {
+        sessionStorage.setItem('pendingOrderNumber', orderNumber)
       }
+
+      // Save order context for result page
+      sessionStorage.setItem(
+        'lastOrderDetails',
+        JSON.stringify({
+          orderId,
+          orderNumber,
+          customerName: guestShipping.fullName || user?.fullName || 'Değerli Müşterimiz',
+          customerEmail,
+          customerPhone: guestShipping.phoneNumber || user?.phoneNumber || '',
+          shippingAddress: guestShipping,
+          totalAmount: previewData?.grandTotal || 0,
+          itemsCount: cartItems.length,
+          items: cartItems
+        })
+      )
 
       await clearCart()
       navigate(
         `/odeme/sonuc?orderId=${encodeURIComponent(
           orderId
-        )}&orderNumber=${encodeURIComponent(orderRes.orderNumber || '')}`
+        )}&orderNumber=${encodeURIComponent(orderNumber)}&email=${encodeURIComponent(customerEmail)}`
       )
     } catch (err) {
       let errorMessage =
@@ -298,717 +394,591 @@ export default function CheckoutPage () {
     }
   }
 
-  const formatPhone = val => {
-    let digits = val.replace(/\D/g, '')
-    if (digits.startsWith('0')) digits = digits.substring(1)
-    digits = digits.substring(0, 10)
-    let res = ''
-    if (digits.length > 0) res += digits.substring(0, 3)
-    if (digits.length > 3) res += ' ' + digits.substring(3, 6)
-    if (digits.length > 6) res += ' ' + digits.substring(6, 8)
-    if (digits.length > 8) res += ' ' + digits.substring(8, 10)
-    return res
-  }
+  // Selected address summary for authenticated users
+  const selectedAddr = addresses.find(a => a.id === shippingAddressId) || addresses[0]
 
-  const handleGuestShippingChange = (field, val) => {
-    let value = val
-    if (field === 'phoneNumber') {
-      value = formatPhone(val)
-    }
-    setGuestShipping(prev => ({ ...prev, [field]: value }))
-  }
+  // Active address summary text
+  const currentAddressSummary = isAuthenticated
+    ? (selectedAddr ? `${selectedAddr.fullName}, ${selectedAddr.neighborhood || ''} ${selectedAddr.addressLine}, ${selectedAddr.district}/${selectedAddr.city}` : 'Adres seçilmedi')
+    : (guestShipping.fullName ? `${guestShipping.fullName}, +90${guestShipping.phoneNumber || ''} ${guestShipping.addressLine || ''} ${guestShipping.district || ''} ${guestShipping.city || ''}` : 'Adres bilgisi giriniz')
 
-  const handleGuestBillingChange = (field, val) => {
-    let value = val
-    if (field === 'phoneNumber') {
-      value = formatPhone(val)
-    }
-    setGuestBilling(prev => ({ ...prev, [field]: value }))
-  }
+  const currentEmailSummary = isAuthenticated
+    ? (user?.email || '')
+    : (guestShipping.email || 'E-posta belirtilmedi')
 
   if (cartItems.length === 0) {
     return (
-      <div className={styles.emptyContainer}>
-        <FiShoppingBag className={styles.emptyIcon} />
-        <h2>Sepetiniz Boş</h2>
-        <p>Ödeme yapabilmek için sepetinize ürün eklemelisiniz.</p>
-        <button onClick={() => navigate('/urunler')} className={styles.shopBtn}>
-          Alışverişe Başla
-        </button>
+      <div className={styles.page}>
+        <div className={styles.emptyContainer}>
+          <FiShoppingBag className={styles.emptyIcon} />
+          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>Sepetiniz Boş</h2>
+          <p style={{ color: '#64748b', margin: '0 0 20px 0' }}>Ödeme yapabilmek için sepetinize ürün eklemelisiniz.</p>
+          <button onClick={() => navigate('/urunler')} className={styles.formActionBtn}>
+            Alışverişe Başla
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
     <div className={styles.page}>
-      <SEO title='Ödeme ve Sipariş | Muhristan' noindex={true} />
-      <div className={styles.container}>
-        <div className={styles.leftColumn}>
-          {/* 1. ADRES SEÇİMİ */}
-          <div className={styles.sectionCard}>
-            <h3 className={styles.sectionTitle}>
-              <FiMapPin /> Teslimat & Fatura Adresi
-            </h3>
+      <SEO title='Güvenli Ödeme | Muhristan' noindex={true} />
 
-            {isAuthenticated ? (
-              // Authenticated address list
-              loadingAddresses ? (
-                <p>Adresleriniz yükleniyor...</p>
-              ) : (
-                <div className={styles.addressList}>
-                  {addresses.map(addr => (
-                    <div
-                      key={addr.id}
-                      className={`${styles.addressSelectCard} ${
-                        shippingAddressId === addr.id ? styles.selectedCard : ''
-                      }`}
-                      onClick={() => setShippingAddressId(addr.id)}
-                    >
-                      <div className={styles.cardHeader}>
-                        <span className={styles.cardTitle}>{addr.title}</span>
-                        {shippingAddressId === addr.id && (
-                          <FiCheck className={styles.checkIcon} />
-                        )}
-                      </div>
-                      <p className={styles.cardName}>{addr.fullName}</p>
-                      <p className={styles.cardAddress}>
-                        {addr.neighborhood}, {addr.addressLine} {addr.district}/
-                        {addr.city}
-                      </p>
-                    </div>
-                  ))}
-                  {addresses.length === 0 && (
+      {/* Top Header */}
+      <header className={styles.checkoutHeader}>
+        <div className={styles.headerContainer}>
+          <Link to='/' className={styles.brandLogo}>
+            <img src={logoImage} alt='Muhristan Logo' className={styles.logoImage} />
+            <span className={styles.brandTitle}>Muhristan</span>
+          </Link>
+          {!isAuthenticated && (
+            <div className={styles.headerRightLink}>
+              Zaten hesabınız var mı? <Link to='/giris'>Giriş Yap</Link>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <div className={styles.container}>
+        {/* Left Column: 3 Stepper Checkout Cards */}
+        <div className={styles.leftColumn}>
+
+          {/* 1. STEP: ADRES */}
+          <div className={styles.stepCard}>
+            <div className={styles.stepHeader}>
+              <div className={styles.stepTitleGroup}>
+                <div className={editingStep === 1 ? styles.stepBadge : styles.stepBadgeCompleted}>
+                  {editingStep === 1 ? '1' : <FiCheck />}
+                </div>
+                <h3 className={styles.stepTitle}>Adres</h3>
+              </div>
+              {editingStep !== 1 && (
+                <button
+                  type='button'
+                  onClick={() => setEditingStep(1)}
+                  className={styles.editBtn}
+                >
+                  Düzenle
+                </button>
+              )}
+            </div>
+
+            {editingStep === 1 ? (
+              // EDITING STATE
+              <div>
+                {isAuthenticated ? (
+                  loadingAddresses ? (
+                    <p style={{ fontSize: 13, color: '#64748b' }}>Adresler yükleniyor...</p>
+                  ) : (
                     <div>
-                      <p
-                        style={{
-                          color: 'var(--text-muted)',
-                          fontSize: 13,
-                          marginBottom: 12
-                        }}
-                      >
-                        Kayıtlı adresiniz bulunmamaktadır.
-                      </p>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                        {addresses.map(addr => (
+                          <div
+                            key={addr.id}
+                            onClick={() => setShippingAddressId(addr.id)}
+                            style={{
+                              padding: 12,
+                              border: shippingAddressId === addr.id ? '2px solid #0f172a' : '1px solid #cbd5e1',
+                              borderRadius: 8,
+                              cursor: 'pointer',
+                              background: shippingAddressId === addr.id ? 'rgba(15,23,42,0.03)' : '#fff'
+                            }}
+                          >
+                            <strong style={{ display: 'block', fontSize: 13 }}>{addr.title}</strong>
+                            <p style={{ fontSize: 12, color: '#64748b', margin: '4px 0 0 0' }}>
+                              {addr.fullName} — {addr.district}/{addr.city}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                       <button
-                        onClick={() => navigate('/adreslerim')}
-                        className={styles.seeAllBtn}
+                        type='button'
+                        onClick={() => setEditingStep(null)}
+                        className={styles.formActionBtn}
                       >
-                        Adres Ekle
+                        Bu Adresi Kullan
                       </button>
                     </div>
-                  )}
-                </div>
-              )
+                  )
+                ) : (
+                  <div>
+                    <div className={styles.formGrid}>
+                      <div className={styles.inputGroup} style={{ gridColumn: 'span 2' }}>
+                        <input
+                          type='email'
+                          placeholder='E-posta *'
+                          required
+                          value={guestShipping.email}
+                          onChange={e => handleGuestShippingChange('email', e.target.value)}
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <input
+                          type='text'
+                          placeholder='Ad Soyad *'
+                          required
+                          value={guestShipping.fullName}
+                          onChange={e => handleGuestShippingChange('fullName', e.target.value)}
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <input
+                          type='tel'
+                          placeholder='Telefon (5XX XXX XX XX) *'
+                          required
+                          value={guestShipping.phoneNumber}
+                          onChange={e => handleGuestShippingChange('phoneNumber', e.target.value)}
+                          className={styles.input}
+                        />
+                      </div>
+                      <div style={{ gridColumn: 'span 2' }}>
+                        <LocationSelects
+                          city={guestShipping.city}
+                          district={guestShipping.district}
+                          neighborhood={guestShipping.neighborhood}
+                          onCityChange={val => handleGuestShippingChange('city', val)}
+                          onDistrictChange={val => handleGuestShippingChange('district', val)}
+                          onNeighborhoodChange={val => handleGuestShippingChange('neighborhood', val)}
+                          fieldInputClass={styles.input}
+                          showLabels={false}
+                        />
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <input
+                          type='text'
+                          placeholder='Posta Kodu *'
+                          required
+                          value={guestShipping.postalCode}
+                          onChange={e => handleGuestShippingChange('postalCode', e.target.value)}
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.inputGroup} style={{ gridColumn: 'span 2' }}>
+                        <input
+                          type='text'
+                          placeholder='Açık Adres (Cadde, Mahalle, Sokak, No, Daire) *'
+                          required
+                          value={guestShipping.addressLine}
+                          onChange={e => handleGuestShippingChange('addressLine', e.target.value)}
+                          className={styles.input}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        if (!guestShipping.fullName || !guestShipping.email || !guestShipping.phoneNumber) {
+                          alert('Lütfen ad soyad, e-posta ve telefon alanlarını doldurunuz.')
+                          return
+                        }
+                        setEditingStep(null)
+                      }}
+                      className={styles.formActionBtn}
+                    >
+                      Kargoya Devam Et
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
-              // Guest Address forms
-              <div className={styles.guestAddressForm}>
-                <h4>Teslimat Adresi</h4>
-                <div className={styles.formGrid}>
-                  <input
-                    type='text'
-                    placeholder='Ad Soyad *'
-                    required
-                    value={guestShipping.fullName}
-                    onChange={e =>
-                      handleGuestShippingChange('fullName', e.target.value)
-                    }
-                    className={styles.input}
-                  />
-                  <input
-                    type='email'
-                    placeholder='E-posta *'
-                    required
-                    value={guestShipping.email}
-                    onChange={e =>
-                      handleGuestShippingChange('email', e.target.value)
-                    }
-                    className={styles.input}
-                  />
-                  <input
-                    type='tel'
-                    placeholder='Telefon *'
-                    required
-                    value={guestShipping.phoneNumber}
-                    onChange={e =>
-                      handleGuestShippingChange('phoneNumber', e.target.value)
-                    }
-                    className={styles.input}
-                  />
-                  <LocationSelects
-                    city={guestShipping.city}
-                    district={guestShipping.district}
-                    neighborhood={guestShipping.neighborhood}
-                    onCityChange={val => handleGuestShippingChange('city', val)}
-                    onDistrictChange={val =>
-                      handleGuestShippingChange('district', val)
-                    }
-                    onNeighborhoodChange={val =>
-                      handleGuestShippingChange('neighborhood', val)
-                    }
-                    fieldInputClass={styles.input}
-                    showLabels={false}
-                    selectStyle={{
-                      background: 'var(--bg-dark)',
-                      color: 'var(--text-primary)'
-                    }}
-                  />
-                  <input
-                    type='text'
-                    placeholder='Posta Kodu *'
-                    required
-                    value={guestShipping.postalCode}
-                    onChange={e =>
-                      handleGuestShippingChange('postalCode', e.target.value)
-                    }
-                    className={styles.input}
-                  />
-                  <input
-                    type='text'
-                    placeholder='Açık Adres *'
-                    required
-                    value={guestShipping.addressLine}
-                    onChange={e =>
-                      handleGuestShippingChange('addressLine', e.target.value)
-                    }
-                    className={styles.input}
-                    style={{ gridColumn: 'span 2' }}
-                  />
+              // SUMMARY VIEW (AS IN SCREENSHOT)
+              <div className={styles.summaryInfoBox}>
+                <div className={styles.summaryEmail}>{currentEmailSummary}</div>
+                <div className={styles.summaryName}>
+                  {isAuthenticated ? (selectedAddr?.fullName || user?.fullName) : (guestShipping.fullName || 'Misafir Müşteri')}
+                  <span style={{ fontWeight: 400, color: '#64748b', marginLeft: 8 }}>
+                    +{isAuthenticated ? (selectedAddr?.phoneNumber || user?.phoneNumber || '90') : (guestShipping.phoneNumber ? `90${guestShipping.phoneNumber}` : '')}
+                  </span>
                 </div>
+                <p className={styles.summaryAddress}>
+                  {isAuthenticated
+                    ? (selectedAddr ? `${selectedAddr.neighborhood ? selectedAddr.neighborhood + ' Mah. ' : ''}${selectedAddr.addressLine}, ${selectedAddr.district}, ${selectedAddr.city}, Türkiye` : 'Kayıtlı adres seçilmedi')
+                    : (guestShipping.addressLine ? `${guestShipping.neighborhood ? guestShipping.neighborhood + ' Mah. ' : ''}${guestShipping.addressLine}, ${guestShipping.district}, ${guestShipping.city}, Türkiye` : 'Adres bilgisi henüz girilmedi')}
+                </p>
               </div>
             )}
+          </div>
 
-            {/* Fatura Adresi Ayrı İse */}
-            <div style={{ marginTop: 20 }}>
-              <label
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  color: 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  fontSize: 13
-                }}
+          {/* 2. STEP: KARGO */}
+          <div className={styles.stepCard}>
+            <div className={styles.stepHeader}>
+              <div className={styles.stepTitleGroup}>
+                <div className={styles.stepBadgeCompleted}>
+                  <FiCheck />
+                </div>
+                <h3 className={styles.stepTitle}>Kargo</h3>
+              </div>
+            </div>
+
+            <div className={styles.summaryInfoBox}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontWeight: 600, color: '#0f172a' }}>ÜCRETSİZ KARGO / Ücretsiz</span>
+                <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 700 }}>Hızlı Teslimat (1-3 İş Günü)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. STEP: ÖDEME */}
+          <div className={styles.stepCard}>
+            <div className={styles.stepHeader}>
+              <div className={styles.stepTitleGroup}>
+                <div className={styles.stepBadge}>3</div>
+                <h3 className={styles.stepTitle}>Ödeme</h3>
+              </div>
+            </div>
+
+            {/* Payment Method Radio Cards */}
+            <div className={styles.paymentMethodsList}>
+              {/* Option 1: Credit / Debit Card (Radio) */}
+              <div
+                className={`${styles.paymentRadioCard} ${
+                  paymentMethod === PAYMENT_METHODS.ONLINE_CARD ? styles.paymentRadioCardActive : ''
+                }`}
+                onClick={() => setPaymentMethod(PAYMENT_METHODS.ONLINE_CARD)}
               >
+                <div className={styles.paymentRadioHeader}>
+                  <div
+                    className={`${styles.customRadio} ${
+                      paymentMethod === PAYMENT_METHODS.ONLINE_CARD ? styles.customRadioChecked : ''
+                    }`}
+                  >
+                    {paymentMethod === PAYMENT_METHODS.ONLINE_CARD && <FiCheck />}
+                  </div>
+                  <span className={styles.paymentMethodName}>Banka veya Kredi Kartı</span>
+                </div>
+              </div>
+
+              {/* Option 2: Havale / EFT (Selected Radio) */}
+              <div
+                className={`${styles.paymentRadioCard} ${
+                  paymentMethod === PAYMENT_METHODS.BANK_TRANSFER ? styles.paymentRadioCardActive : ''
+                }`}
+                onClick={() => setPaymentMethod(PAYMENT_METHODS.BANK_TRANSFER)}
+              >
+                <div className={styles.paymentRadioHeader}>
+                  <div
+                    className={`${styles.customRadio} ${
+                      paymentMethod === PAYMENT_METHODS.BANK_TRANSFER ? styles.customRadioChecked : ''
+                    }`}
+                  >
+                    {paymentMethod === PAYMENT_METHODS.BANK_TRANSFER && <FiCheck />}
+                  </div>
+                  <span className={styles.paymentMethodName}>Havale / EFT</span>
+                </div>
+
+                {/* Details Accordion Content */}
+                {paymentMethod === PAYMENT_METHODS.BANK_TRANSFER && (
+                  <div className={styles.paymentDetailsContent}>
+                    <div className={styles.bankDetailRow}>
+                      <strong>{bankInfo.bankName}</strong>
+                    </div>
+
+                    <div className={styles.bankIbanBox}>
+                      <span className={styles.ibanCode}>{bankInfo.iban}</span>
+                      <button
+                        type='button'
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleCopyIban()
+                        }}
+                        className={styles.copyBtn}
+                      >
+                        {copiedIban ? <><FiCheck color='#16a34a' /> Kopyalandı</> : <><FiCopy /> Kopyala</>}
+                      </button>
+                    </div>
+
+                    <div className={styles.bankDetailRow}>
+                      <strong>{bankInfo.accountHolder}</strong> (İsa Şahap Şahsi Şirketi)
+                    </div>
+
+                    <p className={styles.bankInstruction}>
+                      Ödeme yaptıktan sonra <strong>{bankInfo.phone}</strong> Whatsapp hattımıza sipariş numaranızı ve dekontunuzu iletmeniz gerekmektedir.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Checkboxes */}
+            <div className={styles.checkboxGroup}>
+              <label className={styles.checkboxLabel}>
                 <input
                   type='checkbox'
                   checked={sameAddress}
                   onChange={e => setSameAddress(e.target.checked)}
+                  className={styles.checkboxInput}
                 />
-                Fatura adresim teslimat adresiyle aynı olsun
+                <span>Fatura adresim teslimat adresimle aynı</span>
+              </label>
+
+              {!sameAddress && (
+                <div style={{ marginTop: 12, padding: 16, border: '1px solid #cbd5e1', borderRadius: 8, background: '#f8fafc' }}>
+                  <h4 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 10px 0' }}>Fatura Adresi Bilgileri</h4>
+                  <div className={styles.formGrid}>
+                    <input
+                      type='text'
+                      placeholder='Fatura Ünvanı / Ad Soyad *'
+                      value={guestBilling.fullName}
+                      onChange={e => handleGuestBillingChange('fullName', e.target.value)}
+                      className={styles.input}
+                    />
+                    <input
+                      type='tel'
+                      placeholder='Telefon *'
+                      value={guestBilling.phoneNumber}
+                      onChange={e => handleGuestBillingChange('phoneNumber', e.target.value)}
+                      className={styles.input}
+                    />
+                    <input
+                      type='text'
+                      placeholder='Fatura Adresi *'
+                      value={guestBilling.addressLine}
+                      onChange={e => handleGuestBillingChange('addressLine', e.target.value)}
+                      className={styles.input}
+                      style={{ gridColumn: 'span 2' }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <label className={styles.checkboxLabel}>
+                <input
+                  type='checkbox'
+                  checked={agreedToTerms}
+                  onChange={e => setAgreedToTerms(e.target.checked)}
+                  className={styles.checkboxInput}
+                />
+                <span>
+                  <span
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setActiveModal('gizlilik')
+                    }}
+                    className={styles.contractLink}
+                  >
+                    Gizlilik Sözleşmesini
+                  </span>{' '}
+                  ve{' '}
+                  <span
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setActiveModal('mesafeli')
+                    }}
+                    className={styles.contractLink}
+                  >
+                    Satış Sözleşmesini
+                  </span>{' '}
+                  okudum, onaylıyorum.
+                </span>
               </label>
             </div>
 
-            {!sameAddress && (
-              <div
-                style={{
-                  marginTop: 20,
-                  paddingTop: 20,
-                  borderTop: '1px solid rgba(255,255,255,0.05)'
-                }}
-              >
-                <h4
-                  style={{ color: 'var(--gold-light)', margin: '0 0 12px 0' }}
-                >
-                  Fatura Adresi
-                </h4>
-                {isAuthenticated ? (
-                  <div className={styles.addressList}>
-                    {addresses.map(addr => (
-                      <div
-                        key={addr.id}
-                        className={`${styles.addressSelectCard} ${
-                          billingAddressId === addr.id
-                            ? styles.selectedCard
-                            : ''
-                        }`}
-                        onClick={() => setBillingAddressId(addr.id)}
-                      >
-                        <div className={styles.cardHeader}>
-                          <span className={styles.cardTitle}>{addr.title}</span>
-                          {billingAddressId === addr.id && (
-                            <FiCheck className={styles.checkIcon} />
-                          )}
-                        </div>
-                        <p className={styles.cardName}>{addr.fullName}</p>
-                        <p className={styles.cardAddress}>
-                          {addr.neighborhood}, {addr.addressLine}{' '}
-                          {addr.district}/{addr.city}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={styles.guestAddressForm}>
-                    <div className={styles.formGrid}>
-                      <input
-                        type='text'
-                        placeholder='Ad Soyad *'
-                        required
-                        value={guestBilling.fullName}
-                        onChange={e =>
-                          handleGuestBillingChange('fullName', e.target.value)
-                        }
-                        className={styles.input}
-                      />
-                      <input
-                        type='tel'
-                        placeholder='Telefon *'
-                        required
-                        value={guestBilling.phoneNumber}
-                        onChange={e =>
-                          handleGuestBillingChange(
-                            'phoneNumber',
-                            e.target.value
-                          )
-                        }
-                        className={styles.input}
-                      />
-                      <LocationSelects
-                        city={guestBilling.city}
-                        district={guestBilling.district}
-                        neighborhood={guestBilling.neighborhood}
-                        onCityChange={val =>
-                          handleGuestBillingChange('city', val)
-                        }
-                        onDistrictChange={val =>
-                          handleGuestBillingChange('district', val)
-                        }
-                        onNeighborhoodChange={val =>
-                          handleGuestBillingChange('neighborhood', val)
-                        }
-                        fieldInputClass={styles.input}
-                        showLabels={false}
-                        selectStyle={{
-                          background: 'var(--bg-dark)',
-                          color: 'var(--text-primary)'
-                        }}
-                      />
-                      <input
-                        type='text'
-                        placeholder='Posta Kodu *'
-                        required
-                        value={guestBilling.postalCode}
-                        onChange={e =>
-                          handleGuestBillingChange('postalCode', e.target.value)
-                        }
-                        className={styles.input}
-                      />
-                      <input
-                        type='text'
-                        placeholder='Açık Adres *'
-                        required
-                        value={guestBilling.addressLine}
-                        onChange={e =>
-                          handleGuestBillingChange(
-                            'addressLine',
-                            e.target.value
-                          )
-                        }
-                        className={styles.input}
-                        style={{ gridColumn: 'span 2' }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* KARGO FİRMASI VE ÜCRETİ BÖLÜMÜ */}
-          <div
-            className={styles.sectionCard}
-            style={{
-              background: 'rgba(201, 162, 39, 0.05)',
-              border: '1px solid rgba(201, 162, 39, 0.3)',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '20px'
-            }}
-          >
-            <h3
-              className={styles.sectionTitle}
-              style={{
-                fontSize: '15px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: 'var(--gold-light)',
-                margin: '0 0 12px 0'
-              }}
-            >
-              <FiTruck style={{ color: 'var(--gold)' }} /> Kargo & Teslimat
-              Firması
-            </h3>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justify: 'space-between',
-                padding: '12px 16px',
-                background: 'var(--bg-dark, #0f0a18)',
-                border: '1px solid rgba(201, 162, 39, 0.4)',
-                borderRadius: '10px'
-              }}
-            >
-              <div
-                style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
-              >
-                <div
-                  style={{
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: '8px',
-                    background: '#e30613',
-                    color: '#fff',
-                    fontWeight: 900,
-                    fontSize: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    letterSpacing: '-0.5px'
-                  }}
-                >
-                  YK
-                </div>
-                <div>
-                  <span
-                    style={{
-                      display: 'block',
-                      fontWeight: 700,
-                      color: '#fff',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Yurtiçi Kargo
-                  </span>
-                  <span
-                    style={{
-                      display: 'block',
-                      fontSize: '11px',
-                      color: 'var(--text-muted)'
-                    }}
-                  >
-                    Tüm Türkiye'ye 1-3 iş günü içinde hızlı ve güvenli teslimat
-                  </span>
-                </div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span
-                  style={{
-                    fontSize: '15px',
-                    fontWeight: 700,
-                    color: 'var(--gold-light)'
-                  }}
-                >
-                  170.00 ₺
-                </span>
-                <span
-                  style={{
-                    display: 'block',
-                    fontSize: '10px',
-                    color: '#2ecc71',
-                    fontWeight: 600
-                  }}
-                >
-                  Sabit Ücret
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* KİŞİSELLEŞTİRME BÖLÜMÜ */}
-          <div
-            className={styles.sectionCard}
-            style={{
-              background:
-                'linear-gradient(135deg, rgba(201, 162, 39, 0.08), rgba(20, 10, 32, 0.95))',
-              border: '1.5px solid var(--gold, #c9a227)',
-              boxShadow: '0 4px 16px rgba(201, 162, 39, 0.15)'
-            }}
-          >
-            <div
-              style={{
-                fontSize: '14px',
-                fontWeight: 700,
-                color: 'var(--gold-light, #f5d680)',
-                marginBottom: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-            >
-              <span>✨</span> Kişiye Özel Tılsım & İsim Hazırlığı (İsteğe Bağlı)
-            </div>
-            <p
-              style={{
-                fontSize: '12px',
-                color: 'var(--text-secondary, #cbd5e1)',
-                lineHeight: '1.5',
-                marginBottom: '12px'
-              }}
-            >
-              Ürününüzün size özel niyet ve ebced vefki ile hazırlanması için
-              lütfen ürünü takacak kişinin <strong>Tam Adı</strong> ve{' '}
-              <strong>Anne Adı</strong> bilgilerini yazın (Bilgileriniz tamamen
-              gizli tutulmaktadır).
-            </p>
-            <div style={{ position: 'relative' }}>
-              <textarea
-                rows={3}
-                maxLength={250}
-                value={orderCustomNote}
-                onChange={e => setOrderCustomNote(e.target.value)}
-                placeholder='Örn: Ahmet oğlu Mehmet, Anne Adı: Ayşe — Özel tılsım notu...'
-                style={{
-                  width: '100%',
-                  padding: '12px 14px 28px 14px',
-                  background: 'var(--bg-dark, #0f0a18)',
-                  border: '1px solid rgba(201, 162, 39, 0.4)',
-                  borderRadius: '10px',
-                  color: 'var(--text-primary, #fff)',
-                  fontSize: '13px',
-                  outline: 'none',
-                  resize: 'none',
-                  fontFamily: 'inherit',
-                  lineHeight: 1.5,
-                  boxSizing: 'border-box'
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: '8px',
-                  right: '12px',
-                  fontSize: '11px',
-                  color: 'var(--text-muted, #94a3b8)',
-                  fontWeight: 600
-                }}
-              >
-                {orderCustomNote.length}/250
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.sectionCard}>
-            <h3 className={styles.sectionTitle}>Ödeme Yöntemi</h3>
-            <div
-              style={{
-                padding: '16px 20px',
-                borderRadius: '10px',
-                background: 'rgba(245, 214, 128, 0.08)',
-                border: '1px solid rgba(245, 214, 128, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px'
-              }}
-            >
-              <div
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: '50%',
-                  background: 'rgba(245, 214, 128, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--gold-light, #f5d680)',
-                  fontSize: '20px',
-                  flexShrink: 0
-                }}
-              >
-                🏦
-              </div>
-              <div>
-                <strong
-                  style={{
-                    display: 'block',
-                    color: 'var(--gold-light, #f5d680)',
-                    fontSize: '15px',
-                    marginBottom: '3px'
-                  }}
-                >
-                  Banka Havalesi / EFT (IBAN ile Ödeme)
-                </strong>
-                <span
-                  style={{
-                    fontSize: '13px',
-                    color: 'var(--text-secondary, #94a3b8)',
-                    lineHeight: 1.4
-                  }}
-                >
-                  Siparişinizi tamamladıktan sonra banka hesap bilgilerimiz
-                  (IBAN) ve sipariş numaranız ekranda görüntülenecektir.
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.rightColumn}>
-          {/* SİPARİŞ ÖZETİ & HESAPLAMA */}
-          <div className={styles.sectionCard}>
-            <h3 className={styles.sectionTitle}>
-              <FiShoppingBag /> Sipariş Özeti
-            </h3>
-
-            <div className={styles.cartItemsList}>
-              {cartItems.map(item => (
-                <div key={item.id} className={styles.cartItemRow}>
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className={styles.cartItemImg}
-                  />
-                  <div className={styles.cartItemInfo}>
-                    <p className={styles.cartItemName}>{item.name}</p>
-                    {item.customNote && (
-                      <p
-                        style={{
-                          fontSize: 11,
-                          color: 'var(--gold-light, #f5d680)',
-                          margin: '2px 0 4px 0'
-                        }}
-                      >
-                        ✨ Kişiselleştirme: {item.customNote}
-                      </p>
-                    )}
-                    <p className={styles.cartItemMeta}>
-                      {item.qty} adet × {item.price}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* KUPON FORMU */}
-            <div className={styles.couponSection}>
-              <form onSubmit={handleApplyCoupon} className={styles.couponForm}>
-                <input
-                  type='text'
-                  value={couponCode}
-                  onChange={e => {
-                    setCouponCode(e.target.value)
-                    if (couponError) setCouponError('')
-                    if (couponSuccess) setCouponSuccess('')
-                  }}
-                  placeholder='İndirim kuponu'
-                  className={styles.couponInput}
-                  disabled={!!couponApplied}
-                />
-                {couponApplied ? (
-                  <button
-                    type='button'
-                    onClick={handleRemoveCoupon}
-                    className={styles.couponRemoveBtn}
-                  >
-                    Kaldır
-                  </button>
-                ) : (
-                  <button type='submit' className={styles.couponApplyBtn}>
-                    Uygula
-                  </button>
-                )}
-              </form>
-              {couponSuccess && (
-                <p className={styles.couponSuccess}>{couponSuccess}</p>
-              )}
-              {couponError && (
-                <p className={styles.couponError}>{couponError}</p>
-              )}
-            </div>
-
-            {/* HESAPLAR */}
-            <div className={styles.summaryTotals}>
-              <div className={styles.totalsRow}>
-                <span>Ara Toplam</span>
-                <span>{previewData?.subtotal || 0} ₺</span>
-              </div>
-
-              {previewData?.productDiscountAmount > 0 && (
-                <div className={`${styles.totalsRow} ${styles.discountText}`}>
-                  <span>Ürün İndirimi</span>
-                  <span>-{previewData.productDiscountAmount} ₺</span>
-                </div>
-              )}
-
-              {previewData?.couponDiscountAmount > 0 && (
-                <div className={`${styles.totalsRow} ${styles.discountText}`}>
-                  <span>Kupon İndirimi</span>
-                  <span>-{previewData.couponDiscountAmount} ₺</span>
-                </div>
-              )}
-
-              <div className={styles.totalsRow}>
-                <span>Kargo (Yurtiçi Kargo)</span>
-                <span>
-                  {previewData?.shippingAmount === 0
-                    ? 'Ücretsiz'
-                    : `${previewData?.shippingAmount || 170} ₺`}
-                </span>
-              </div>
-
-              {previewData?.taxAmount > 0 && (
-                <div className={styles.totalsRow}>
-                  <span>KDV</span>
-                  <span>{previewData.taxAmount} ₺</span>
-                </div>
-              )}
-
-              <div className={`${styles.totalsRow} ${styles.grandTotal}`}>
-                <span>Genel Toplam</span>
-                <span>
-                  {previewData?.grandTotal || 0}{' '}
-                  {previewData?.currency || 'TRY'}
-                </span>
-              </div>
-            </div>
-
-            {/* UYARILAR */}
-            {previewData?.warnings?.length > 0 && (
-              <div className={styles.warningsBox}>
-                {previewData.warnings.map((warn, index) => (
-                  <div key={index} className={styles.warningRow}>
-                    <FiAlertTriangle /> <span>{warn}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {previewError && (
-              <div
-                className={styles.warningsBox}
-                style={{ borderColor: '#e05594', color: '#e05594' }}
-              >
-                <FiAlertTriangle /> <span>{previewError}</span>
-              </div>
-            )}
-
+            {/* Submit Button */}
             <button
+              type='button'
               onClick={handleSubmitOrder}
-              disabled={orderLoading || previewLoading || !!previewError}
-              className={styles.submitBtn}
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 8,
-                marginTop: 20
-              }}
+              disabled={orderLoading || previewLoading}
+              className={styles.completeOrderBtn}
             >
               {orderLoading && (
                 <FiLoader
-                  className={styles.spinner}
                   style={{
                     animation: 'spin 1.5s linear infinite',
-                    fontSize: 16,
-                    margin: 0
+                    fontSize: 18
                   }}
                 />
               )}
               <span>Siparişi Tamamla</span>
             </button>
+
+            {/* Security Badge */}
+            <div className={styles.securityNote}>
+              <FiLock /> <span>Ödemeler güvenli ve şifrelidir</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Column: Order Summary Sidebar */}
+        <div className={styles.rightColumn}>
+          <div className={styles.summaryCard}>
+            {/* Products List with Floating Circular Count Badges */}
+            <div className={styles.productsList}>
+              {cartItems.map(item => (
+                <div key={item.id} className={styles.productRow}>
+                  <div className={styles.imageBadgeWrapper}>
+                    <img src={item.image} alt={item.name} className={styles.productImg} />
+                    <span className={styles.countBadge}>{item.qty || 1}</span>
+                  </div>
+
+                  <div className={styles.productInfo}>
+                    <p className={styles.productName}>{item.name}</p>
+                    {item.customNote && (
+                      <p className={styles.productCustomNote}>✨ {item.customNote}</p>
+                    )}
+                  </div>
+
+                  <div className={styles.productPriceGroup}>
+                    {item.originalPrice && item.originalPrice !== item.unitPrice && (
+                      <span className={styles.oldPrice}>
+                        {typeof item.originalPrice === 'number'
+                          ? `₺ ${item.originalPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
+                          : item.originalPrice}
+                      </span>
+                    )}
+                    <span className={styles.currentPrice}>
+                      {typeof item.unitPrice === 'number'
+                        ? `₺ ${(item.unitPrice * (item.qty || 1)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
+                        : item.price}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Coupon / Discount Accordion */}
+            <div className={styles.couponArea}>
+              {!showCouponInput && !couponApplied ? (
+                <button
+                  type='button'
+                  onClick={() => setShowCouponInput(true)}
+                  className={styles.couponToggleLink}
+                >
+                  <span>+ İndirim kodu ekle</span>
+                </button>
+              ) : (
+                <form onSubmit={handleApplyCoupon}>
+                  <div className={styles.couponInputRow}>
+                    <input
+                      type='text'
+                      value={couponCode}
+                      onChange={e => {
+                        setCouponCode(e.target.value)
+                        if (couponError) setCouponError('')
+                        if (couponSuccess) setCouponSuccess('')
+                      }}
+                      placeholder='İndirim kodu'
+                      className={styles.couponInput}
+                      disabled={!!couponApplied}
+                    />
+                    {couponApplied ? (
+                      <button
+                        type='button'
+                        onClick={handleRemoveCoupon}
+                        className={styles.couponRemoveBtn}
+                      >
+                        Kaldır
+                      </button>
+                    ) : (
+                      <button type='submit' className={styles.couponApplyBtn}>
+                        Uygula
+                      </button>
+                    )}
+                  </div>
+                  {couponSuccess && (
+                    <p style={{ color: '#16a34a', fontSize: 12, margin: '6px 0 0 0' }}>{couponSuccess}</p>
+                  )}
+                  {couponError && (
+                    <p style={{ color: '#dc2626', fontSize: 12, margin: '6px 0 0 0' }}>{couponError}</p>
+                  )}
+                </form>
+              )}
+            </div>
+
+            {/* Price Calculations Breakdown */}
+            <div className={styles.totalsList}>
+              <div className={styles.totalRow}>
+                <span>Ara Toplam ⓘ</span>
+                <span>
+                  ₺ {(previewData?.subtotal || cartItems.reduce((sum, it) => sum + (it.unitPrice || 0) * (it.qty || 1), 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              <div className={styles.totalRow}>
+                <span>Teslimat / Kargo</span>
+                <span style={{ color: '#16a34a', fontWeight: 600 }}>Ücretsiz</span>
+              </div>
+
+              {previewData?.productDiscountAmount > 0 && (
+                <div className={styles.totalDiscountRow}>
+                  <span>Ürün İndirimi</span>
+                  <span>- ₺ {previewData.productDiscountAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                </div>
+              )}
+
+              {previewData?.couponDiscountAmount > 0 && (
+                <div className={styles.totalDiscountRow}>
+                  <span>Kupon İndirimi</span>
+                  <span>- ₺ {previewData.couponDiscountAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                </div>
+              )}
+
+              <div className={styles.grandTotalRow}>
+                <span className={styles.grandTotalLabel}>Toplam</span>
+                <span className={styles.grandTotalPrice}>
+                  ₺ {(previewData?.grandTotal || cartItems.reduce((sum, it) => sum + (it.unitPrice || 0) * (it.qty || 1), 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              <div className={styles.taxSubtext}>
+                Vergi ₺ {((previewData?.grandTotal || 0) * 0.2).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+
+            <div className={styles.poweredBy}>
+              powered by <strong>Muhristan</strong>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Contract Modals */}
+      {activeModal && (
+        <div className={styles.modalOverlay} onClick={() => setActiveModal(null)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>
+                {activeModal === 'gizlilik' ? 'Gizlilik Sözleşmesi' : 'Mesafeli Satış Sözleşmesi'}
+              </h3>
+              <button
+                type='button'
+                onClick={() => setActiveModal(null)}
+                className={styles.modalCloseBtn}
+              >
+                <FiX />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              {activeModal === 'gizlilik' ? (
+                <div>
+                  <h4>1. Gizlilik Politikası ve Veri Güvenliği</h4>
+                  <p>
+                    İşbu Gizlilik Politikası, Muhristan (İsa Şahap Şahsi Şirketi) tarafından işletilen platform üzerinden toplanan kişisel verilerin korunması ve işlenmesine ilişkin şartları içerir.
+                  </p>
+                  <p>
+                    Müşteri bilgileri yalnızca sipariş teslimatı, faturalandırma ve yasal yükümlülüklerin yerine getirilmesi amacıyla işlenir ve üçüncü taraflarla paylaşılmaz.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <h4>1. Mesafeli Satış Sözleşmesi Şartları</h4>
+                  <p>
+                    <strong>Satıcı:</strong> İsa Şahap (Muhristan)<br />
+                    <strong>İletişim:</strong> 0555 890 68 63<br />
+                    <strong>Adres:</strong> Türkiye
+                  </p>
+                  <p>
+                    Alıcı, siparişi onayladığında sözleşme konusu ürünün temel niteliklerini, satış fiyatını, ödeme şeklini ve teslimata ilişkin tüm ön bilgileri okuyup bilgi sahibi olduğunu ve onayladığını kabul eder.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
