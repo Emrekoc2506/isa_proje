@@ -632,73 +632,46 @@ export default function CheckoutPage () {
 
             {/* Payment Method Radio Cards */}
             <div className={styles.paymentMethodsList}>
-              {/* Option 1: Credit / Debit Card (Radio) */}
+              {/* Havale / EFT */}
               <div
-                className={`${styles.paymentRadioCard} ${
-                  paymentMethod === PAYMENT_METHODS.ONLINE_CARD ? styles.paymentRadioCardActive : ''
-                }`}
-                onClick={() => setPaymentMethod(PAYMENT_METHODS.ONLINE_CARD)}
-              >
-                <div className={styles.paymentRadioHeader}>
-                  <div
-                    className={`${styles.customRadio} ${
-                      paymentMethod === PAYMENT_METHODS.ONLINE_CARD ? styles.customRadioChecked : ''
-                    }`}
-                  >
-                    {paymentMethod === PAYMENT_METHODS.ONLINE_CARD && <FiCheck />}
-                  </div>
-                  <span className={styles.paymentMethodName}>Banka veya Kredi Kartı</span>
-                </div>
-              </div>
-
-              {/* Option 2: Havale / EFT (Selected Radio) */}
-              <div
-                className={`${styles.paymentRadioCard} ${
-                  paymentMethod === PAYMENT_METHODS.BANK_TRANSFER ? styles.paymentRadioCardActive : ''
-                }`}
+                className={`${styles.paymentRadioCard} ${styles.paymentRadioCardActive}`}
                 onClick={() => setPaymentMethod(PAYMENT_METHODS.BANK_TRANSFER)}
               >
                 <div className={styles.paymentRadioHeader}>
-                  <div
-                    className={`${styles.customRadio} ${
-                      paymentMethod === PAYMENT_METHODS.BANK_TRANSFER ? styles.customRadioChecked : ''
-                    }`}
-                  >
-                    {paymentMethod === PAYMENT_METHODS.BANK_TRANSFER && <FiCheck />}
+                  <div className={`${styles.customRadio} ${styles.customRadioChecked}`}>
+                    <FiCheck />
                   </div>
                   <span className={styles.paymentMethodName}>Havale / EFT</span>
                 </div>
 
-                {/* Details Accordion Content */}
-                {paymentMethod === PAYMENT_METHODS.BANK_TRANSFER && (
-                  <div className={styles.paymentDetailsContent}>
-                    <div className={styles.bankDetailRow}>
-                      <strong>{bankInfo.bankName}</strong>
-                    </div>
-
-                    <div className={styles.bankIbanBox}>
-                      <span className={styles.ibanCode}>{bankInfo.iban}</span>
-                      <button
-                        type='button'
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleCopyIban()
-                        }}
-                        className={styles.copyBtn}
-                      >
-                        {copiedIban ? <><FiCheck color='#16a34a' /> Kopyalandı</> : <><FiCopy /> Kopyala</>}
-                      </button>
-                    </div>
-
-                    <div className={styles.bankDetailRow}>
-                      <strong>{bankInfo.accountHolder}</strong> (İsa Şahap Şahsi Şirketi)
-                    </div>
-
-                    <p className={styles.bankInstruction}>
-                      Ödeme yaptıktan sonra <strong>{bankInfo.phone}</strong> Whatsapp hattımıza sipariş numaranızı ve dekontunuzu iletmeniz gerekmektedir.
-                    </p>
+                {/* Details Content */}
+                <div className={styles.paymentDetailsContent}>
+                  <div className={styles.bankDetailRow}>
+                    <strong>{bankInfo.bankName}</strong>
                   </div>
-                )}
+
+                  <div className={styles.bankIbanBox}>
+                    <span className={styles.ibanCode}>{bankInfo.iban}</span>
+                    <button
+                      type='button'
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleCopyIban()
+                      }}
+                      className={styles.copyBtn}
+                    >
+                      {copiedIban ? <><FiCheck color='#16a34a' /> Kopyalandı</> : <><FiCopy /> Kopyala</>}
+                    </button>
+                  </div>
+
+                  <div className={styles.bankDetailRow}>
+                    <strong>{bankInfo.accountHolder}</strong> (İsa Şahap Şahsi Şirketi)
+                  </div>
+
+                  <p className={styles.bankInstruction}>
+                    Ödeme yaptıktan sonra <strong>{bankInfo.phone}</strong> Whatsapp hattımıza sipariş numaranızı ve dekontunuzu iletmeniz gerekmektedir.
+                  </p>
+                </div>
               </div>
             </div>
 
