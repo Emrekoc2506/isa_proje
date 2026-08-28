@@ -91,11 +91,24 @@ export function updateAdminProduct(id, payload) {
   });
 }
 
-export function deleteAdminProduct(id) {
-  return request(`/admin/products/${id}/hard-delete`, {
-    method: "POST",
-    body: JSON.stringify({ confirm: true })
-  });
+export async function deleteAdminProduct(id) {
+  try {
+    return await request(`/admin/products/${id}/hard-delete`, {
+      method: "POST",
+      body: JSON.stringify({ confirm: true })
+    });
+  } catch (err) {
+    if (err?.code === 'product_has_order_history') {
+      try {
+        return await request(`/admin/products/${id}`, {
+          method: "DELETE"
+        });
+      } catch (deleteErr) {
+        return await updateAdminProductStatus(id, false);
+      }
+    }
+    throw err;
+  }
 }
 
 export function updateAdminProductStatus(id, isActive) {
