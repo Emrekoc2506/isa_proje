@@ -483,14 +483,18 @@ export default function ProductsSection({ onSelectProductForVariants }) {
 
     setDeletingId(id);
     try {
-      await productApi.deleteAdminProduct(id);
+      const res = await productApi.deleteAdminProduct(id);
       if (products.length === 1 && page > 1) {
         setPage(prev => prev - 1);
       } else {
         fetchProducts();
       }
       refreshProducts?.();
-      alert("Ürün başarıyla silindi.");
+      if (res?.archived) {
+        alert("Ürün sipariş kaydı içerdiği için pasife alındı ve mağaza/vitrinden tamamen kaldırıldı.");
+      } else {
+        alert("Ürün başarıyla silindi.");
+      }
     } catch (err) {
       alert(getHardDeleteErrorMessage(err, "Ürün"));
     } finally {

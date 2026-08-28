@@ -98,13 +98,22 @@ export async function deleteAdminProduct(id) {
       body: JSON.stringify({ confirm: true })
     });
   } catch (err) {
-    if (err?.code === 'product_has_order_history') {
+    if (err?.code === 'product_has_order_history' || err?.status === 409) {
       try {
-        return await request(`/admin/products/${id}`, {
-          method: "DELETE"
+        return await request(`/admin/products/${id}/delete`, {
+          method: "POST"
         });
-      } catch (deleteErr) {
-        return await updateAdminProductStatus(id, false);
+      } catch {
+        try {
+          await updateAdminProductStatus(id, false);
+          return {
+            success: true,
+            archived: true,
+            message: "Ürün sipariş geçmişi içerdiği için pasife alınarak mağazadan kaldırıldı."
+          };
+        } catch (statusErr) {
+          throw err;
+        }
       }
     }
     throw err;
