@@ -2,7 +2,8 @@ import { request } from "./apiClient";
 
 // Kamu Ürün İstekleri
 export function getProducts(params = {}, options = {}) {
-  const query = new URLSearchParams(params);
+  const finalParams = { pageSize: 500, ...params };
+  const query = new URLSearchParams(finalParams);
   const qStr = query.toString();
   return request(`/products${qStr ? `?${qStr}` : ''}`, options);
 }

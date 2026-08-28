@@ -316,7 +316,7 @@ export function ProductProvider ({ children }) {
   const loadProducts = useCallback(async (params = {}) => {
     try {
       const prodsData = await getProducts({
-        pageSize: params.pageSize || 100,
+        pageSize: params.pageSize || 500,
         ...params
       })
       const normalized = normalizeProducts(prodsData)
@@ -341,10 +341,10 @@ export function ProductProvider ({ children }) {
         setError(null)
       }
 
-      // Kategori ve Ürün verilerini bağımsız paralel çek
+      // Kategori ve Ürün verilerini bağımsız paralel çek (Tüm kataloğu çekmek için pageSize: 500)
       const [catResult, prodResult] = await Promise.allSettled([
         getCategoryTree().catch(() => getCategories()),
-        fetchProductsWithRetry(() => getProducts({}, { timeout: 6000 }))
+        fetchProductsWithRetry(() => getProducts({ pageSize: 500 }, { timeout: 8000 }))
       ])
 
       if (
