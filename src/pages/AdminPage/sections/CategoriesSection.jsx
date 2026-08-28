@@ -528,14 +528,27 @@ export default function CategoriesSection() {
               depth > 0 && <FiCornerDownRight style={{ opacity: 0.25, color: 'rgba(232,224,240,0.5)' }} size={13} />
             )}
 
-            <span style={S.catName(depth)}>
+            <a
+              href={`/urunler?kategori=${encodeURIComponent(cat.slug || cat.name || catId)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Mağazada bu kategoriye git (Yeni Sekmede Açılır)"
+              style={{
+                ...S.catName(depth),
+                textDecoration: 'none',
+                cursor: 'pointer',
+                transition: 'color 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--gold-light, #c9a227)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
+            >
               {displayName}
               {isCategorySecret && (
                 <span style={S.secretBadge}>
                   <FiLock size={8} /> GİZLİ
                 </span>
               )}
-            </span>
+            </a>
           </div>
 
           <div

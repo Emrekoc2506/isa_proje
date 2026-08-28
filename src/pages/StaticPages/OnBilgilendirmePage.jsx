@@ -57,7 +57,7 @@ export default function OnBilgilendirmePage() {
           <h2 className={s.sectionTitle}>5. Anlaşmalı İade Kargo Firması ve Ücreti</h2>
           <p className={s.text}>
             <strong>Anlaşmalı Kargo Firmamız:</strong> Yurtiçi Kargo<br />
-            <strong>Sabit Kargo Gönderim Ücreti:</strong> 170.00 TL<br />
+            <strong>Kargo Gönderimi:</strong> Siparişleriniz anlaşmalı Yurtiçi Kargo firması ile gönderilmektedir.<br />
             Cayma hakkı veya iade taleplerinizde ürünlerin tarafımıza anlaşmalı kargo firmamız vasıtasıyla gönderilmesi gerekmektedir. İade kargo adres bilgisi ve kargo kodu müşteri hizmetlerimiz (info@muhristan.com) tarafından iletilir.
           </p>
         </div>

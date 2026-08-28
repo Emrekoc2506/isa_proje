@@ -14,7 +14,7 @@ export default function KargoTeslimatPage() {
     <div className={s.page}>
       <SEO
         title="Kargo ve Teslimat | Muhristan"
-        description="Muhristan kargo ve teslimat politikası. 500 TL üzeri ücretsiz teslimat ve hızlı gönderim şartları."
+        description="Muhristan kargo ve teslimat politikası. Yurtiçi Kargo güvencesiyle hızlı ve güvenli gönderim şartları."
         canonical="https://muhristan.com/kargo-teslimat"
       />
       <section className={s.hero}>
@@ -48,9 +48,9 @@ export default function KargoTeslimatPage() {
           </p>
           <div className={s.grid}>
             <div className={s.card} style={{ gridColumn: 'span 2' }}>
-              <h3 className={s.cardTitle}>Yurtiçi Kargo (Sabit Gönderim Ücreti)</h3>
-              <p className={s.cardText} style={{ fontSize: 32, fontWeight: 700, color: 'var(--gold-light)', margin: '12px 0' }}>170.00 ₺</p>
-              <p className={s.cardText}>Tüm Türkiye geneline 1-3 iş günü içerisinde güvenli ve hızlı teslimat</p>
+              <h3 className={s.cardTitle}>Yurtiçi Kargo Güvencesi</h3>
+              <p className={s.cardText} style={{ fontSize: 20, fontWeight: 600, color: 'var(--gold-light)', margin: '12px 0' }}>Hızlı ve Güvenli Teslimat</p>
+              <p className={s.cardText}>Tüm Türkiye geneline 1-3 iş günü içerisinde özenle paketlenmiş teslimat</p>
             </div>
           </div>
         </div>

@@ -91,7 +91,7 @@ export default function HomePage() {
         <div className={styles.announcementBar}>
           <MdOutlineLocalShipping className={styles.announcementIcon} />
           <span>
-            Siparişleriniz <strong>Yurtiçi Kargo</strong> ile hızlı ve güvenli teslim edilir — Kargo Ücreti: <strong>170 ₺</strong>
+            Siparişleriniz <strong>Yurtiçi Kargo</strong> ile hızlı ve güvenli teslim edilir.
           </span>
         </div>
 

@@ -629,6 +629,40 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                             >
                               {p.name}
                             </a>
+                            {(() => {
+                              const catObj = categories.find(c => String(c.id) === String(p.categoryId) || String(c.databaseId) === String(p.categoryId));
+                              const catDisplayName = catObj?.name || p.categoryName || p.category?.name || '';
+                              const catSlugOrId = catObj?.slug || catObj?.name || p.categoryId;
+                              if (!catDisplayName) return null;
+                              return (
+                                <div style={{ marginTop: 3 }}>
+                                  <a
+                                    href={`/urunler?kategori=${encodeURIComponent(catSlugOrId)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="Mağazada bu kategoriye git (Yeni Sekmede Açılır)"
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 3,
+                                      fontSize: 10,
+                                      fontWeight: 500,
+                                      color: 'var(--gold-light, #c9a227)',
+                                      background: 'rgba(201, 162, 39, 0.1)',
+                                      border: '1px solid rgba(201, 162, 39, 0.25)',
+                                      padding: '1px 5px',
+                                      borderRadius: 4,
+                                      textDecoration: 'none',
+                                      transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(201, 162, 39, 0.2)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(201, 162, 39, 0.1)'}
+                                  >
+                                    📁 {catDisplayName.replace(' [GİZLİ]', '')}
+                                  </a>
+                                </div>
+                              );
+                            })()}
                             <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
                               {p.isNew && <span style={{ fontSize: 9, background: 'rgba(52,152,219,0.15)', color: '#3498db', padding: '2px 6px', borderRadius: 4 }}>YENİ</span>}
                               {p.isSale && <span style={{ fontSize: 9, background: 'rgba(224,85,148,0.15)', color: '#e05594', padding: '2px 6px', borderRadius: 4 }}>İNDİRİM</span>}

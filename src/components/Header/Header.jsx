@@ -302,7 +302,7 @@ export default function Header() {
                 <div className={styles.announcementRow}>
                   <MdOutlineLocalShipping className={styles.announcementIcon} />
                   <span>
-                    <strong>500 ₺</strong> ve üzeri siparişlerde ücretsiz teslimat
+                    Siparişleriniz <strong>Yurtiçi Kargo</strong> ile hızlı ve güvenli teslim edilir
                   </span>
                 </div>
                 <div className={styles.categoryRow}>

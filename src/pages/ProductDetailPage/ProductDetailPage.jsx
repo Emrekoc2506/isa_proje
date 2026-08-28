@@ -812,7 +812,7 @@ export default function ProductDetailPage() {
                 <FiTruck className={styles.trustIcon} />
                 <div>
                   <b>Yurtiçi Kargo</b>
-                  <span>170 ₺ Sabit Kargo Ücreti</span>
+                  <span>Hızlı & Güvenli Teslimat</span>
                 </div>
               </div>
               <div className={styles.trustItem}>
