@@ -94,6 +94,48 @@
   scrollbar-color: var(--border-gold) transparent;
 }
 
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(224, 85, 148, 0.12);
+  border: 1px solid rgba(224, 85, 148, 0.4);
+  color: #f38cb8;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  margin-bottom: var(--space-md);
+}
+
+.errorIcon {
+  font-size: 16px;
+  flex-shrink: 0;
+  color: #e05594;
+}
+
+.errorText {
+  flex: 1;
+}
+
+.errorClose {
+  background: none;
+  border: none;
+  color: #f38cb8;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  opacity: 0.8;
+  transition: opacity var(--transition-base);
+}
+
+.errorClose:hover {
+  opacity: 1;
+}
+
 .empty {
   display: flex;
   flex-direction: column;

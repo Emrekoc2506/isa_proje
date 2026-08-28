@@ -193,6 +193,9 @@ export function CartProvider ({ children }) {
     }
   }, [isAuthenticated, refreshCart, triggerGuestCartMerge])
 
+  // Debounce timers map for updateQty
+  const updateQtyDebounceTimers = useRef(new Map())
+
   const addToCart = useCallback(
     async (product, quantity = 1, variantId = null, customNote = null) => {
       setCartError(null)
@@ -211,6 +214,47 @@ export function CartProvider ({ children }) {
         }
       }
 
+      // ── Hızlı Optimistik UI Güncellemesi (0ms tepki) ──
+      setItems(prev => {
+        const existing = prev.find(
+          i => String(i.id || i.productId) === String(rawId)
+        )
+        if (existing) {
+          return prev.map(i =>
+            String(i.id || i.productId) === String(rawId)
+              ? {
+                  ...i,
+                  qty: (i.qty || i.quantity || 1) + quantity,
+                  quantity: (i.qty || i.quantity || 1) + quantity,
+                  customNote: customNote || i.customNote
+                }
+              : i
+          )
+        }
+        const rawPrice = product.price || product.unitPrice || 100
+        const numPrice =
+          typeof rawPrice === 'number'
+            ? rawPrice
+            : parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 100
+        return [
+          ...prev,
+          {
+            id: rawId,
+            productId: rawId,
+            productName: product.name || product.productName || 'Ürün',
+            name: product.name || product.productName || 'Ürün',
+            price: typeof rawPrice === 'number' ? `${rawPrice} ₺` : rawPrice,
+            unitPrice: numPrice,
+            imageUrl: product.image || product.imageUrl || '/ornek resim.jpg',
+            image: product.image || product.imageUrl || '/ornek resim.jpg',
+            qty: quantity,
+            quantity: quantity,
+            customNote: customNote || null,
+            source: isGuid ? 'optimistic' : 'mock'
+          }
+        ]
+      })
+
       if (isGuid) {
         addingProductIdsRef.current.add(rawId)
         setAddingProductIds(Array.from(addingProductIdsRef.current))
@@ -225,7 +269,7 @@ export function CartProvider ({ children }) {
           return { success: true, cart: data }
         } catch (err) {
           if (err.status === 409 || err.code === 'cart_concurrency_conflict') {
-            await new Promise(r => setTimeout(r, 350))
+            await new Promise(r => setTimeout(r, 250))
             try {
               const retryData = await cartApi.addCartItem({
                 productId: rawId,
@@ -266,44 +310,6 @@ export function CartProvider ({ children }) {
         return { success: false, code: 'invalid_id', message: msg }
       }
 
-      // Development mock fallback only for demo items without valid GUID
-      setItems(prev => {
-        const existing = prev.find(
-          i => String(i.id || i.productId) === String(rawId)
-        )
-        if (existing) {
-          return prev.map(i =>
-            String(i.id || i.productId) === String(rawId)
-              ? {
-                  ...i,
-                  qty: (i.qty || i.quantity || 1) + quantity,
-                  customNote: customNote || i.customNote
-                }
-              : i
-          )
-        }
-        const rawPrice = product.price || 100
-        const numPrice =
-          typeof rawPrice === 'number'
-            ? rawPrice
-            : parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 100
-        return [
-          ...prev,
-          {
-            id: rawId || 'item-' + Date.now(),
-            productName: product.name || 'Ürün',
-            name: product.name || 'Ürün',
-            price: typeof rawPrice === 'number' ? `${rawPrice} ₺` : rawPrice,
-            unitPrice: numPrice,
-            imageUrl: product.image || product.imageUrl || '/ornek resim.jpg',
-            image: product.image || product.imageUrl || '/ornek resim.jpg',
-            qty: quantity,
-            quantity: quantity,
-            customNote: customNote || null,
-            source: 'mock'
-          }
-        ]
-      })
       return { success: true }
     },
     [applyServerCart, refreshCart]
@@ -313,6 +319,9 @@ export function CartProvider ({ children }) {
     async itemId => {
       setCartError(null)
       if (!itemId) return { success: false }
+
+      // Optimistik Kaldırma
+      setItems(prev => prev.filter(i => String(i.id) !== String(itemId)))
 
       if (removingItemIdsRef.current.has(itemId)) {
         return {
@@ -360,64 +369,74 @@ export function CartProvider ({ children }) {
         return removeFromCart(itemId)
       }
 
-      if (updatingItemIdsRef.current.has(itemId)) {
-        return {
-          success: false,
-          code: 'duplicate_request',
-          message: 'İşlem devam ediyor.'
-        }
+      // ── Anında Optimistik Miktar Güncellemesi (Hızlı + / - tepkisi) ──
+      setItems(prev =>
+        prev.map(i =>
+          String(i.id) === String(itemId)
+            ? { ...i, qty, quantity: qty }
+            : i
+        )
+      )
+
+      // Önceki bekleyen debounce isteğini temizle
+      if (updateQtyDebounceTimers.current.has(itemId)) {
+        clearTimeout(updateQtyDebounceTimers.current.get(itemId))
       }
 
-      updatingItemIdsRef.current.add(itemId)
-      setUpdatingItemIds(Array.from(updatingItemIdsRef.current))
-      try {
-        const data = await cartApi.updateCartItem(itemId, { quantity: qty })
-        if (data && (data.items || data.cartData)) {
-          applyServerCart(data)
-        } else {
-          await refreshCart()
-        }
-        return { success: true, cart: data }
-      } catch (err) {
-        if (err.status === 409 || err.code === 'cart_concurrency_conflict') {
-          await new Promise(r => setTimeout(r, 350))
+      return new Promise(resolve => {
+        const timer = setTimeout(async () => {
+          updateQtyDebounceTimers.current.delete(itemId)
           try {
-            const retryData = await cartApi.updateCartItem(itemId, {
-              quantity: qty
-            })
-            if (retryData && (retryData.items || retryData.cartData)) {
-              applyServerCart(retryData)
+            const data = await cartApi.updateCartItem(itemId, { quantity: qty })
+            if (data && (data.items || data.cartData)) {
+              applyServerCart(data)
             } else {
               await refreshCart()
             }
-            return { success: true, cart: retryData }
-          } catch (retryErr) {
-            await refreshCart()
-            const msg = getCartErrorMessage(retryErr)
-            setCartError(msg)
-            return {
-              success: false,
-              code: retryErr.code || 'cart_error',
-              message: msg
+            resolve({ success: true, cart: data })
+          } catch (err) {
+            if (err.status === 409 || err.code === 'cart_concurrency_conflict') {
+              await new Promise(r => setTimeout(r, 250))
+              try {
+                const retryData = await cartApi.updateCartItem(itemId, {
+                  quantity: qty
+                })
+                if (retryData && (retryData.items || retryData.cartData)) {
+                  applyServerCart(retryData)
+                } else {
+                  await refreshCart()
+                }
+                resolve({ success: true, cart: retryData })
+                return
+              } catch (retryErr) {
+                await refreshCart()
+                const msg = getCartErrorMessage(retryErr)
+                setCartError(msg)
+                resolve({
+                  success: false,
+                  code: retryErr.code || 'cart_error',
+                  message: msg
+                })
+                return
+              }
             }
+            await refreshCart()
+            const code = err.code || ''
+            let msg = getCartErrorMessage(err)
+            if (
+              code === 'not_found' ||
+              code === 'product_unavailable' ||
+              code === 'product_variant_unavailable'
+            ) {
+              msg = 'Bu ürün artık satışta değil ve sepetinizden kaldırıldı.'
+            }
+            setCartError(msg)
+            resolve({ success: false, code, message: msg })
           }
-        }
-        await refreshCart()
-        const code = err.code || ''
-        let msg = getCartErrorMessage(err)
-        if (
-          code === 'not_found' ||
-          code === 'product_unavailable' ||
-          code === 'product_variant_unavailable'
-        ) {
-          msg = 'Bu ürün artık satışta değil ve sepetinizden kaldırıldı.'
-        }
-        setCartError(msg)
-        return { success: false, code, message: msg }
-      } finally {
-        updatingItemIdsRef.current.delete(itemId)
-        setUpdatingItemIds(Array.from(updatingItemIdsRef.current))
-      }
+        }, 150) // 150ms debounce ile peş peşe tıklamaları tek bir akıcı istekte birleştirir
+
+        updateQtyDebounceTimers.current.set(itemId, timer)
+      })
     },
     [removeFromCart, applyServerCart, refreshCart]
   )
@@ -454,12 +473,17 @@ export function CartProvider ({ children }) {
       return s + p * (i.qty || i.quantity || 1)
     }, 0)
 
+  const clearCartError = useCallback(() => {
+    setCartError(null)
+  }, [])
+
   const value = useMemo(
     () => ({
       cartData,
       items,
       loading,
       cartError,
+      clearCartError,
       addingProductIds,
       updatingItemIds,
       removingItemIds,
@@ -477,6 +501,7 @@ export function CartProvider ({ children }) {
       items,
       loading,
       cartError,
+      clearCartError,
       addingProductIds,
       updatingItemIds,
       removingItemIds,

@@ -759,34 +759,24 @@ export default function DashboardPage({ activeTab = "overview" }) {
                               <button
                                 className={styles.wishCartBtn}
                                 aria-label="Sepete ekle"
-                                disabled={addingWishId === (item.id || item.productId)}
-                                onClick={async () => {
+                                onClick={() => {
                                   const targetId = item.id || item.productId;
-                                  if (addingWishId === targetId) return;
-                                  setAddingWishId(targetId);
-                                  try {
-                                    await addToCart({
-                                      id: targetId,
-                                      productId: item.productId || item.id,
-                                      name: itemName,
-                                      productName: itemName,
-                                      price: itemPrice,
-                                      image: itemImage,
-                                      imageUrl: itemImage,
-                                      qty: 1
-                                    });
-                                    setAddedWishId(targetId);
-                                    setTimeout(() => setAddedWishId(null), 1800);
-                                  } catch {
-                                  } finally {
-                                    setAddingWishId(null);
-                                  }
+                                  setAddedWishId(targetId);
+                                  setTimeout(() => setAddedWishId(null), 1200);
+                                  addToCart({
+                                    id: targetId,
+                                    productId: item.productId || item.id,
+                                    name: itemName,
+                                    productName: itemName,
+                                    price: itemPrice,
+                                    image: itemImage,
+                                    imageUrl: itemImage,
+                                    qty: 1
+                                  }).catch(() => {});
                                 }}
                               >
                                 {addedWishId === (item.id || item.productId) ? (
                                   <><FiCheck /> Eklendi!</>
-                                ) : addingWishId === (item.id || item.productId) ? (
-                                  <><FiLoader className={styles.spinner} style={{ animation: "spin 1.5s linear infinite", fontSize: 13 }} /> Ekleniyor...</>
                                 ) : (
                                   <><FiShoppingCart /> Sepete Ekle</>
                                 )}

@@ -21,14 +21,11 @@ export default function ProductCard({ product }) {
   const isFavorite = isInWishlist(productId);
   const detailHref = `/urun/${detailSlugOrId}`;
 
-  const handleAdd = async () => {
-    try {
-      await addToCart({ id: productId, name, price, image });
-      setAdded(true);
-      setTimeout(() => setAdded(false), 1800);
-    } catch (err) {
-      // Error alert is already handled by CartContext, so we just catch and suppress here
-    }
+  const handleAdd = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
+    addToCart({ id: productId, name, price, image }).catch(() => {});
   };
 
   const handleWishlist = () => {

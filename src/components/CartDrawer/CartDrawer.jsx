@@ -1,12 +1,23 @@
 import styles from './CartDrawer.module.css';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiTrash2, FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi';
+import { FiX, FiTrash2, FiMinus, FiPlus, FiShoppingBag, FiAlertCircle } from 'react-icons/fi';
 import { useCart } from '../../context/CartContext';
 
 export default function CartDrawer({ open, onClose }) {
-  const { items, updateQty, removeFromCart, clearCart, totalCount, totalPrice } = useCart();
+  const { items, updateQty, removeFromCart, clearCart, totalCount, totalPrice, cartError, clearCartError } = useCart();
   const navigate = useNavigate();
+
+  // Auto clear error after 4 seconds
+  useEffect(() => {
+    if (cartError) {
+      const timer = setTimeout(() => {
+        if (clearCartError) clearCartError();
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [cartError, clearCartError]);
 
   const handleGoToCheckout = () => {
     onClose();
@@ -52,6 +63,23 @@ export default function CartDrawer({ open, onClose }) {
 
             {/* Ürün Listesi */}
             <div className={styles.body}>
+              <AnimatePresence>
+                {cartError && (
+                  <motion.div
+                    className={styles.errorBanner}
+                    initial={{ opacity: 0, y: -10, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: 'auto' }}
+                    exit={{ opacity: 0, y: -10, height: 0 }}
+                  >
+                    <FiAlertCircle className={styles.errorIcon} />
+                    <span className={styles.errorText}>{cartError}</span>
+                    <button className={styles.errorClose} onClick={clearCartError}>
+                      <FiX />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {items.length === 0 ? (
                 <div className={styles.empty}>
                   <span className={styles.emptyIcon}>🛒</span>
