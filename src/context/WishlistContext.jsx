@@ -20,16 +20,25 @@ export function WishlistProvider({ children }) {
       setError(null);
       if (isAuthenticated) {
         const data = await wishlistApi.getWishlist();
-        const mapped = (data || []).map(item => ({
-          id: item.productId || item.id,
-          productId: item.productId || item.id,
-          productName: item.productName || item.name || "",
-          slug: item.slug || "",
-          imageUrl: item.imageUrl || item.image || "",
-          price: typeof item.price === 'number' ? `${item.price} ₺` : item.price || "0 ₺",
-          oldPrice: item.oldPrice == null ? null : (typeof item.oldPrice === 'number' ? `${item.oldPrice} ₺` : item.oldPrice),
-          addedAt: item.addedAt || item.createdAt || null
-        }));
+        const mapped = (data || []).map(item => {
+          const name = item.name || item.productName || "Favori Ürün";
+          const image = item.imageUrl || item.image || "/ornek resim.jpg";
+          const price = typeof item.price === 'number' ? `${item.price} ₺` : item.price || "0 ₺";
+          const unitPrice = typeof item.price === 'number' ? item.price : (Number(String(item.price || '').replace(/[^\d.-]/g, '')) || 0);
+          return {
+            id: item.productId || item.id,
+            productId: item.productId || item.id,
+            productName: name,
+            name: name,
+            slug: item.slug || "",
+            imageUrl: image,
+            image: image,
+            price: price,
+            unitPrice: unitPrice,
+            oldPrice: item.oldPrice == null ? null : (typeof item.oldPrice === 'number' ? `${item.oldPrice} ₺` : item.oldPrice),
+            addedAt: item.addedAt || item.createdAt || null
+          };
+        });
         setItems(mapped);
       } else {
         const localStored = safeGetJson("isa_guest_wishlist", []);
@@ -52,13 +61,21 @@ export function WishlistProvider({ children }) {
               : null;
 
             const p = foundInCatalog || foundInLocalObj || { id };
+            const name = p.name || p.productName || "Favori Ürün";
+            const image = p.image || p.imageUrl || "/ornek resim.jpg";
+            const price = typeof p.price === 'number' ? `${p.price} ₺` : p.price || "0 ₺";
+            const unitPrice = typeof p.price === 'number' ? p.price : (Number(String(p.price || '').replace(/[^\d.-]/g, '')) || 0);
+
             return {
               id: p.id || id,
               productId: p.id || p.productId || id,
-              productName: p.name || p.productName || "Favori Ürün",
+              productName: name,
+              name: name,
               slug: p.slug || "",
-              imageUrl: p.image || p.imageUrl || "",
-              price: typeof p.price === 'number' ? `${p.price} ₺` : p.price || "0 ₺",
+              imageUrl: image,
+              image: image,
+              price: price,
+              unitPrice: unitPrice,
               oldPrice: p.oldPrice == null ? null : (typeof p.oldPrice === 'number' ? `${p.oldPrice} ₺` : p.oldPrice),
               addedAt: new Date().toISOString()
             };
@@ -189,16 +206,25 @@ export function WishlistProvider({ children }) {
       const cleanIds = prepareWishlistProductIds(guestItemsInput);
       const res = await wishlistApi.mergeGuestWishlist(cleanIds);
       const rawList = Array.isArray(res) ? res : (res?.items || []);
-      const mapped = rawList.map(item => ({
-        id: item.id || item.productId,
-        productId: item.productId || item.id,
-        productName: item.productName || item.name || "",
-        slug: item.slug || "",
-        imageUrl: item.imageUrl || item.image || "",
-        price: typeof item.price === 'number' ? `${item.price} ₺` : item.price || "0 ₺",
-        oldPrice: item.oldPrice == null ? null : (typeof item.oldPrice === 'number' ? `${item.oldPrice} ₺` : item.oldPrice),
-        addedAt: item.addedAt || item.createdAt || null
-      }));
+      const mapped = rawList.map(item => {
+        const name = item.name || item.productName || "Favori Ürün";
+        const image = item.imageUrl || item.image || "/ornek resim.jpg";
+        const price = typeof item.price === 'number' ? `${item.price} ₺` : item.price || "0 ₺";
+        const unitPrice = typeof item.price === 'number' ? item.price : (Number(String(item.price || '').replace(/[^\d.-]/g, '')) || 0);
+        return {
+          id: item.id || item.productId,
+          productId: item.productId || item.id,
+          productName: name,
+          name: name,
+          slug: item.slug || "",
+          imageUrl: image,
+          image: image,
+          price: price,
+          unitPrice: unitPrice,
+          oldPrice: item.oldPrice == null ? null : (typeof item.oldPrice === 'number' ? `${item.oldPrice} ₺` : item.oldPrice),
+          addedAt: item.addedAt || item.createdAt || null
+        };
+      });
       setItems(mapped);
       safeRemoveItem("isa_guest_wishlist");
       return mapped;

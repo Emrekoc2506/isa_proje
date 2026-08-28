@@ -721,49 +721,68 @@ export default function DashboardPage({ activeTab = "overview" }) {
                     </div>
                   ) : (
                     <div className={styles.wishlistGrid}>
-                      {wishlist.map((item, i) => (
-                        <motion.div
-                          key={item.id}
-                          className={styles.wishCard}
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: i * 0.05 }}
-                          layout
-                        >
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className={styles.wishImg}
-                          />
-                          <div className={styles.wishInfo}>
-                            <p className={styles.wishName}>{item.name}</p>
-                            <p className={styles.wishPrice}>{item.price}</p>
-                          </div>
-                          <div className={styles.wishActions}>
-                            <button
-                              className={styles.wishCartBtn}
-                              aria-label="Sepete ekle"
-                              onClick={() =>
-                                addToCart({
-                                  id: item.id,
-                                  name: item.name,
-                                  price: item.price,
-                                  image: item.image,
-                                })
-                              }
-                            >
-                              <FiShoppingCart /> Sepete Ekle
-                            </button>
-                            <button
-                              className={styles.wishRemoveBtn}
-                              onClick={() => removeFromWishlist(item.id)}
-                              aria-label="Favorilerden çıkar"
-                            >
-                              <FiTrash2 />
-                            </button>
-                          </div>
-                        </motion.div>
-                      ))}
+                      {wishlist.map((item, i) => {
+                        const itemName = item.name || item.productName || item.title || "Favori Ürün";
+                        const itemImage = item.image || item.imageUrl || item.images?.[0] || "/ornek resim.jpg";
+                        const itemPrice = typeof item.price === "number" ? `${item.price} ₺` : (item.price || "0 ₺");
+                        const itemUrl = item.slug ? `/urun/${item.slug}` : (item.productId || item.id ? `/urun/${item.productId || item.id}` : "#");
+
+                        return (
+                          <motion.div
+                            key={item.id || item.productId || i}
+                            className={styles.wishCard}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: i * 0.05 }}
+                            layout
+                          >
+                            <a href={itemUrl} style={{ display: "block", textDecoration: "none" }}>
+                              <img
+                                src={itemImage}
+                                alt={itemName}
+                                className={styles.wishImg}
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = "/ornek resim.jpg";
+                                }}
+                              />
+                            </a>
+                            <div className={styles.wishInfo}>
+                              <a href={itemUrl} style={{ textDecoration: "none" }}>
+                                <p className={styles.wishName}>{itemName}</p>
+                              </a>
+                              <p className={styles.wishPrice}>{itemPrice}</p>
+                            </div>
+                            <div className={styles.wishActions}>
+                              <button
+                                className={styles.wishCartBtn}
+                                aria-label="Sepete ekle"
+                                onClick={() =>
+                                  addToCart({
+                                    id: item.id || item.productId,
+                                    productId: item.productId || item.id,
+                                    name: itemName,
+                                    productName: itemName,
+                                    price: itemPrice,
+                                    image: itemImage,
+                                    imageUrl: itemImage,
+                                    qty: 1
+                                  })
+                                }
+                              >
+                                <FiShoppingCart /> Sepete Ekle
+                              </button>
+                              <button
+                                className={styles.wishRemoveBtn}
+                                onClick={() => removeFromWishlist(item.id || item.productId)}
+                                aria-label="Favorilerden çıkar"
+                              >
+                                <FiTrash2 />
+                              </button>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
