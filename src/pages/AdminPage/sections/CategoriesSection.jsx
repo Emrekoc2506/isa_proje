@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiPlus, FiTrash2, FiCornerDownRight, FiChevronDown, FiChevronRight, FiLock, FiUnlock, FiSearch, FiEdit3, FiX, FiFolder, FiSave, FiRefreshCw } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiCornerDownRight, FiChevronDown, FiChevronRight, FiLock, FiUnlock, FiSearch, FiEdit3, FiX, FiFolder, FiSave, FiRefreshCw, FiCheck, FiEyeOff, FiLink, FiCopy } from 'react-icons/fi';
 import * as categoryApi from '../../../services/categoryApi';
 import { collectDescendantIds } from '../../../utils/categoryTree';
 import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
@@ -366,6 +366,20 @@ export default function CategoriesSection() {
     setParentError('');
   };
 
+  const [copiedCatId, setCopiedCatId] = useState(null);
+
+  const handleCopyCategoryLink = (cat) => {
+    const catSlugOrId = cat.slug || cat.name || cat.id;
+    const cleanSlug = catSlugOrId.replace(' [GİZLİ]', '').trim();
+    const link = `${window.location.origin}/urunler?kategori=${encodeURIComponent(cleanSlug)}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(link);
+    }
+    const catId = String(cat.databaseId ?? cat.id);
+    setCopiedCatId(catId);
+    setTimeout(() => setCopiedCatId(null), 2500);
+  };
+
   const handleToggleStatus = async (cat) => {
     const catId = cat.databaseId ?? cat.id;
     try {
@@ -581,18 +595,31 @@ export default function CategoriesSection() {
           >
             <button
               type="button"
+              onClick={() => handleCopyCategoryLink(cat)}
+              style={S.iconBtn('#38bdf8')}
+              title="Kategori linkini kopyala (Kime atarsanız doğrudan bu kategoriyi açar)"
+            >
+              {copiedCatId === catId ? (
+                <><FiCheck size={10} style={{ color: '#2ecc71' }} /> <span style={{ color: '#2ecc71' }}>Kopyalandı</span></>
+              ) : (
+                <><FiLink size={10} /> Link</>
+              )}
+            </button>
+
+            <button
+              type="button"
               onClick={() => handleToggleStatus(cat)}
               disabled={updatingId === catId}
               style={{
                 ...S.statusBtn(cat.isActive),
                 opacity: updatingId === catId ? 0.4 : 1,
               }}
-              title={cat.isActive ? "Gizlemek için tıkla" : "Göstermek için tıkla"}
+              title={cat.isActive ? "Kategoriyi Yayından Kaldır (Pasife Al)" : "Kategoriyi Yayına Al (Aktif Et)"}
             >
               {cat.isActive ? (
-                <><FiUnlock size={10} /> Açık</>
+                <><FiCheck size={10} /> Yayında</>
               ) : (
-                <><FiLock size={10} /> Kilitli</>
+                <><FiEyeOff size={10} /> Pasif</>
               )}
             </button>
 

@@ -110,17 +110,26 @@ export default function ProductsPage () {
     return isNaN(val) ? 0 : val
   }
 
-  // Slug dönüştürücü
+  // Slug dönüştürücü (Türkçe İ, I, ı, ş, ğ vb. tam uyumlu)
   const toSlug = str =>
     String(str || '')
-      .toLowerCase()
-      .trim()
-      .replace(/ğ/g, 'g')
-      .replace(/ü/g, 'u')
-      .replace(/ş/g, 's')
+      .replace(/İ/g, 'i')
+      .replace(/I/g, 'i')
       .replace(/ı/g, 'i')
+      .replace(/Ğ/g, 'g')
+      .replace(/ğ/g, 'g')
+      .replace(/Ü/g, 'u')
+      .replace(/ü/g, 'u')
+      .replace(/Ş/g, 's')
+      .replace(/ş/g, 's')
+      .replace(/Ö/g, 'o')
       .replace(/ö/g, 'o')
+      .replace(/Ç/g, 'c')
       .replace(/ç/g, 'c')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '')
 
@@ -138,9 +147,10 @@ export default function ProductsPage () {
         String(c.label || '').toLowerCase() === targetStr ||
         toSlug(c.slug || c.name || c.label) === targetSlug
     )
-    return cat
-      ? (cat.label || cat.name || '').replace(' [GİZLİ]', '')
-      : String(catId)
+    if (cat) return (cat.label || cat.name || '').replace(' [GİZLİ]', '')
+    
+    // Ağaçta bulunamazsa aranan ifadenin kendisini düzgün göster
+    return String(catId).replace(/-/g, ' ').toUpperCase()
   }
 
   // Kategori Eşleştirme (Slug, ID, DatabaseId, İsim ve Alt Kategorileri kapsar)
@@ -150,6 +160,12 @@ export default function ProductsPage () {
     }
     const targetStr = String(targetCat).toLowerCase().trim()
     const targetSlug = toSlug(targetCat)
+
+    // 1. Ürünün kendi üzerindeki kategori adı/slug kontrolü (Ağaçta olmasa veya gizli olsa bile linkle açılır)
+    const pCatName = String(product.categoryName || product.category || '').trim()
+    const pSubCatName = String(product.subcategory || product.subCategory || '').trim()
+    if (pCatName && (toSlug(pCatName) === targetSlug || toSlug(pCatName) === toSlug(targetStr))) return true
+    if (pSubCatName && (toSlug(pSubCatName) === targetSlug || toSlug(pSubCatName) === toSlug(targetStr))) return true
 
     const matchedCats = (catList || categories).filter(
       c =>
@@ -189,24 +205,14 @@ export default function ProductsPage () {
     })
     validKeys.delete('')
 
-    const pCatId = String(product.categoryId || '')
-      .toLowerCase()
-      .trim()
-    const pSubCatId = String(product.subcategoryId || '')
-      .toLowerCase()
-      .trim()
-    const pCatName = String(product.categoryName || product.category || '')
-      .toLowerCase()
-      .trim()
-    const pSubCatName = String(product.subcategory || product.subCategory || '')
-      .toLowerCase()
-      .trim()
+    const pCatId = String(product.categoryId || '').toLowerCase().trim()
+    const pSubCatId = String(product.subcategoryId || '').toLowerCase().trim()
 
     return (
       (Boolean(pCatId) && validKeys.has(pCatId)) ||
       (Boolean(pSubCatId) && validKeys.has(pSubCatId)) ||
-      (Boolean(pCatName) && validKeys.has(pCatName)) ||
-      (Boolean(pSubCatName) && validKeys.has(pSubCatName)) ||
+      (Boolean(pCatName) && validKeys.has(pCatName.toLowerCase())) ||
+      (Boolean(pSubCatName) && validKeys.has(pSubCatName.toLowerCase())) ||
       (Boolean(pCatName) && validKeys.has(toSlug(pCatName))) ||
       (Boolean(pSubCatName) && validKeys.has(toSlug(pSubCatName)))
     )
