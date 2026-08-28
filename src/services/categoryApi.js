@@ -29,11 +29,31 @@ export function createAdminCategory(payload) {
   });
 }
 
-export function updateAdminCategory(id, payload) {
-  return request(`/admin/categories/${id}/update`, {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
+export async function updateAdminCategory(id, payload) {
+  try {
+    return await request(`/admin/categories/${id}/update`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    if (err.status === 404 || err.status === 405 || (err.message && err.message.includes('405'))) {
+      try {
+        return await request(`/admin/categories/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(payload)
+        });
+      } catch (e2) {
+        if (e2.status === 404 || e2.status === 405) {
+          return await request(`/admin/categories/${id}`, {
+            method: "POST",
+            body: JSON.stringify(payload)
+          });
+        }
+        throw e2;
+      }
+    }
+    throw err;
+  }
 }
 
 export function deleteAdminCategory(id) {
@@ -43,10 +63,27 @@ export function deleteAdminCategory(id) {
   });
 }
 
-export function updateAdminCategoryStatus(id, isActive) {
+export async function updateAdminCategoryStatus(id, isActive) {
   // Kural: nesne gövdesi ister: { "isActive": true }
-  return request(`/admin/categories/${id}/status`, {
-    method: "PATCH",
-    body: JSON.stringify({ isActive })
-  });
+  try {
+    return await request(`/admin/categories/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ isActive })
+    });
+  } catch (err) {
+    if (err.status === 404 || err.status === 405) {
+      try {
+        return await request(`/admin/categories/${id}/status`, {
+          method: "POST",
+          body: JSON.stringify({ isActive })
+        });
+      } catch (e2) {
+        if (e2.status === 404 || e2.status === 405) {
+          return await updateAdminCategory(id, { isActive });
+        }
+        throw e2;
+      }
+    }
+    throw err;
+  }
 }

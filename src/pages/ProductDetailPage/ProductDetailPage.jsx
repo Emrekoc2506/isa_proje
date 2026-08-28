@@ -812,7 +812,18 @@ export default function ProductDetailPage() {
                 <FiTruck className={styles.trustIcon} />
                 <div>
                   <b>Yurtiçi Kargo</b>
-                  <span>Hızlı & Güvenli Teslimat</span>
+                  <span>
+                    {(() => {
+                      if (productDetail.isFreeShipping || productDetail.freeShipping || productDetail.shippingFee === 0 || productDetail.cargoFee === 0) {
+                        return '🚚 Ücretsiz Kargo';
+                      }
+                      const fee = productDetail.shippingFee ?? productDetail.cargoFee ?? productDetail.cargoPrice ?? productDetail.shippingCost;
+                      if (fee != null && fee !== '' && !isNaN(parseFloat(fee)) && parseFloat(fee) > 0) {
+                        return `${parseFloat(fee)} ₺ Kargo Ücreti`;
+                      }
+                      return 'Hızlı & Güvenli Teslimat';
+                    })()}
+                  </span>
                 </div>
               </div>
               <div className={styles.trustItem}>

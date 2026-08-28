@@ -413,10 +413,12 @@ export default function CategoriesSection() {
       if (editingCategory) {
         const catId = editingCategory.databaseId ?? editingCategory.id;
         await categoryApi.updateAdminCategory(catId, payload);
+        alert("Kategori başarıyla güncellendi.");
         resetForm();
         fetchCategories();
       } else {
         await categoryApi.createAdminCategory(payload);
+        alert("Kategori başarıyla eklendi.");
         resetForm();
         fetchCategories();
       }
@@ -435,22 +437,42 @@ export default function CategoriesSection() {
     }
   };
 
-  const handleEditClick = (cat) => {
+  const handleEditClick = async (cat) => {
     setEditingCategory(cat);
-    if (cat.name.endsWith(' [GİZLİ]')) {
-      setNewCatName(cat.name.replace(' [GİZLİ]', '').trim());
-      setIsSecret(true);
-    } else {
-      setNewCatName(cat.name);
-      setIsSecret(false);
-    }
-    setDescription(cat.description || '');
-    setSlug(cat.slug || '');
-    setSeoTitle(cat.seoTitle || '');
-    setSeoDescription(cat.seoDescription || '');
-    setSeoKeywords(cat.seoKeywords || '');
-    setParentId(cat.parentCategoryId || '');
+    const isSec = cat.name?.endsWith(' [GİZLİ]') || Boolean(cat.isSecret ?? cat.IsSecret);
+    setNewCatName(cat.name ? cat.name.replace(' [GİZLİ]', '').trim() : '');
+    setIsSecret(isSec);
+    setDescription(cat.description || cat.Description || '');
+    setSlug(cat.slug || cat.Slug || '');
+    setSeoTitle(cat.seoTitle || cat.SeoTitle || '');
+    setSeoDescription(cat.seoDescription || cat.SeoDescription || '');
+    setSeoKeywords(cat.seoKeywords || cat.SeoKeywords || '');
+    setParentId(cat.parentCategoryId || cat.ParentCategoryId || '');
     setParentError('');
+
+    // Backend'den detaylı kategori verisini çekip eksik alanları tamamla
+    const catId = cat.databaseId ?? cat.id;
+    if (catId) {
+      try {
+        const full = await categoryApi.getAdminCategoryById(catId);
+        if (full) {
+          if (full.name || full.Name) {
+            const fName = full.name || full.Name;
+            const fullSec = fName.endsWith(' [GİZLİ]') || Boolean(full.isSecret ?? full.IsSecret);
+            setNewCatName(fName.replace(' [GİZLİ]', '').trim());
+            setIsSecret(fullSec);
+          }
+          if (full.description || full.Description) setDescription(full.description || full.Description || '');
+          if (full.slug || full.Slug) setSlug(full.slug || full.Slug || '');
+          if (full.seoTitle || full.SeoTitle) setSeoTitle(full.seoTitle || full.SeoTitle || '');
+          if (full.seoDescription || full.SeoDescription) setSeoDescription(full.seoDescription || full.SeoDescription || '');
+          if (full.seoKeywords || full.SeoKeywords) setSeoKeywords(full.seoKeywords || full.SeoKeywords || '');
+          if (full.parentCategoryId || full.ParentCategoryId) setParentId(full.parentCategoryId || full.ParentCategoryId || '');
+        }
+      } catch {
+        // Background fetch fallback
+      }
+    }
   };
 
   const handleCancelEdit = () => {
