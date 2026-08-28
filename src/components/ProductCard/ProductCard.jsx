@@ -14,6 +14,7 @@ export default function ProductCard({ product }) {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
+  const [stockOut, setStockOut] = useState(false);
   const navigate = useNavigate();
 
   const productId = id || name;
@@ -28,11 +29,14 @@ export default function ProductCard({ product }) {
   const handleAdd = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
     if (isOutOfStock) {
-      navigate(detailHref);
+      setStockOut(true);
+      setTimeout(() => setStockOut(false), 2500);
       return;
     }
     const res = await addToCart({ id: productId, name, price, image });
     if (res && res.success === false) {
+      setStockOut(true);
+      setTimeout(() => setStockOut(false), 2500);
       return;
     }
     setAdded(true);
@@ -95,16 +99,25 @@ export default function ProductCard({ product }) {
         </div>
 
         <motion.button
-          className={`${styles.addBtn} ${added ? styles.addBtnAdded : ''}`}
+          className={`${styles.addBtn} ${stockOut ? styles.addBtnOutOfStock : added ? styles.addBtnAdded : ''}`}
           onClick={handleAdd}
-          whileHover={{ scale: added || isOutOfStock ? 1 : 1.04 }}
+          whileHover={{ scale: added || stockOut ? 1 : 1.04 }}
           whileTap={{ scale: 0.97 }}
-          disabled={isOutOfStock}
-          style={isOutOfStock ? { opacity: 0.6, cursor: 'not-allowed', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)' } : undefined}
           aria-label={`${name} sepete ekle`}
         >
           <AnimatePresence mode="wait">
-            {isOutOfStock ? (
+            {stockOut ? (
+              <motion.span
+                key="out"
+                className={styles.addBtnInner}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+              >
+                ⚠️ Stok Tükendi!
+              </motion.span>
+            ) : isOutOfStock ? (
               <span className={styles.addBtnInner}>Tükendi</span>
             ) : added ? (
               <motion.span

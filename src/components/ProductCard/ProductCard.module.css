@@ -226,6 +226,14 @@
   cursor: default;
 }
 
+/* "Stok Tükendi" durumu */
+.addBtnOutOfStock {
+  background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(231, 76, 60, 0.35) !important;
+  cursor: default;
+}
+
 .addBtnInner {
   display: flex;
   align-items: center;
