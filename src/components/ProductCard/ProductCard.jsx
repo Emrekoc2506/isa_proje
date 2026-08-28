@@ -21,7 +21,9 @@ export default function ProductCard({ product }) {
   const isFavorite = isInWishlist(productId);
   const detailHref = `/urun/${detailSlugOrId}`;
 
-  const isOutOfStock = product.stockQuantity === 0 || product.stock === 0;
+  const isOutOfStock =
+    product.isOutOfStock === true ||
+    (product.hasExplicitStock === true && (product.stockQuantity === 0 || product.stock === 0));
 
   const handleAdd = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();

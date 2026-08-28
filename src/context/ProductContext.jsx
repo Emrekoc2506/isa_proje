@@ -70,7 +70,13 @@ export function normalizeProducts (productsData) {
 
     const priceVal = p.price ?? p.Price ?? 0
     const oldPriceVal = p.oldPrice ?? p.OldPrice ?? null
-    const stockVal = getSafeStockQuantity(p)
+    const hasExplicitStock =
+      (p.stockQuantity !== undefined && p.stockQuantity !== null) ||
+      (p.StockQuantity !== undefined && p.StockQuantity !== null) ||
+      (p.stock !== undefined && p.stock !== null) ||
+      (p.Stock !== undefined && p.Stock !== null) ||
+      (Array.isArray(p.variants) && p.variants.length > 0)
+    const stockVal = hasExplicitStock ? getSafeStockQuantity(p) : null
 
     return {
       ...p,
@@ -89,6 +95,7 @@ export function normalizeProducts (productsData) {
         : null,
       rawPrice: priceVal,
       rawOldPrice: oldPriceVal,
+      hasExplicitStock,
       stockQuantity: stockVal,
       stock: stockVal,
       image: mainImg,
