@@ -21,11 +21,20 @@ export default function ProductCard({ product }) {
   const isFavorite = isInWishlist(productId);
   const detailHref = `/urun/${detailSlugOrId}`;
 
-  const handleAdd = (e) => {
+  const isOutOfStock = product.stockQuantity === 0 || product.stock === 0;
+
+  const handleAdd = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
+    if (isOutOfStock) {
+      navigate(detailHref);
+      return;
+    }
+    const res = await addToCart({ id: productId, name, price, image });
+    if (res && res.success === false) {
+      return;
+    }
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
-    addToCart({ id: productId, name, price, image }).catch(() => {});
   };
 
   const handleWishlist = () => {
@@ -41,12 +50,18 @@ export default function ProductCard({ product }) {
     >
       {/* ── Badges ─────────────────────────────────────────── */}
       <div className={styles.badges}>
-        {isNew && <span className={styles.badge + ' ' + styles.badgeNew}>Yeni</span>}
-        {isSale && discount && (
-          <span className={styles.badge + ' ' + styles.badgeSale}>{discount}</span>
-        )}
-        {freeShipping && (
-          <span className={styles.badge} style={{ background: '#10b981', color: '#ffffff', fontWeight: 700 }}>Kargo Bedava</span>
+        {isOutOfStock ? (
+          <span className={styles.badge} style={{ background: '#e05594', color: '#ffffff', fontWeight: 700 }}>Tükendi</span>
+        ) : (
+          <>
+            {isNew && <span className={styles.badge + ' ' + styles.badgeNew}>Yeni</span>}
+            {isSale && discount && (
+              <span className={styles.badge + ' ' + styles.badgeSale}>{discount}</span>
+            )}
+            {freeShipping && (
+              <span className={styles.badge} style={{ background: '#10b981', color: '#ffffff', fontWeight: 700 }}>Kargo Bedava</span>
+            )}
+          </>
         )}
       </div>
 
@@ -80,12 +95,16 @@ export default function ProductCard({ product }) {
         <motion.button
           className={`${styles.addBtn} ${added ? styles.addBtnAdded : ''}`}
           onClick={handleAdd}
-          whileHover={{ scale: added ? 1 : 1.04 }}
+          whileHover={{ scale: added || isOutOfStock ? 1 : 1.04 }}
           whileTap={{ scale: 0.97 }}
+          disabled={isOutOfStock}
+          style={isOutOfStock ? { opacity: 0.6, cursor: 'not-allowed', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)' } : undefined}
           aria-label={`${name} sepete ekle`}
         >
           <AnimatePresence mode="wait">
-            {added ? (
+            {isOutOfStock ? (
+              <span className={styles.addBtnInner}>Tükendi</span>
+            ) : added ? (
               <motion.span
                 key="added"
                 className={styles.addBtnInner}

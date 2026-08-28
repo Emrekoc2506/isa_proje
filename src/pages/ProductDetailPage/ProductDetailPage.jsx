@@ -7,7 +7,7 @@ import {
   FiShoppingCart, FiHeart, FiCheck, FiStar,
   FiChevronRight, FiTruck,
   FiShield, FiMinus, FiPlus, FiShare2,
-  FiZap, FiChevronDown, FiMessageCircle, FiBell, FiZoomIn
+  FiZap, FiChevronDown, FiMessageCircle, FiBell, FiZoomIn, FiAlertCircle
 } from 'react-icons/fi';
 import { FaHeart, FaWhatsapp, FaInstagram } from 'react-icons/fa';
 import { useProducts } from '../../context/ProductContext';
@@ -118,6 +118,7 @@ export default function ProductDetailPage() {
   const [activeImg, setActiveImg] = useState(0);
   const [qty, setQty] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [stockError, setStockError] = useState(null);
   const [activeTab, setActiveTab] = useState('description');
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -215,28 +216,60 @@ export default function ProductDetailPage() {
   const currentAvailableStock = getSafeStockQuantity(selectedVariant || productDetail);
 
   /* ─── Handlers ──────────────────────────────────────── */
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
+    setStockError(null);
+    if (currentAvailableStock <= 0) {
+      setStockError('Bu ürünün stoğu tükenmiştir.');
+      setTimeout(() => setStockError(null), 4000);
+      return;
+    }
+
+    if (qty > currentAvailableStock) {
+      setStockError(`Bu üründen en fazla ${currentAvailableStock} adet ekleyebilirsiniz.`);
+      setTimeout(() => setStockError(null), 4000);
+      return;
+    }
+
     const finalPrice = productDetail.price + (selectedVariant?.additionalPrice || 0);
-    addToCart({ 
+    const res = await addToCart({ 
       id: productDetail.id, 
       name: productDetail.name + (selectedVariant ? ` (${selectedVariant.name})` : ''), 
       price: finalPrice + ' ₺', 
       image: productDetail.imageUrl || (productDetail.images?.[0]?.url || '') 
     }, qty, selectedVariantId, customNote.trim());
     
+    if (res && res.success === false) {
+      setStockError(res.message || 'Bu ürün için yeterli stok bulunmuyor.');
+      setTimeout(() => setStockError(null), 4000);
+      return;
+    }
+
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2200);
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
+    setStockError(null);
+    if (currentAvailableStock <= 0) {
+      setStockError('Bu ürünün stoğu tükenmiştir.');
+      setTimeout(() => setStockError(null), 4000);
+      return;
+    }
+
     const finalPrice = productDetail.price + (selectedVariant?.additionalPrice || 0);
-    addToCart({ 
+    const res = await addToCart({ 
       id: productDetail.id, 
       name: productDetail.name + (selectedVariant ? ` (${selectedVariant.name})` : ''), 
       price: finalPrice + ' ₺', 
       image: productDetail.imageUrl || (productDetail.images?.[0]?.url || '') 
     }, qty, selectedVariantId, customNote.trim());
     
+    if (res && res.success === false) {
+      setStockError(res.message || 'Bu ürün için yeterli stok bulunmuyor.');
+      setTimeout(() => setStockError(null), 4000);
+      return;
+    }
+
     navigate('/odeme');
   };
 
@@ -648,8 +681,11 @@ export default function ProductDetailPage() {
               <div className={styles.qtyBox}>
                 <button
                   className={styles.qtyBtn}
-                  onClick={() => setQty(q => Math.max(1, q - 1))}
-                  disabled={currentAvailableStock === 0}
+                  onClick={() => {
+                    setStockError(null);
+                    setQty(q => Math.max(1, q - 1));
+                  }}
+                  disabled={currentAvailableStock === 0 || qty <= 1}
                   aria-label="Azalt"
                 >
                   <FiMinus />
@@ -657,8 +693,16 @@ export default function ProductDetailPage() {
                 <span className={styles.qtyVal}>{qty}</span>
                 <button
                   className={styles.qtyBtn}
-                  onClick={() => setQty(q => Math.min(currentAvailableStock, q + 1))}
-                  disabled={currentAvailableStock === 0}
+                  onClick={() => {
+                    if (currentAvailableStock > 0 && qty >= currentAvailableStock) {
+                      setStockError(`Maksimum mevcut stok sınırı: ${currentAvailableStock} adet`);
+                      setTimeout(() => setStockError(null), 3500);
+                      return;
+                    }
+                    setStockError(null);
+                    setQty(q => q + 1);
+                  }}
+                  disabled={currentAvailableStock === 0 || (currentAvailableStock > 0 && qty >= currentAvailableStock)}
                   aria-label="Artır"
                 >
                   <FiPlus />
@@ -667,18 +711,62 @@ export default function ProductDetailPage() {
               <span className={styles.stockLabel}>
                 <FiZap className={styles.stockIcon} /> 
                 {currentAvailableStock === 0 ? (
-                  <span style={{ color: '#e05594' }}>Tükendi</span>
+                  <span style={{ color: '#e05594', fontWeight: 700 }}>Tükendi</span>
                 ) : (
                   <>Stokta Mevcut ({currentAvailableStock} Adet)</>
                 )}
               </span>
             </div>
 
+            {/* Stok Uyarı Banner'ı */}
+            <AnimatePresence>
+              {stockError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: 'auto' }}
+                  exit={{ opacity: 0, y: -6, height: 0 }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    background: 'rgba(224, 85, 148, 0.14)',
+                    border: '1px solid rgba(224, 85, 148, 0.45)',
+                    color: '#f8a5c2',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    lineHeight: '1.4',
+                    marginBottom: '14px'
+                  }}
+                >
+                  <FiAlertCircle style={{ fontSize: '18px', color: '#e05594', flexShrink: 0 }} />
+                  <span style={{ flex: 1 }}>{stockError}</span>
+                  <button
+                    onClick={() => setStockError(null)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#f8a5c2',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      padding: '2px',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    ✕
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* CTA Butonları */}
             <div className={styles.ctaGroup}>
               <button
                 className={`${styles.cartBtn} ${addedToCart ? styles.cartAdded : ''}`}
                 onClick={currentAvailableStock === 0 ? () => setStockModalOpen(true) : handleAddToCart}
+                disabled={currentAvailableStock === 0 && !setStockModalOpen}
               >
                 {currentAvailableStock === 0 ? (
                   <span><FiBell /> Stoka Gelince Bildir</span>
