@@ -102,6 +102,92 @@ export default function ProductsSection({ onSelectProductForVariants }) {
 
   const allCategories = flattenCategories(categories);
 
+  // Akıllı Kategori Eşleştirme ve Tespit Yardımcısı
+  const resolveProductCategory = (p, catList) => {
+    if (!p) return null;
+    const all = Array.isArray(catList) && catList.length > 0 ? catList : allCategories;
+
+    const pName = (p.name || p.Name || '').toLowerCase();
+    const pCatName = (p.categoryName || p.CategoryName || (typeof p.category === 'string' ? p.category : p.category?.name) || '').toLowerCase().trim();
+    const targetCatId = p.categoryId || p.CategoryId || p.category?.id || p.Category?.Id;
+
+    // 1. Ürün adı veya kategori adı içerisindeki anahtar kelimelere göre öncelikli eşleşme
+    const keywords = [
+      { key: 'buhurdanl', match: 'buhurdanlık' },
+      { key: 'tütsü', match: 'tütsü' },
+      { key: 'tutsu', match: 'tütsü' },
+      { key: 'yüzük', match: 'yüzük' },
+      { key: 'yuzuk', match: 'yüzük' },
+      { key: 'kolye', match: 'kolye' },
+      { key: 'bileklik', match: 'bileklik' },
+      { key: 'esans', match: 'esans' },
+      { key: 'tesbih', match: 'tesbih' },
+      { key: 'tespih', match: 'tesbih' },
+      { key: 'doğal taş', match: 'doğal taş' },
+      { key: 'dogal tas', match: 'doğal taş' },
+      { key: 'parfüm', match: 'parfüm' },
+      { key: 'parfum', match: 'parfüm' }
+    ];
+
+    let foundByKeyword = null;
+    for (const item of keywords) {
+      if (pName.includes(item.key) || pCatName.includes(item.key)) {
+        foundByKeyword = all.find(c => {
+          const cLower = (c.name || c.label || '').toLowerCase();
+          return cLower.includes(item.match);
+        });
+        if (foundByKeyword) break;
+      }
+    }
+
+    if (foundByKeyword) {
+      return {
+        id: foundByKeyword.id,
+        name: foundByKeyword.name || foundByKeyword.label,
+        slug: foundByKeyword.slug || foundByKeyword.name,
+        catObj: foundByKeyword
+      };
+    }
+
+    // 2. ID üzerinden eşleşme
+    if (targetCatId) {
+      const matchedCat = all.find(c => String(c.id) === String(targetCatId) || String(c.databaseId) === String(targetCatId));
+      if (matchedCat) {
+        return {
+          id: matchedCat.id,
+          name: matchedCat.name || matchedCat.label,
+          slug: matchedCat.slug || matchedCat.name,
+          catObj: matchedCat
+        };
+      }
+    }
+
+    // 3. Kategori Adı / Slug üzerinden eşleşme
+    if (pCatName) {
+      const matchedCat = all.find(c => 
+        (c.name || '').toLowerCase() === pCatName || 
+        (c.label || '').toLowerCase() === pCatName || 
+        (c.slug || '').toLowerCase() === pCatName
+      );
+      if (matchedCat) {
+        return {
+          id: matchedCat.id,
+          name: matchedCat.name || matchedCat.label,
+          slug: matchedCat.slug || matchedCat.name,
+          catObj: matchedCat
+        };
+      }
+      return {
+        id: targetCatId || pCatName,
+        name: p.categoryName || p.CategoryName || (typeof p.category === 'string' ? p.category : p.category?.name),
+        slug: pCatName,
+        catObj: null
+      };
+    }
+
+    return null;
+  };
+
   // Ana ve Alt Kategori Hesaplama
   const mainCategories = allCategories.filter(c => !c.parentCategoryId && !c.parentId);
   const displayMainCategories = mainCategories.length > 0 ? mainCategories : allCategories;
@@ -158,11 +244,6 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     try {
       const data = await categoryApi.getAdminCategories();
       setCategories(data || []);
-      if (data?.length > 0 && !categoryId) {
-        const firstId = data[0].id;
-        setSelectedMainCatId(firstId);
-        setCategoryId(firstId);
-      }
     } catch (err) {
       console.error(err);
     }
@@ -280,19 +361,33 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setOldPrice(p.oldPrice ?? p.OldPrice ?? '');
     setStockQuantity(getSafeStockQuantity(p));
 
-    const targetCatId = p.categoryId || p.CategoryId || '';
-    setCategoryId(targetCatId);
+    const resolved = resolveProductCategory(p, allCategories);
+    if (resolved?.catObj) {
+      const parentIdOfCat = resolved.catObj.parentCategoryId || resolved.catObj.parentId;
+      if (parentIdOfCat) {
+        setSelectedMainCatId(String(parentIdOfCat));
+        setSelectedSubCatId(String(resolved.catObj.id));
+        setCategoryId(String(resolved.catObj.id));
+      } else {
+        setSelectedMainCatId(String(resolved.catObj.id));
+        setSelectedSubCatId('');
+        setCategoryId(String(resolved.catObj.id));
+      }
+    } else {
+      const targetCatId = p.categoryId || p.CategoryId || '';
+      setCategoryId(targetCatId);
 
-    const allCats = flattenCategories(categories);
-    const matchedCat = allCats.find(c => String(c.id) === String(targetCatId));
-    const parentIdOfCat = matchedCat?.parentCategoryId || matchedCat?.parentId;
+      const allCats = flattenCategories(categories);
+      const matchedCat = allCats.find(c => String(c.id) === String(targetCatId) || String(c.databaseId) === String(targetCatId));
+      const parentIdOfCat = matchedCat?.parentCategoryId || matchedCat?.parentId;
 
-    if (parentIdOfCat) {
-      setSelectedMainCatId(String(parentIdOfCat));
-      setSelectedSubCatId(String(targetCatId));
-    } else if (targetCatId) {
-      setSelectedMainCatId(String(targetCatId));
-      setSelectedSubCatId('');
+      if (parentIdOfCat) {
+        setSelectedMainCatId(String(parentIdOfCat));
+        setSelectedSubCatId(String(targetCatId));
+      } else if (targetCatId) {
+        setSelectedMainCatId(String(targetCatId));
+        setSelectedSubCatId('');
+      }
     }
 
     let initialUrls = [];
@@ -725,10 +820,10 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                               </span>
                             )}
                             {(() => {
-                              const catObj = categories.find(c => String(c.id) === String(p.categoryId) || String(c.databaseId) === String(p.categoryId));
-                              const catDisplayName = catObj?.name || p.categoryName || p.category?.name || '';
-                              const catSlugOrId = catObj?.slug || catObj?.name || p.categoryId;
-                              if (!catDisplayName) return null;
+                              const resolved = resolveProductCategory(p, allCategories);
+                              if (!resolved || !resolved.name) return null;
+                              const catDisplayName = resolved.name.replace(' [GİZLİ]', '');
+                              const catSlugOrId = resolved.slug || resolved.id || resolved.name;
                               return (
                                 <div style={{ marginTop: 3 }}>
                                   <a
@@ -753,7 +848,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(201, 162, 39, 0.2)'}
                                     onMouseLeave={e => e.currentTarget.style.background = 'rgba(201, 162, 39, 0.1)'}
                                   >
-                                    📁 {catDisplayName.replace(' [GİZLİ]', '')}
+                                    📁 {catDisplayName}
                                   </a>
                                 </div>
                               );

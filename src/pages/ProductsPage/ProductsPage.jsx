@@ -217,13 +217,20 @@ export default function ProductsPage () {
     const pCatId = String(product.categoryId || '').toLowerCase().trim()
     const pSubCatId = String(product.subcategoryId || '').toLowerCase().trim()
 
+    const pName = (product.name || '').toLowerCase();
+    const matchesKeyword = Array.from(validKeys).some(key => {
+      const cleanKey = key.replace(/lar$|ler$/i, '');
+      return cleanKey.length >= 4 && pName.includes(cleanKey);
+    });
+
     return (
       (Boolean(pCatId) && validKeys.has(pCatId)) ||
       (Boolean(pSubCatId) && validKeys.has(pSubCatId)) ||
       (Boolean(pCatName) && validKeys.has(pCatName.toLowerCase())) ||
       (Boolean(pSubCatName) && validKeys.has(pSubCatName.toLowerCase())) ||
       (Boolean(pCatName) && validKeys.has(toSlug(pCatName))) ||
-      (Boolean(pSubCatName) && validKeys.has(toSlug(pSubCatName)))
+      (Boolean(pSubCatName) && validKeys.has(toSlug(pSubCatName))) ||
+      matchesKeyword
     )
   }
 
