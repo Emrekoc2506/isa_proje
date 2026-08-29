@@ -6,6 +6,7 @@ import {
   FiDollarSign, FiCheck
 } from 'react-icons/fi';
 import * as couponApi from '../../../services/couponApi';
+import { formatTurkishDate } from '../../../utils/dateUtils';
 import { useTheme } from '../../../context/ThemeContext';
 import styles from '../AdminPage.module.css';
 
@@ -261,7 +262,7 @@ export default function CouponsSection() {
                 <td style={{ padding: '12px 16px', color: isLight ? '#0c1929' : '#fff', fontWeight: 700 }}>{c.code}</td>
                 <td style={{ padding: '12px 16px', color: isLight ? '#334155' : 'var(--text-secondary)' }}>{getDiscountTypeLabel(c)}</td>
                 <td style={{ padding: '12px 16px', color: isLight ? '#0284c7' : 'var(--gold-light)', fontWeight: 700 }}>{getDiscountValueDisplay(c)}</td>
-                <td style={{ padding: '12px 16px', color: isLight ? '#475569' : 'var(--text-secondary)' }}>{c.expiryDate ? new Date(c.expiryDate).toLocaleDateString('tr-TR') : 'Sınırsız'}</td>
+                <td style={{ padding: '12px 16px', color: isLight ? '#475569' : 'var(--text-secondary)' }}>{c.expiryDate ? formatTurkishDate(c.expiryDate) : 'Sınırsız'}</td>
                 <td style={{ padding: '12px 16px', color: isLight ? '#475569' : 'var(--text-secondary)' }}>{c.maxUses || 'Sınırsız'}</td>
                 <td style={{ padding: '12px 16px' }}>
                   <button 

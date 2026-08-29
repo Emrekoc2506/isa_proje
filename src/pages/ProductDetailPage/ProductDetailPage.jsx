@@ -23,6 +23,7 @@ import RecentlyViewed from '../../components/RecentlyViewed/RecentlyViewed';
 import StockNotifyModal from '../../components/StockNotifyModal/StockNotifyModal';
 import { addRecentlyViewed, removeRecentlyViewed } from '../../utils/recentlyViewed';
 import { getSafeStockQuantity } from '../../utils/stockUtils';
+import { formatTurkishDate } from '../../utils/dateUtils';
 
 /* ─── Yıldız Bileşeni ────────────────────────────────────── */
 function Stars({ rating, size = 14 }) {
@@ -1000,7 +1001,7 @@ export default function ProductDetailPage() {
                               <Stars rating={rv.rating} size={12} />
                             </div>
                             <span className={styles.rvDate}>
-                              {rv.createdAt ? new Date(rv.createdAt).toLocaleDateString('tr-TR') : ""}
+                              {formatTurkishDate(rv.createdAt)}
                             </span>
                           </div>
                           <p className={styles.rvText}>{rv.comment}</p>

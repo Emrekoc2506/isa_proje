@@ -15,6 +15,7 @@ import { useAuth } from '../../context/AuthContext'
 import * as orderApi from '../../services/orderApi'
 import * as bankTransferApi from '../../services/bankTransferApi'
 import * as authApi from '../../services/authApi'
+import { formatTurkishDateTime } from '../../utils/dateUtils'
 import logoImage from '../../assets/images/logo-2.png'
 import SEO from '../../components/SEO/SEO'
 
@@ -194,11 +195,7 @@ export default function PaymentResultPage () {
   const itemsList = order?.items || orderDetails?.items || []
   const itemsCount = itemsList.reduce((acc, it) => acc + (it.qty || it.quantity || 1), 0) || orderDetails?.itemsCount || 2
 
-  const formattedDate = new Date().toLocaleDateString('tr-TR', {
-    day: 'numeric',
-    month: 'Ağustos',
-    year: 'numeric'
-  }) + ' ' + new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+  const formattedDate = formatTurkishDateTime(order?.createdAt || orderDetails?.createdAt || new Date())
 
   const shippingAddr = order?.shippingAddress || orderDetails?.shippingAddress
   const fullAddressString = shippingAddr

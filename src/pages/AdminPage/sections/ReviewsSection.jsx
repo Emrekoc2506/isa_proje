@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FiCheck, FiX, FiTrash2, FiStar, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
 import * as reviewApi from '../../../services/reviewApi';
+import { formatTurkishDate } from '../../../utils/dateUtils';
 import styles from '../AdminPage.module.css';
 
 const STATUS_MAP = {
@@ -165,7 +166,7 @@ export default function ReviewsSection() {
                     </div>
                   </td>
                   <td style={{ color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>
-                    {r.createdAt ? new Date(r.createdAt).toLocaleDateString('tr-TR') : '—'}
+                    {formatTurkishDate(r.createdAt)}
                   </td>
                   <td>
                     <span style={{

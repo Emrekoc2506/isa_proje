@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { FiToggleLeft, FiToggleRight, FiMail, FiPhone, FiCalendar, FiMessageCircle, FiShield, FiUser, FiCheckCircle, FiUserX } from 'react-icons/fi';
 import * as customerApi from '../../../services/customerApi';
+import { formatTurkishDate } from '../../../utils/dateUtils';
 import { useAuth } from '../../../context/AuthContext';
 import styles from '../AdminPage.module.css';
 
@@ -115,7 +116,7 @@ export default function CustomersSection({ onMessageUser }) {
                   )}
                 </td>
                 <td style={{ padding: 8, color: 'var(--text-secondary)' }}><FiPhone style={{ display: 'inline', marginRight: 4, opacity: 0.7 }} /> {c.phoneNumber || 'Yok'}</td>
-                <td style={{ padding: 8, color: 'var(--text-secondary)' }}><FiCalendar style={{ display: 'inline', marginRight: 4, opacity: 0.7 }} /> {c.createdAt ? new Date(c.createdAt).toLocaleDateString('tr-TR') : 'Bilinmiyor'}</td>
+                <td style={{ padding: 8, color: 'var(--text-secondary)' }}><FiCalendar style={{ display: 'inline', marginRight: 4, opacity: 0.7 }} /> {c.createdAt ? formatTurkishDate(c.createdAt) : 'Bilinmiyor'}</td>
                 <td style={{ padding: 8 }}>
                   <button 
                     onClick={() => handleToggleStatus(c.id, c.isActive)}

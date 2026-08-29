@@ -266,13 +266,22 @@ function handleLogoutRedirect() {
   const hadToken = Boolean(safeGetItem("accessToken"));
   safeRemoveItem("accessToken");
 
-  const protectedRoutes = [
-    "/admin", "/panel", "/odeme", "/siparislerim", "/adreslerim", "/profil", "/hesabim"
-  ];
-
   if (hadToken && typeof window !== "undefined") {
     const currentPath = window.location.pathname.toLowerCase();
-    const isProtectedRoute = protectedRoutes.some(route => currentPath.startsWith(route));
+    
+    // Sipariş onay/sonuç sayfasındayken kullanıcıyı asla giriş sayfasına yönlendirme
+    if (currentPath.startsWith("/odeme/sonuc") || currentPath.startsWith("/odeme-sonuc")) {
+      return;
+    }
+
+    const protectedRoutes = [
+      "/admin", "/panel", "/siparislerim", "/adreslerim", "/profil", "/hesabim"
+    ];
+
+    const isProtectedRoute = 
+      protectedRoutes.some(route => currentPath.startsWith(route)) ||
+      (currentPath === "/odeme" || currentPath === "/odeme/");
+
     if (isProtectedRoute && currentPath !== "/giris" && currentPath !== "/uye-ol") {
       window.location.href = "/giris";
     }

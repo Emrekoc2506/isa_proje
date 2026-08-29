@@ -22,6 +22,7 @@ import {
 } from "react-icons/fi";
 import logoImage from "../../assets/images/logo-2.png";
 import { getMyOrders } from "../../services/orderApi";
+import { formatTurkishDate } from "../../utils/dateUtils";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
 import { useNotifications } from "../../context/NotificationContext";
@@ -135,9 +136,7 @@ export default function DashboardPage({ activeTab = "overview" }) {
         const mapped = ordersData.map((o) => ({
           id: o.id,
           orderNumber: o.orderNumber || o.id.substring(0, 8).toUpperCase(),
-          date: o.createdAt
-            ? new Date(o.createdAt).toLocaleDateString("tr-TR")
-            : new Date().toLocaleDateString("tr-TR"),
+          date: formatTurkishDate(o.createdAt || new Date()),
           total: (o.totalAmount || o.grandTotal || 0) + " ₺",
           status: o.statusText || "Sipariş Verildi",
           statusCode: String(o.status || "placed").toLowerCase(),

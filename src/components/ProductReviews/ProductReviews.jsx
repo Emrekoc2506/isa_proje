@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { FiStar, FiCheckCircle, FiEdit3, FiThumbsUp, FiMessageSquare } from "react-icons/fi";
 import { getReviewsByProduct, addReview } from "../../services/reviewApi";
+import { formatTurkishDate } from "../../utils/dateUtils";
 import { useAuth } from "../../context/AuthContext";
 import styles from "./ProductReviews.module.css";
 
@@ -236,7 +237,7 @@ export default function ProductReviews({ productId }) {
                   </div>
                 </div>
                 <span className={styles.date}>
-                  {new Date(rev.createdAt).toLocaleDateString("tr-TR")}
+                  {formatTurkishDate(rev.createdAt)}
                 </span>
               </div>
 

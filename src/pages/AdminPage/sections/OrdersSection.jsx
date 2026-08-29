@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FiEye, FiX, FiCheck, FiXCircle, FiFileText, FiDownload, FiLoader, FiFilter } from 'react-icons/fi';
 import * as orderApi from '../../../services/orderApi';
 import * as bankTransferApi from '../../../services/bankTransferApi';
+import { formatTurkishDate } from '../../../utils/dateUtils';
 import styles from '../AdminPage.module.css';
 import { useTheme } from '../../../context/ThemeContext';
 
@@ -191,7 +192,7 @@ export default function OrdersSection() {
                   <tr key={o.id} style={{ borderBottom: isLight ? '1px solid var(--border-gold)' : '1px solid rgba(255,255,255,0.05)' }}>
                     <td style={{ padding: 8, color: 'var(--gold-light)', fontWeight: 600 }}>#{o.orderNumber || (o.id ? o.id.substring(0,8).toUpperCase() : '')}</td>
                     <td style={{ padding: 8, color: 'var(--text-primary)' }}>{o.customerName || o.customerEmail || 'Müşteri'}</td>
-                    <td style={{ padding: 8, color: 'var(--text-secondary)', fontSize: 12 }}>{new Date(o.createdAt).toLocaleDateString('tr-TR')}</td>
+                    <td style={{ padding: 8, color: 'var(--text-secondary)', fontSize: 12 }}>{formatTurkishDate(o.createdAt)}</td>
                     <td style={{ padding: 8, color: 'var(--gold-light)', fontWeight: 600 }}>{o.totalAmount || o.grandTotal} ₺</td>
                     <td style={{ padding: 8 }}>{getPaymentMethodBadge(o.paymentMethod)}</td>
                     <td style={{ padding: 8 }}>{getPaymentStatusBadge(o.paymentStatus)}</td>
@@ -269,7 +270,7 @@ export default function OrdersSection() {
                     Gönderen: <strong style={{ color: 'var(--text-primary)' }}>{selectedOrder.bankTransferReceipt?.senderName || selectedOrder.senderName || selectedOrder.customerName || 'Belirtilmedi'}</strong>
                   </p>
                   <p style={{ margin: '0 0 8px 0', fontSize: 12, color: 'var(--text-secondary)' }}>
-                    Havale Tarihi: <strong style={{ color: 'var(--text-primary)' }}>{selectedOrder.bankTransferReceipt?.transferDate || selectedOrder.transferDate || new Date(selectedOrder.createdAt).toLocaleDateString('tr-TR')}</strong>
+                    Havale Tarihi: <strong style={{ color: 'var(--text-primary)' }}>{selectedOrder.bankTransferReceipt?.transferDate || selectedOrder.transferDate ? formatTurkishDate(selectedOrder.bankTransferReceipt?.transferDate || selectedOrder.transferDate) : formatTurkishDate(selectedOrder.createdAt)}</strong>
                   </p>
 
                   {selectedOrder.receiptUrl || selectedOrder.bankTransferReceipt?.fileUrl ? (
