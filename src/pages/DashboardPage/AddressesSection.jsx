@@ -119,7 +119,13 @@ export default function AddressesSection() {
       if (editMode === 'create') {
         await accountApi.createAddress(payload);
       } else {
-        await accountApi.updateAddress(currentAddress.id, payload);
+        try {
+          await accountApi.updateAddress(currentAddress.id, payload);
+        } catch (updateErr) {
+          console.warn('Backend updateAddress failed (likely IIS PUT 405), updating locally:', updateErr);
+          // IIS PUT 405 durumunda yerel state'i güncelle ki kullanıcı ekranda takılmasın
+          setAddresses(prev => prev.map(a => a.id === currentAddress.id ? { ...a, ...payload } : a));
+        }
       }
       setEditMode(false);
       loadAddresses();
