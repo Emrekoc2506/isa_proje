@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   FiTrash2, FiEdit3, FiPlus, FiLock, FiUnlock,
-  FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText, FiX, FiSearch, FiTruck, FiLink
+  FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText, FiX, FiSearch, FiTruck, FiLink, FiEyeOff, FiEye
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as productApi from '../../../services/productApi';
