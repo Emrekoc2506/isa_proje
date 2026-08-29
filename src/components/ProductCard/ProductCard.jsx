@@ -7,7 +7,7 @@ import { FaHeart } from 'react-icons/fa'; // Filled heart
 import { cardHover } from '../../animations/variants';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
-import { getSafeStockQuantity } from '../../utils/stockUtils';
+import { isOutOfStock as getIsOutOfStock } from '../../utils/stockUtils';
 
 export default function ProductCard({ product }) {
   const { name, price, oldPrice, discount, unit, image, href, isNew, isSale, id, isFreeShipping, isFreeCargo } = product;
@@ -22,26 +22,11 @@ export default function ProductCard({ product }) {
   const detailSlugOrId = product.slug || id || name;
   const isFavorite = isInWishlist(productId);
   const detailHref = `/urun/${detailSlugOrId}`;
-
-  const hasStockField =
-    product.hasExplicitStock === true ||
-    product.availableStock !== undefined ||
-    product.AvailableStock !== undefined ||
-    product.stockQuantity !== undefined ||
-    product.StockQuantity !== undefined ||
-    product.stock !== undefined ||
-    product.Stock !== undefined ||
-    (Array.isArray(product.variants) && product.variants.length > 0);
-
-  const availableStock = hasStockField ? getSafeStockQuantity(product) : null;
-
-  const isOutOfStock =
-    product.isOutOfStock === true ||
-    (hasStockField && availableStock === 0);
+  const outOfStock = getIsOutOfStock(product);
 
   const handleAdd = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
-    if (isOutOfStock) {
+    if (outOfStock) {
       setStockOut(true);
       setTimeout(() => setStockOut(false), 2500);
       return;
@@ -69,7 +54,7 @@ export default function ProductCard({ product }) {
     >
       {/* ── Badges ─────────────────────────────────────────── */}
       <div className={styles.badges}>
-        {isOutOfStock ? (
+        {outOfStock ? (
           <span className={styles.badge} style={{ background: '#e05594', color: '#ffffff', fontWeight: 700 }}>Tükendi</span>
         ) : (
           <>
@@ -130,7 +115,7 @@ export default function ProductCard({ product }) {
               >
                 ⚠️ Stok Tükendi!
               </motion.span>
-            ) : isOutOfStock ? (
+            ) : outOfStock ? (
               <span className={styles.addBtnInner}>Tükendi</span>
             ) : added ? (
               <motion.span
@@ -152,7 +137,7 @@ export default function ProductCard({ product }) {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
               >
-                <FiShoppingCart /> Sepete Ekle
+                <><FiShoppingCart /> Sepete Ekle</>
               </motion.span>
             )}
           </AnimatePresence>
