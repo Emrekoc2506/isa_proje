@@ -109,7 +109,13 @@ export default function ProductDetailPage() {
   /* ─── Benzer Ürünler (Random) ───────────────────────── */
   const relatedProducts = useMemo(() => {
     if (!products.length || !productDetail) return [];
-    const others = products.filter(p => String(p.id) !== String(productDetail.id) && p.isActive !== false);
+    const others = products.filter(p => 
+      String(p.id) !== String(productDetail.id) && 
+      p.isActive !== false &&
+      !p.isSecret &&
+      !p.IsSecret &&
+      !p.name?.endsWith(' [GİZLİ]')
+    );
     const shuffled = [...others].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 8);
   }, [products, productDetail]);

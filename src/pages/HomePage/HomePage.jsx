@@ -47,13 +47,13 @@ export default function HomePage() {
     ]).then(([newRes, saleRes, featRes]) => {
       if (!isMounted) return;
       if (newRes.status === 'fulfilled') {
-        setNewsProducts(normalizeProducts(newRes.value).filter(p => p.isActive !== false));
+        setNewsProducts(normalizeProducts(newRes.value).filter(p => p.isActive !== false && !p.isSecret && !p.IsSecret && !p.name?.endsWith(' [GİZLİ]')));
       }
       if (saleRes.status === 'fulfilled') {
-        setSaleProducts(normalizeProducts(saleRes.value).filter(p => p.isActive !== false));
+        setSaleProducts(normalizeProducts(saleRes.value).filter(p => p.isActive !== false && !p.isSecret && !p.IsSecret && !p.name?.endsWith(' [GİZLİ]')));
       }
       if (featRes.status === 'fulfilled') {
-        setFeaturedProducts(normalizeProducts(featRes.value).filter(p => p.isActive !== false));
+        setFeaturedProducts(normalizeProducts(featRes.value).filter(p => p.isActive !== false && !p.isSecret && !p.IsSecret && !p.name?.endsWith(' [GİZLİ]')));
       }
     }).catch(err => console.error("Home vitrin yükleme hatası:", err));
 

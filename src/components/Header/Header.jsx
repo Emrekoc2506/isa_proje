@@ -59,6 +59,10 @@ export default function Header() {
     searchQuery.trim().length >= 2
       ? allProducts
           .filter((p) =>
+            p.isActive !== false &&
+            !p.isSecret &&
+            !p.IsSecret &&
+            !p.name?.endsWith(' [GİZLİ]') &&
             p.name?.toLowerCase().includes(searchQuery.toLowerCase().trim()),
           )
           .slice(0, 5)

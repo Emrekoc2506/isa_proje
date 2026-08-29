@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   FiTrash2, FiEdit3, FiPlus, FiLock, FiUnlock,
-  FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText, FiX, FiSearch, FiTruck
+  FiTag, FiDollarSign, FiImage, FiSliders, FiChevronLeft, FiChevronRight, FiCheck, FiUploadCloud, FiBox, FiFileText, FiX, FiSearch, FiTruck, FiLink
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as productApi from '../../../services/productApi';
@@ -42,6 +42,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [totalPages, setTotalPages] = useState(1);
   const [deletingId, setDeletingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [copiedProductId, setCopiedProductId] = useState(null);
 
   // Edit / Create Modal States
   const [showModal, setShowModal] = useState(false);
@@ -60,6 +61,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
   const [isNew, setIsNew] = useState(false);
   const [isSale, setIsSale] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
+  const [isSecret, setIsSecret] = useState(false);
   const [shortDescription, setShortDescription] = useState('');
   const [description, setDescription] = useState('');
   const [unit, setUnit] = useState('adet');
@@ -198,6 +200,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setSeoKeywords('');
     setIsFreeShipping(false);
     setShippingFee('');
+    setIsSecret(false);
     setIsActive(true);
     setModalStep(1);
     setFieldErrors({});
@@ -205,9 +208,23 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setShowModal(true);
   };
 
+  const handleCopyProductLink = (p) => {
+    const slugOrId = p.slug || p.id;
+    const cleanSlug = String(slugOrId).replace(' [GİZLİ]', '').trim();
+    const link = `${window.location.origin}/urun/${encodeURIComponent(cleanSlug)}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(link);
+    }
+    setCopiedProductId(p.id);
+    setTimeout(() => setCopiedProductId(null), 2500);
+  };
+
   const populateFormFromProduct = (p) => {
     if (!p) return;
-    setName(p.name || p.Name || '');
+    const isSec = p.name?.endsWith(' [GİZLİ]') || Boolean(p.isSecret ?? p.IsSecret);
+    setIsSecret(isSec);
+    const rawName = p.name || p.Name || '';
+    setName(rawName.replace(' [GİZLİ]', '').trim());
     setPrice(p.price ?? p.Price ?? '');
     setOldPrice(p.oldPrice ?? p.OldPrice ?? '');
     setStockQuantity(getSafeStockQuantity(p));
@@ -414,8 +431,17 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     if (submitting) return;
 
     const cleanName = name.trim();
+    let finalName = cleanName;
+    if (isSecret) {
+      if (!finalName.endsWith(' [GİZLİ]')) {
+        finalName = `${finalName} [GİZLİ]`;
+      }
+    } else {
+      finalName = finalName.replace(' [GİZLİ]', '').trim();
+    }
+
     const payload = {
-      name: cleanName,
+      name: finalName,
       price: parseFloat(price) || 0,
       oldPrice: oldPrice ? parseFloat(oldPrice) : null,
       stockQuantity: stockQuantity ? parseInt(stockQuantity, 10) : 0,
@@ -425,6 +451,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       isNew,
       isSale,
       isFeatured,
+      isSecret: Boolean(isSecret),
       shortDescription: shortDescription.trim(),
       description: description.trim(),
       unit: unit || 'adet',
@@ -627,8 +654,25 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                               onMouseEnter={e => e.currentTarget.style.color = 'var(--gold-light, #c9a227)'}
                               onMouseLeave={e => e.currentTarget.style.color = isLight ? '#111827' : '#ffffff'}
                             >
-                              {p.name}
+                              {p.name?.replace(' [GİZLİ]', '')}
                             </a>
+                            {(p.name?.endsWith(' [GİZLİ]') || p.isSecret || p.IsSecret) && (
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 3,
+                                marginLeft: 6,
+                                fontSize: 9,
+                                fontWeight: 700,
+                                background: 'rgba(224, 85, 148, 0.15)',
+                                color: '#e05594',
+                                border: '1px solid rgba(224, 85, 148, 0.3)',
+                                padding: '1px 5px',
+                                borderRadius: 4
+                              }}>
+                                🔒 GİZLİ
+                              </span>
+                            )}
                             {(() => {
                               const catObj = categories.find(c => String(c.id) === String(p.categoryId) || String(c.databaseId) === String(p.categoryId));
                               const catDisplayName = catObj?.name || p.categoryName || p.category?.name || '';
@@ -672,6 +716,27 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                           <td style={{ padding: 8, color: stockVal <= 3 ? '#e05594' : '#2ecc71' }}>{stockVal} Adet</td>
                       <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyProductLink(p)}
+                          className={styles.seeAllBtn}
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: 11,
+                            color: '#38bdf8',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4
+                          }}
+                          title="Özel ürün linkini kopyala (Müşteriye gönderebilirsiniz)"
+                        >
+                          {copiedProductId === p.id ? (
+                            <><FiCheck size={11} style={{ color: '#2ecc71' }} /> <span style={{ color: '#2ecc71' }}>Kopyalandı</span></>
+                          ) : (
+                            <><FiLink size={11} /> Link</>
+                          )}
+                        </button>
+
                         <button 
                           onClick={() => handleToggleProductStatus(p)} 
                           disabled={statusUpdatingId === p.id}
@@ -692,7 +757,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                           <span>{p.isActive ? 'Açık' : 'Gizli'}</span>
                         </button>
 
-                        <button onClick={() => handleOpenEdit(p)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <button onClick={() => handleOpenEdit(p)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: '#f5d680', display: 'flex', alignItems: 'center', gap: 4 }}>
                           <FiEdit3 /> Düzenle
                         </button>
                         <button
@@ -1417,6 +1482,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                             { label: "Yeni Ürün", sub: "Ürüne 'YENİ' rozeti ekler", checked: isNew, set: setIsNew },
                             { label: "İndirimde", sub: "İndirim rozeti ve indirim notu gösterilir", checked: isSale, set: setIsSale },
                             { label: "Öne Çıkar", sub: "Ana sayfada vitrine yerleştirilir", checked: isFeatured, set: setIsFeatured },
+                            { label: "🔒 Gizli Ürün (Özel Link)", sub: "Sitede gizlenir, sadece linki olan müşteri görüp satın alabilir", checked: isSecret, set: setIsSecret },
                             { label: "Satışa Açık", sub: "Müşteriler bu ürünü sipariş edebilir", checked: isActive, set: setIsActive }
                           ].map((t, idx) => (
                             <div key={idx} style={{ 

@@ -78,17 +78,26 @@ export default function ProductsPage () {
     setTempSearchQuery(searchParam)
   }, [searchParam])
 
-  // Gizli Kategori Tespiti
+  // Gizli Kategori ve Gizli Ürün Tespiti
   const isCategorySecret = catId => {
-    const cat = categories.find(c => c.id === catId)
+    const cat = categories.find(c => String(c.id) === String(catId) || String(c.databaseId) === String(catId))
     return cat
-      ? cat.label?.endsWith(' [GİZLİ]') || cat.name?.endsWith(' [GİZLİ]')
+      ? cat.label?.endsWith(' [GİZLİ]') || cat.name?.endsWith(' [GİZLİ]') || Boolean(cat.isSecret || cat.IsSecret)
       : false
+  }
+
+  const isProductSecret = product => {
+    return Boolean(
+      product.isSecret ||
+      product.IsSecret ||
+      product.name?.endsWith(' [GİZLİ]') ||
+      isCategorySecret(product.categoryId)
+    )
   }
 
   // Sitede normal kullanıcılara gösterilecek halka açık kategoriler
   const publicCategories = categories.filter(
-    c => !c.label?.endsWith(' [GİZLİ]') && !c.name?.endsWith(' [GİZLİ]')
+    c => !c.label?.endsWith(' [GİZLİ]') && !c.name?.endsWith(' [GİZLİ]') && !c.isSecret && !c.IsSecret
   )
 
   // Fiyat ayrıştırma (Türkçe format, sayı, string uyumlu)
@@ -156,7 +165,7 @@ export default function ProductsPage () {
   // Kategori Eşleştirme (Slug, ID, DatabaseId, İsim ve Alt Kategorileri kapsar)
   const isProductInCategory = (product, targetCat, catList) => {
     if (!targetCat || targetCat === 'hepsi') {
-      return !isCategorySecret(product.categoryId)
+      return !isProductSecret(product)
     }
     const targetStr = String(targetCat).toLowerCase().trim()
     const targetSlug = toSlug(targetCat)
