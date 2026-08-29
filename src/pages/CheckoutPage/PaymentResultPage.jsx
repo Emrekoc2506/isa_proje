@@ -91,7 +91,7 @@ export default function PaymentResultPage () {
 
   // Fetch order info from API
   useEffect(() => {
-    if (!orderId) {
+    if (!orderId && !orderNumber) {
       setLoading(false)
       return
     }
@@ -99,21 +99,28 @@ export default function PaymentResultPage () {
     setLoading(true)
     const fetchOrder = async () => {
       try {
-        let data
-        if (isAuthenticated) {
+        let data = null
+        if (isAuthenticated && orderId) {
           data = await orderApi.getMyOrderById(orderId)
         } else if (orderNumber && emailParam) {
-          data = await orderApi.trackGuestOrder({ orderNumber, email: emailParam })
-        } else {
+          const cleanNum = String(orderNumber).replace(/^#/, '').trim()
+          try {
+            data = await orderApi.trackGuestOrder({ orderNumber: cleanNum, email: emailParam })
+          } catch {
+            if (orderId) {
+              try {
+                data = await orderApi.getMyOrderById(orderId)
+              } catch {}
+            }
+          }
+        } else if (orderId) {
           try {
             data = await orderApi.getMyOrderById(orderId)
-          } catch {
-            data = null
-          }
+          } catch {}
         }
         if (data) setOrder(data)
-      } catch (err) {
-        console.warn('Order fetch warning:', err)
+      } catch {
+        // Fallback to sessionStorage orderDetails gracefully
       } finally {
         setLoading(false)
       }

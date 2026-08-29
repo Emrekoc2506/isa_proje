@@ -1,5 +1,5 @@
 import styles from './CheckoutPage.module.css'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   FiCheck,
@@ -18,14 +18,21 @@ import * as couponApi from '../../services/couponApi'
 import * as orderApi from '../../services/orderApi'
 import * as checkoutApi from '../../services/checkoutApi'
 import * as bankTransferApi from '../../services/bankTransferApi'
+import { translateErrorMessage } from '../../api/apiError'
 import { PAYMENT_METHODS } from './paymentFlow'
 import logoImage from '../../assets/images/logo-2.png'
 import SEO from '../../components/SEO/SEO'
 
 export default function CheckoutPage () {
   const { isAuthenticated, user } = useAuth()
-  const { items: cartItems, clearCart } = useCart()
+  const { items: cartItems, clearCart, refreshCart } = useCart()
   const navigate = useNavigate()
+
+  // Submit guard ref to prevent double orders
+  const isSubmittingOrderRef = useRef(false)
+  // Request sequence and abort controller for preview requests
+  const previewReqSeqRef = useRef(0)
+  const previewAbortRef = useRef(null)
 
   // Stepper State: 1 = Adres, 2 = Kargo, 3 = Ödeme
   const [editingStep, setEditingStep] = useState(1)
@@ -93,6 +100,20 @@ export default function CheckoutPage () {
   const [previewData, setPreviewData] = useState(null)
   const [previewError, setPreviewError] = useState('')
 
+  // Stable cart signature for comparison
+  const cartSignature = useMemo(
+    () =>
+      cartItems
+        .map(
+          i =>
+            `${i.id || i.productId}:${i.qty || i.quantity || 1}:${
+              i.unitPrice || 0
+            }`
+        )
+        .join('|'),
+    [cartItems]
+  )
+
   // Load Bank Transfer info
   useEffect(() => {
     bankTransferApi.getBankTransferInfo()
@@ -130,9 +151,19 @@ export default function CheckoutPage () {
     }
   }, [isAuthenticated])
 
-  // Load preview data
+  // Load preview data (Race-safe, AbortController enabled, No keystroke spam)
   const loadPreview = useCallback(async () => {
     if (cartItems.length === 0) return
+
+    const seq = ++previewReqSeqRef.current
+
+    if (previewAbortRef.current) {
+      try {
+        previewAbortRef.current.abort()
+      } catch {}
+    }
+    const abortCtrl = new AbortController()
+    previewAbortRef.current = abortCtrl
 
     setPreviewLoading(true)
     setPreviewError('')
@@ -151,41 +182,59 @@ export default function CheckoutPage () {
           : billingAddressId || shippingAddressId
       }
     } else {
-      const cleanShippingPhone = guestShipping.phoneNumber
-        ? guestShipping.phoneNumber.replace(/\s+/g, '')
-        : ''
-      const cleanBillingPhone = guestBilling.phoneNumber
-        ? guestBilling.phoneNumber.replace(/\s+/g, '')
-        : ''
+      // Only include guest address if it is adequately populated to prevent backend 400 validation error storms
+      const s = guestShipping
+      const isAdequate = Boolean(
+        s.city?.trim() &&
+          s.district?.trim() &&
+          s.addressLine?.trim() &&
+          s.fullName?.trim()
+      )
 
-      const cleanGuestShipping = {
-        ...guestShipping,
-        neighborhood: guestShipping.neighborhood || 'Merkez',
-        phoneNumber: cleanShippingPhone
-      }
-      const cleanGuestBilling = {
-        ...guestBilling,
-        neighborhood: guestBilling.neighborhood || 'Merkez',
-        phoneNumber: cleanBillingPhone
-      }
+      if (isAdequate) {
+        const cleanShippingPhone = s.phoneNumber
+          ? s.phoneNumber.replace(/\s+/g, '')
+          : ''
+        const cleanBillingPhone = guestBilling.phoneNumber
+          ? guestBilling.phoneNumber.replace(/\s+/g, '')
+          : ''
 
-      payload.guestShippingAddress = cleanGuestShipping
-      payload.guestBillingAddress = sameAddress
-        ? cleanGuestShipping
-        : cleanGuestBilling
+        const cleanGuestShipping = {
+          ...s,
+          neighborhood: s.neighborhood || 'Merkez',
+          phoneNumber: cleanShippingPhone
+        }
+        const cleanGuestBilling = {
+          ...guestBilling,
+          neighborhood: guestBilling.neighborhood || 'Merkez',
+          phoneNumber: cleanBillingPhone
+        }
+
+        payload.guestShippingAddress = cleanGuestShipping
+        payload.guestBillingAddress = sameAddress
+          ? cleanGuestShipping
+          : cleanGuestBilling
+      }
     }
 
     try {
       const data = await checkoutApi.previewCheckout(payload)
-      setPreviewData(data)
+      if (seq === previewReqSeqRef.current) {
+        setPreviewData(data)
+      }
     } catch (err) {
-      setPreviewError(err.message || 'Ön izleme hesaplanamadı.')
+      if (seq === previewReqSeqRef.current) {
+        // Prevent infinite retry loop on 400 errors
+        setPreviewError(translateErrorMessage(err.message) || 'Ön izleme hesaplanamadı.')
+      }
     } finally {
-      setPreviewLoading(false)
+      if (seq === previewReqSeqRef.current) {
+        setPreviewLoading(false)
+      }
     }
   }, [
     isAuthenticated,
-    cartItems,
+    cartItems.length,
     shippingAddressId,
     billingAddressId,
     sameAddress,
@@ -196,9 +245,20 @@ export default function CheckoutPage () {
     paymentMethod
   ])
 
+  // Stable trigger for preview: fires only on cart, method, coupon, or address selection changes (NEVER per keystroke)
   useEffect(() => {
+    if (cartItems.length === 0) return
     loadPreview()
-  }, [loadPreview])
+  }, [
+    isAuthenticated,
+    cartSignature,
+    shippingAddressId,
+    billingAddressId,
+    sameAddress,
+    shippingMethodCode,
+    couponApplied,
+    paymentMethod
+  ])
 
   // Apply Coupon
   const handleApplyCoupon = async e => {
@@ -213,7 +273,7 @@ export default function CheckoutPage () {
       setCouponApplied(couponCode.trim())
       setCouponSuccess(`"${couponCode.trim()}" kuponu başarıyla uygulandı!`)
     } catch (err) {
-      setCouponError(err.message || 'Kupon geçersiz.')
+      setCouponError(translateErrorMessage(err.message) || 'Kupon geçersiz.')
     }
   }
 
@@ -261,16 +321,17 @@ export default function CheckoutPage () {
     setGuestBilling(prev => ({ ...prev, [field]: value }))
   }
 
-  // Submit Order and Proceed to Confirmation
+  // Submit Order and Proceed to Confirmation (Protected against double submit & 409 stock conflicts)
   const handleSubmitOrder = async () => {
     if (cartItems.length === 0) return
+
+    // Double submit guard
+    if (isSubmittingOrderRef.current || orderLoading) return
 
     if (!agreedToTerms) {
       alert('Lütfen Gizlilik ve Satış Sözleşmesini onaylayınız.')
       return
     }
-
-    setOrderLoading(true)
 
     const payload = {
       paymentMethod,
@@ -283,7 +344,6 @@ export default function CheckoutPage () {
       if (!shippingAddressId) {
         alert('Lütfen teslimat adresi seçin.')
         setEditingStep(1)
-        setOrderLoading(false)
         return
       }
       payload.shippingAddressId = shippingAddressId
@@ -302,7 +362,6 @@ export default function CheckoutPage () {
       ) {
         alert('Lütfen tüm adres ve iletişim alanlarını doldurun.')
         setEditingStep(1)
-        setOrderLoading(false)
         return
       }
 
@@ -310,7 +369,6 @@ export default function CheckoutPage () {
       if (!emailRegex.test(s.email)) {
         alert('Lütfen geçerli bir e-posta adresi girin.')
         setEditingStep(1)
-        setOrderLoading(false)
         return
       }
 
@@ -341,6 +399,9 @@ export default function CheckoutPage () {
       payload.customerPhone = cleanShippingPhone
     }
 
+    isSubmittingOrderRef.current = true
+    setOrderLoading(true)
+
     try {
       let orderRes
       if (isAuthenticated) {
@@ -349,8 +410,8 @@ export default function CheckoutPage () {
         orderRes = await orderApi.createGuestOrder(payload)
       }
 
-      const orderId = orderRes.id
-      const orderNumber = orderRes.orderNumber || ''
+      const orderId = orderRes?.id || orderRes?.orderId
+      const orderNumber = orderRes?.orderNumber || ''
       const customerEmail = guestShipping.email || user?.email || ''
 
       sessionStorage.setItem('pendingOrderId', orderId)
@@ -358,7 +419,7 @@ export default function CheckoutPage () {
         sessionStorage.setItem('pendingOrderNumber', orderNumber)
       }
 
-      // Save order context for result page
+      // Save authoritative order context for result page
       sessionStorage.setItem(
         'lastOrderDetails',
         JSON.stringify({
@@ -367,7 +428,7 @@ export default function CheckoutPage () {
           customerName: guestShipping.fullName || user?.fullName || 'Değerli Müşterimiz',
           customerEmail,
           customerPhone: guestShipping.phoneNumber || user?.phoneNumber || '',
-          shippingAddress: guestShipping,
+          shippingAddress: isAuthenticated ? (selectedAddr || addresses[0]) : guestShipping,
           totalAmount: previewData?.grandTotal || 0,
           itemsCount: cartItems.length,
           items: cartItems
@@ -381,15 +442,40 @@ export default function CheckoutPage () {
         )}&orderNumber=${encodeURIComponent(orderNumber)}&email=${encodeURIComponent(customerEmail)}`
       )
     } catch (err) {
-      let errorMessage =
-        err.message || 'Sipariş oluşturulurken bir hata oluştu.'
-      if (err.errors) {
-        errorMessage = Object.entries(err.errors)
-          .map(([key, value]) => `${key}: ${value.join(', ')}`)
-          .join(' | ')
+      // 409 & Insufficient Stock Handling
+      if (
+        err.status === 409 ||
+        err.code === 'insufficient_stock' ||
+        (err.message && (err.message.toLowerCase().includes('stock') || err.message.toLowerCase().includes('stok')))
+      ) {
+        let stockMsg = 'Sepetinizdeki ürünlerden birinin kullanılabilir stoğu değişti. Lütfen sepetinizi kontrol edin.'
+        if (err.errors && typeof err.errors === 'object') {
+          const details = Object.entries(err.errors)
+            .map(([k, v]) => (Array.isArray(v) ? v.join(', ') : String(v)))
+            .join(' ')
+          if (details) stockMsg += ` (${details})`
+        } else if (
+          err.message &&
+          !err.message.toLowerCase().includes('failed') &&
+          !err.message.toLowerCase().includes('409')
+        ) {
+          stockMsg = translateErrorMessage(err.message)
+        }
+        alert(stockMsg)
+        if (typeof refreshCart === 'function') {
+          refreshCart()
+        }
+      } else {
+        let errorMessage = translateErrorMessage(err.message || 'Sipariş oluşturulurken bir hata oluştu.')
+        if (err.errors && typeof err.errors === 'object') {
+          errorMessage = Object.entries(err.errors)
+            .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+            .join(' | ')
+        }
+        alert(errorMessage)
       }
-      alert(errorMessage)
     } finally {
+      isSubmittingOrderRef.current = false
       setOrderLoading(false)
     }
   }

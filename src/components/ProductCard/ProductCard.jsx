@@ -7,6 +7,7 @@ import { FaHeart } from 'react-icons/fa'; // Filled heart
 import { cardHover } from '../../animations/variants';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { getSafeStockQuantity } from '../../utils/stockUtils';
 
 export default function ProductCard({ product }) {
   const { name, price, oldPrice, discount, unit, image, href, isNew, isSale, id, isFreeShipping, isFreeCargo } = product;
@@ -22,9 +23,11 @@ export default function ProductCard({ product }) {
   const isFavorite = isInWishlist(productId);
   const detailHref = `/urun/${detailSlugOrId}`;
 
+  const availableStock = getSafeStockQuantity(product);
   const isOutOfStock =
     product.isOutOfStock === true ||
-    (product.hasExplicitStock === true && (product.stockQuantity === 0 || product.stock === 0));
+    (product.hasExplicitStock === true && availableStock === 0) ||
+    availableStock === 0;
 
   const handleAdd = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
