@@ -25,7 +25,7 @@ import {
   deleteAdminBanner
 } from '../services/bannerApi'
 import { parseBannerContent } from '../utils/bannerContent'
-import { getSafeStockQuantity } from '../utils/stockUtils'
+import { hasExplicitStock as hasExplicitStockValue } from '../utils/stockUtils'
 
 const ProductContext = createContext(null)
 
@@ -70,17 +70,9 @@ export function normalizeProducts (productsData) {
 
     const priceVal = p.price ?? p.Price ?? 0
     const oldPriceVal = p.oldPrice ?? p.OldPrice ?? null
-    const hasExplicitStock =
-      (p.availableStock !== undefined && p.availableStock !== null) ||
-      (p.AvailableStock !== undefined && p.AvailableStock !== null) ||
-      (p.stockQuantity !== undefined && p.stockQuantity !== null) ||
-      (p.StockQuantity !== undefined && p.StockQuantity !== null) ||
-      (p.stock !== undefined && p.stock !== null) ||
-      (p.Stock !== undefined && p.Stock !== null) ||
-      (Array.isArray(p.variants) && p.variants.length > 0)
-    const stockVal = hasExplicitStock ? getSafeStockQuantity(p) : null
+    const hasExplicitStock = hasExplicitStockValue(p)
 
-    return {
+    const normalizedProduct = {
       ...p,
       id: p.id || p.Id || p.databaseId,
       name: p.name || p.Name || '',
@@ -98,8 +90,6 @@ export function normalizeProducts (productsData) {
       rawPrice: priceVal,
       rawOldPrice: oldPriceVal,
       hasExplicitStock,
-      stockQuantity: stockVal,
-      stock: stockVal,
       image: mainImg,
       imageUrl: mainImg,
       imageUrls: imageUrlsArr,
@@ -116,6 +106,25 @@ export function normalizeProducts (productsData) {
       isFeatured: Boolean(p.isFeatured ?? p.IsFeatured),
       isActive: p.isActive ?? p.IsActive ?? true
     }
+
+    const hasStockQuantity = Object.prototype.hasOwnProperty.call(p, 'stockQuantity')
+      || Object.prototype.hasOwnProperty.call(p, 'StockQuantity');
+    const hasAvailableStock = Object.prototype.hasOwnProperty.call(p, 'availableStock')
+      || Object.prototype.hasOwnProperty.call(p, 'AvailableStock');
+
+    if (hasStockQuantity) {
+      normalizedProduct.stockQuantity = Object.prototype.hasOwnProperty.call(p, 'stockQuantity')
+        ? p.stockQuantity
+        : p.StockQuantity;
+    }
+
+    if (hasAvailableStock) {
+      normalizedProduct.availableStock = Object.prototype.hasOwnProperty.call(p, 'availableStock')
+        ? p.availableStock
+        : p.AvailableStock;
+    }
+
+    return normalizedProduct
   })
 }
 

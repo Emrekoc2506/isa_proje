@@ -6,9 +6,9 @@ import BlogSection from '../../components/BlogSection/BlogSection';
 import CategoryNav from '../../components/CategoryNav/CategoryNav';
 import SEO from '../../components/SEO/SEO';
 import { MdOutlineLocalShipping } from 'react-icons/md';
-import { getNewProducts, getSaleProducts, getFeaturedProducts } from '../../services/productApi';
 import { normalizeProducts } from '../../context/ProductContext';
 import { getBlogArticles } from '../../services/blogApi';
+import { getHomeBootstrap } from '../../services/homeApi';
 
 const orgSchema = {
   '@context': 'https://schema.org',
@@ -39,23 +39,15 @@ export default function HomePage() {
   useEffect(() => {
     let isMounted = true;
 
-    // Ana sayfa için sadece 8'er adet hafif ürün verisini paralel çek (1000 ürün indirilmez)
-    Promise.allSettled([
-      getNewProducts({ page: 1, pageSize: 8 }),
-      getSaleProducts({ page: 1, pageSize: 8 }),
-      getFeaturedProducts({ page: 1, pageSize: 8 })
-    ]).then(([newRes, saleRes, featRes]) => {
+    // Ana sayfa vitrinlerini tek bootstrap isteğiyle yükle.
+    getHomeBootstrap().then(response => {
       if (!isMounted) return;
-      if (newRes.status === 'fulfilled') {
-        setNewsProducts(normalizeProducts(newRes.value).filter(p => p.isActive !== false && !p.isSecret && !p.IsSecret && !p.name?.endsWith(' [GİZLİ]')));
-      }
-      if (saleRes.status === 'fulfilled') {
-        setSaleProducts(normalizeProducts(saleRes.value).filter(p => p.isActive !== false && !p.isSecret && !p.IsSecret && !p.name?.endsWith(' [GİZLİ]')));
-      }
-      if (featRes.status === 'fulfilled') {
-        setFeaturedProducts(normalizeProducts(featRes.value).filter(p => p.isActive !== false && !p.isSecret && !p.IsSecret && !p.name?.endsWith(' [GİZLİ]')));
-      }
-    }).catch(err => console.error("Home vitrin yükleme hatası:", err));
+      const visible = products => normalizeProducts(products || [])
+        .filter(p => p.isActive !== false && !p.isSecret && !p.IsSecret && !p.name?.endsWith(' [GİZLİ]'));
+      setNewsProducts(visible(response?.newProducts));
+      setSaleProducts(visible(response?.saleProducts));
+      setFeaturedProducts(visible(response?.featuredProducts));
+    }).catch(err => console.error('Home vitrin yükleme hatası:', err));
 
     // Blog içeriklerini defer ederek arka planda çek
     const timer = setTimeout(() => {
