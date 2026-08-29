@@ -28,7 +28,7 @@ export default function CheckoutPage () {
   const navigate = useNavigate()
 
   // Stepper State: 1 = Adres, 2 = Kargo, 3 = Ödeme
-  const [editingStep, setEditingStep] = useState(null)
+  const [editingStep, setEditingStep] = useState(1)
 
   // Loading states
   const [addresses, setAddresses] = useState([])
@@ -397,6 +397,11 @@ export default function CheckoutPage () {
   // Selected address summary for authenticated users
   const selectedAddr = addresses.find(a => a.id === shippingAddressId) || addresses[0]
 
+  // Has address completed check
+  const hasAddressCompleted = isAuthenticated
+    ? Boolean(selectedAddr)
+    : Boolean(guestShipping.addressLine && guestShipping.fullName && guestShipping.city && guestShipping.phoneNumber)
+
   // Active address summary text
   const currentAddressSummary = isAuthenticated
     ? (selectedAddr ? `${selectedAddr.fullName}, ${selectedAddr.neighborhood || ''} ${selectedAddr.addressLine}, ${selectedAddr.district}/${selectedAddr.city}` : 'Adres seçilmedi')
@@ -448,8 +453,8 @@ export default function CheckoutPage () {
           <div className={styles.stepCard}>
             <div className={styles.stepHeader}>
               <div className={styles.stepTitleGroup}>
-                <div className={editingStep === 1 ? styles.stepBadge : styles.stepBadgeCompleted}>
-                  {editingStep === 1 ? '1' : <FiCheck />}
+                <div className={editingStep === 1 ? styles.stepBadge : hasAddressCompleted ? styles.stepBadgeCompleted : styles.stepBadge}>
+                  {hasAddressCompleted && editingStep !== 1 ? <FiCheck /> : '1'}
                 </div>
                 <h3 className={styles.stepTitle}>Adres</h3>
               </div>
@@ -459,7 +464,7 @@ export default function CheckoutPage () {
                   onClick={() => setEditingStep(1)}
                   className={styles.editBtn}
                 >
-                  Düzenle
+                  {hasAddressCompleted ? 'Düzenle' : (isAuthenticated ? 'Adres Seç' : 'Adres Ekle')}
                 </button>
               )}
             </div>
