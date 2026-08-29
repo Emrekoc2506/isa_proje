@@ -1,4 +1,5 @@
 import { request } from "./apiClient";
+import { invalidOrderIdError, normalizeOrderId } from "../utils/orderId";
 
 /**
  * Banka Havalesi / EFT Bilgilerini Getirir
@@ -17,6 +18,11 @@ export function getBankTransferInfo() {
  * @param {string|null} [guestToken]
  */
 export function uploadBankTransferReceipt(orderId, payload, guestToken = null) {
+  const validOrderId = normalizeOrderId(orderId);
+  if (!validOrderId) {
+    return Promise.reject(invalidOrderIdError());
+  }
+
   let body;
   if (payload instanceof FormData) {
     body = payload;
@@ -42,7 +48,7 @@ export function uploadBankTransferReceipt(orderId, payload, guestToken = null) {
 
   const query = token ? `?token=${encodeURIComponent(token)}` : "";
 
-  return request(`/orders/${orderId}/bank-transfer/receipt${query}`, {
+  return request(`/orders/${encodeURIComponent(validOrderId)}/bank-transfer/receipt${query}`, {
     method: "POST",
     headers,
     body
@@ -54,7 +60,10 @@ export function uploadBankTransferReceipt(orderId, payload, guestToken = null) {
  * GET /api/orders/{id}/bank-transfer/receipt
  */
 export function getBankTransferReceipt(orderId) {
-  return request(`/orders/${orderId}/bank-transfer/receipt`);
+  const validOrderId = normalizeOrderId(orderId);
+  return validOrderId
+    ? request(`/orders/${encodeURIComponent(validOrderId)}/bank-transfer/receipt`)
+    : Promise.reject(invalidOrderIdError());
 }
 
 /**
@@ -62,8 +71,13 @@ export function getBankTransferReceipt(orderId) {
  * POST /api/admin/orders/{id}/bank-transfer/confirm
  */
 export function adminConfirmBankTransfer(orderId, payload = {}) {
+  const validOrderId = normalizeOrderId(orderId);
+  if (!validOrderId) {
+    return Promise.reject(invalidOrderIdError());
+  }
+
   const bodyData = payload && Object.keys(payload).length > 0 ? payload : { isConfirmed: true, note: "Onaylandı" };
-  return request(`/admin/orders/${orderId}/bank-transfer/confirm`, {
+  return request(`/admin/orders/${encodeURIComponent(validOrderId)}/bank-transfer/confirm`, {
     method: "POST",
     body: JSON.stringify(bodyData)
   });
@@ -76,7 +90,12 @@ export function adminConfirmBankTransfer(orderId, payload = {}) {
  * @param {string} reason 
  */
 export function adminRejectBankTransfer(orderId, reason = "") {
-  return request(`/admin/orders/${orderId}/bank-transfer/reject`, {
+  const validOrderId = normalizeOrderId(orderId);
+  if (!validOrderId) {
+    return Promise.reject(invalidOrderIdError());
+  }
+
+  return request(`/admin/orders/${encodeURIComponent(validOrderId)}/bank-transfer/reject`, {
     method: "POST",
     body: JSON.stringify({ reason })
   });
@@ -87,5 +106,8 @@ export function adminRejectBankTransfer(orderId, reason = "") {
  * GET /api/admin/orders/{id}/bank-transfer/receipt
  */
 export function getAdminBankTransferReceipt(orderId) {
-  return request(`/admin/orders/${orderId}/bank-transfer/receipt`);
+  const validOrderId = normalizeOrderId(orderId);
+  return validOrderId
+    ? request(`/admin/orders/${encodeURIComponent(validOrderId)}/bank-transfer/receipt`)
+    : Promise.reject(invalidOrderIdError());
 }
