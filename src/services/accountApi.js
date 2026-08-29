@@ -50,11 +50,26 @@ export function createAddress(payload) {
   });
 }
 
-export function updateAddress(id, payload) {
-  return request(`/account/addresses/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(payload)
-  });
+export async function updateAddress(id, payload) {
+  try {
+    return await request(`/account/addresses/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    // IIS WebDAV 405 durumunda POST alternatif rotalarını dene
+    try {
+      return await request(`/account/addresses/${id}`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+    } catch {
+      return await request(`/account/addresses/update/${id}`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+    }
+  }
 }
 
 export async function deleteAddress(id) {
@@ -62,21 +77,49 @@ export async function deleteAddress(id) {
     return await request(`/account/addresses/${id}`, { method: "DELETE" });
   } catch (e) {
     try {
-      return await request(`/account/addresses/${id}`, { method: "PUT" });
-    } catch (e2) {
       return await request(`/account/addresses/${id}/delete`, { method: "POST", body: JSON.stringify({ confirm: true }) });
+    } catch (e2) {
+      try {
+        return await request(`/account/addresses/delete/${id}`, { method: "POST" });
+      } catch (e3) {
+        return await request(`/account/addresses/${id}`, { method: "POST", body: JSON.stringify({ isDeleted: true }) });
+      }
     }
   }
 }
 
-export function setDefaultShipping(id) {
-  return request(`/account/addresses/${id}/default-shipping`, {
-    method: "PATCH"
-  });
+export async function setDefaultShipping(id) {
+  try {
+    return await request(`/account/addresses/${id}/default-shipping`, {
+      method: "PATCH"
+    });
+  } catch {
+    try {
+      return await request(`/account/addresses/${id}/default-shipping`, {
+        method: "POST"
+      });
+    } catch {
+      return await request(`/account/addresses/${id}/default-shipping`, {
+        method: "PUT"
+      });
+    }
+  }
 }
 
-export function setDefaultBilling(id) {
-  return request(`/account/addresses/${id}/default-billing`, {
-    method: "PATCH"
-  });
+export async function setDefaultBilling(id) {
+  try {
+    return await request(`/account/addresses/${id}/default-billing`, {
+      method: "PATCH"
+    });
+  } catch {
+    try {
+      return await request(`/account/addresses/${id}/default-billing`, {
+        method: "POST"
+      });
+    } catch {
+      return await request(`/account/addresses/${id}/default-billing`, {
+        method: "PUT"
+      });
+    }
+  }
 }
