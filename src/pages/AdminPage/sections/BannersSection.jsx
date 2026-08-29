@@ -403,7 +403,16 @@ export default function BannersSection() {
 
   // ── Submit ────────────────────────────────────────────────────────────────────
   const handleAdd = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+
+    // 1. Adımdaysak formu kaydetme, 2. adıma (Görsel yükleme) geçir
+    if (modalStep < STEPS.length) {
+      if (validateStep(modalStep)) {
+        setModalStep(s => s + 1);
+      }
+      return;
+    }
+
     if (uploadingVideo || uploadingImg) {
       alert('Lütfen dosya yüklemesinin tamamlanmasını bekleyin.');
       return;
@@ -850,7 +859,7 @@ export default function BannersSection() {
                     const done = modalStep > s.id;
                     const active = modalStep === s.id;
                     return (
-                      <div key={s.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3, cursor: done ? 'pointer' : 'default' }} onClick={() => done && setModalStep(s.id)}>
+                      <div key={s.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3, cursor: 'pointer' }} onClick={() => { if (s.id <= modalStep || validateStep(modalStep)) setModalStep(s.id); }}>
                         <div style={{ width: 36, height: 36, borderRadius: '50%', background: done ? 'linear-gradient(135deg,#0284c7,#7c3aed)' : active ? 'var(--bg-mid)' : 'var(--bg-dark)', border: active ? '2px solid var(--gold-light)' : done ? 'none' : '1px solid var(--border-gold)', color: done ? '#fff' : active ? 'var(--gold-light)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: active ? '0 0 12px rgba(201,162,39,0.3)' : 'none', transition: 'all 0.3s' }}>
                           {done ? <FiCheck size={16} /> : <Icon size={16} />}
                         </div>
