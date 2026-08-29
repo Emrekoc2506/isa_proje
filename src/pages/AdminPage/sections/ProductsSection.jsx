@@ -219,6 +219,57 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setTimeout(() => setCopiedProductId(null), 2500);
   };
 
+  const handleToggleProductSecret = async (p) => {
+    const isCurrentlySecret = p.name?.endsWith(' [GİZLİ]') || Boolean(p.isSecret ?? p.IsSecret);
+    const nextSecret = !isCurrentlySecret;
+
+    let nextName = p.name || '';
+    if (nextSecret) {
+      if (!nextName.endsWith(' [GİZLİ]')) {
+        nextName = `${nextName} [GİZLİ]`;
+      }
+    } else {
+      nextName = nextName.replace(' [GİZLİ]', '').trim();
+    }
+
+    try {
+      setStatusUpdatingId(p.id);
+      const payload = {
+        name: nextName,
+        price: p.price ?? 0,
+        oldPrice: p.oldPrice ?? null,
+        stockQuantity: getSafeStockQuantity(p),
+        categoryId: p.categoryId,
+        imageUrl: p.imageUrl || null,
+        imageUrls: p.imageUrls || (p.imageUrl ? [p.imageUrl] : []),
+        isNew: p.isNew ?? false,
+        isSale: p.isSale ?? false,
+        isFeatured: p.isFeatured ?? false,
+        isSecret: nextSecret,
+        shortDescription: p.shortDescription || p.name || '',
+        description: p.description || p.shortDescription || p.name || '',
+        unit: p.unit || 'adet',
+        weightGram: p.weightGram ?? p.weight ?? null,
+        dimensions: p.dimensions || null,
+        discount: p.discount || null,
+        slug: p.slug || null,
+        isFreeShipping: Boolean(p.isFreeShipping),
+        shippingFee: p.shippingFee ?? null,
+        seoTitle: p.seoTitle || null,
+        seoDescription: p.seoDescription || null,
+        seoKeywords: p.seoKeywords || null,
+        isActive: p.isActive ?? true
+      };
+      await productApi.updateAdminProduct(p.id, payload);
+      fetchProducts();
+      refreshProducts?.();
+    } catch (err) {
+      alert("Ürün gizlilik durumu güncellenemedi: " + err.message);
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
+
   const populateFormFromProduct = (p) => {
     if (!p) return;
     const isSec = p.name?.endsWith(' [GİZLİ]') || Boolean(p.isSecret ?? p.IsSecret);
@@ -751,10 +802,31 @@ export default function ProductsSection({ onSelectProductForVariants }) {
                             background: p.isActive ? 'rgba(46, 204, 113, 0.1)' : 'rgba(224, 85, 148, 0.1)',
                             opacity: statusUpdatingId === p.id ? 0.5 : 1
                           }}
-                          title={p.isActive ? "Sitede Görünür (Gizlemek için Tıkla)" : "Sitede Gizli (Göstermek için Tıkla)"}
+                          title={p.isActive ? "Satışa Açık (Pasife almak için tıkla)" : "Satışa Kapalı (Yayına almak için tıkla)"}
                         >
-                          {p.isActive ? <FiUnlock size={11} /> : <FiLock size={11} />}
-                          <span>{p.isActive ? 'Açık' : 'Gizli'}</span>
+                          {p.isActive ? <FiCheck size={11} /> : <FiEyeOff size={11} />}
+                          <span>{p.isActive ? 'Yayında' : 'Pasif'}</span>
+                        </button>
+
+                        <button 
+                          onClick={() => handleToggleProductSecret(p)} 
+                          disabled={statusUpdatingId === p.id}
+                          className={styles.seeAllBtn} 
+                          style={{ 
+                            padding: '4px 8px', 
+                            fontSize: 11, 
+                            color: (p.isSecret || p.IsSecret || p.name?.endsWith(' [GİZLİ]')) ? '#e05594' : '#c084fc', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 4,
+                            background: (p.isSecret || p.IsSecret || p.name?.endsWith(' [GİZLİ]')) ? 'rgba(224, 85, 148, 0.15)' : 'rgba(168, 85, 247, 0.1)',
+                            border: `1px solid ${(p.isSecret || p.IsSecret || p.name?.endsWith(' [GİZLİ]')) ? 'rgba(224, 85, 148, 0.35)' : 'rgba(168, 85, 247, 0.25)'}`,
+                            opacity: statusUpdatingId === p.id ? 0.5 : 1
+                          }}
+                          title={(p.isSecret || p.IsSecret || p.name?.endsWith(' [GİZLİ]')) ? "Gizli ürün (Sadece linkle açılır). Herkese açmak için tıkla" : "Herkese açık ürün. Gizliye (Sadece linkli) almak için tıkla"}
+                        >
+                          {(p.isSecret || p.IsSecret || p.name?.endsWith(' [GİZLİ]')) ? <FiLock size={11} /> : <FiUnlock size={11} />}
+                          <span>{(p.isSecret || p.IsSecret || p.name?.endsWith(' [GİZLİ]')) ? 'Gizli' : 'Görünür'}</span>
                         </button>
 
                         <button onClick={() => handleOpenEdit(p)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: '#f5d680', display: 'flex', alignItems: 'center', gap: 4 }}>

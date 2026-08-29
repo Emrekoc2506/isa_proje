@@ -394,6 +394,43 @@ export default function CategoriesSection() {
     }
   };
 
+  const handleToggleSecret = async (cat) => {
+    const catId = cat.databaseId ?? cat.id;
+    const isCurrentlySecret = cat.name?.endsWith(' [GİZLİ]') || Boolean(cat.isSecret ?? cat.IsSecret);
+    const nextSecret = !isCurrentlySecret;
+    
+    let nextName = cat.name || '';
+    if (nextSecret) {
+      if (!nextName.endsWith(' [GİZLİ]')) {
+        nextName = `${nextName} [GİZLİ]`;
+      }
+    } else {
+      nextName = nextName.replace(' [GİZLİ]', '').trim();
+    }
+
+    try {
+      setUpdatingId(catId);
+      const payload = {
+        name: nextName,
+        description: cat.description || cat.Description || null,
+        parentCategoryId: cat.parentCategoryId || cat.ParentCategoryId || null,
+        isSecret: nextSecret,
+        slug: cat.slug || cat.Slug || null,
+        seoTitle: cat.seoTitle || cat.SeoTitle || null,
+        seoDescription: cat.seoDescription || cat.SeoDescription || null,
+        seoKeywords: cat.seoKeywords || cat.SeoKeywords || null,
+        isActive: cat.isActive ?? true,
+        sortOrder: cat.sortOrder ?? 0
+      };
+      await categoryApi.updateAdminCategory(catId, payload);
+      fetchCategories();
+    } catch (err) {
+      alert("Gizlilik durumu değiştirilemedi: " + err.message);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newCatName.trim() || submitting) return;
@@ -620,6 +657,26 @@ export default function CategoriesSection() {
                 <><FiCheck size={10} /> Yayında</>
               ) : (
                 <><FiEyeOff size={10} /> Pasif</>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleToggleSecret(cat)}
+              disabled={updatingId === catId}
+              style={{
+                ...S.iconBtn(isCategorySecret ? '#e05594' : '#a855f7'),
+                background: isCategorySecret ? 'rgba(224, 85, 148, 0.15)' : 'rgba(168, 85, 247, 0.1)',
+                border: `1px solid ${isCategorySecret ? 'rgba(224, 85, 148, 0.35)' : 'rgba(168, 85, 247, 0.25)'}`,
+                color: isCategorySecret ? '#e05594' : '#c084fc',
+                opacity: updatingId === catId ? 0.4 : 1,
+              }}
+              title={isCategorySecret ? "Bu kategori gizli (Sadece linkle açılır). Herkese açmak için tıkla" : "Bu kategori herkese açık. Gizliye (Sadece linkli) almak için tıkla"}
+            >
+              {isCategorySecret ? (
+                <><FiLock size={10} /> Gizli</>
+              ) : (
+                <><FiUnlock size={10} /> Görünür</>
               )}
             </button>
 
