@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { useAuth } from './AuthContext'
 import * as cartApi from '../services/cartApi'
+import { translateErrorMessage, translateErrorCode } from '../api/apiError'
 
 const CartContext = createContext(null)
 
@@ -39,12 +40,29 @@ export function getCartErrorMessage (codeOrMessage) {
     typeof codeOrMessage === 'object' ? codeOrMessage?.code : codeOrMessage
   const status =
     typeof codeOrMessage === 'object' ? codeOrMessage?.status : null
+  const rawMsg =
+    typeof codeOrMessage === 'object' ? codeOrMessage?.message : typeof codeOrMessage === 'string' ? codeOrMessage : null
+
+  if (rawMsg) {
+    const translated = translateErrorMessage(rawMsg)
+    if (translated && translated !== rawMsg) {
+      return translated
+    }
+  }
+
+  if (code) {
+    const translatedCode = translateErrorCode(code)
+    if (translatedCode) {
+      return translatedCode
+    }
+  }
+
   if (status === 404) {
     return 'Bu ürün silinmiş veya artık satışta değil.'
   }
   if (status === 400) {
     return (
-      (typeof codeOrMessage === 'object' && codeOrMessage?.message) ||
+      (rawMsg && translateErrorMessage(rawMsg)) ||
       'Bu ürün sepete eklenemiyor (geçersiz veya tükenmiş ürün).'
     )
   }
@@ -54,6 +72,7 @@ export function getCartErrorMessage (codeOrMessage) {
     case 'product_variant_unavailable':
       return 'Seçtiğiniz ürün seçeneği artık satışta değil.'
     case 'insufficient_stock':
+    case 'insufficient_available_stock':
       return 'Bu ürün için yeterli stok bulunmuyor.'
     case 'quantity_limit_exceeded':
       return 'Bu ürün için izin verilen sipariş miktarı aşıldı.'
@@ -65,7 +84,7 @@ export function getCartErrorMessage (codeOrMessage) {
       return 'Sepete ulaşılamadı. Lütfen bağlantınızı kontrol edin.'
     default:
       return (
-        (typeof codeOrMessage === 'object' && codeOrMessage?.message) ||
+        (rawMsg && translateErrorMessage(rawMsg)) ||
         'Sepet işlemi tamamlanamadı.'
       )
   }

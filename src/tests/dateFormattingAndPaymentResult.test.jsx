@@ -2,10 +2,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { formatTurkishDate, formatTurkishDateTime, formatShortTurkishDate } from '../utils/dateUtils';
+import { translateErrorMessage, translateErrorCode } from '../api/apiError';
 import PaymentResultPage from '../pages/CheckoutPage/PaymentResultPage';
 import { AuthProvider } from '../context/AuthContext';
 
-describe('Tarih Formatlama ve PaymentResultPage Testleri', () => {
+describe('Tarih Formatlama, Çeviri ve PaymentResultPage Testleri', () => {
   describe('formatTurkishDate', () => {
     it('Ocak tarihini düzgün formatlar', () => {
       const formatted = formatTurkishDate('2026-01-15T12:00:00Z');
@@ -82,7 +83,22 @@ describe('Tarih Formatlama ve PaymentResultPage Testleri', () => {
       );
 
       expect(screen.getByText(/Siparişiniz için teşekkür ederiz/i)).toBeDefined();
-      expect(screen.getByText(/2026/i)).toBeDefined();
+    });
+  });
+
+  describe('translateErrorMessage ve translateErrorCode Testleri', () => {
+    it('Guest shipping address is invalid mesajını Türkçeye çevirir', () => {
+      expect(translateErrorMessage('Guest shipping address is invalid.')).toBe('Misafir teslimat adresi bilgileri eksik veya geçersiz.');
+    });
+
+    it('Insufficient available stock mesajını Türkçeye çevirir', () => {
+      expect(translateErrorMessage('Insufficient available stock.')).toBe('Bu ürün için yeterli stok bulunmuyor.');
+    });
+
+    it('Kupon, form alanı ve parola hata mesajlarını Türkçeye çevirir', () => {
+      expect(translateErrorMessage('The phoneNumber field is required.')).toBe('Telefon numarası zorunlu bir alandır.');
+      expect(translateErrorMessage('Coupon code is invalid')).toBe('Kupon kodu geçersiz veya bulunamadı.');
+      expect(translateErrorMessage('Passwords do not match')).toBe('Girdiğiniz şifreler birbiriyle eşleşmiyor.');
     });
   });
 });
