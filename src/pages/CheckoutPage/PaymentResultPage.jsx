@@ -16,6 +16,7 @@ import * as orderApi from '../../services/orderApi'
 import * as bankTransferApi from '../../services/bankTransferApi'
 import * as authApi from '../../services/authApi'
 import { formatTurkishDateTime } from '../../utils/dateUtils'
+import { translateErrorMessage } from '../../api/apiError'
 import logoImage from '../../assets/images/logo-2.png'
 import SEO from '../../components/SEO/SEO'
 
@@ -34,6 +35,10 @@ export default function PaymentResultPage () {
     '#5693'
   const emailParam =
     searchParams.get('email') ||
+    ''
+  const tokenParam =
+    searchParams.get('token') ||
+    searchParams.get('guestToken') ||
     ''
 
   const [loading, setLoading] = useState(true)
@@ -173,22 +178,49 @@ export default function PaymentResultPage () {
   // Handle Receipt File Upload
   const handleReceiptUpload = async (e) => {
     e.preventDefault()
+    if (uploadingReceipt) return
     if (!receiptFile) {
       setReceiptError('Lütfen bir dekont dosyası seçiniz.')
+      return
+    }
+
+    // Allowed file types: PDF, JPG, JPEG, PNG
+    const fileExt = receiptFile.name ? receiptFile.name.split('.').pop().toLowerCase() : ''
+    const allowedExts = ['pdf', 'jpg', 'jpeg', 'png']
+
+    if (!allowedExts.includes(fileExt)) {
+      setReceiptError('Yalnızca PDF, JPG veya PNG formatında dosya yükleyebilirsiniz.')
+      return
+    }
+
+    // 5 MB limit check
+    if (receiptFile.size > 5 * 1024 * 1024) {
+      setReceiptError('Dekont dosyası en fazla 5 MB büyüklüğünde olabilir.')
       return
     }
 
     setUploadingReceipt(true)
     setReceiptError('')
     try {
-      await bankTransferApi.uploadBankTransferReceipt(orderId, {
-        file: receiptFile,
-        senderName: orderDetails?.customerName || order?.customerName || '',
-        transferDate: new Date().toISOString().slice(0, 10)
-      })
+      const targetOrderId = orderId || order?.id || orderDetails?.orderId || orderDetails?.id
+      const guestToken = tokenParam || sessionStorage.getItem('guestOrderAccessToken') || orderDetails?.guestAccessToken || null
+
+      await bankTransferApi.uploadBankTransferReceipt(
+        targetOrderId,
+        {
+          file: receiptFile,
+          senderName: orderDetails?.customerName || order?.customerName || '',
+          transferDate: new Date().toISOString().slice(0, 10)
+        },
+        guestToken
+      )
       setReceiptSuccess(true)
     } catch (err) {
-      setReceiptError(err.message || 'Dekont yüklenemedi. WhatsApp hattımızdan iletebilirsiniz.')
+      if (err.status === 401 || err.code === 'unauthorized') {
+        setReceiptError('Bu sipariş için dekont yükleme bağlantısı artık geçerli değil veya yetkilendirilemedi. Dekontunuzu dilerseniz doğrudan WhatsApp üzerinden iletebilirsiniz.')
+      } else {
+        setReceiptError(translateErrorMessage(err.message) || 'Dekont yüklenemedi. WhatsApp hattımızdan iletebilirsiniz.')
+      }
     } finally {
       setUploadingReceipt(false)
     }
@@ -197,7 +229,9 @@ export default function PaymentResultPage () {
   // Derived Info
   const customerName = order?.customerName || orderDetails?.customerName || 'MUSAAB ALQASSAB'
   const customerEmail = emailParam || order?.customerEmail || orderDetails?.customerEmail || 'musaab19971999@gmail.com'
-  const displayOrderNo = order?.orderNumber || orderDetails?.orderNumber || orderNumber || '#5693'
+  const rawOrderNo = order?.orderNumber || orderDetails?.orderNumber || orderNumber || '5693'
+  const cleanOrderNo = String(rawOrderNo).replace(/^#/, '').trim()
+  const displayOrderNo = `#${cleanOrderNo}`
   const displayTotal = order?.totalAmount || order?.grandTotal || orderDetails?.totalAmount || 19150
   const itemsList = order?.items || orderDetails?.items || []
   const itemsCount = itemsList.reduce((acc, it) => acc + (it.qty || it.quantity || 1), 0) || orderDetails?.itemsCount || 2
@@ -210,7 +244,8 @@ export default function PaymentResultPage () {
     : 'YES I LEVLER MAHLI VEDI K CAD.O NDER AP BLOK NO 442 I C KAPI NO 34 YENI MAHALLE ANKARA, 34 56, 07333, Foça, İzmir, Türkiye'
 
   const cleanPhone = bankInfo.phone.replace(/\D/g, '')
-  const whatsappUrl = `https://wa.me/90${cleanPhone.startsWith('0') ? cleanPhone.substring(1) : cleanPhone}?text=${encodeURIComponent(
+  const whatsappPhone = cleanPhone.startsWith('90') ? cleanPhone : `90${cleanPhone.startsWith('0') ? cleanPhone.substring(1) : cleanPhone}`
+  const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(
     `Merhaba, ${displayOrderNo} numaralı siparişim için ödeme dekontunu iletiyorum.`
   )}`
 
@@ -359,32 +394,50 @@ export default function PaymentResultPage () {
                   </div>
                 </div>
 
-                {/* Inline Dekont Upload Option */}
+                {/* Inline Dekont Upload Option (Explicitly Optional) */}
                 <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed #e2e8f0' }}>
-                  <strong style={{ display: 'block', fontSize: 13, marginBottom: 8 }}>
-                    Site Üzerinden Dekont Yükleyin (İsteğe Bağlı):
-                  </strong>
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <strong style={{ fontSize: 13, color: '#0f172a' }}>
+                        Site Üzerinden Dekont Yükleyin
+                      </strong>
+                      <span style={{ fontSize: 11, background: '#f1f5f9', color: '#64748b', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>
+                        İsteğe Bağlı
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.45 }}>
+                      Dekontunuzu dilerseniz buradan dosya olarak yükleyebilir veya yukarıdaki buton ile WhatsApp üzerinden bize iletebilirsiniz. Dekont yüklemek zorunlu değildir; ödemeniz banka hesabımızdan da kontrol edilmektedir.
+                    </p>
+                  </div>
+
                   <form onSubmit={handleReceiptUpload} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                     <input
                       type='file'
-                      accept='.jpg,.jpeg,.png,.pdf'
-                      onChange={e => setReceiptFile(e.target.files[0])}
+                      accept='.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf'
+                      onChange={e => {
+                        setReceiptFile(e.target.files[0] || null)
+                        setReceiptError('')
+                      }}
                       style={{ fontSize: 12 }}
                     />
                     <button
                       type='submit'
-                      disabled={uploadingReceipt || receiptSuccess}
+                      disabled={uploadingReceipt || receiptSuccess || !receiptFile}
                       className={styles.formActionBtn}
-                      style={{ margin: 0, padding: '8px 14px', fontSize: 12 }}
+                      style={{ margin: 0, padding: '8px 16px', fontSize: 12, opacity: (uploadingReceipt || !receiptFile) ? 0.7 : 1 }}
                     >
                       {uploadingReceipt ? <><FiLoader /> Yükleniyor...</> : <><FiUpload /> Dekontu Gönder</>}
                     </button>
                   </form>
                   {receiptSuccess && (
-                    <p style={{ color: '#16a34a', fontSize: 12, margin: '6px 0 0 0' }}>Dekontunuz başarıyla yüklendi!</p>
+                    <p style={{ color: '#16a34a', fontSize: 12, fontWeight: 600, margin: '8px 0 0 0' }}>
+                      ✓ Dekontunuz başarıyla yüklendi! Ödemeniz en kısa sürede kontrol edilecektir.
+                    </p>
                   )}
                   {receiptError && (
-                    <p style={{ color: '#dc2626', fontSize: 12, margin: '6px 0 0 0' }}>{receiptError}</p>
+                    <p style={{ color: '#dc2626', fontSize: 12, margin: '8px 0 0 0', lineHeight: 1.4 }}>
+                      {receiptError}
+                    </p>
                   )}
                 </div>
               </div>

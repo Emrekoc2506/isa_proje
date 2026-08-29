@@ -413,10 +413,20 @@ export default function CheckoutPage () {
       const orderId = orderRes?.id || orderRes?.orderId
       const orderNumber = orderRes?.orderNumber || ''
       const customerEmail = guestShipping.email || user?.email || ''
+      const guestToken =
+        orderRes?.guestAccessToken ||
+        orderRes?.guestOrderAccessToken ||
+        orderRes?.accessToken ||
+        orderRes?.token ||
+        orderRes?.orderAccessToken ||
+        null
 
       sessionStorage.setItem('pendingOrderId', orderId)
       if (orderNumber) {
         sessionStorage.setItem('pendingOrderNumber', orderNumber)
+      }
+      if (guestToken) {
+        sessionStorage.setItem('guestOrderAccessToken', guestToken)
       }
 
       // Save authoritative order context for result page
@@ -431,15 +441,17 @@ export default function CheckoutPage () {
           shippingAddress: isAuthenticated ? (selectedAddr || addresses[0]) : guestShipping,
           totalAmount: previewData?.grandTotal || 0,
           itemsCount: cartItems.length,
-          items: cartItems
+          items: cartItems,
+          guestAccessToken: guestToken
         })
       )
 
       await clearCart()
+      const tokenQuery = guestToken ? `&token=${encodeURIComponent(guestToken)}` : ''
       navigate(
         `/odeme/sonuc?orderId=${encodeURIComponent(
           orderId
-        )}&orderNumber=${encodeURIComponent(orderNumber)}&email=${encodeURIComponent(customerEmail)}`
+        )}&orderNumber=${encodeURIComponent(orderNumber)}&email=${encodeURIComponent(customerEmail)}${tokenQuery}`
       )
     } catch (err) {
       // 409 & Insufficient Stock Handling

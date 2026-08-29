@@ -5,7 +5,7 @@ export async function login(payload) {
   const result = await request("/auth/login", {
     method: "POST",
     credentials: "include",
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 
   if (result?.accessToken) {
@@ -20,7 +20,7 @@ export function register(payload) {
   return request("/auth/register", {
     method: "POST",
     credentials: "include",
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 }
 
@@ -30,9 +30,9 @@ export function me() {
 
 export async function logout() {
   try {
-    return await request("/auth/logout", { 
+    return await request("/auth/logout", {
       method: "POST",
-      credentials: "include"
+      credentials: "include",
     });
   } catch (err) {
     return null;
@@ -41,9 +41,9 @@ export async function logout() {
 
 export async function logoutAll() {
   try {
-    return await request("/auth/logout-all", { 
+    return await request("/auth/logout-all", {
       method: "POST",
-      credentials: "include"
+      credentials: "include",
     });
   } catch (err) {
     return null;
@@ -53,28 +53,28 @@ export async function logoutAll() {
 export function refreshToken() {
   return request("/auth/refresh-token", {
     method: "POST",
-    credentials: "include"
+    credentials: "include",
   });
 }
 
 export function verifyEmail(userId, token) {
   return request("/auth/verify-email", {
     method: "POST",
-    body: JSON.stringify({ userId, token })
+    body: JSON.stringify({ userId, token }),
   });
 }
 
 export function resendVerification(email) {
   return request("/auth/resend-verification", {
     method: "POST",
-    body: JSON.stringify({ email })
+    body: JSON.stringify({ email }),
   });
 }
 
 export function forgotPassword(email) {
   return request("/auth/forgot-password", {
     method: "POST",
-    body: JSON.stringify({ email })
+    body: JSON.stringify({ email }),
   });
 }
 
@@ -85,7 +85,7 @@ export function resetPassword(payload) {
       userId: payload.userId,
       token: payload.token,
       newPassword: payload.newPassword,
-      confirmPassword: payload.confirmPassword
-    })
+      confirmPassword: payload.confirmPassword,
+    }),
   });
 }
