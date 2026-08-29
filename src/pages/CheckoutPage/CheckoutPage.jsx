@@ -863,42 +863,66 @@ export default function CheckoutPage () {
 
             {/* Price Calculations Breakdown */}
             <div className={styles.totalsList}>
-              <div className={styles.totalRow}>
-                <span>Ara Toplam ⓘ</span>
-                <span>
-                  ₺ {(previewData?.subtotal || cartItems.reduce((sum, it) => sum + (it.unitPrice || 0) * (it.qty || 1), 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
+              {(() => {
+                const subtotal = previewData?.subtotal || cartItems.reduce((sum, it) => sum + (it.unitPrice || 0) * (it.qty || 1), 0);
+                const couponDiscount = previewData?.couponDiscountAmount || 0;
+                const productDiscount = previewData?.productDiscountAmount || 0;
+                const grandTotal = previewData?.grandTotal || Math.max(0, subtotal - couponDiscount - productDiscount);
+                
+                // Backendden gelen veya hesaplanan dinamik kargo ücreti
+                const calculatedShipping = (previewData?.shippingFee != null)
+                  ? Number(previewData.shippingFee)
+                  : (previewData?.shippingTotal != null)
+                  ? Number(previewData.shippingTotal)
+                  : (previewData?.shippingCost != null)
+                  ? Number(previewData.shippingCost)
+                  : (previewData ? Math.max(0, Math.round((grandTotal - subtotal + couponDiscount + productDiscount) * 100) / 100) : 0);
 
-              <div className={styles.totalRow}>
-                <span>Teslimat / Kargo</span>
-                <span style={{ color: '#16a34a', fontWeight: 600 }}>Ücretsiz</span>
-              </div>
+                return (
+                  <>
+                    <div className={styles.totalRow}>
+                      <span>Ara Toplam ⓘ</span>
+                      <span>₺ {subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                    </div>
 
-              {previewData?.productDiscountAmount > 0 && (
-                <div className={styles.totalDiscountRow}>
-                  <span>Ürün İndirimi</span>
-                  <span>- ₺ {previewData.productDiscountAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
-                </div>
-              )}
+                    <div className={styles.totalRow}>
+                      <span>Teslimat / Kargo</span>
+                      <span>
+                        {calculatedShipping > 0 ? (
+                          `₺ ${calculatedShipping.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
+                        ) : (
+                          <span style={{ color: '#16a34a', fontWeight: 600 }}>Ücretsiz</span>
+                        )}
+                      </span>
+                    </div>
 
-              {previewData?.couponDiscountAmount > 0 && (
-                <div className={styles.totalDiscountRow}>
-                  <span>Kupon İndirimi</span>
-                  <span>- ₺ {previewData.couponDiscountAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
-                </div>
-              )}
+                    {productDiscount > 0 && (
+                      <div className={styles.totalDiscountRow}>
+                        <span>Ürün İndirimi</span>
+                        <span>- ₺ {productDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    )}
 
-              <div className={styles.grandTotalRow}>
-                <span className={styles.grandTotalLabel}>Toplam</span>
-                <span className={styles.grandTotalPrice}>
-                  ₺ {(previewData?.grandTotal || cartItems.reduce((sum, it) => sum + (it.unitPrice || 0) * (it.qty || 1), 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
+                    {couponDiscount > 0 && (
+                      <div className={styles.totalDiscountRow}>
+                        <span>Kupon İndirimi</span>
+                        <span>- ₺ {couponDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    )}
 
-              <div className={styles.taxSubtext}>
-                Vergi ₺ {((previewData?.grandTotal || 0) * 0.2).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-              </div>
+                    <div className={styles.grandTotalRow}>
+                      <span className={styles.grandTotalLabel}>Toplam</span>
+                      <span className={styles.grandTotalPrice}>
+                        ₺ {grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+
+                    <div className={styles.taxSubtext}>
+                      (KDV Dahildir — %20 Vergi: ₺ {(grandTotal - (grandTotal / 1.2)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })})
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
             <div className={styles.poweredBy}>

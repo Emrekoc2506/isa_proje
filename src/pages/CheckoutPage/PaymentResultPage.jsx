@@ -491,26 +491,48 @@ export default function PaymentResultPage () {
 
             {/* Totals Breakdown */}
             <div className={styles.totalsList} style={{ marginTop: 16 }}>
-              <div className={styles.totalRow}>
-                <span>Ara Toplam ⓘ</span>
-                <span>₺ {Number(displayTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
-              </div>
+              {(() => {
+                const sub = order?.subtotal || orderDetails?.subtotal || displayTotal;
+                const shipping = order?.shippingFee ?? orderDetails?.shippingFee ?? (order?.shippingTotal ?? 0);
+                const discount = order?.discountAmount || orderDetails?.discountAmount || 0;
+                return (
+                  <>
+                    <div className={styles.totalRow}>
+                      <span>Ara Toplam ⓘ</span>
+                      <span>₺ {Number(sub).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                    </div>
 
-              <div className={styles.totalRow}>
-                <span>Teslimat / Kargo</span>
-                <span style={{ color: '#16a34a', fontWeight: 600 }}>Ücretsiz</span>
-              </div>
+                    <div className={styles.totalRow}>
+                      <span>Teslimat / Kargo</span>
+                      <span>
+                        {Number(shipping) > 0 ? (
+                          `₺ ${Number(shipping).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
+                        ) : (
+                          <span style={{ color: '#16a34a', fontWeight: 600 }}>Ücretsiz</span>
+                        )}
+                      </span>
+                    </div>
 
-              <div className={styles.grandTotalRow}>
-                <span className={styles.grandTotalLabel}>Toplam</span>
-                <span className={styles.grandTotalPrice}>
-                  ₺ {Number(displayTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
+                    {discount > 0 && (
+                      <div className={styles.totalDiscountRow}>
+                        <span>İndirim</span>
+                        <span>- ₺ {Number(discount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    )}
 
-              <div className={styles.taxSubtext}>
-                Vergi ₺ {(Number(displayTotal) * 0.2).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-              </div>
+                    <div className={styles.grandTotalRow}>
+                      <span className={styles.grandTotalLabel}>Toplam</span>
+                      <span className={styles.grandTotalPrice}>
+                        ₺ {Number(displayTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+
+                    <div className={styles.taxSubtext}>
+                      (KDV Dahildir — %20 Vergi: ₺ {(Number(displayTotal) - (Number(displayTotal) / 1.2)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })})
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
             <div className={styles.poweredBy}>
