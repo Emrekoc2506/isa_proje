@@ -138,14 +138,8 @@ async function request(path, options = {}) {
         return request(path, publicRetryOptions);
       }
 
-      // If there was no token sent and no token in storage (Guest user session), do NOT attempt token refresh!
-      const currentToken = safeGetItem("accessToken");
-      if (!token && !currentToken) {
-        const apiErr = await parseResponseError(response);
-        throw apiErr;
-      }
-
       // If token in localStorage changed while this request was in flight, retry with new token
+      const currentToken = safeGetItem("accessToken");
       if (currentToken && currentToken !== token && !isJwtExpired(currentToken)) {
         const retryOptions = { ...options, _isRetry: true };
         const retryHeaders = new Headers(options.headers || {});

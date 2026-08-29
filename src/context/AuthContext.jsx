@@ -34,15 +34,10 @@ export function AuthProvider ({ children }) {
 
   const reloadUser = useCallback(async () => {
     let token = safeGetItem('accessToken')
-    if (!token) {
-      safeSetState(setUser, null)
-      safeSetState(setRoles, [])
-      safeSetState(setIsLoading, false)
-      return null
-    }
-
-    if (isJwtExpired(token)) {
-      safeRemoveItem('accessToken')
+    if (!token || isJwtExpired(token)) {
+      if (token) {
+        safeRemoveItem('accessToken')
+      }
       try {
         const refreshRes = await authApi.refreshToken()
         if (refreshRes?.accessToken) {

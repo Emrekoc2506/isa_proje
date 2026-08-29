@@ -3,6 +3,7 @@ import { FiEye, FiX, FiCheck, FiXCircle, FiFileText, FiDownload, FiLoader, FiFil
 import * as orderApi from '../../../services/orderApi';
 import * as bankTransferApi from '../../../services/bankTransferApi';
 import { formatTurkishDate } from '../../../utils/dateUtils';
+import { translateErrorMessage } from '../../../api/apiError';
 import styles from '../AdminPage.module.css';
 import { useTheme } from '../../../context/ThemeContext';
 
@@ -26,15 +27,24 @@ export default function OrdersSection() {
   const [rejectReason, setRejectReason] = useState('');
   const [processingAction, setProcessingAction] = useState(false);
 
+  // Fetch orders from backend
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await orderApi.getAdminOrders({ page, pageSize: 50 });
-      setOrders(res.items || []);
-      const calculatedPages = Math.max(1, Math.ceil((res.totalCount || 0) / (res.pageSize || 50)));
-      setTotalPages(calculatedPages);
+      const params = { page, pageSize: 20 };
+      if (statusFilter !== 'ALL') params.status = statusFilter;
+      const data = await orderApi.getAdminOrders(params);
+      if (data && data.items) {
+        setOrders(data.items);
+        setTotalPages(data.totalPages || 1);
+      } else if (Array.isArray(data)) {
+        setOrders(data);
+        setTotalPages(1);
+      } else {
+        setOrders([]);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Siparişler yüklenemedi:', err);
     } finally {
       setLoading(false);
     }
@@ -42,15 +52,15 @@ export default function OrdersSection() {
 
   useEffect(() => {
     fetchOrders();
-  }, [page]);
+  }, [page, statusFilter]);
 
-  const handleOpenDetail = async (orderId) => {
+  const handleOpenDetail = async (order) => {
     try {
-      const details = await orderApi.getAdminOrderById(orderId);
+      const details = await orderApi.getAdminOrderById(order.id);
       setSelectedOrder(details);
       setShowDetail(true);
     } catch (err) {
-      alert("Sipariş detayları yüklenemedi: " + err.message);
+      alert("Sipariş detayları yüklenemedi: " + translateErrorMessage(err.message));
     }
   };
 
@@ -58,7 +68,10 @@ export default function OrdersSection() {
     if (!selectedOrder?.id) return;
     setProcessingAction(true);
     try {
-      await bankTransferApi.adminConfirmBankTransfer(selectedOrder.id);
+      await bankTransferApi.adminConfirmBankTransfer(selectedOrder.id, {
+        isConfirmed: true,
+        note: "Havale ödemesi yönetici tarafından onaylandı."
+      });
       alert("Havale ödemesi başarıyla onaylandı (Ödeme Alındı).");
       setShowConfirmModal(false);
       // Detayı ve listeyi güncelle
@@ -66,7 +79,7 @@ export default function OrdersSection() {
       setSelectedOrder(updated);
       await fetchOrders();
     } catch (err) {
-      alert("Ödeme onaylanırken hata oluştu: " + (err.message || err));
+      alert("Ödeme onaylanırken hata oluştu: " + (translateErrorMessage(err.message) || err.message || err));
     } finally {
       setProcessingAction(false);
     }

@@ -44,9 +44,11 @@ export function getBankTransferReceipt(orderId) {
  * Admin: Havale Ödemesini Onayla ("Ödeme Alındı")
  * POST /api/admin/orders/{id}/bank-transfer/confirm
  */
-export function adminConfirmBankTransfer(orderId) {
+export function adminConfirmBankTransfer(orderId, payload = {}) {
+  const bodyData = payload && Object.keys(payload).length > 0 ? payload : { isConfirmed: true, note: "Onaylandı" };
   return request(`/admin/orders/${orderId}/bank-transfer/confirm`, {
-    method: "POST"
+    method: "POST",
+    body: JSON.stringify(bodyData)
   });
 }
 
