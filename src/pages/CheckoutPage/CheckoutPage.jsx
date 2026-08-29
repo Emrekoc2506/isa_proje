@@ -44,7 +44,7 @@ export default function CheckoutPage () {
     bankName: 'Enpara',
     accountHolder: 'İsa Şahap',
     iban: 'TR09 0015 7000 0000 0136 3203 61',
-    phone: '0555 890 68 63'
+    phone: '0542 790 68 63'
   })
   const [copiedIban, setCopiedIban] = useState(false)
 
@@ -940,7 +940,7 @@ export default function CheckoutPage () {
                   <h4>1. Mesafeli Satış Sözleşmesi Şartları</h4>
                   <p>
                     <strong>Satıcı:</strong> İsa Şahap (Muhristan)<br />
-                    <strong>İletişim:</strong> 0555 890 68 63<br />
+                    <strong>İletişim:</strong> 0542 790 68 63<br />
                     <strong>Adres:</strong> Türkiye
                   </p>
                   <p>

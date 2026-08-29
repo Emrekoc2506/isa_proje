@@ -54,7 +54,7 @@ export default function PaymentResultPage () {
     bankName: 'Enpara',
     accountHolder: 'İsa Şahap',
     iban: 'TR09 0015 7000 0000 0136 3203 61',
-    phone: '0555 890 68 63'
+    phone: '0542 790 68 63'
   })
   const [copiedIban, setCopiedIban] = useState(false)
   const [receiptFile, setReceiptFile] = useState(null)

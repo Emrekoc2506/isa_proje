@@ -295,7 +295,7 @@ export default function ProductDetailPage() {
     }
   };
 
-  const whatsappUrl = `https://wa.me/905551234567?text=${encodeURIComponent(`Merhaba! ${productDetail.name} hakkında bilgi almak istiyorum.`)}`;
+  const whatsappUrl = `https://wa.me/905427906863?text=${encodeURIComponent(`Merhaba! ${productDetail.name} hakkında bilgi almak istiyorum.`)}`;
   const instagramUrl = `https://www.instagram.com/muhristan`;
 
   /* ─── Tabs ──────────────────────────────────────────── */
