@@ -1,4 +1,5 @@
 import { request } from "./apiClient";
+import { invalidOrderIdError, normalizeOrderId } from "../utils/orderId";
 
 export function createOrder(payload) {
   return request("/orders", {
@@ -21,7 +22,10 @@ export function getMyOrders() {
 }
 
 export function getMyOrderById(id) {
-  return request(`/orders/my/${id}`);
+  const orderId = normalizeOrderId(id);
+  return orderId
+    ? request(`/orders/my/${encodeURIComponent(orderId)}`)
+    : Promise.reject(invalidOrderIdError());
 }
 
 export function trackGuestOrder(payload) {
@@ -46,7 +50,10 @@ export function getAdminOrders(params = {}) {
 }
 
 export function getAdminOrderById(id) {
-  return request(`/admin/orders/${id}`);
+  const orderId = normalizeOrderId(id);
+  return orderId
+    ? request(`/admin/orders/${encodeURIComponent(orderId)}`)
+    : Promise.reject(invalidOrderIdError());
 }
 
 export function updateAdminOrderStatus(id, status) {

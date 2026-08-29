@@ -54,9 +54,9 @@ export default function OrdersSection() {
     fetchOrders();
   }, [page, statusFilter]);
 
-  const handleOpenDetail = async (order) => {
+  const handleOpenDetail = async (orderId) => {
     try {
-      const details = await orderApi.getAdminOrderById(order.id);
+      const details = await orderApi.getAdminOrderById(orderId);
       setSelectedOrder(details);
       setShowDetail(true);
     } catch (err) {
