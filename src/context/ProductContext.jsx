@@ -71,6 +71,8 @@ export function normalizeProducts (productsData) {
     const priceVal = p.price ?? p.Price ?? 0
     const oldPriceVal = p.oldPrice ?? p.OldPrice ?? null
     const hasExplicitStock =
+      (p.availableStock !== undefined && p.availableStock !== null) ||
+      (p.AvailableStock !== undefined && p.AvailableStock !== null) ||
       (p.stockQuantity !== undefined && p.stockQuantity !== null) ||
       (p.StockQuantity !== undefined && p.StockQuantity !== null) ||
       (p.stock !== undefined && p.stock !== null) ||

@@ -15,23 +15,29 @@ const CartContext = createContext(null)
 
 export function mapServerCart (data) {
   if (!data) return { cartData: null, items: [] }
-  const items = (data.items || []).map(item => ({
-    ...item,
-    id: item.id || item.cartItemId,
-    productId: item.productId,
-    productVariantId: item.productVariantId,
-    qty: item.quantity,
-    quantity: item.quantity,
-    customNote:
-      item.customNote || item.personalizationNote || item.note || null,
-    price: `${item.unitPrice} ₺`,
-    unitPrice: item.unitPrice,
-    image: item.imageUrl || '/ornek resim.jpg',
-    imageUrl: item.imageUrl || '/ornek resim.jpg',
-    name: item.productName || 'Ürün',
-    productName: item.productName || 'Ürün',
-    source: 'server'
-  }))
+  const items = (data.items || []).map(item => {
+    let cleanName = item.productName || 'Ürün'
+    if (cleanName.toLowerCase().includes('unavailable product')) {
+      cleanName = 'Stokta Bulunmayan Ürün'
+    }
+    return {
+      ...item,
+      id: item.id || item.cartItemId,
+      productId: item.productId,
+      productVariantId: item.productVariantId,
+      qty: item.quantity,
+      quantity: item.quantity,
+      customNote:
+        item.customNote || item.personalizationNote || item.note || null,
+      price: `${item.unitPrice} ₺`,
+      unitPrice: item.unitPrice,
+      image: item.imageUrl || '/ornek resim.jpg',
+      imageUrl: item.imageUrl || '/ornek resim.jpg',
+      name: cleanName,
+      productName: cleanName,
+      source: 'server'
+    }
+  })
   return { cartData: data, items }
 }
 

@@ -23,11 +23,21 @@ export default function ProductCard({ product }) {
   const isFavorite = isInWishlist(productId);
   const detailHref = `/urun/${detailSlugOrId}`;
 
-  const availableStock = getSafeStockQuantity(product);
+  const hasStockField =
+    product.hasExplicitStock === true ||
+    product.availableStock !== undefined ||
+    product.AvailableStock !== undefined ||
+    product.stockQuantity !== undefined ||
+    product.StockQuantity !== undefined ||
+    product.stock !== undefined ||
+    product.Stock !== undefined ||
+    (Array.isArray(product.variants) && product.variants.length > 0);
+
+  const availableStock = hasStockField ? getSafeStockQuantity(product) : null;
+
   const isOutOfStock =
     product.isOutOfStock === true ||
-    (product.hasExplicitStock === true && availableStock === 0) ||
-    availableStock === 0;
+    (hasStockField && availableStock === 0);
 
   const handleAdd = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
