@@ -103,6 +103,11 @@ export function hasExplicitStock(item) {
   return getExplicitStock(item) !== null;
 }
 
+export function getKnownStockQuantity(item) {
+  const stock = getExplicitStock(item);
+  return stock === null ? null : Math.max(0, Math.trunc(stock));
+}
+
 export function isOutOfStock(item) {
   if (item?.isOutOfStock === true || item?.IsOutOfStock === true) return true;
 

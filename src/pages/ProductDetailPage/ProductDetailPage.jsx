@@ -22,7 +22,7 @@ import ProductReviews from '../../components/ProductReviews/ProductReviews';
 import RecentlyViewed from '../../components/RecentlyViewed/RecentlyViewed';
 import StockNotifyModal from '../../components/StockNotifyModal/StockNotifyModal';
 import { addRecentlyViewed, removeRecentlyViewed } from '../../utils/recentlyViewed';
-import { getSafeStockQuantity } from '../../utils/stockUtils';
+import { getKnownStockQuantity } from '../../utils/stockUtils';
 import { formatTurkishDate } from '../../utils/dateUtils';
 
 /* ─── Yıldız Bileşeni ────────────────────────────────────── */
@@ -227,18 +227,20 @@ export default function ProductDetailPage() {
   const isFav = isInWishlist(productDetail.id);
   const rating = avg(reviews);
   const visibleReviews = showAllReviews ? reviews : (reviews || []).slice(0, 3);
-  const currentAvailableStock = getSafeStockQuantity(selectedVariant || productDetail);
+  const currentAvailableStock = getKnownStockQuantity(selectedVariant || productDetail);
+  const stockKnown = currentAvailableStock !== null;
+  const isOutOfStock = stockKnown && currentAvailableStock === 0;
 
   /* ─── Handlers ──────────────────────────────────────── */
   const handleAddToCart = async () => {
     setStockError(null);
-    if (currentAvailableStock <= 0) {
+    if (isOutOfStock) {
       setStockError('Bu ürünün stoğu tükenmiştir.');
       setTimeout(() => setStockError(null), 4000);
       return;
     }
 
-    if (qty > currentAvailableStock) {
+    if (stockKnown && qty > currentAvailableStock) {
       setStockError(`Bu üründen en fazla ${currentAvailableStock} adet ekleyebilirsiniz.`);
       setTimeout(() => setStockError(null), 4000);
       return;
@@ -264,7 +266,7 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = async () => {
     setStockError(null);
-    if (currentAvailableStock <= 0) {
+    if (isOutOfStock) {
       setStockError('Bu ürünün stoğu tükenmiştir.');
       setTimeout(() => setStockError(null), 4000);
       return;
@@ -699,7 +701,7 @@ export default function ProductDetailPage() {
                     setStockError(null);
                     setQty(q => Math.max(1, q - 1));
                   }}
-                  disabled={currentAvailableStock === 0 || qty <= 1}
+                  disabled={isOutOfStock || qty <= 1}
                   aria-label="Azalt"
                 >
                   <FiMinus />
@@ -708,7 +710,7 @@ export default function ProductDetailPage() {
                 <button
                   className={styles.qtyBtn}
                   onClick={() => {
-                    if (currentAvailableStock > 0 && qty >= currentAvailableStock) {
+                    if (stockKnown && qty >= currentAvailableStock) {
                       setStockError(`Maksimum mevcut stok sınırı: ${currentAvailableStock} adet`);
                       setTimeout(() => setStockError(null), 3500);
                       return;
@@ -716,7 +718,7 @@ export default function ProductDetailPage() {
                     setStockError(null);
                     setQty(q => q + 1);
                   }}
-                  disabled={currentAvailableStock === 0 || (currentAvailableStock > 0 && qty >= currentAvailableStock)}
+                  disabled={isOutOfStock || (stockKnown && qty >= currentAvailableStock)}
                   aria-label="Artır"
                 >
                   <FiPlus />
@@ -724,10 +726,12 @@ export default function ProductDetailPage() {
               </div>
               <span className={styles.stockLabel}>
                 <FiZap className={styles.stockIcon} /> 
-                {currentAvailableStock === 0 ? (
+                {isOutOfStock ? (
                   <span style={{ color: '#e05594', fontWeight: 700 }}>Tükendi</span>
-                ) : (
+                ) : stockKnown ? (
                   <>Stokta Mevcut ({currentAvailableStock} Adet)</>
+                ) : (
+                  <>Stok bilgisi bilinmiyor</>
                 )}
               </span>
             </div>
@@ -779,10 +783,10 @@ export default function ProductDetailPage() {
             <div className={styles.ctaGroup}>
               <button
                 className={`${styles.cartBtn} ${addedToCart ? styles.cartAdded : ''}`}
-                onClick={currentAvailableStock === 0 ? () => setStockModalOpen(true) : handleAddToCart}
-                disabled={currentAvailableStock === 0 && !setStockModalOpen}
+                onClick={isOutOfStock ? () => setStockModalOpen(true) : handleAddToCart}
+                disabled={isOutOfStock && !setStockModalOpen}
               >
-                {currentAvailableStock === 0 ? (
+                {isOutOfStock ? (
                   <span><FiBell /> Stoka Gelince Bildir</span>
                 ) : addedToCart ? (
                   <span><FiCheck /> Sepete Eklendi!</span>
