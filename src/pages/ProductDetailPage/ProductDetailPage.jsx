@@ -250,40 +250,8 @@ export default function ProductDetailPage() {
     relatedRef.current.scrollBy({ left: dir * 280, behavior: "smooth" });
   };
 
-  if (loadingDetail) {
-    return (
-      <MainLayout>
-        <div className={styles.loadingScreen}>
-          <div className={styles.spinner} />
-          <p>Ürün detayları yükleniyor...</p>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (!productDetail) {
-    return (
-      <MainLayout>
-        <div className={styles.loadingScreen}>
-          <p>Ürün bulunamadı.</p>
-          <Link
-            to="/urunler"
-            className={styles.buyBtn}
-            style={{
-              marginTop: "16px",
-              textDecoration: "none",
-              display: "inline-block",
-            }}
-          >
-            Mağazaya Dön
-          </Link>
-        </div>
-      </MainLayout>
-    );
-  }
-
   /* ─── Hesaplamalar ──────────────────────────────────── */
-  const isFav = isInWishlist(productDetail.id);
+  const isFav = isInWishlist(productDetail?.id);
   const rating = avg(reviews);
   const visibleReviews = showAllReviews ? reviews : (reviews || []).slice(0, 3);
   const currentAvailableStock = getKnownStockQuantity(
