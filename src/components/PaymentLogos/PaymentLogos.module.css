@@ -1,0 +1,58 @@
+.badgesGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.badge:hover {
+  transform: translateY(-1px);
+  border-color: var(--gold, #c9a227);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.svgLogo {
+  display: block;
+  overflow: visible;
+}
+
+/* ── Gece & Gündüz Modu Renk Uyumluluğu ── */
+:global([data-theme="light"]) .badge {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+:global([data-theme="light"]) .badge:hover {
+  background: rgba(0, 0, 0, 0.07);
+  border-color: var(--gold, #c9a227);
+}
+
+.visaBlue {
+  fill: #2563eb;
+}
+
+:global([data-theme="light"]) .visaBlue {
+  fill: #1a1f71;
+}
+
+.brandText,
+.troyDark {
+  fill: var(--text-primary, #ffffff);
+}
+
+:global([data-theme="light"]) .brandText,
+:global([data-theme="light"]) .troyDark {
+  fill: #1e293b;
+}
