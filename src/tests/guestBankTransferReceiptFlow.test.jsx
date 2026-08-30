@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { request } from '../services/apiClient'
 import * as bankTransferApi from '../services/bankTransferApi'
 import { translateErrorMessage } from '../api/apiError'
+
+vi.mock('../services/apiClient', () => ({
+  request: vi.fn()
+}))
 
 describe('Guest Havale Siparişi ve Dekont Yükleme Akışı Testleri (Section 12 Tests)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    request.mockResolvedValue({})
     sessionStorage.clear()
     localStorage.clear()
   })
@@ -51,20 +57,24 @@ describe('Guest Havale Siparişi ve Dekont Yükleme Akışı Testleri (Section 1
     expect(decodeURIComponent(whatsappUrl)).toContain('#5693')
   })
 
-  // 4. Guest dekont upload guest token ile header veya query parametresi ile gönderilir
-  it('4. Guest dekont yükleme isteği guestOrderAccessToken ile yetkilendirilir', () => {
+  // 4. Guest dekont upload guest endpoint ve beklenen header ile gönderilir
+  it('4. Guest dekont yükleme isteği doğru endpoint ve X-Order-Access-Token ile yetkilendirilir', async () => {
     const guestToken = 'guest_jwt_token_secret_123'
     sessionStorage.setItem('guestOrderAccessToken', guestToken)
 
-    const token = sessionStorage.getItem('guestOrderAccessToken')
-    const headers = {}
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
-      headers['X-Guest-Access-Token'] = token
-    }
+    await bankTransferApi.uploadBankTransferReceipt(
+      '11111111-1111-1111-1111-111111111111',
+      { file: new File(['receipt'], 'dekont.pdf', { type: 'application/pdf' }) }
+    )
 
-    expect(headers['Authorization']).toBe('Bearer guest_jwt_token_secret_123')
-    expect(headers['X-Guest-Access-Token']).toBe('guest_jwt_token_secret_123')
+    expect(request).toHaveBeenCalledWith(
+      '/orders/guest/11111111-1111-1111-1111-111111111111/bank-transfer/receipt',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'X-Order-Access-Token': guestToken },
+        body: expect.any(FormData)
+      })
+    )
   })
 
   // 5. Access token olmadan (misafir oturumunda) guest token ile upload çalışır
@@ -88,7 +98,7 @@ describe('Guest Havale Siparişi ve Dekont Yükleme Akışı Testleri (Section 1
 
   // 7. 401 durumunda refresh-token döngüsü oluşmaz
   it('7. Misafir dekont endpointi 401 aldığında auth refresh döngüsü tetiklenmez', () => {
-    const path = '/orders/123/bank-transfer/receipt'
+    const path = '/orders/guest/123/bank-transfer/receipt'
     const isGuestPath = path.includes('/bank-transfer/receipt') || path.includes('/orders/guest')
     const hasAccessToken = Boolean(localStorage.getItem('accessToken'))
 
