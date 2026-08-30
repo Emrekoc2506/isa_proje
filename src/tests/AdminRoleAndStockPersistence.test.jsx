@@ -6,6 +6,7 @@ import { http, HttpResponse } from 'msw';
 import CustomersSection from '../pages/AdminPage/sections/CustomersSection';
 import InventorySection from '../pages/AdminPage/sections/InventorySection';
 import { AuthProvider } from '../context/AuthContext';
+import * as productApi from '../services/productApi';
 
 const MOCK_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjI1MjQ2MDgwMDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
 
@@ -172,7 +173,7 @@ describe('Admin Role & Stock Persistence Suite (Section 14 Tests)', () => {
     expect(requestPayload.stockQuantity).toBe(25);
   });
 
-  it('Test 5 — Stock success re-fetches inventory and displays server value', async () => {
+  it('Test 5 — Stock success updates the local row with the server value', async () => {
     let fetchCount = 0;
     server.use(
       http.get('*/api/admin/products', () => {
@@ -195,6 +196,7 @@ describe('Admin Role & Stock Persistence Suite (Section 14 Tests)', () => {
     await waitFor(() => {
       expect(screen.getByText('Gümüş Yüzük')).toBeDefined();
     });
+    const initialFetchCount = fetchCount;
 
     fireEvent.click(screen.getByRole('button', { name: /Stok Güncelle/i }));
     fireEvent.change(screen.getByDisplayValue('5'), { target: { value: '50' } });
@@ -203,10 +205,7 @@ describe('Admin Role & Stock Persistence Suite (Section 14 Tests)', () => {
       fireEvent.click(screen.getByTitle('Kaydet'));
     });
 
-    await waitFor(() => {
-      expect(fetchCount).toBeGreaterThanOrEqual(2);
-    });
-
+    expect(fetchCount).toBe(initialFetchCount);
     expect(screen.getByText('50 Adet')).toBeDefined();
   });
 
@@ -330,5 +329,50 @@ describe('Admin Role & Stock Persistence Suite (Section 14 Tests)', () => {
 
     expect(methodUsed).toBe('POST');
     expect(requestPayload.stockQuantity).toBe(15);
+  });
+
+  it('Test 9 — Mobile inventory saves with Enter and does not refetch the catalog', async () => {
+    let adminFetchCount = 0;
+
+    vi.spyOn(window, 'matchMedia').mockImplementation(query => ({
+      matches: true,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }));
+
+    server.use(
+      http.get('*/api/admin/products', () => {
+        adminFetchCount++;
+        return HttpResponse.json([
+          { id: 'mobile-p1', name: 'Mobil Ürün', sku: 'MOB-1', stockQuantity: 4 }
+        ]);
+      }),
+      http.get('*/api/admin/inventory/low-stock', () => HttpResponse.json([]))
+    );
+    const stockUpdateSpy = vi.spyOn(productApi, 'updateAdminProductStock')
+      .mockResolvedValue({ productId: 'mobile-p1', stockQuantity: 9 });
+
+    render(<InventorySection />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Mobil Ürün')).toBeDefined();
+    });
+    const initialAdminFetchCount = adminFetchCount;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Stok Güncelle' }));
+    const input = screen.getByLabelText('Mobil Ürün stok adedi');
+    fireEvent.change(input, { target: { value: '9' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+    await waitFor(() => {
+      expect(stockUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(screen.getAllByText('9 Adet')).toHaveLength(2);
+    });
+    expect(adminFetchCount).toBe(initialAdminFetchCount);
   });
 });

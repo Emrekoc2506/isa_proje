@@ -609,6 +609,210 @@
   color: var(--text-light);
 }
 
+/* Inventory responsive presentation */
+.inventoryMobileList {
+  display: none;
+}
+
+.inventoryCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.inventoryCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inventoryCardIdentity {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.inventoryCardName {
+  color: var(--text-light);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.inventoryCardSku {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.inventoryCardImage {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.inventoryStockGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.inventoryStockGrid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.inventoryStockGrid span {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.inventoryStockGrid strong {
+  font-size: 14px;
+}
+
+.inventoryLowValue {
+  color: #e05594;
+}
+
+.inventoryNormalValue {
+  color: #2ecc71;
+}
+
+.inventoryCardAction {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inventoryActionLabel {
+  color: var(--gold-pale);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.inventoryViewControls,
+.inventoryEditControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.inventoryEditControls {
+  width: 100%;
+}
+
+.inventoryStockInput {
+  min-width: 0;
+  width: 90px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--text-light);
+  font-size: 16px;
+  line-height: 1.2;
+  scroll-margin-bottom: 96px;
+}
+
+.inventorySaveButton,
+.inventoryCancelButton,
+.inventoryEditButton {
+  min-height: 44px;
+}
+
+.inventorySaveButton {
+  flex: 1 1 120px;
+  justify-content: center;
+}
+
+.inventoryCancelButton {
+  flex: 0 0 auto;
+}
+
+.inventorySuccess {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #2ecc71;
+  font-size: 12px;
+}
+
+.inventoryError {
+  color: #ef4444;
+  font-size: 11px;
+}
+
+.inventoryVariantToggle,
+.inventoryVariantEdit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gold-light);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.inventoryVariantList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+}
+
+.inventoryVariantCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border-left: 2px solid var(--border-gold);
+  background: rgba(0, 0, 0, 0.14);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.inventoryVariantCard > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.inventoryVariantCard strong {
+  color: var(--text-light);
+}
+
+.inventoryEmpty {
+  margin: 0;
+  padding: 24px 8px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
 .badgeRow {
   display: flex;
   gap: 4px;
@@ -2803,6 +3007,80 @@
 
   .statCard h3 {
     font-size: 20px !important;
+  }
+}
+
+@media (max-width: 991px) {
+  .inventorySection {
+    overflow: visible;
+  }
+
+  .inventoryHeader {
+    align-items: stretch !important;
+  }
+
+  .inventoryToolbar {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .inventorySearch {
+    width: 100%;
+    min-width: 0 !important;
+  }
+
+  .inventoryFilterButton {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .inventoryTableWrapper {
+    display: none;
+  }
+
+  .inventoryMobileList {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .inventoryEditControls {
+    align-items: stretch;
+  }
+
+  .inventoryStockInput {
+    flex: 1 1 76px;
+  }
+
+  .inventorySaveButton {
+    flex: 1 1 120px;
+  }
+}
+
+@media (max-width: 420px) {
+  .inventoryStockGrid {
+    gap: 6px;
+  }
+
+  .inventoryStockGrid > div {
+    padding: 8px;
+  }
+
+  .inventoryEditControls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .inventoryStockInput {
+    grid-column: 1 / -1;
+    width: auto;
+  }
+
+  .inventorySaveButton,
+  .inventoryCancelButton {
+    width: 100%;
   }
 }
 
