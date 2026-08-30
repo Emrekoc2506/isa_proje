@@ -49,7 +49,6 @@ export default function ArticleCard({ article, onClick }) {
       <div className={styles.content}>
         <div className={styles.meta}>
           {date && <time className={styles.date} dateTime={date}>{date}</time>}
-          {readTime && <span className={styles.readTime}>· {readTime}</span>}
         </div>
 
         <h3 className={styles.title}>{title}</h3>
