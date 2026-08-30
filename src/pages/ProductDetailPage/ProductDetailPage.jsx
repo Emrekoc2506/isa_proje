@@ -292,6 +292,16 @@ export default function ProductDetailPage() {
   const stockKnown = currentAvailableStock !== null;
   const isOutOfStock = stockKnown && currentAvailableStock === 0;
 
+  /* ─── F12 Geliştirici / Admin Stok Takip Uyarısı ─────── */
+  useEffect(() => {
+    if (productDetail && !stockKnown) {
+      console.warn(
+        `[Stok Uyarısı - F12] "${productDetail.name}" (ID: ${productDetail.id}) için backend'den stok adedi (stockQuantity/availableStock) dönmedi. Müşteriye "Stokta Mevcut" gösteriliyor. Lütfen admin panelinden bu ürünün stok adedini kontrol ediniz.`,
+        { product: productDetail }
+      );
+    }
+  }, [productDetail, stockKnown]);
+
   /* ─── Handlers ──────────────────────────────────────── */
   const handleAddToCart = async () => {
     setStockError(null);
@@ -985,7 +995,7 @@ export default function ProductDetailPage() {
                 ) : stockKnown ? (
                   <>Stokta Mevcut ({currentAvailableStock} Adet)</>
                 ) : (
-                  <>Stok Bilgisi Bilinmiyort</>
+                  <>Stokta Mevcut</>
                 )}
               </span>
             </div>
