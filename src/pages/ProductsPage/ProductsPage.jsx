@@ -326,7 +326,7 @@ export default function ProductsPage () {
     const matchSubcategory = isProductInSubcategory(p, selectedSubcategory)
 
     // Arama kelimesine göre filtrele
-    const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchSearch = (p.name || '').toLowerCase().includes(searchQuery.toLowerCase())
 
     // Fiyata göre filtrele
     const priceNum = parsePrice(p.price)
@@ -341,7 +341,7 @@ export default function ProductsPage () {
 
     const matchCategory = isProductInCategory(p, tempCategory, categories)
     const matchSubcategory = isProductInSubcategory(p, tempSubcategory)
-    const matchSearch = p.name
+    const matchSearch = (p.name || '')
       .toLowerCase()
       .includes(tempSearchQuery.toLowerCase())
     const priceNum = parsePrice(p.price)

@@ -373,7 +373,7 @@ export default function ProductDetailPage() {
     }
   };
 
-  const whatsappUrl = `https://wa.me/905427906863?text=${encodeURIComponent(`Merhaba! ${productDetail.name} hakkında bilgi almak istiyorum.`)}`;
+  const whatsappUrl = `https://wa.me/905427906863?text=${encodeURIComponent(`Merhaba! ${productDetail?.name || 'Ürün'} hakkında bilgi almak istiyorum.`)}`;
   const instagramUrl = `https://www.instagram.com/muhristan`;
 
   /* ─── Tabs ──────────────────────────────────────────── */
@@ -1647,15 +1647,16 @@ export default function ProductDetailPage() {
 function RelatedCard({ product, navigate, addToCart }) {
   const [added, setAdded] = useState(false);
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const isFav = isInWishlist(product.id);
+  if (!product) return null;
+  const isFav = isInWishlist(product?.id);
 
   const handleAdd = (e) => {
     e.stopPropagation();
     addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
+      id: product?.id,
+      name: product?.name || 'Ürün',
+      price: product?.price || '0 ₺',
+      image: product?.image || '/ornek resim.jpg',
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1600);
@@ -1664,12 +1665,12 @@ function RelatedCard({ product, navigate, addToCart }) {
   return (
     <div
       className={styles.relCard}
-      onClick={() => navigate(`/urun/${product.id}`)}
+      onClick={() => navigate(`/urun/${product?.id}`)}
       style={{ cursor: "pointer" }}
     >
       <div className={styles.relImgWrap}>
-        {product.isNew && <span className={styles.relBadgeNew}>YENİ</span>}
-        {product.isSale && product.discount && (
+        {product?.isNew && <span className={styles.relBadgeNew}>YENİ</span>}
+        {product?.isSale && product?.discount && (
           <span className={styles.relBadgeSale}>{product.discount}</span>
         )}
         <button
@@ -1683,19 +1684,19 @@ function RelatedCard({ product, navigate, addToCart }) {
           {isFav ? <FaHeart /> : <FiHeart />}
         </button>
         <img
-          src={product.image}
-          alt={product.name}
+          src={product?.image || "/ornek resim.jpg"}
+          alt={product?.name || "Ürün Görseli"}
           loading="lazy"
           className={styles.relImg}
         />
       </div>
       <div className={styles.relInfo}>
-        <p className={styles.relName}>{product.name}</p>
+        <p className={styles.relName}>{product?.name}</p>
         <div className={styles.relPriceRow}>
-          {product.oldPrice && (
+          {product?.oldPrice && (
             <span className={styles.relOldPrice}>{product.oldPrice}</span>
           )}
-          <span className={styles.relPrice}>{product.price}</span>
+          <span className={styles.relPrice}>{product?.price}</span>
         </div>
         <button
           className={`${styles.relCartBtn} ${added ? styles.relCartAdded : ""}`}
