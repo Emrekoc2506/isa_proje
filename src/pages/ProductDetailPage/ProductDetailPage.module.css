@@ -1343,3 +1343,43 @@
   .richContent table { font-size: 13px; }
   .richContent table td, .richContent table th { padding: 7px 10px; }
 }
+
+/* Stok Uyarı Rozeti */
+.stockErrorBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(224, 85, 148, 0.14);
+  border: 1px solid rgba(224, 85, 148, 0.45);
+  color: #f8a5c2;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+
+.stockErrorCloseBtn {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.stockErrorCloseBtn:hover {
+  opacity: 1;
+}
+
+:global([data-theme="light"]) .stockErrorBanner {
+  background: #fdf2f8;
+  border-color: #fbcfe8;
+  color: #9d174d;
+}
+
