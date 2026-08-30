@@ -45,7 +45,7 @@ function avg(reviews) {
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products } = useProducts();
+  const { products, loadProducts, catalogDeferred } = useProducts();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -59,6 +59,13 @@ export default function ProductDetailPage() {
 
   /* ─── Ürünü Bul ─────────────────────────────────────── */
   const product = products.find(p => String(p.id) === String(id) || p.slug === id);
+
+  // Home'dan detay sayfasına geçişte katalog ertelenmiş olabilir; benzer ürünleri korumak için burada yükle.
+  useEffect(() => {
+    if (catalogDeferred && products.length === 0 && typeof loadProducts === 'function') {
+      loadProducts({ pageSize: 500 });
+    }
+  }, [catalogDeferred, products.length, loadProducts]);
 
   useEffect(() => {
     if (product) {

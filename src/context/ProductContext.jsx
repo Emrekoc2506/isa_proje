@@ -244,11 +244,59 @@ export async function fetchProductsWithRetry (
   throw lastError
 }
 
-export function ProductProvider ({ children }) {
-  const [categories, setCategories] = useState(() => getCachedCategories())
-  const [products, setProducts] = useState(() => getCachedProducts())
-  const [slides, setSlides] = useState(() => getCachedSlides())
+function normalizeHomeSlides (bannersData) {
+  return bannersData
+    .map(b => {
+      const parsedContent = parseBannerContent(b.contentJson)
+      const videoUrl = b.videoUrl || parsedContent.videoUrl || ''
+      const mediaType = String(
+        b.mediaType || parsedContent.mediaType || (videoUrl ? 'video' : 'image')
+      ).toLowerCase()
+
+      return {
+        id: b.id || b.Id,
+        title: b.title ?? '',
+        subtitle: b.subtitle ?? '',
+        imageUrl: b.imageUrl ?? b.image ?? parsedContent.posterImageUrl ?? '',
+        mobileImageUrl:
+          b.imageMobileUrl ??
+          b.imageMobile ??
+          parsedContent.mobilePosterImageUrl ??
+          b.image ??
+          '',
+        href: b.href ?? b.linkUrl ?? '',
+        cta: b.cta ?? '',
+        sortOrder: Number(b.sortOrder ?? 0),
+        isActive: b.isActive ?? true,
+        mediaType,
+        themeMode: parsedContent.themeMode || b.themeMode || 'all',
+        imageDark: b.imageDark || parsedContent.imageDark || '',
+        imageMobileDark: b.imageMobileDark || parsedContent.imageMobileDark || '',
+        hideTextOverlay: Boolean(parsedContent.hideTextOverlay || b.hideTextOverlay),
+        videoUrl,
+        mobileVideoUrl: b.mobileVideoUrl || parsedContent.mobileVideoUrl || '',
+        posterImageUrl: b.posterImageUrl || b.image || parsedContent.posterImageUrl || '',
+        mobilePosterImageUrl:
+          b.mobilePosterImageUrl ||
+          b.imageMobile ||
+          parsedContent.mobilePosterImageUrl ||
+          '',
+        autoplay: Boolean(b.autoplay || parsedContent.autoplay),
+        loop: Boolean(b.loop || parsedContent.loop),
+        muted: Boolean(b.muted || parsedContent.muted || b.autoplay || parsedContent.autoplay),
+        contentJson: b.contentJson
+      }
+    })
+    .filter(item => item.imageUrl || item.videoUrl)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+}
+
+export function ProductProvider ({ children, deferInitialData = false }) {
+  const [categories, setCategories] = useState(() => deferInitialData ? [] : getCachedCategories())
+  const [products, setProducts] = useState(() => deferInitialData ? [] : getCachedProducts())
+  const [slides, setSlides] = useState(() => deferInitialData ? [] : getCachedSlides())
   const [loading, setLoading] = useState(() => {
+    if (deferInitialData) return false
     const cachedP = getCachedProducts()
     return cachedP.length === 0
   })
@@ -257,6 +305,8 @@ export function ProductProvider ({ children }) {
   const isMountedRef = useRef(true)
   const latestRequestIdRef = useRef(0)
   const productsRef = useRef(products)
+  const productsLoadRef = useRef(null)
+  const categoriesLoadRef = useRef(null)
   productsRef.current = products
 
   useEffect(() => {
@@ -331,20 +381,67 @@ export function ProductProvider ({ children }) {
   }, [])
 
   // Ürünleri talep üzerine (on-demand / admin vb.) yükleme
-  const loadProducts = useCallback(async (params = {}) => {
-    try {
-      const prodsData = await getProducts({
-        pageSize: params.pageSize || 500,
-        ...params
-      })
-      const normalized = normalizeProducts(prodsData)
-      setProducts(normalized || [])
-      setCachedProducts(normalized || [])
-      return normalized
-    } catch (err) {
-      console.error('Ürün yükleme hatası:', err)
-      return []
+  const loadProducts = useCallback((params = {}) => {
+    if (productsLoadRef.current) return productsLoadRef.current
+
+    const request = (async () => {
+      try {
+        const prodsData = await getProducts({
+          pageSize: params.pageSize || 500,
+          ...params
+        })
+        const normalized = normalizeProducts(prodsData)
+        setProducts(normalized || [])
+        setCachedProducts(normalized || [])
+        return normalized
+      } catch (err) {
+        console.error('Ürün yükleme hatası:', err)
+        return []
+      } finally {
+        setLoading(false)
+        productsLoadRef.current = null
+      }
+    })()
+
+    productsLoadRef.current = request
+    return request
+  }, [])
+
+  // Home bootstrap'ın banner ve kategori verisini global context'e aktarır.
+  // Ürün vitrinleri HomePage'de küçük listeler olarak normalize edilir; tam katalog burada işlenmez.
+  const hydrateHomeData = useCallback(homeData => {
+    if (Array.isArray(homeData?.banners)) {
+      const normalizedSlides = normalizeHomeSlides(homeData.banners)
+      setSlides(normalizedSlides)
+      setCachedSlides(normalizedSlides)
     }
+    if (Array.isArray(homeData?.categories)) {
+      setCategories(homeData.categories)
+      setCachedCategories(homeData.categories)
+    }
+    setLoading(false)
+  }, [])
+
+  const loadCategories = useCallback(() => {
+    if (categoriesLoadRef.current) return categoriesLoadRef.current
+
+    const request = (async () => {
+      try {
+        const categoryData = await getCategoryTree().catch(() => getCategories())
+        const normalized = categoryData || []
+        setCategories(normalized)
+        setCachedCategories(normalized)
+        return normalized
+      } catch (err) {
+        console.error('Kategori yükleme hatası:', err)
+        return []
+      } finally {
+        categoriesLoadRef.current = null
+      }
+    })()
+
+    categoriesLoadRef.current = request
+    return request
   }, [])
 
   // Kategori ve Ürün verilerini yükleme (bağımsız paralel & retry destekli)
@@ -433,9 +530,10 @@ export function ProductProvider ({ children }) {
   }, [])
 
   useEffect(() => {
+    if (deferInitialData) return
     fetchBannersFast()
     loadInitialData()
-  }, [fetchBannersFast, loadInitialData])
+  }, [deferInitialData, fetchBannersFast, loadInitialData])
 
   // Kategori Ekle
   const addCategory = useCallback(async label => {
@@ -673,6 +771,9 @@ export function ProductProvider ({ children }) {
       loading,
       error,
       loadProducts,
+      loadCategories,
+      hydrateHomeData,
+      catalogDeferred: deferInitialData,
       refreshData: loadInitialData,
       refreshProducts: loadProducts,
       retry: loadInitialData,
@@ -693,6 +794,9 @@ export function ProductProvider ({ children }) {
       loading,
       error,
       loadProducts,
+      loadCategories,
+      hydrateHomeData,
+      deferInitialData,
       loadInitialData,
       addCategory,
       deleteCategory,

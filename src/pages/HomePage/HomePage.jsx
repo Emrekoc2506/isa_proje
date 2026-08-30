@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './HomePage.module.css';
 import HeroSlider from '../../components/HeroSlider/HeroSlider';
 import ProductSection from '../../components/ProductSection/ProductSection';
@@ -9,6 +9,7 @@ import { MdOutlineLocalShipping } from 'react-icons/md';
 import { normalizeProducts } from '../../context/ProductContext';
 import { getBlogArticles } from '../../services/blogApi';
 import { getHomeBootstrap } from '../../services/homeApi';
+import { useProducts } from '../../context/ProductContext';
 
 const orgSchema = {
   '@context': 'https://schema.org',
@@ -31,10 +32,12 @@ const websiteSchema = {
 };
 
 export default function HomePage() {
+  const { hydrateHomeData } = useProducts();
   const [articles, setArticles] = useState([]);
   const [newsProducts, setNewsProducts] = useState([]);
   const [saleProducts, setSaleProducts] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const blogSectionRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -42,6 +45,7 @@ export default function HomePage() {
     // Ana sayfa vitrinlerini tek bootstrap isteğiyle yükle.
     getHomeBootstrap().then(response => {
       if (!isMounted) return;
+      if (typeof hydrateHomeData === 'function') hydrateHomeData(response);
       const visible = products => normalizeProducts(products || [])
         .filter(p => p.isActive !== false && !p.isSecret && !p.IsSecret && !p.name?.endsWith(' [GİZLİ]'));
       setNewsProducts(visible(response?.newProducts));
@@ -49,8 +53,13 @@ export default function HomePage() {
       setFeaturedProducts(visible(response?.featuredProducts));
     }).catch(err => console.error('Home vitrin yükleme hatası:', err));
 
-    // Blog içeriklerini defer ederek arka planda çek
-    const timer = setTimeout(() => {
+    // Blog, viewport'a yaklaşınca yüklenir; ilk LCP ile yarışmaz.
+    let blogTimer;
+    let observer;
+    let blogLoaded = false;
+    const loadBlog = () => {
+      if (blogLoaded) return;
+      blogLoaded = true;
       getBlogArticles()
         .then(res => {
           if (!isMounted) return;
@@ -58,13 +67,26 @@ export default function HomePage() {
           setArticles(list);
         })
         .catch(() => {});
-    }, 100);
+    };
+
+    if (typeof IntersectionObserver !== 'undefined' && blogSectionRef.current) {
+      observer = new IntersectionObserver(entries => {
+        if (entries.some(entry => entry.isIntersecting)) {
+          loadBlog();
+          observer.disconnect();
+        }
+      }, { rootMargin: '600px 0px' });
+      observer.observe(blogSectionRef.current);
+    } else {
+      blogTimer = setTimeout(loadBlog, 1000);
+    }
 
     return () => {
       isMounted = false;
-      clearTimeout(timer);
+      clearTimeout(blogTimer);
+      observer?.disconnect();
     };
-  }, []);
+  }, [hydrateHomeData]);
 
   return (
     <main id="main-content" className={styles.main}>
@@ -123,7 +145,9 @@ export default function HomePage() {
       )}
 
       {/* ── Blog ─────────────────────────────────────────── */}
-      <BlogSection articles={articles} />
+      <div ref={blogSectionRef}>
+        <BlogSection articles={articles} />
+      </div>
     </main>
   );
 }

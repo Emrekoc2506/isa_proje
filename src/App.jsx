@@ -363,7 +363,7 @@ function App() {
         <BrowserRouter>
           <ScrollToTop />
           <AuthProvider>
-            <ProductProvider>
+            <ProductProvider deferInitialData>
               <WishlistProvider>
                 <CartProvider>
                   <NotificationProvider>

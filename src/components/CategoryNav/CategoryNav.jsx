@@ -27,7 +27,8 @@ function DropdownPortal({ anchorRect, children, onClose, onMouseEnter, onMouseLe
 }
 
 export default function CategoryNav({ mobileOpen, onMobileClose }) {
-  const { categories } = useProducts();
+  const { categories, loadCategories, catalogDeferred } = useProducts();
+  const isHomePage = typeof window !== 'undefined' && window.location.pathname === '/';
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [showLeftArrow, setShowLeftArrow]   = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -35,6 +36,11 @@ export default function CategoryNav({ mobileOpen, onMobileClose }) {
   const listRef = useRef(null);
   const itemRefs = useRef({});
   const leaveTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (!catalogDeferred || isHomePage || categories.length > 0 || typeof loadCategories !== 'function') return;
+    loadCategories();
+  }, [catalogDeferred, categories.length, loadCategories, isHomePage]);
 
   const clearLeaveTimer = () => {
     if (leaveTimerRef.current) {

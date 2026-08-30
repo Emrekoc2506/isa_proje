@@ -1,5 +1,5 @@
 import styles from "./Header.module.css";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -40,6 +40,7 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef(null);
@@ -54,6 +55,22 @@ export default function Header() {
   const { totalCount: wishlistCount } = useWishlist();
   const productContext = useProducts();
   const allProducts = productContext?.products || [];
+  const { loadProducts, catalogDeferred, loading: productsLoading } = productContext || {};
+
+  useEffect(() => {
+    if (searchQuery.trim().length < 2 || allProducts.length > 0 || typeof loadProducts !== 'function') return;
+    if (!catalogDeferred && productsLoading) return;
+
+    let active = true;
+    setSearchLoading(true);
+    loadProducts({ pageSize: 500 }).finally(() => {
+      if (active) setSearchLoading(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [searchQuery, allProducts.length, catalogDeferred, productsLoading, loadProducts]);
 
   const searchResults =
     searchQuery.trim().length >= 2
@@ -111,7 +128,9 @@ export default function Header() {
             {/* Live Autocomplete Dropdown */}
             {searchQuery.trim().length >= 2 && (
               <div className={styles.searchDropdown}>
-                {searchResults.length > 0 ? (
+                {searchLoading ? (
+                  <div className={styles.searchNoResults}>Ürünler yükleniyor…</div>
+                ) : searchResults.length > 0 ? (
                   searchResults.map((item) => (
                     <a
                       key={item.id}

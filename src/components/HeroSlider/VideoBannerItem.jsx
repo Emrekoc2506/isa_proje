@@ -154,7 +154,7 @@ export default function VideoBannerItem({
         muted={muted}
         loop={loop}
         playsInline
-        preload={isFirst ? 'auto' : 'metadata'}
+        preload={isFirst && !isMobile ? 'auto' : 'metadata'}
         className={className}
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         onError={() => setHasError(true)}
