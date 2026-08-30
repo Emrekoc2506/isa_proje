@@ -7,8 +7,9 @@ export default function ArticleCard({ article, onClick }) {
   const navigate = useNavigate();
   if (!article) return null;
 
-  const { title, date, description, summary, image, readTime, category, slug, id } = article;
+  const { title, date, description, summary, image, coverImageUrl, imageUrl, readTime, category, slug, id } = article;
   const targetSlug = slug || id;
+  const displayImage = image || coverImageUrl || imageUrl || `https://picsum.photos/seed/${encodeURIComponent(targetSlug || 'blog')}/600/400`;
 
   const handleClick = (e) => {
     e.preventDefault();
@@ -33,13 +34,13 @@ export default function ArticleCard({ article, onClick }) {
       {/* ── Görsel ─────────────────────────────────────────── */}
       <div className={styles.imgWrapper}>
         <img
-          src={image || '/ornek resim.jpg'}
+          src={displayImage}
           alt={title || 'Blog görseli'}
           className={styles.img}
           loading="lazy"
           decoding="async"
           onError={(e) => {
-            e.target.src = '/ornek resim.jpg';
+            e.target.src = `https://picsum.photos/seed/${encodeURIComponent(targetSlug || 'blog')}/600/400`;
           }}
         />
         <div className={styles.imgOverlay} />
