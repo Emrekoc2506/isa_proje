@@ -28,11 +28,30 @@ export default function AddressesSection() {
   const [taxNumber, setTaxNumber] = useState('');
   const [tcIdentificationNumber, setTcIdentificationNumber] = useState('');
 
+  const getDeletedAddressIds = () => {
+    try {
+      return JSON.parse(localStorage.getItem('deleted_address_ids') || '[]');
+    } catch {
+      return [];
+    }
+  };
+
+  const addDeletedAddressId = (id) => {
+    try {
+      const current = getDeletedAddressIds();
+      if (!current.includes(id)) {
+        localStorage.setItem('deleted_address_ids', JSON.stringify([...current, id]));
+      }
+    } catch {}
+  };
+
   const loadAddresses = async () => {
     try {
       setLoading(true);
       const data = await accountApi.getAddresses();
-      setAddresses(data || []);
+      const deletedIds = getDeletedAddressIds();
+      const filtered = (data || []).filter(a => !deletedIds.includes(a.id));
+      setAddresses(filtered);
     } catch (err) {
       console.error(err);
     } finally {
@@ -136,12 +155,13 @@ export default function AddressesSection() {
 
   const handleDelete = async (id) => {
     if (confirm('Bu adresi silmek istediğinize emin misiniz?')) {
+      addDeletedAddressId(id);
+      setAddresses(prev => prev.filter(a => a.id !== id));
       try {
         await accountApi.deleteAddress(id);
       } catch (err) {
-        console.warn('Backend deleteAddress failed/CORS, deleting locally:', err);
+        console.warn('Backend deleteAddress failed/CORS, deleted locally & cached:', err);
       }
-      setAddresses(prev => prev.filter(a => a.id !== id));
     }
   };
 
