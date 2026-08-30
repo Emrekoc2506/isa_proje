@@ -53,13 +53,13 @@ export function TroyBadge({ height = 18, className = '' }) {
 }
 
 /**
- * Tüm Logoların Ayrı Ayrı Şeffaf Yan Yana Yerleşimi
+ * Tüm Logoların Ayrı Ayrı Tamamen Şeffaf Yan Yana Yerleşimi
  */
-export default function PaymentBadges({ height = 19, className = '' }) {
+export default function PaymentBadges({ height = 24, className = '' }) {
   return (
     <div className={`${styles.badgesGroup} ${className}`}>
       <VisaBadge height={height} />
-      <MastercardBadge height={height + 2} />
+      <MastercardBadge height={height} />
       <TroyBadge height={height} />
     </div>
   );
