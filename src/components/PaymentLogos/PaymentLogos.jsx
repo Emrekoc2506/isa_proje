@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './PaymentLogos.module.css';
 import visaLogo from '../../assets/images/visa-logo.png';
-import mastercardLogo from '../../assets/images/mastercard-logo.png';
+import mastercardLogo from '../../assets/images/mastercard-logo.webp';
 import troyLogo from '../../assets/images/troy-logo.png';
 
 /**
