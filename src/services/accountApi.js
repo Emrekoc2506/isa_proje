@@ -73,16 +73,24 @@ export async function updateAddress(id, payload) {
 }
 
 export async function deleteAddress(id) {
+  // 1. Standart REST DELETE
   try {
     return await request(`/account/addresses/${id}`, { method: "DELETE" });
-  } catch (e) {
+  } catch {
+    // 2. Force/Cascade DELETE parametresi ile
     try {
-      return await request(`/account/addresses/${id}/delete`, { method: "POST", body: JSON.stringify({ confirm: true }) });
-    } catch (e2) {
+      return await request(`/account/addresses/${id}?force=true`, { method: "DELETE" });
+    } catch {
+      // 3. POST /delete alt rotası
       try {
-        return await request(`/account/addresses/delete/${id}`, { method: "POST" });
-      } catch (e3) {
-        return await request(`/account/addresses/${id}`, { method: "POST", body: JSON.stringify({ isDeleted: true }) });
+        return await request(`/account/addresses/${id}/delete`, { method: "POST", body: JSON.stringify({ confirm: true, isDeleted: true }) });
+      } catch {
+        // 4. Soft-delete payload ile POST/PUT
+        try {
+          return await request(`/account/addresses/${id}`, { method: "POST", body: JSON.stringify({ isDeleted: true, isActive: false }) });
+        } catch {
+          return await request(`/account/addresses/${id}`, { method: "PUT", body: JSON.stringify({ isDeleted: true, isActive: false }) });
+        }
       }
     }
   }
