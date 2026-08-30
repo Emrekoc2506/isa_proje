@@ -1,4 +1,4 @@
-/**
+jj    /**
  * blogApi.js — Blog Modülü Servis Katmanı
  * Backend spec: http://api-test.ozeldersvip.xyz/api
  * NOT: Natro, PUT/PATCH/DELETE metotlarını engeller.
@@ -41,7 +41,7 @@ function normalizeDates(item) {
     summary:     item.summary || item.description || '',
     description: item.summary || item.description || '',
     date:        dateStr,
-    readTime:    item.readTime || '5 dk okuma',
+    readTime:    item.readTime || null,
     isActive:    statusStr === 'Published',
     status:      statusStr,
     slug:        item.slug || item.id,
