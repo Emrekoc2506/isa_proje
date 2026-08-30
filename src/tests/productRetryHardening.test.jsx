@@ -274,4 +274,16 @@ describe('Product Retry & Hardening Requirements (Section 16 Tests)', () => {
     // Request B's result (count 2) MUST be preserved! Late Request A must NOT overwrite B!
     expect(screen.getByTestId('product-count').textContent).toBe('2');
   });
+
+  it('Test 9 — Deferred başlangıçta katalog, kategori ve banner istekleri atılmaz', () => {
+    render(
+      <ProductProvider deferInitialData>
+        <TestConsumer />
+      </ProductProvider>
+    );
+
+    expect(productApi.getProducts).not.toHaveBeenCalled();
+    expect(categoryApi.getCategoryTree).not.toHaveBeenCalled();
+    expect(bannerApi.getBanners).not.toHaveBeenCalled();
+  });
 });

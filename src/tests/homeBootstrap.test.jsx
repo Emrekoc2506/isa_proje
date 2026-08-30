@@ -28,17 +28,22 @@ vi.mock('../components/ProductSection/ProductSection', () => ({
 
 describe('home bootstrap loading', () => {
   test('loads all home product sections through one bootstrap request', async () => {
-    useProducts.mockReturnValue({ products: [], slides: [] });
-    getHomeBootstrap.mockResolvedValue({
+    const hydrateHomeData = vi.fn();
+    useProducts.mockReturnValue({ products: [], slides: [], hydrateHomeData });
+    const bootstrapResponse = {
+      banners: [{ id: 'banner-1' }],
+      categories: [{ id: 'category-1' }],
       newProducts: [{ id: 'new-1' }],
       saleProducts: [{ id: 'sale-1' }],
       featuredProducts: [{ id: 'featured-1' }],
-    });
+    };
+    getHomeBootstrap.mockResolvedValue(bootstrapResponse);
 
     render(<HomePage />);
 
     await waitFor(() => expect(getHomeBootstrap).toHaveBeenCalledTimes(1));
     expect(getHomeBootstrap).toHaveBeenCalledWith();
+    expect(hydrateHomeData).toHaveBeenCalledWith(bootstrapResponse);
     expect(screen.getByTestId('Yeni Gelenler')).toHaveTextContent('new-1');
     expect(screen.getByTestId('İndirimdekiler')).toHaveTextContent('sale-1');
     expect(screen.getByTestId('Öne Çıkan Ürünler')).toHaveTextContent('featured-1');

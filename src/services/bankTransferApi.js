@@ -12,7 +12,8 @@ export function getBankTransferInfo() {
 
 /**
  * Müşteri Dekont Yükleme (Kayıtlı veya Misafir Kullanıcı)
- * POST /api/orders/{id}/bank-transfer/receipt
+ * POST /api/orders/{id}/bank-transfer/receipt (authenticated)
+ * POST /api/orders/guest/{id}/bank-transfer/receipt (guest)
  * @param {string} orderId 
  * @param {FormData|{ file: File, senderName?: string, transferDate?: string }} payload 
  * @param {string|null} [guestToken]
@@ -39,16 +40,12 @@ export function uploadBankTransferReceipt(orderId, payload, guestToken = null) {
       ? sessionStorage.getItem("guestOrderAccessToken")
       : null);
 
-  const headers = {};
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-    headers["X-Guest-Access-Token"] = token;
-    headers["X-Guest-Token"] = token;
-  }
+  const headers = token ? { "X-Order-Access-Token": token } : {};
+  const endpoint = token
+    ? `/orders/guest/${encodeURIComponent(validOrderId)}/bank-transfer/receipt`
+    : `/orders/${encodeURIComponent(validOrderId)}/bank-transfer/receipt`;
 
-  const query = token ? `?token=${encodeURIComponent(token)}` : "";
-
-  return request(`/orders/${encodeURIComponent(validOrderId)}/bank-transfer/receipt${query}`, {
+  return request(endpoint, {
     method: "POST",
     headers,
     body

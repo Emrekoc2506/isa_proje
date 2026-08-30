@@ -67,6 +67,7 @@ export default function PaymentResultPage () {
   const [uploadingReceipt, setUploadingReceipt] = useState(false)
   const [receiptSuccess, setReceiptSuccess] = useState(false)
   const [receiptError, setReceiptError] = useState('')
+  const [receiptMethod, setReceiptMethod] = useState('whatsapp')
 
   // Restore cached details from sessionStorage if available
   useEffect(() => {
@@ -203,7 +204,9 @@ export default function PaymentResultPage () {
     setReceiptError('')
     try {
       const targetOrderId = orderId || order?.id || orderDetails?.orderId || orderDetails?.id
-      const guestToken = tokenParam || sessionStorage.getItem('guestOrderAccessToken') || orderDetails?.guestAccessToken || null
+      const guestToken = !isAuthenticated
+        ? tokenParam || sessionStorage.getItem('guestOrderAccessToken') || orderDetails?.guestAccessToken || null
+        : null
 
       await bankTransferApi.uploadBankTransferReceipt(
         targetOrderId,
@@ -373,15 +376,6 @@ export default function PaymentResultPage () {
                       Ödeme yaptıktan sonra <strong>{bankInfo.phone}</strong> Whatsapp hattımıza sipariş numaranızı ve dekontunuzu iletmeniz gerekmektedir.
                     </p>
 
-                    {/* WhatsApp Action Button */}
-                    <a
-                      href={whatsappUrl}
-                      target='_blank'
-                      rel='noreferrer'
-                      className={styles.whatsappBtn}
-                    >
-                      <FiMessageCircle /> WhatsApp ile Dekont İlet
-                    </a>
                   </div>
 
                   {/* Billing Address Details */}
@@ -394,41 +388,57 @@ export default function PaymentResultPage () {
                   </div>
                 </div>
 
-                {/* Inline Dekont Upload Option (Explicitly Optional) */}
+                {/* Receipt delivery options */}
                 <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed #e2e8f0' }}>
                   <div style={{ marginBottom: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <strong style={{ fontSize: 13, color: '#0f172a' }}>
-                        Site Üzerinden Dekont Yükleyin
-                      </strong>
-                      <span style={{ fontSize: 11, background: '#f1f5f9', color: '#64748b', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>
-                        İsteğe Bağlı
-                      </span>
-                    </div>
+                    <strong style={{ fontSize: 13, color: '#0f172a' }}>
+                      Dekontunuzu nasıl iletmek istersiniz?
+                    </strong>
                     <p style={{ fontSize: 12, color: '#64748b', margin: 0, lineHeight: 1.45 }}>
-                      Dekontunuzu dilerseniz buradan dosya olarak yükleyebilir veya yukarıdaki buton ile WhatsApp üzerinden bize iletebilirsiniz. Dekont yüklemek zorunlu değildir; ödemeniz banka hesabımızdan da kontrol edilmektedir.
+                      Dekontunuzu WhatsApp üzerinden iletebilir veya JPG, JPEG, PNG ya da PDF olarak sitemizden yükleyebilirsiniz.
                     </p>
                   </div>
 
-                  <form onSubmit={handleReceiptUpload} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <input
-                      type='file'
-                      accept='.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf'
-                      onChange={e => {
-                        setReceiptFile(e.target.files[0] || null)
-                        setReceiptError('')
-                      }}
-                      style={{ fontSize: 12 }}
-                    />
-                    <button
-                      type='submit'
-                      disabled={uploadingReceipt || receiptSuccess || !receiptFile}
-                      className={styles.formActionBtn}
-                      style={{ margin: 0, padding: '8px 16px', fontSize: 12, opacity: (uploadingReceipt || !receiptFile) ? 0.7 : 1 }}
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                    <a
+                      href={whatsappUrl}
+                      target='_blank'
+                      rel='noreferrer'
+                      className={styles.whatsappBtn}
                     >
-                      {uploadingReceipt ? <><FiLoader /> Yükleniyor...</> : <><FiUpload /> Dekontu Gönder</>}
+                      <FiMessageCircle /> WhatsApp ile Gönder
+                    </a>
+                    <button
+                      type='button'
+                      onClick={() => setReceiptMethod('site')}
+                      className={styles.formActionBtn}
+                      style={{ margin: 0, padding: '8px 16px', fontSize: 12 }}
+                    >
+                      <FiUpload /> Site Üzerinden Yükle
                     </button>
-                  </form>
+                  </div>
+
+                  {receiptMethod === 'site' && (
+                    <form onSubmit={handleReceiptUpload} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input
+                        type='file'
+                        accept='.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf'
+                        onChange={e => {
+                          setReceiptFile(e.target.files[0] || null)
+                          setReceiptError('')
+                        }}
+                        style={{ fontSize: 12 }}
+                      />
+                      <button
+                        type='submit'
+                        disabled={uploadingReceipt || receiptSuccess || !receiptFile}
+                        className={styles.formActionBtn}
+                        style={{ margin: 0, padding: '8px 16px', fontSize: 12, opacity: (uploadingReceipt || !receiptFile) ? 0.7 : 1 }}
+                      >
+                        {uploadingReceipt ? <><FiLoader /> Yükleniyor...</> : <><FiUpload /> Dekontu Gönder</>}
+                      </button>
+                    </form>
+                  )}
                   {receiptSuccess && (
                     <p style={{ color: '#16a34a', fontSize: 12, fontWeight: 600, margin: '8px 0 0 0' }}>
                       ✓ Dekontunuz başarıyla yüklendi! Ödemeniz en kısa sürede kontrol edilecektir.

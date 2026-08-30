@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { hasExplicitStock, isOutOfStock } from '../utils/stockUtils';
+import { getKnownStockQuantity, hasExplicitStock, isOutOfStock } from '../utils/stockUtils';
 import { normalizeProducts } from '../context/ProductContext';
 
 describe('stock utilities', () => {
@@ -24,6 +24,15 @@ describe('stock utilities', () => {
     expect(isOutOfStock({ stockQuantity: 50, availableStock: 47 })).toBe(false);
     expect(isOutOfStock({ stockQuantity: NaN })).toBe(false);
     expect(isOutOfStock({ stockQuantity: '' })).toBe(false);
+  });
+
+  test('keeps unknown stock separate from known available stock', () => {
+    expect(getKnownStockQuantity({ availableStock: 0 })).toBe(0);
+    expect(getKnownStockQuantity({ availableStock: 3 })).toBe(3);
+    expect(getKnownStockQuantity({ stockQuantity: 0 })).toBe(0);
+    expect(getKnownStockQuantity({ stockQuantity: 2, availableStock: 0 })).toBe(0);
+    expect(getKnownStockQuantity({ stockQuantity: null, availableStock: null })).toBeNull();
+    expect(getKnownStockQuantity({})).toBeNull();
   });
 
   test('preserves stock fields only when the backend sent them', () => {

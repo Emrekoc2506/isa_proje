@@ -2,9 +2,46 @@ import { useState, useEffect, useRef } from 'react';
 import { FiAlertTriangle, FiCheck, FiSave, FiChevronDown, FiChevronUp, FiBox, FiSearch, FiX } from 'react-icons/fi';
 import * as productApi from '../../../services/productApi';
 import { getSafeStockQuantity } from '../../../utils/stockUtils';
-import { useProducts } from '../../../context/ProductContext';
 import { useTheme } from '../../../context/ThemeContext';
 import styles from '../AdminPage.module.css';
+
+const getItemId = item => item?.id ?? item?.Id ?? item?.productId ?? item?.ProductId;
+
+const getPhysicalStock = item => {
+  const value = item?.stockQuantity ?? item?.StockQuantity ?? item?.stock ?? item?.Stock;
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : null;
+};
+
+const getAvailableStock = item => {
+  const value = item?.availableStock ?? item?.AvailableStock;
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : null;
+};
+
+// The stock endpoint returns physical stock only. Keep the previously known
+// reservation delta so the current admin availability does not jump to an
+// incorrect value until the next authoritative inventory response.
+const withUpdatedStockSnapshot = (item, stockQuantity) => {
+  const updated = { ...item, stockQuantity };
+  const physicalStock = getPhysicalStock(item);
+  const availableStock = getAvailableStock(item);
+
+  if (physicalStock !== null && availableStock !== null) {
+    const reservedStock = Math.max(0, physicalStock - availableStock);
+    updated.availableStock = Math.max(0, stockQuantity - reservedStock);
+  }
+
+  return updated;
+};
+
+const normalizeLowStockItem = item => ({
+  ...item,
+  id: getItemId(item),
+  name: item?.name ?? item?.Name ?? item?.productName ?? item?.ProductName
+});
 
 export default function InventorySection() {
   const { theme } = useTheme();
@@ -15,15 +52,11 @@ export default function InventorySection() {
   const [loading, setLoading] = useState(true);
   const [filterLowStock, setFilterLowStock] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Optional ProductContext hook access (safe for isolated component testing)
-  let refreshProducts = null;
-  try {
-    const prodCtx = useProducts();
-    refreshProducts = prodCtx?.refreshProducts;
-  } catch {
-    // Component used outside ProductProvider in isolated test
-  }
+  const [isMobileLayout, setIsMobileLayout] = useState(() => (
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(max-width: 991px)').matches
+      : false
+  ));
 
   // Per-row editing state maps: { [id]: value }
   const [editingIds, setEditingIds] = useState({});
@@ -33,6 +66,7 @@ export default function InventorySection() {
   const [errorMsgs, setErrorMsgs] = useState({});
   const [expandedVariants, setExpandedVariants] = useState({});
   const isUpdatingStockRef = useRef({});
+  const lastStockSubmissionRef = useRef({});
 
   const loadInventory = async () => {
     try {
@@ -44,7 +78,7 @@ export default function InventorySection() {
 
       const itemsList = Array.isArray(allRes) ? allRes : (allRes?.items || []);
       setProducts(itemsList);
-      setLowStockProducts(Array.isArray(lowRes) ? lowRes : []);
+      setLowStockProducts(Array.isArray(lowRes) ? lowRes.map(normalizeLowStockItem) : []);
     } catch (err) {
       console.error("Envanter yükleme hatası:", err);
     } finally {
@@ -56,7 +90,17 @@ export default function InventorySection() {
     loadInventory();
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+
+    const mediaQuery = window.matchMedia('(max-width: 991px)');
+    const handleViewportChange = event => setIsMobileLayout(event.matches);
+    mediaQuery.addEventListener?.('change', handleViewportChange);
+    return () => mediaQuery.removeEventListener?.('change', handleViewportChange);
+  }, []);
+
   const handleStartEdit = (id, currentStock) => {
+    lastStockSubmissionRef.current[id] = null;
     setEditingIds(prev => ({ ...prev, [id]: true }));
     setStockValues(prev => ({ ...prev, [id]: String(currentStock ?? 0) }));
     setErrorMsgs(prev => ({ ...prev, [id]: null }));
@@ -77,27 +121,61 @@ export default function InventorySection() {
       return;
     }
 
+    const submissionKey = `${isVariant ? productId : 'product'}:${id}:${stockQuantity}`;
+    if (lastStockSubmissionRef.current[id] === submissionKey) return;
+    lastStockSubmissionRef.current[id] = submissionKey;
+
     try {
       isUpdatingStockRef.current[id] = true;
       setUpdatingIds(prev => ({ ...prev, [id]: true }));
       setErrorMsgs(prev => ({ ...prev, [id]: null }));
 
+      let response;
       if (isVariant && productId) {
-        await productApi.updateAdminProductVariantStock(productId, id, {
+        response = await productApi.updateAdminProductVariantStock(productId, id, {
           stockQuantity,
           note: "Envanter ekranından varyant stok güncelleme"
         });
       } else {
-        await productApi.updateAdminProductStock(id, {
+        response = await productApi.updateAdminProductStock(id, {
           stockQuantity,
           note: "Envanter ekranından hızlı stok güncelleme"
         });
       }
 
-      // Re-fetch backend DB state to ensure 100% persistence alignment
-      await loadInventory();
-      if (refreshProducts) {
-        refreshProducts().catch(() => null);
+      const savedStock = Number(response?.stockQuantity ?? response?.StockQuantity ?? stockQuantity);
+      const nextStock = Number.isFinite(savedStock) ? Math.max(0, savedStock) : stockQuantity;
+
+      // The POST response is authoritative for the changed entity. Update only
+      // that entity locally instead of reloading the 500-item admin/public lists.
+      setProducts(prev => prev.map(product => {
+        if (!isVariant && String(getItemId(product)) === String(id)) {
+          return withUpdatedStockSnapshot(product, nextStock);
+        }
+
+        if (isVariant && String(getItemId(product)) === String(productId)) {
+          return {
+            ...product,
+            variants: (product.variants || []).map(variant => (
+              String(getItemId(variant)) === String(id)
+                ? withUpdatedStockSnapshot(variant, nextStock)
+                : variant
+            ))
+          };
+        }
+
+        return product;
+      }));
+
+      if (!isVariant) {
+        setLowStockProducts(prev => prev.flatMap(item => {
+          if (String(getItemId(item)) !== String(id)) return [item];
+
+          const updated = withUpdatedStockSnapshot(item, nextStock);
+          const threshold = Number(item?.lowStockThreshold ?? item?.LowStockThreshold);
+          const available = getSafeStockQuantity(updated);
+          return Number.isFinite(threshold) && available > threshold ? [] : [updated];
+        }));
       }
 
       setEditingIds(prev => ({ ...prev, [id]: false }));
@@ -106,6 +184,7 @@ export default function InventorySection() {
         setSuccessIds(prev => ({ ...prev, [id]: false }));
       }, 3000);
     } catch (err) {
+      lastStockSubmissionRef.current[id] = null;
       console.error("Stok güncellenemedi:", err);
       const msg = err?.status === 403
         ? "Bu işlem için yetki gereklidir."
@@ -134,11 +213,11 @@ export default function InventorySection() {
   });
 
   return (
-    <div className={styles.sectionCard}>
-      <div className={styles.sectionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+    <div className={`${styles.sectionCard} ${styles.inventorySection}`}>
+      <div className={`${styles.sectionHeader} ${styles.inventoryHeader}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Stok & Envanter Yönetimi</h3>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', minWidth: 260 }}>
+        <div className={styles.inventoryToolbar} style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className={styles.inventorySearch} style={{ position: 'relative', minWidth: 260 }}>
             <FiSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--gold-light)' }} />
             <input
               type="text"
@@ -170,7 +249,7 @@ export default function InventorySection() {
 
           <button
             onClick={() => setFilterLowStock(prev => !prev)}
-            className={styles.seeAllBtn}
+            className={`${styles.seeAllBtn} ${styles.inventoryFilterButton}`}
             style={{
               background: filterLowStock ? 'rgba(224, 85, 148, 0.2)' : 'rgba(255,255,255,0.05)',
               borderColor: filterLowStock ? '#e05594' : 'var(--border-mid)',
@@ -182,8 +261,8 @@ export default function InventorySection() {
         </div>
       </div>
 
-      <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
-        <table className={styles.table} style={{ width: '100%', minWidth: 600, borderCollapse: 'collapse', marginTop: 16 }}>
+      {!isMobileLayout && <div className={styles.inventoryTableWrapper} style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+        <table className={`${styles.table} ${styles.inventoryTable}`} style={{ width: '100%', minWidth: 600, borderCollapse: 'collapse', marginTop: 16 }}>
         <thead>
           <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-gold)' }}>
             <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Görsel</th>
@@ -282,6 +361,14 @@ export default function InventorySection() {
                         className={styles.fieldInput}
                         style={{ width: 90, padding: '6px 8px', fontSize: 13, background: 'rgba(0,0,0,0.4)', color: '#fff', border: '1px solid var(--border-gold)', borderRadius: 6 }}
                         min="0"
+                        inputMode="numeric"
+                        enterKeyHint="done"
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleUpdateStock(p.id);
+                          }
+                        }}
                         autoFocus
                       />
                       <button
@@ -337,6 +424,14 @@ export default function InventorySection() {
                                   type="number"
                                   value={stockValues[v.id] ?? ''}
                                   onChange={e => setStockValues(prev => ({ ...prev, [v.id]: e.target.value }))}
+                                  inputMode="numeric"
+                                  enterKeyHint="done"
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      handleUpdateStock(v.id, true, p.id);
+                                    }
+                                  }}
                                   style={{ width: 60, padding: '2px 6px', fontSize: 12, background: '#000', color: '#fff', border: '1px solid var(--gold)' }}
                                   min="0"
                                 />
@@ -373,7 +468,130 @@ export default function InventorySection() {
           )}
         </tbody>
       </table>
-      </div>
+      </div>}
+
+      {isMobileLayout && <div className={styles.inventoryMobileList}>
+        {displayedProducts.map(p => {
+          const currentStock = getSafeStockQuantity(p);
+          const physicalStock = getPhysicalStock(p) ?? currentStock;
+          const isCritical = currentStock <= 3;
+          const isEditing = Boolean(editingIds[p.id]);
+          const isUpdating = Boolean(updatingIds[p.id]);
+          const isSuccess = Boolean(successIds[p.id]);
+          const errorMsg = errorMsgs[p.id];
+          const hasVariants = Array.isArray(p.variants) && p.variants.length > 0;
+          const isVariantExpanded = Boolean(expandedVariants[p.id]);
+          const imgUrl = p.imageUrl || p.ImageUrl || p.image || p.Image || "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100";
+
+          return (
+            <article key={`mobile-${p.id}`} className={styles.inventoryCard}>
+              <div className={styles.inventoryCardHeader}>
+                <div className={styles.inventoryCardIdentity}>
+                  <a href={`/urun/${p.slug || p.id}`} target="_blank" rel="noopener noreferrer" className={styles.inventoryCardName}>
+                    {p.name || p.Name}
+                  </a>
+                  {(p.sku || p.Sku) && <span className={styles.inventoryCardSku}>SKU: {p.sku || p.Sku}</span>}
+                  {hasVariants && (
+                    <button onClick={() => toggleVariants(p.id)} className={styles.inventoryVariantToggle} type="button">
+                      <FiBox /> {p.variants.length} Varyant {isVariantExpanded ? <FiChevronUp /> : <FiChevronDown />}
+                    </button>
+                  )}
+                </div>
+                <img src={imgUrl} alt={p.name || p.Name || ''} className={styles.inventoryCardImage} />
+              </div>
+
+              <div className={styles.inventoryStockGrid}>
+                <div><span>Fiziksel stok</span><strong>{physicalStock} Adet</strong></div>
+                <div><span>Kullanılabilir stok</span><strong className={isCritical ? styles.inventoryLowValue : styles.inventoryNormalValue}>{currentStock} Adet</strong></div>
+              </div>
+
+              <div className={styles.inventoryCardAction}>
+                <span className={styles.inventoryActionLabel}>Stok Güncelle</span>
+                {isEditing ? (
+                  <div className={styles.inventoryEditControls}>
+                    <input
+                      type="number"
+                      value={stockValues[p.id] ?? ''}
+                      onChange={e => setStockValues(prev => ({ ...prev, [p.id]: e.target.value }))}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleUpdateStock(p.id);
+                        }
+                      }}
+                      inputMode="numeric"
+                      enterKeyHint="done"
+                      min="0"
+                      autoFocus
+                      className={styles.inventoryStockInput}
+                      aria-label={`${p.name || p.Name} stok adedi`}
+                    />
+                    <button type="button" onClick={() => handleUpdateStock(p.id)} disabled={isUpdating} title="Kaydet" aria-label="Kaydet" className={`${styles.shopBtn} ${styles.inventorySaveButton}`}>
+                      {isUpdating ? '...' : <><FiSave /> Kaydet</>}
+                    </button>
+                    <button type="button" onClick={() => handleCancelEdit(p.id)} className={`${styles.seeAllBtn} ${styles.inventoryCancelButton}`}>İptal</button>
+                  </div>
+                ) : (
+                  <div className={styles.inventoryViewControls}>
+                    <button type="button" onClick={() => handleStartEdit(p.id, currentStock)} className={`${styles.seeAllBtn} ${styles.inventoryEditButton}`}>Stok Güncelle</button>
+                    {isSuccess && <span className={styles.inventorySuccess}><FiCheck /> Güncellendi</span>}
+                  </div>
+                )}
+                {errorMsg && <div className={styles.inventoryError}>⚠️ {errorMsg}</div>}
+              </div>
+
+              {hasVariants && isVariantExpanded && (
+                <div className={styles.inventoryVariantList}>
+                  {p.variants.map(v => {
+                    const vStock = getSafeStockQuantity(v);
+                    const isVEditing = Boolean(editingIds[v.id]);
+                    const isVUpdating = Boolean(updatingIds[v.id]);
+                    const isVSuccess = Boolean(successIds[v.id]);
+                    return (
+                      <div key={v.id} className={styles.inventoryVariantCard}>
+                        <div>
+                          <strong>{v.name}</strong>
+                          {v.sku && <span className={styles.inventoryCardSku}>SKU: {v.sku}</span>}
+                          <span>{vStock} adet</span>
+                        </div>
+                        {isVEditing ? (
+                          <div className={styles.inventoryEditControls}>
+                            <input
+                              type="number"
+                              value={stockValues[v.id] ?? ''}
+                              onChange={e => setStockValues(prev => ({ ...prev, [v.id]: e.target.value }))}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleUpdateStock(v.id, true, p.id);
+                                }
+                              }}
+                              inputMode="numeric"
+                              enterKeyHint="done"
+                              min="0"
+                              autoFocus
+                              className={styles.inventoryStockInput}
+                              aria-label={`${v.name} stok adedi`}
+                            />
+                            <button type="button" onClick={() => handleUpdateStock(v.id, true, p.id)} disabled={isVUpdating} title="Kaydet" className={`${styles.shopBtn} ${styles.inventorySaveButton}`}>
+                              {isVUpdating ? '...' : 'Kaydet'}
+                            </button>
+                            <button type="button" onClick={() => handleCancelEdit(v.id)} className={`${styles.seeAllBtn} ${styles.inventoryCancelButton}`}>İptal</button>
+                          </div>
+                        ) : (
+                          <button type="button" onClick={() => handleStartEdit(v.id, vStock)} className={styles.inventoryVariantEdit}>Düzenle</button>
+                        )}
+                        {isVSuccess && <span className={styles.inventorySuccess}>✓</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </article>
+          );
+        })}
+        {displayedProducts.length === 0 && <p className={styles.inventoryEmpty}>Gereksinimleri karşılayan ürün bulunamadı.</p>}
+      </div>}
     </div>
   );
 }
