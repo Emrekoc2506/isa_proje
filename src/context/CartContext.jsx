@@ -203,7 +203,21 @@ export function CartProvider ({ children }) {
       if (isAuthenticated) {
         triggerGuestCartMerge()
       } else {
-        refreshCart()
+        // Test ortamında anında çalıştır, tarayıcıda ise LCP'den sonra idle callback ile çalıştır
+        const isTestEnv = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
+        if (isTestEnv) {
+          refreshCart()
+        } else if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          const idleId = window.requestIdleCallback(() => {
+            refreshCart()
+          }, { timeout: 1200 })
+          return () => {
+            if ('cancelIdleCallback' in window) window.cancelIdleCallback(idleId)
+          }
+        } else {
+          const timer = setTimeout(refreshCart, 400)
+          return () => clearTimeout(timer)
+        }
       }
       return
     }

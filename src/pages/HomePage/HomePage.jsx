@@ -53,14 +53,14 @@ export default function HomePage() {
       setFeaturedProducts(visible(response?.featuredProducts));
     }).catch(err => console.error('Home vitrin yükleme hatası:', err));
 
-    // Blog, viewport'a yaklaşınca yüklenir; ilk LCP ile yarışmaz.
+    // Blog, viewport'a yaklaşınca yüklenir; ilk LCP ile yarışmaz (sadece 4 makale çekilir).
     let blogTimer;
     let observer;
     let blogLoaded = false;
     const loadBlog = () => {
       if (blogLoaded) return;
       blogLoaded = true;
-      getBlogArticles()
+      getBlogArticles({ page: 1, pageSize: 4 })
         .then(res => {
           if (!isMounted) return;
           const list = Array.isArray(res) ? res : (res?.items || []);
@@ -75,10 +75,10 @@ export default function HomePage() {
           loadBlog();
           observer.disconnect();
         }
-      }, { rootMargin: '600px 0px' });
+      }, { rootMargin: '250px 0px' });
       observer.observe(blogSectionRef.current);
     } else {
-      blogTimer = setTimeout(loadBlog, 1000);
+      blogTimer = setTimeout(loadBlog, 2500);
     }
 
     return () => {

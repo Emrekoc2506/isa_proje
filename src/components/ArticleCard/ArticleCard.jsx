@@ -33,12 +33,13 @@ export default function ArticleCard({ article, onClick }) {
       {/* ── Görsel ─────────────────────────────────────────── */}
       <div className={styles.imgWrapper}>
         <img
-          src={image || `https://picsum.photos/seed/${targetSlug || 'blog'}/600/400`}
+          src={image || '/ornek resim.jpg'}
           alt={title || 'Blog görseli'}
           className={styles.img}
           loading="lazy"
+          decoding="async"
           onError={(e) => {
-            e.target.src = `https://picsum.photos/seed/${targetSlug || 'blog'}/600/400`;
+            e.target.src = '/ornek resim.jpg';
           }}
         />
         <div className={styles.imgOverlay} />

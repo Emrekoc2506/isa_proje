@@ -9,14 +9,43 @@ import {
 } from 'react'
 import * as authApi from '../services/authApi'
 import { safeGetItem, safeSetItem, safeRemoveItem } from '../utils/storage'
-import { isJwtExpired, getJwtRemainingTimeMs } from '../utils/jwt'
+import { isJwtExpired, getJwtRemainingTimeMs, getJwtPayload } from '../utils/jwt'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider ({ children }) {
-  const [user, setUser] = useState(null)
-  const [roles, setRoles] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState(() => {
+    const token = safeGetItem('accessToken')
+    if (token && !isJwtExpired(token)) {
+      const payload = getJwtPayload(token)
+      if (payload) {
+        const rawRole = payload.role || payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+        return {
+          id: payload.sub || payload.nameid || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || 'user',
+          email: payload.email || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || payload.sub,
+          fullName: payload.name || payload.unique_name || 'Kullanıcı',
+          roles: Array.isArray(rawRole) ? rawRole : [rawRole].filter(Boolean)
+        }
+      }
+    }
+    return null
+  })
+
+  const [roles, setRoles] = useState(() => {
+    const token = safeGetItem('accessToken')
+    if (token && !isJwtExpired(token)) {
+      const payload = getJwtPayload(token)
+      if (payload) {
+        const rawRole = payload.role || payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+        return Array.isArray(rawRole) ? rawRole : [rawRole].filter(Boolean)
+      }
+    }
+    return []
+  })
+
+  const [isLoading, setIsLoading] = useState(() => {
+    return Boolean(safeGetItem('accessToken'))
+  })
 
   const isMountedRef = useRef(true)
   useEffect(() => {
@@ -34,6 +63,7 @@ export function AuthProvider ({ children }) {
 
   const reloadUser = useCallback(async () => {
     let token = safeGetItem('accessToken')
+
     if (!token || isJwtExpired(token)) {
       if (token) {
         safeRemoveItem('accessToken')
@@ -42,14 +72,17 @@ export function AuthProvider ({ children }) {
         const refreshRes = await authApi.refreshToken()
         if (refreshRes?.accessToken) {
           safeSetItem('accessToken', refreshRes.accessToken)
+          safeSetItem('has_logged_in', '1')
           token = refreshRes.accessToken
         } else {
+          safeRemoveItem('has_logged_in')
           safeSetState(setUser, null)
           safeSetState(setRoles, [])
           safeSetState(setIsLoading, false)
           return null
         }
       } catch {
+        safeRemoveItem('has_logged_in')
         safeSetState(setUser, null)
         safeSetState(setRoles, [])
         safeSetState(setIsLoading, false)
@@ -61,11 +94,13 @@ export function AuthProvider ({ children }) {
       safeSetState(setIsLoading, true)
       const res = await authApi.me()
       if (res && safeGetItem('accessToken')) {
+        safeSetItem('has_logged_in', '1')
         safeSetState(setUser, res)
         safeSetState(setRoles, res.roles || [])
         return res
       }
     } catch (err) {
+      safeRemoveItem('has_logged_in')
       safeSetState(setUser, null)
       safeSetState(setRoles, [])
     } finally {
@@ -80,6 +115,7 @@ export function AuthProvider ({ children }) {
     if (typeof window === 'undefined') return
     const handleSessionExpired = () => {
       safeRemoveItem('accessToken')
+      safeRemoveItem('has_logged_in')
       setUser(null)
       setRoles([])
     }
@@ -160,12 +196,14 @@ export function AuthProvider ({ children }) {
     async credentials => {
       try {
         const res = await authApi.login(credentials)
+        safeSetItem('has_logged_in', '1')
         const userProfile = await reloadUser()
         if (userProfile) {
           return { ...res, user: userProfile }
         }
         throw new Error('Giriş bilgileri alınamadı.')
       } catch (err) {
+        safeRemoveItem('has_logged_in')
         setUser(null)
         setRoles([])
         throw err
@@ -185,6 +223,7 @@ export function AuthProvider ({ children }) {
       // Ignore logout errors
     } finally {
       safeRemoveItem('accessToken')
+      safeRemoveItem('has_logged_in')
       setUser(null)
       setRoles([])
     }
@@ -197,6 +236,7 @@ export function AuthProvider ({ children }) {
       // Ignore logout errors
     } finally {
       safeRemoveItem('accessToken')
+      safeRemoveItem('has_logged_in')
       setUser(null)
       setRoles([])
     }

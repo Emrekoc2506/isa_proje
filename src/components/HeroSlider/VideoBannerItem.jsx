@@ -117,6 +117,7 @@ export default function VideoBannerItem({
           className={className}
           loading={isFirst ? 'eager' : 'lazy'}
           fetchPriority={isFirst ? 'high' : 'auto'}
+          decoding={isFirst ? 'sync' : 'async'}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       </picture>
@@ -132,6 +133,7 @@ export default function VideoBannerItem({
           src={embedUrl}
           title={slide.title || 'Video Banner'}
           className={className}
+          loading="lazy"
           style={{ width: '100%', height: '100%', border: 'none', objectFit: 'cover' }}
           allow="autoplay; encrypted-media"
           allowFullScreen

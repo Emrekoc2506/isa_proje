@@ -13,6 +13,8 @@ export function VisaBadge({ height = 18, className = '' }) {
       <img
         src={visaLogo}
         alt="Visa"
+        loading="lazy"
+        decoding="async"
         style={{ height: `${height}px` }}
         className={styles.logoImg}
       />
@@ -29,6 +31,8 @@ export function MastercardBadge({ height = 20, className = '' }) {
       <img
         src={mastercardLogo}
         alt="Mastercard"
+        loading="lazy"
+        decoding="async"
         style={{ height: `${height}px` }}
         className={styles.logoImg}
       />
@@ -45,6 +49,8 @@ export function TroyBadge({ height = 18, className = '' }) {
       <img
         src={troyLogo}
         alt="TROY"
+        loading="lazy"
+        decoding="async"
         style={{ height: `${height}px` }}
         className={styles.logoImg}
       />
