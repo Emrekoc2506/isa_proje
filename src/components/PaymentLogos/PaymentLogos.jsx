@@ -2,27 +2,43 @@ import React from 'react';
 import styles from './PaymentLogos.module.css';
 
 /**
- * 1. VISA Logosu — Resmi Orijinal Vektörel (Şeffaf / Gece-Gündüz Uyumlu)
+ * 1. VISA Logosu — Kusursuz Harf Aralıkları ve Resmi Oranlar (Şeffaf / Gece-Gündüz Uyumlu)
  */
 export function VisaBadge({ height = 18, className = '' }) {
   return (
     <div className={`${styles.badge} ${className}`} title="Visa ile Güvenli Ödeme">
       <svg
-        viewBox="0 0 100 32"
+        viewBox="0 0 76 24"
         height={height}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={styles.svgLogo}
         aria-label="Visa"
       >
+        {/* V Sarı Vurgu (Sol Üst Kanat) */}
         <path
-          className={styles.visaBlue}
-          d="M38.86 31.42l5.65-27.4h9.02l-5.65 27.4h-9.02zm33.51-26.75c-1.8-.7-4.6-1.46-8.08-1.46-8.9 0-15.17 4.74-15.22 11.53-.08 5.01 4.46 7.8 7.88 9.47 3.51 1.71 4.69 2.81 4.67 4.33-.05 2.34-2.8 3.41-5.39 3.41-3.6 0-5.52-.54-8.47-1.84l-1.16-.54-1.25 6.06c1.63.75 4.64 1.41 7.78 1.44 9.47 0 15.63-4.68 15.68-11.93.06-3.98-2.37-7.01-7.58-9.5-3.16-1.62-5.09-2.7-5.09-4.35.03-1.49 1.63-3.03 5.14-3.03 2.94-.05 5.07.63 6.72 1.34l.8.38 1.07-5.31zm24.18.08h-6.98c-2.16 0-3.78.62-4.73 2.89L71.4 31.42h9.47l1.89-5.23h11.58l1.09 5.23h8.34L96.55 4.75zm-11.26 18.77l3.54-9.74 2.04 9.74h-5.58zM24.77 4.75L15.93 23.4l-.95-4.88c-1.65-5.6-6.79-11.68-12.54-14.73l8.1 30.22h9.52l14.16-29.26h-9.45z"
-          fill="#2563EB"
-        />
-        <path
-          d="M12.44 4.75H0l-.13.62c9.7 2.48 16.12 8.46 18.78 15.64l-2.7-13.69c-.47-1.87-1.8-2.43-3.51-2.57z"
+          d="M6.5 1.5H0.5L0.4 1.8C5.2 3.1 9.4 6.2 11.2 11.2L9.8 3.5C9.5 1.9 8.3 1.5 6.5 1.5Z"
           fill="#F59E0B"
+        />
+        {/* V Harfi */}
+        <path
+          d="M15.5 1.5L10.8 14.5L10.2 11.8C9.3 8.3 6.8 4.8 3.5 3.1L7.8 19.8H13.2L20.8 1.5H15.5Z"
+          className={styles.visaBlue}
+        />
+        {/* I Harfi (x: 23 - 29.5) */}
+        <path
+          d="M23.5 19.8L26.6 1.5H31.8L28.7 19.8H23.5Z"
+          className={styles.visaBlue}
+        />
+        {/* S Harfi (x: 33.5 - 51) — I ile hiçbir teması/çakışması yoktur */}
+        <path
+          d="M50.2 2.2C49.1 1.7 47.3 1.3 45.2 1.3C39.6 1.3 35.8 4.3 35.7 8.5C35.7 11.7 38.4 13.5 40.6 14.6C42.8 15.7 43.6 16.5 43.6 17.5C43.6 19 41.8 19.7 40.1 19.7C37.8 19.7 36.5 19.3 34.6 18.5L33.8 18.1L33 22.8C34.3 23.4 36.7 23.8 39.2 23.8C45.2 23.8 49.2 20.8 49.3 16.2C49.3 13.6 47.8 11.7 44.4 10C42.4 9 41.2 8.3 41.2 7.3C41.2 6.3 42.3 5.4 44.5 5.4C46.3 5.4 47.7 5.8 48.8 6.3L49.3 6.5L50.2 2.2Z"
+          className={styles.visaBlue}
+        />
+        {/* A Harfi (x: 53 - 75) */}
+        <path
+          d="M69.8 1.5H65.8C64.5 1.5 63.6 1.9 63 3.3L55.5 19.8H60.8L61.8 16.8H68.3L68.9 19.8H73.6L69.8 1.5ZM63.3 12.8L66.2 4.8L67.8 12.8H63.3Z"
+          className={styles.visaBlue}
         />
       </svg>
     </div>
@@ -30,36 +46,36 @@ export function VisaBadge({ height = 18, className = '' }) {
 }
 
 /**
- * 2. MASTERCARD Logosu — Resmi Orijinal İki Halka ve Metin (Şeffaf / Gece-Gündüz Uyumlu)
+ * 2. MASTERCARD Logosu — Kutunun İçinde Mükemmel Ortalanmış ve Dengeli
  */
-export function MastercardBadge({ height = 18, className = '' }) {
+export function MastercardBadge({ height = 20, className = '' }) {
   return (
-    <div className={`${styles.badge} ${className}`} title="Mastercard ile Güvenli Ödeme">
+    <div className={`${styles.badge} ${styles.mastercardBadge} ${className}`} title="Mastercard ile Güvenli Ödeme">
       <svg
-        viewBox="0 0 100 40"
+        viewBox="0 0 78 24"
         height={height}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={styles.svgLogo}
         aria-label="Mastercard"
       >
-        {/* Kırmızı Daire */}
-        <circle cx="18" cy="20" r="18" fill="#EB001B" />
-        {/* Sarı Daire */}
-        <circle cx="40" cy="20" r="18" fill="#F79E1B" />
+        {/* Sol Kırmızı Daire */}
+        <circle cx="12" cy="12" r="9.5" fill="#EB001B" />
+        {/* Sağ Sarı/Turuncu Daire */}
+        <circle cx="23.5" cy="12" r="9.5" fill="#F79E1B" />
         {/* Kesişim Alanı */}
         <path
-          d="M29 6.8A17.9 17.9 0 0 1 35.8 20A17.9 17.9 0 0 1 29 33.2A17.9 17.9 0 0 1 22.2 20A17.9 17.9 0 0 1 29 6.8Z"
+          d="M17.75 4.8A9.5 9.5 0 0 1 21.5 12A9.5 9.5 0 0 1 17.75 19.2A9.5 9.5 0 0 1 14 12A9.5 9.5 0 0 1 17.75 4.8Z"
           fill="#FF5F00"
         />
-        {/* mastercard Tipografisi */}
+        {/* Ortalanmış mastercard Tipografisi */}
         <text
-          x="62"
-          y="25.5"
+          x="36"
+          y="15.2"
           fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-          fontSize="14.5"
+          fontSize="9"
           fontWeight="700"
-          letterSpacing="-0.4px"
+          letterSpacing="-0.2px"
           className={styles.brandText}
         >
           mastercard
@@ -70,37 +86,48 @@ export function MastercardBadge({ height = 18, className = '' }) {
 }
 
 /**
- * 3. TROY Logosu — Resmi Orijinal Vektörel (Şeffaf / Gece-Gündüz Uyumlu)
+ * 3. TROY Logosu — Turkuaz Halka & Modern Tipografi
  */
-export function TroyBadge({ height = 18, className = '' }) {
+export function TroyBadge({ height = 20, className = '' }) {
   return (
     <div className={`${styles.badge} ${className}`} title="TROY ile Güvenli Ödeme">
       <svg
-        viewBox="0 0 95 38"
+        viewBox="0 0 68 24"
         height={height}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={styles.svgLogo}
         aria-label="TROY"
       >
-        {/* 't' */}
-        <path
-          d="M12.5 10.8V3.6H6.2V10.8H1.5V17H6.2V27.5C6.2 32.5 9.8 35.2 15.5 35.2C17.8 35.2 19.8 34.6 21 33.8L19.4 28.2C18.5 28.7 17.4 29 16.2 29C13.8 29 12.5 27.8 12.5 24.8V17H20.5V10.8H12.5Z"
+        {/* 'tr' */}
+        <text
+          x="2"
+          y="17"
+          fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+          fontSize="15"
+          fontWeight="800"
+          letterSpacing="-0.5px"
           className={styles.troyDark}
-        />
-        {/* 'r' */}
-        <path
-          d="M23.5 10.8H29.5V15.2C31 12 34.5 10.2 39 10.2C40.5 10.2 41.8 10.5 43 11L41.2 17.2C40 16.8 38.8 16.5 37.5 16.5C33.2 16.5 29.8 19.8 29.8 25.5V35H23.5V10.8Z"
-          className={styles.troyDark}
-        />
+        >
+          tr
+        </text>
+
         {/* 'o' Turkuaz Halka & Merkez Nokta */}
-        <circle cx="58" cy="22.8" r="11.5" stroke="#00B2A9" strokeWidth="5.2" fill="none" />
-        <circle cx="58" cy="22.8" r="3.2" fill="#00B2A9" />
+        <circle cx="27" cy="12" r="5.8" stroke="#00B2A9" strokeWidth="2.6" fill="none" />
+        <circle cx="27" cy="12" r="1.6" fill="#00B2A9" />
+
         {/* 'y' */}
-        <path
-          d="M73 10.8L80.5 27.5L88 10.8H94.8L84.2 32.5C81.8 38 78.2 41.5 72.5 41.5C70.8 41.5 69.2 41.1 68 40.5L69.6 35C70.5 35.4 71.4 35.6 72.5 35.6C75.2 35.6 77 33.8 78.2 31L78.6 30L66.5 10.8H73Z"
+        <text
+          x="36"
+          y="17"
+          fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+          fontSize="15"
+          fontWeight="800"
+          letterSpacing="-0.5px"
           className={styles.troyDark}
-        />
+        >
+          y
+        </text>
       </svg>
     </div>
   );

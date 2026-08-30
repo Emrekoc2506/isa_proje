@@ -1,7 +1,7 @@
 .badgesGroup {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -9,23 +9,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 5px 9px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
+  height: 32px;
+  padding: 4px 12px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
   transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   backdrop-filter: blur(4px);
+  box-sizing: border-box;
 }
 
 .badge:hover {
   transform: translateY(-1px);
   border-color: var(--gold, #c9a227);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.09);
 }
 
 .svgLogo {
   display: block;
   overflow: visible;
+  max-width: 100%;
 }
 
 /* ── Gece & Gündüz Modu Renk Uyumluluğu ── */
