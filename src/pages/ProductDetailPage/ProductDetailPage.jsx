@@ -975,20 +975,7 @@ export default function ProductDetailPage() {
                   initial={{ opacity: 0, y: -6, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: "auto" }}
                   exit={{ opacity: 0, y: -6, height: 0 }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    background: "rgba(224, 85, 148, 0.14)",
-                    border: "1px solid rgba(224, 85, 148, 0.45)",
-                    color: "#f8a5c2",
-                    padding: "10px 14px",
-                    borderRadius: "8px",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    lineHeight: "1.4",
-                    marginBottom: "14px",
-                  }}
+                  className={styles.stockErrorBanner}
                 >
                   <FiAlertCircle
                     style={{
@@ -1000,16 +987,8 @@ export default function ProductDetailPage() {
                   <span style={{ flex: 1 }}>{stockError}</span>
                   <button
                     onClick={() => setStockError(null)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "#f8a5c2",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      padding: "2px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
+                    className={styles.stockErrorCloseBtn}
+                    aria-label="Kapat"
                   >
                     ✕
                   </button>
