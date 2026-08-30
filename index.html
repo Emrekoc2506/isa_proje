@@ -20,6 +20,36 @@
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Roboto:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      (function() {
+        try {
+          var manual = localStorage.getItem('user_manual_theme');
+          var manualTime = parseInt(localStorage.getItem('user_manual_theme_time'), 10);
+          var manualHour = parseInt(localStorage.getItem('user_manual_theme_hour'), 10);
+          var now = new Date();
+          var trHour;
+          try {
+            var f = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Istanbul', hour: 'numeric', hourCycle: 'h23' });
+            trHour = parseInt(f.format(now), 10);
+          } catch(e) {
+            trHour = (now.getUTCHours() + 3) % 24;
+          }
+          var autoTheme = (trHour >= 19 || trHour < 7) ? 'dark' : 'light';
+          
+          if (manual && manualTime && (Date.now() - manualTime < 6 * 3600000)) {
+            var wasDay = manualHour >= 7 && manualHour < 19;
+            var isDay = trHour >= 7 && trHour < 19;
+            if (wasDay === isDay) {
+              document.documentElement.setAttribute('data-theme', manual);
+              return;
+            }
+          }
+          document.documentElement.setAttribute('data-theme', autoTheme);
+        } catch(e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
