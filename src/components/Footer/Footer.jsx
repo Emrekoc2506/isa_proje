@@ -9,7 +9,7 @@ import {
 } from "react-icons/fi";
 import { footerLinks } from "../../data/index";
 import logoImage from "../../assets/images/logo-2.png";
-import paymentMethodsImg from "../../assets/images/payment-methods.png";
+import PaymentBadges from "../PaymentLogos/PaymentLogos";
 import { useProducts } from "../../context/ProductContext";
 
 export default function Footer() {
@@ -153,17 +153,11 @@ export default function Footer() {
 
         {/* ── Alt: Güvenlik / Ödeme Rozetleri ve Copyright ── */}
         <div className={styles.bottom} style={{ flexDirection: 'column', gap: 16, alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, flexWrap: 'wrap', opacity: 0.95 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap', opacity: 0.95 }}>
             <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.03)', padding: '6px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.06)' }}>
               🔒 256-Bit SSL Güvenli Ödeme
             </span>
-            <div style={{ display: 'inline-flex', alignItems: 'center', background: '#ffffff', padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 6px rgba(0,0,0,0.06)' }}>
-              <img
-                src={paymentMethodsImg}
-                alt="Visa, MasterCard, Troy ile Güvenli Ödeme"
-                style={{ height: 22, width: 'auto', display: 'block', objectFit: 'contain' }}
-              />
-            </div>
+            <PaymentBadges height={20} />
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold-light)', background: 'rgba(201,162,39,0.1)', padding: '6px 12px', borderRadius: 6, border: '1px solid rgba(201,162,39,0.25)' }}>
               %100 Güvenli Alışveriş
             </span>
