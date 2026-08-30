@@ -19,6 +19,7 @@ import {
   FiTrash2,
   FiMessageSquare,
   FiLoader,
+  FiCheck,
 } from "react-icons/fi";
 import logoImage from "../../assets/images/logo-2.png";
 import { getMyOrders } from "../../services/orderApi";

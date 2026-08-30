@@ -1,4 +1,4 @@
-jj    /**
+/**
  * blogApi.js — Blog Modülü Servis Katmanı
  * Backend spec: http://api-test.ozeldersvip.xyz/api
  * NOT: Natro, PUT/PATCH/DELETE metotlarını engeller.
