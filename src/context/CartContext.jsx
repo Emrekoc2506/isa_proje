@@ -88,6 +88,10 @@ export function getCartErrorMessage (codeOrMessage) {
       return 'Sepet ürünü bulunamadı. Sepetiniz yenilendi.'
     case 'network_error':
       return 'Sepete ulaşılamadı. Lütfen bağlantınızı kontrol edin.'
+    case 'unauthorized':
+    case 'token_expired':
+    case 'invalid_refresh_token':
+      return null // Oturum hatası — CartContext özel olarak işler
     default:
       return (
         (rawMsg && translateErrorMessage(rawMsg)) ||
@@ -307,6 +311,13 @@ export function CartProvider ({ children }) {
           applyServerCart(data)
           return { success: true, cart: data }
         } catch (err) {
+          // 401/unauthorized → token yenilemesi başarısız, refreshCart gereksiz yere 401 alır
+          const isAuthErr =
+            err.status === 401 ||
+            err.code === 'unauthorized' ||
+            err.code === 'token_expired' ||
+            err.code === 'invalid_refresh_token'
+
           if (err.status === 409 || err.code === 'cart_concurrency_conflict') {
             await new Promise(r => setTimeout(r, 250))
             try {
@@ -319,7 +330,7 @@ export function CartProvider ({ children }) {
               applyServerCart(retryData)
               return { success: true, cart: retryData }
             } catch (retryErr) {
-              await refreshCart()
+              if (!isAuthErr) await refreshCart()
               const msg = getCartErrorMessage(retryErr)
               setCartError(msg)
               return {
@@ -329,13 +340,16 @@ export function CartProvider ({ children }) {
               }
             }
           }
-          await refreshCart()
+          if (!isAuthErr) await refreshCart()
           const msg = getCartErrorMessage(err)
-          setCartError(msg)
+          // Oturum hatası için sepet error'u gösterme (zaten global session-expired işleniyor)
+          if (!isAuthErr && msg) setCartError(msg)
           return {
             success: false,
             code: err.code || 'cart_error',
-            message: msg
+            message: isAuthErr
+              ? 'Bu işlem için giriş yapmanız gerekmektedir.'
+              : msg
           }
         } finally {
           addingProductIdsRef.current.delete(rawId)
@@ -434,6 +448,12 @@ export function CartProvider ({ children }) {
             }
             resolve({ success: true, cart: data })
           } catch (err) {
+            const isAuthErr =
+              err.status === 401 ||
+              err.code === 'unauthorized' ||
+              err.code === 'token_expired' ||
+              err.code === 'invalid_refresh_token'
+
             if (err.status === 409 || err.code === 'cart_concurrency_conflict') {
               await new Promise(r => setTimeout(r, 250))
               try {
@@ -443,14 +463,14 @@ export function CartProvider ({ children }) {
                 if (retryData && (retryData.items || retryData.cartData)) {
                   applyServerCart(retryData)
                 } else {
-                  await refreshCart()
+                  if (!isAuthErr) await refreshCart()
                 }
                 resolve({ success: true, cart: retryData })
                 return
               } catch (retryErr) {
-                await refreshCart()
+                if (!isAuthErr) await refreshCart()
                 const msg = getCartErrorMessage(retryErr)
-                setCartError(msg)
+                if (!isAuthErr && msg) setCartError(msg)
                 resolve({
                   success: false,
                   code: retryErr.code || 'cart_error',
@@ -459,7 +479,7 @@ export function CartProvider ({ children }) {
                 return
               }
             }
-            await refreshCart()
+            if (!isAuthErr) await refreshCart()
             const code = err.code || ''
             let msg = getCartErrorMessage(err)
             if (
@@ -469,8 +489,12 @@ export function CartProvider ({ children }) {
             ) {
               msg = 'Bu ürün artık satışta değil ve sepetinizden kaldırıldı.'
             }
-            setCartError(msg)
-            resolve({ success: false, code, message: msg })
+            if (!isAuthErr && msg) setCartError(msg)
+            resolve({
+              success: false,
+              code: isAuthErr ? 'unauthorized' : code,
+              message: isAuthErr ? 'Bu işlem için giriş yapmanız gerekmektedir.' : msg
+            })
           }
         }, 150) // 150ms debounce ile peş peşe tıklamaları tek bir akıcı istekte birleştirir
 
