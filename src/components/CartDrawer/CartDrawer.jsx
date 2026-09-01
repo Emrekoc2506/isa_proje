@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiTrash2, FiMinus, FiPlus, FiShoppingBag, FiAlertCircle } from 'react-icons/fi';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CartDrawer({ open, onClose }) {
   const { items, updateQty, removeFromCart, clearCart, totalCount, totalPrice, cartError, clearCartError } = useCart();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Auto clear error after 4 seconds
@@ -21,7 +23,11 @@ export default function CartDrawer({ open, onClose }) {
 
   const handleGoToCheckout = () => {
     onClose();
-    navigate('/odeme');
+    if (!isAuthenticated) {
+      navigate('/giris', { state: { from: { pathname: '/odeme' } } });
+    } else {
+      navigate('/odeme');
+    }
   };
 
   return (

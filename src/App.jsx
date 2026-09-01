@@ -280,9 +280,16 @@ function AppRoutes() {
       />
       <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
 
-      {/* Sepet / Ödeme (Auth veya Guest) */}
+      {/* Sepet / Ödeme (Yalnızca Kayıtlı Kullanıcılar) */}
       <Route path="/sepet" element={<Navigate to="/odeme" replace />} />
-      <Route path="/odeme" element={<CheckoutPage />} />
+      <Route
+        path="/odeme"
+        element={
+          <ProtectedRoute>
+            <CheckoutPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/odeme/sonuc" element={<PaymentResultPage />} />
 
       {/* Müşteri Rotaları (Giriş zorunlu) */}
