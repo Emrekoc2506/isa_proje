@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { FiToggleLeft, FiToggleRight, FiMail, FiPhone, FiCalendar, FiMessageCircle, FiShield, FiUser, FiCheckCircle, FiUserX } from 'react-icons/fi';
 import * as customerApi from '../../../services/customerApi';
+import * as abuseApi from '../../../services/abuseApi';
+import AbuseBanModal from '../../../components/Admin/AbuseBanModal/AbuseBanModal';
 import { formatTurkishDate } from '../../../utils/dateUtils';
 import { useAuth } from '../../../context/AuthContext';
 import styles from '../AdminPage.module.css';
@@ -8,7 +10,10 @@ import styles from '../AdminPage.module.css';
 export default function CustomersSection({ onMessageUser }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, user } = useAuth();
+
+  const [selectedCustomerForBan, setSelectedCustomerForBan] = useState(null);
+  const [showBanModal, setShowBanModal] = useState(false);
 
   const fetchCustomers = async () => {
     try {
@@ -20,6 +25,13 @@ export default function CustomersSection({ onMessageUser }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBanSubmit = async (payload) => {
+    if (!selectedCustomerForBan?.id) return;
+    await abuseApi.banCustomer(selectedCustomerForBan.id, payload);
+    alert('Kullanıcı için güvenlik engeli uygulandı.');
+    await fetchCustomers();
   };
 
   useEffect(() => {
@@ -96,6 +108,7 @@ export default function CustomersSection({ onMessageUser }) {
           {customers.map(c => {
             const roleType = getUserRole(c);
             const isUpdatingThis = updatingRoleId === c.id;
+            const isSelf = user && (c.id === user.id || c.userId === user.id || (user.email && c.email && c.email.toLowerCase() === user.email.toLowerCase()));
             return (
               <tr key={c.id} style={{ borderBottom: '1px solid var(--border-gold)' }}>
                 <td style={{ padding: 8, color: 'var(--text-primary)', fontWeight: 600 }}>{c.fullName}</td>
@@ -159,6 +172,44 @@ export default function CustomersSection({ onMessageUser }) {
                       Mesaj
                     </button>
 
+                    {/* 🚫 Engelle Butonu */}
+                    {roleType !== 'SuperAdmin' && !isSelf && (
+                      <button
+                        type="button"
+                        id={`btn-ban-customer-${c.id}`}
+                        aria-label={`${c.fullName} adlı kullanıcıyı engelle`}
+                        onClick={() => {
+                          setSelectedCustomerForBan(c);
+                          setShowBanModal(true);
+                        }}
+                        title={`${c.fullName} adlı kullanıcıyı engelle`}
+                        style={{
+                          background: 'rgba(224, 85, 148, 0.12)',
+                          border: '1px solid rgba(224, 85, 148, 0.35)',
+                          borderRadius: 8,
+                          padding: '6px 12px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          color: '#e05594',
+                          fontSize: 13,
+                          fontWeight: 600,
+                          transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = 'rgba(224, 85, 148, 0.25)';
+                          e.currentTarget.style.transform = 'translateY(-1px)';
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = 'rgba(224, 85, 148, 0.12)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                        }}
+                      >
+                        🚫 Engelle
+                      </button>
+                    )}
+
                     {isSuperAdmin && roleType !== 'SuperAdmin' && (
                       roleType === 'Admin' ? (
                         <button
@@ -221,6 +272,20 @@ export default function CustomersSection({ onMessageUser }) {
         </tbody>
       </table>
       </div>
+
+      {showBanModal && selectedCustomerForBan && (
+        <AbuseBanModal
+          open={showBanModal}
+          sourceType="customer"
+          source={selectedCustomerForBan}
+          allowAccountBan={true}
+          onClose={() => {
+            setShowBanModal(false);
+            setSelectedCustomerForBan(null);
+          }}
+          onSubmit={handleBanSubmit}
+        />
+      )}
     </div>
   );
 }

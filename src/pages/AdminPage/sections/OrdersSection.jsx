@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { FiEye, FiX, FiCheck, FiXCircle, FiFileText, FiDownload, FiLoader, FiFilter } from 'react-icons/fi';
+import { FiEye, FiX, FiCheck, FiXCircle, FiFileText, FiDownload, FiLoader, FiShield } from 'react-icons/fi';
 import * as orderApi from '../../../services/orderApi';
 import * as bankTransferApi from '../../../services/bankTransferApi';
+import * as abuseApi from '../../../services/abuseApi';
+import AbuseBanModal from '../../../components/Admin/AbuseBanModal/AbuseBanModal';
 import { formatTurkishDate } from '../../../utils/dateUtils';
 import { translateErrorMessage } from '../../../api/apiError';
 import styles from '../AdminPage.module.css';
@@ -26,6 +28,20 @@ export default function OrdersSection() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [processingAction, setProcessingAction] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
+
+  const handleBanOrderSource = async (payload) => {
+    if (!selectedOrder?.id) return;
+    await abuseApi.banOrderSource(selectedOrder.id, payload);
+    alert('Sipariş kaynağı için güvenlik engeli uygulandı.');
+    setShowBanModal(false);
+    try {
+      const updated = await orderApi.getAdminOrderById(selectedOrder.id);
+      if (updated) setSelectedOrder(updated);
+    } catch (e) {
+      // Hata durumunda sessizce devam et
+    }
+  };
 
   // Fetch orders from backend
   const fetchOrders = async () => {
@@ -247,9 +263,41 @@ export default function OrdersSection() {
       {showDetail && selectedOrder && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, overflowY: 'auto' }}>
           <div className={styles.sectionCard} style={{ width: '90%', maxWidth: 580, margin: '40px auto', background: 'var(--bg-dark)', border: '1px solid var(--border-gold)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
               <h4 style={{ color: 'var(--gold-light)', margin: 0, fontSize: 16 }}>Sipariş Detayı: #{selectedOrder.orderNumber}</h4>
-              <button onClick={() => setShowDetail(false)} className={styles.iconBtn} style={{ color: 'var(--text-primary)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18 }}><FiX /></button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button
+                  type="button"
+                  id="btn-order-ban-source"
+                  onClick={() => setShowBanModal(true)}
+                  title="Bu siparişin kullanıcısını / kaynağını güvenlik için engelle"
+                  style={{
+                    background: 'rgba(224, 85, 148, 0.15)',
+                    border: '1px solid rgba(224, 85, 148, 0.4)',
+                    color: '#e05594',
+                    borderRadius: 6,
+                    padding: '6px 12px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'rgba(224, 85, 148, 0.28)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'rgba(224, 85, 148, 0.15)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <FiShield size={13} /> 🚫 Kötüye Kullanım / Engelle
+                </button>
+                <button onClick={() => setShowDetail(false)} className={styles.iconBtn} style={{ color: 'var(--text-primary)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18 }}><FiX /></button>
+              </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'left' }}>
@@ -479,6 +527,23 @@ export default function OrdersSection() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ABUSE BAN MODAL FOR ORDER */}
+      {showBanModal && selectedOrder && (
+        <AbuseBanModal
+          open={showBanModal}
+          sourceType="order"
+          source={selectedOrder}
+          allowAccountBan={Boolean(
+            selectedOrder.userId &&
+            selectedOrder.isGuest !== true &&
+            selectedOrder.guest !== true &&
+            selectedOrder.isGuestOrder !== true
+          )}
+          onClose={() => setShowBanModal(false)}
+          onSubmit={handleBanOrderSource}
+        />
       )}
     </div>
   );

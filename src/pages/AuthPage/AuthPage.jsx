@@ -10,6 +10,7 @@ import {
   FiEye,
   FiEyeOff,
   FiAlertCircle,
+  FiPhone,
 } from "react-icons/fi";
 import logoImage from "../../assets/images/logo-2.png";
 import { useAuth } from "../../context/AuthContext";
@@ -20,6 +21,11 @@ import {
   safeRemoveItem,
   safeGetJson,
 } from "../../utils/storage";
+import {
+  formatTurkishPhone,
+  normalizeTurkishPhone,
+  isValidTurkishMobile,
+} from "../../utils/phoneUtils";
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login");
@@ -35,6 +41,7 @@ export default function AuthPage() {
 
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
+  const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirm, setRegConfirm] = useState("");
 
@@ -168,6 +175,13 @@ export default function AuthPage() {
           : "/");
       navigate(destination, { replace: true });
     } catch (err) {
+      if (err.code === "abuse_blocked") {
+        setLoginError(
+          "Bu işlem gerçekleştirilemiyor. Yardım için destek ekibiyle iletişime geçebilirsiniz."
+        );
+        return;
+      }
+
       if (err.requiresVerification === true && err.userId) {
         setLoginError(
           "E-posta adresiniz henüz doğrulanmamış. Yönlendiriliyorsunuz...",
@@ -208,6 +222,16 @@ export default function AuthPage() {
       return;
     }
 
+    if (!regPhone.trim()) {
+      setRegError("Telefon numarası zorunludur.");
+      return;
+    }
+
+    if (!isValidTurkishMobile(regPhone)) {
+      setRegError("Lütfen geçerli bir cep telefonu numarası girin (5XX XXX XX XX).");
+      return;
+    }
+
     if (regPassword.length < 8) {
       setRegError("Şifre en az 8 karakter olmalıdır.");
       return;
@@ -220,11 +244,13 @@ export default function AuthPage() {
 
     try {
       setRegLoading(true);
+      const normalizedPhone = normalizeTurkishPhone(regPhone);
       // Kayıt isteği gönder
       const res = await register({
-        fullName: regName,
-        email: regEmail,
+        fullName: regName.trim(),
+        email: regEmail.trim(),
         password: regPassword,
+        phoneNumber: normalizedPhone,
       });
 
       // Kayıt başarılı olduğunda e-posta doğrulama bekleme sayfasına yönlendir (otomatik login yapılmaz)
@@ -232,6 +258,12 @@ export default function AuthPage() {
         state: { email: regEmail, userId: res?.userId },
       });
     } catch (err) {
+      if (err.code === "abuse_blocked") {
+        setRegError(
+          "Bu işlem gerçekleştirilemiyor. Yardım için destek ekibiyle iletişime geçebilirsiniz."
+        );
+        return;
+      }
       let errorMessage = err.message || "Kayıt işlemi başarısız.";
       if (err.errors) {
         errorMessage = Object.entries(err.errors)
@@ -521,7 +553,6 @@ export default function AuthPage() {
                     id="reg-name"
                     type="text"
                     className={styles.input}
-                    required
                     autoComplete="name"
                     value={regName}
                     onChange={(e) => {
@@ -529,7 +560,7 @@ export default function AuthPage() {
                       if (regError) setRegError(null);
                     }}
                   />
-                  <span className={styles.label}>Ad Soyad</span>
+                  <label htmlFor="reg-name" className={styles.label}>Ad Soyad</label>
                 </div>
 
                 <div className={styles.inputBox}>
@@ -538,7 +569,6 @@ export default function AuthPage() {
                     id="reg-email"
                     type="email"
                     className={styles.input}
-                    required
                     autoComplete="email"
                     value={regEmail}
                     onChange={(e) => {
@@ -546,7 +576,24 @@ export default function AuthPage() {
                       if (regError) setRegError(null);
                     }}
                   />
-                  <span className={styles.label}>E-posta</span>
+                  <label htmlFor="reg-email" className={styles.label}>E-posta</label>
+                </div>
+
+                <div className={styles.inputBox}>
+                  <FiPhone className={styles.inputIcon} />
+                  <input
+                    id="reg-phone"
+                    type="tel"
+                    className={styles.input}
+                    autoComplete="tel"
+                    placeholder="5XX XXX XX XX"
+                    value={regPhone}
+                    onChange={(e) => {
+                      setRegPhone(formatTurkishPhone(e.target.value));
+                      if (regError) setRegError(null);
+                    }}
+                  />
+                  <label htmlFor="reg-phone" className={styles.label}>Telefon Numarası</label>
                 </div>
 
                 <div className={styles.inputBox}>
@@ -555,7 +602,6 @@ export default function AuthPage() {
                     id="reg-password"
                     type={showPass ? "text" : "password"}
                     className={styles.input}
-                    required
                     autoComplete="new-password"
                     value={regPassword}
                     onChange={(e) => {
@@ -563,7 +609,7 @@ export default function AuthPage() {
                       if (regError) setRegError(null);
                     }}
                   />
-                  <span className={styles.label}>Şifre</span>
+                  <label htmlFor="reg-password" className={styles.label}>Şifre</label>
                   <button
                     type="button"
                     className={styles.eyeBtn}
@@ -628,7 +674,6 @@ export default function AuthPage() {
                     id="reg-confirm"
                     type={showConfirm ? "text" : "password"}
                     className={styles.input}
-                    required
                     autoComplete="new-password"
                     value={regConfirm}
                     onChange={(e) => {
@@ -636,7 +681,7 @@ export default function AuthPage() {
                       if (regError) setRegError(null);
                     }}
                   />
-                  <span className={styles.label}>Şifre Tekrar</span>
+                  <label htmlFor="reg-confirm" className={styles.label}>Şifre Tekrar</label>
                   <button
                     type="button"
                     className={styles.eyeBtn}

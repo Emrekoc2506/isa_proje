@@ -454,6 +454,12 @@ export default function CheckoutPage () {
         )}&orderNumber=${encodeURIComponent(orderNumber)}&email=${encodeURIComponent(customerEmail)}${tokenQuery}`
       )
     } catch (err) {
+      // Abuse Blocked Handling (Sepet silinmez, ödemeye gidilmez, genel güvenli mesaj gösterilir)
+      if (err.code === 'abuse_blocked') {
+        alert('Sipariş işlemi gerçekleştirilemiyor. Yardım için destek ekibiyle iletişime geçebilirsiniz.')
+        return
+      }
+
       // 409 & Insufficient Stock Handling
       if (
         err.status === 409 ||

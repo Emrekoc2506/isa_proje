@@ -18,6 +18,7 @@ import {
   FiTrendingUp,
   FiBookOpen,
   FiStar,
+  FiShield,
 } from "react-icons/fi";
 import logoImage from "../../assets/images/logo-2.png";
 import ChatUI from "../../components/ChatUI/ChatUI";
@@ -38,6 +39,7 @@ import CustomersSection from "./sections/CustomersSection";
 import ReportsSection from "./sections/ReportsSection";
 import BlogAdminSection from "./sections/BlogAdminSection";
 import ReviewsSection from "./sections/ReviewsSection";
+import AbuseBansSection from "./sections/AbuseBansSection";
 
 const NAV_ITEMS = [
   { id: "overview", label: "Yönetim Özeti", icon: FiGrid },
@@ -51,6 +53,7 @@ const NAV_ITEMS = [
   { id: "coupons", label: "Kupon Yönetimi", icon: FiTag },
   { id: "inventory", label: "Stok Yönetimi", icon: FiBox },
   { id: "customers", label: "Müşteri Hesapları", icon: FiUser },
+  { id: "abuse-bans", label: "Engellemeler", icon: FiShield },
   { id: "reports", label: "Satış Raporları", icon: FiTrendingUp },
 ];
 
@@ -365,6 +368,8 @@ export default function AdminPage() {
                   }}
                 />
               )}
+
+              {active === "abuse-bans" && <AbuseBansSection />}
 
               {active === "reports" && <ReportsSection />}
             </motion.div>

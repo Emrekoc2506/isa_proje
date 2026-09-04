@@ -8,6 +8,7 @@ export function translateErrorCode(code) {
 
   switch (c) {
     // Auth & Hesap
+    case "abuse_blocked":                return "Bu işlem gerçekleştirilemiyor. Yardım için destek ekibiyle iletişime geçebilirsiniz.";
     case "invalid_credentials":           return "E-posta veya şifre hatalı.";
     case "email_not_confirmed":          return "E-posta adresiniz henüz doğrulanmamış. Lütfen gelen kutunuzu kontrol edin.";
     case "email_already_registered":     return "Bu e-posta adresi zaten kayıtlı.";
@@ -62,6 +63,11 @@ export function translateErrorMessage(msg) {
   if (!msg) return "Bilinmeyen bir hata oluştu.";
   
   const m = String(msg).trim().toLowerCase();
+
+  // 0. Güvenlik & Anti-Abuse
+  if (m.includes("abuse_blocked") || m.includes("abuse blocked")) {
+    return "Bu işlem gerçekleştirilemiyor. Yardım için destek ekibiyle iletişime geçebilirsiniz.";
+  }
 
   // 1. Stok & Ürün Hataları
   if (m.includes("insufficient available stock") || m.includes("insufficient stock") || m.includes("not enough stock")) {
