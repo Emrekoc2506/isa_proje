@@ -362,6 +362,7 @@ function AppRoutes() {
 
 import { HelmetProvider } from "react-helmet-async";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
+import MetaPixelTracker from "./components/MetaPixelTracker/MetaPixelTracker";
 
 function App() {
   return (
@@ -369,6 +370,7 @@ function App() {
       <ThemeProvider>
         <BrowserRouter>
           <ScrollToTop />
+          <MetaPixelTracker />
           <AuthProvider>
             <ProductProvider deferInitialData>
               <WishlistProvider>

@@ -10,6 +10,7 @@ import {
 import { useAuth } from './AuthContext'
 import * as cartApi from '../services/cartApi'
 import { translateErrorMessage, translateErrorCode } from '../api/apiError'
+import { trackMetaEvent } from '../utils/metaPixel'
 
 const CartContext = createContext(null)
 
@@ -309,6 +310,17 @@ export function CartProvider ({ children }) {
             customNote: customNote || null
           })
           applyServerCart(data)
+          const rawPrice = product?.price ?? product?.unitPrice ?? 0
+          const numPrice = typeof rawPrice === 'number'
+            ? rawPrice
+            : parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 0
+          trackMetaEvent('AddToCart', {
+            content_ids: [product?.id || rawId],
+            content_name: product?.name || product?.productName || 'Ürün',
+            content_type: 'product',
+            value: numPrice,
+            currency: 'TRY'
+          })
           return { success: true, cart: data }
         } catch (err) {
           // 401/unauthorized → token yenilemesi başarısız, refreshCart gereksiz yere 401 alır
@@ -328,6 +340,17 @@ export function CartProvider ({ children }) {
                 customNote: customNote || null
               })
               applyServerCart(retryData)
+              const rawPrice = product?.price ?? product?.unitPrice ?? 0
+              const numPrice = typeof rawPrice === 'number'
+                ? rawPrice
+                : parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 0
+              trackMetaEvent('AddToCart', {
+                content_ids: [product?.id || rawId],
+                content_name: product?.name || product?.productName || 'Ürün',
+                content_type: 'product',
+                value: numPrice,
+                currency: 'TRY'
+              })
               return { success: true, cart: retryData }
             } catch (retryErr) {
               if (!isAuthErr) await refreshCart()
@@ -363,6 +386,17 @@ export function CartProvider ({ children }) {
         return { success: false, code: 'invalid_id', message: msg }
       }
 
+      const rawPrice = product?.price ?? product?.unitPrice ?? 0
+      const numPrice = typeof rawPrice === 'number'
+        ? rawPrice
+        : parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 0
+      trackMetaEvent('AddToCart', {
+        content_ids: [product?.id || rawId],
+        content_name: product?.name || product?.productName || 'Ürün',
+        content_type: 'product',
+        value: numPrice,
+        currency: 'TRY'
+      })
       return { success: true }
     },
     [applyServerCart, refreshCart]

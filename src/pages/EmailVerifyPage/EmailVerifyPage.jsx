@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { FiCheckCircle, FiXCircle, FiLoader } from "react-icons/fi";
 import SEO from "../../components/SEO/SEO";
 import { verifyEmail } from "../../services/authApi";
+import { trackMetaEvent } from "../../utils/metaPixel";
 import logoImage from "../../assets/images/logo-2.png";
 
 export default function EmailVerifyPage() {
@@ -30,6 +31,15 @@ export default function EmailVerifyPage() {
     verifyEmail(userId, token)
       .then(() => {
         setStatus("success");
+        trackMetaEvent(
+          "CompleteRegistration",
+          {
+            status: true,
+          },
+          {
+            eventID: `registration_${userId}`,
+          }
+        );
       })
       .catch((err) => {
         setStatus("error");

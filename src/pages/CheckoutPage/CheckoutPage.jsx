@@ -22,6 +22,7 @@ import { translateErrorMessage } from '../../api/apiError'
 import { PAYMENT_METHODS } from './paymentFlow'
 import logoImage from '../../assets/images/logo-2.png'
 import SEO from '../../components/SEO/SEO'
+import { trackMetaEvent } from '../../utils/metaPixel'
 
 export default function CheckoutPage () {
   const { isAuthenticated, user } = useAuth()
@@ -113,6 +114,37 @@ export default function CheckoutPage () {
         .join('|'),
     [cartItems]
   )
+
+  // Meta Pixel: InitiateCheckout Takibi (Deduplicated)
+  const trackedInitiateCheckoutRef = useRef(false)
+  useEffect(() => {
+    if (cartItems.length > 0 && !trackedInitiateCheckoutRef.current) {
+      trackedInitiateCheckoutRef.current = true
+      const totalVal = cartItems.reduce((acc, item) => {
+        const rawP = item.unitPrice ?? item.price ?? 0
+        const numP =
+          typeof rawP === 'number'
+            ? rawP
+            : parseFloat(String(rawP).replace(/[^0-9.]/g, '')) || 0
+        const q = item.qty || item.quantity || 1
+        return acc + numP * q
+      }, 0)
+      const totalQty = cartItems.reduce(
+        (acc, item) => acc + (item.qty || item.quantity || 1),
+        0
+      )
+      const pIds = cartItems
+        .map(item => item.id || item.productId)
+        .filter(Boolean)
+
+      trackMetaEvent('InitiateCheckout', {
+        value: totalVal,
+        currency: 'TRY',
+        num_items: totalQty,
+        content_ids: pIds
+      })
+    }
+  }, [cartItems])
 
   // Load Bank Transfer info
   useEffect(() => {
@@ -445,6 +477,25 @@ export default function CheckoutPage () {
           guestAccessToken: guestToken
         })
       )
+
+      // Meta Pixel: Purchase Takibi (Conversions API ile tekilleştirilmiş eventID)
+      if (orderId) {
+        const orderTotal =
+          orderRes?.totalAmount ??
+          orderRes?.total ??
+          previewData?.grandTotal ??
+          0
+        trackMetaEvent(
+          'Purchase',
+          {
+            value: orderTotal,
+            currency: 'TRY'
+          },
+          {
+            eventID: `purchase_${orderId}`
+          }
+        )
+      }
 
       await clearCart()
       const tokenQuery = guestToken ? `&token=${encodeURIComponent(guestToken)}` : ''

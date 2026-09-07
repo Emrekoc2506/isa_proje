@@ -44,6 +44,7 @@ import {
 } from "../../utils/recentlyViewed";
 import { getKnownStockQuantity } from "../../utils/stockUtils";
 import { formatTurkishDate } from "../../utils/dateUtils";
+import { trackMetaEvent } from "../../utils/metaPixel";
 
 /* ─── Yıldız Bileşeni ────────────────────────────────────── */
 function Stars({ rating, size = 14 }) {
@@ -151,6 +152,27 @@ export default function ProductDetailPage() {
     }
     fetchDetail();
   }, [id, product]);
+
+  /* ─── Meta Pixel: ViewContent Takibi (Duplicate Önlemeli) ─── */
+  const trackedViewContentIdRef = useRef(null);
+  useEffect(() => {
+    if (productDetail && productDetail.id && trackedViewContentIdRef.current !== productDetail.id) {
+      trackedViewContentIdRef.current = productDetail.id;
+      const rawPrice = productDetail.price ?? productDetail.unitPrice ?? 0;
+      const numPrice =
+        typeof rawPrice === "number"
+          ? rawPrice
+          : parseFloat(String(rawPrice).replace(/[^0-9.]/g, "")) || 0;
+
+      trackMetaEvent("ViewContent", {
+        content_ids: [productDetail.id],
+        content_type: "product",
+        content_name: productDetail.name || "",
+        value: numPrice,
+        currency: "TRY",
+      });
+    }
+  }, [productDetail]);
 
   /* ─── Benzer Ürünler (Random) ───────────────────────── */
   const relatedProducts = useMemo(() => {
