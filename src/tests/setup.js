@@ -50,6 +50,9 @@ vi.mock('@microsoft/signalr', () => {
 
 // Setup mock server
 export const handlers = [
+  http.get('*/api/auth/session-state', () => {
+    return HttpResponse.json({ isAuthenticated: false });
+  }),
   http.get('*/api/auth/me', () => {
     return HttpResponse.json({ id: 'user-1', email: 'test@example.com', fullName: 'Test User' });
   }),

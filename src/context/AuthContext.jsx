@@ -68,6 +68,26 @@ export function AuthProvider ({ children }) {
       if (token) {
         safeRemoveItem('accessToken')
       }
+
+      // Check session state first: does a refresh cookie actually exist?
+      // For guest users, skip /refresh-token to prevent 401 error in browser console.
+      try {
+        const session = await authApi.getSessionState()
+        if (!session?.isAuthenticated) {
+          safeRemoveItem('has_logged_in')
+          safeSetState(setUser, null)
+          safeSetState(setRoles, [])
+          safeSetState(setIsLoading, false)
+          return null
+        }
+      } catch {
+        safeRemoveItem('has_logged_in')
+        safeSetState(setUser, null)
+        safeSetState(setRoles, [])
+        safeSetState(setIsLoading, false)
+        return null
+      }
+
       try {
         const refreshRes = await authApi.refreshToken()
         if (refreshRes?.accessToken) {

@@ -19,6 +19,9 @@ const server = setupServer(
       }
     });
   }),
+  http.get('*/api/auth/session-state', () => {
+    return HttpResponse.json({ isAuthenticated: false });
+  }),
   http.get('*/api/auth/me', () => {
     return HttpResponse.json({
       id: 'test-user-id',
@@ -89,5 +92,58 @@ describe('AuthContext Tests', () => {
 
     expect(localStorage.getItem('accessToken')).toBeNull();
     expect(screen.getByTestId('auth-state').textContent).toBe('logged-out');
+  });
+
+  test('should not call refresh-token when session-state is unauthenticated', async () => {
+    let refreshTokenCalled = false;
+    server.use(
+      http.get('*/api/auth/session-state', () => {
+        return HttpResponse.json({ isAuthenticated: false });
+      }),
+      http.post('*/api/auth/refresh-token', () => {
+        refreshTokenCalled = true;
+        return HttpResponse.json({ accessToken: MOCK_JWT });
+      })
+    );
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    await act(async () => {
+      await new Promise(r => setTimeout(r, 50));
+    });
+
+    expect(refreshTokenCalled).toBe(false);
+    expect(screen.getByTestId('auth-state').textContent).toBe('logged-out');
+  });
+
+  test('should call refresh-token and restore session when session-state is authenticated', async () => {
+    let refreshTokenCalled = false;
+    server.use(
+      http.get('*/api/auth/session-state', () => {
+        return HttpResponse.json({ isAuthenticated: true });
+      }),
+      http.post('*/api/auth/refresh-token', () => {
+        refreshTokenCalled = true;
+        return HttpResponse.json({ accessToken: MOCK_JWT });
+      })
+    );
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    await act(async () => {
+      await new Promise(r => setTimeout(r, 100));
+    });
+
+    expect(refreshTokenCalled).toBe(true);
+    expect(screen.getByTestId('auth-state').textContent).toBe('logged-in');
+    expect(screen.getByTestId('user-email').textContent).toBe('admin@gmail.com');
   });
 });

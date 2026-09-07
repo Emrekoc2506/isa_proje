@@ -87,6 +87,7 @@ describe('Security Hardening Requirements Suite (Section 13)', () => {
 
   it('3. Page reload with cookie refresh restores user session', async () => {
     server.use(
+      http.get('*/api/auth/session-state', () => HttpResponse.json({ isAuthenticated: true })),
       http.post('*/api/auth/refresh-token', () => HttpResponse.json({ accessToken: MOCK_JWT })),
       http.get('*/api/auth/me', () => HttpResponse.json({ id: 'u-cookie', email: 'cookieuser@example.com', roles: ['Customer'] }))
     );
@@ -107,6 +108,7 @@ describe('Security Hardening Requirements Suite (Section 13)', () => {
 
   it('4. Refresh failure → clears token and sets null user state', async () => {
     server.use(
+      http.get('*/api/auth/session-state', () => HttpResponse.json({ isAuthenticated: true })),
       http.post('*/api/auth/refresh-token', () => new HttpResponse(null, { status: 401 }))
     );
 
@@ -126,6 +128,7 @@ describe('Security Hardening Requirements Suite (Section 13)', () => {
 
   it('5. Logout → session state is cleared', async () => {
     server.use(
+      http.get('*/api/auth/session-state', () => HttpResponse.json({ isAuthenticated: true })),
       http.post('*/api/auth/refresh-token', () => HttpResponse.json({ accessToken: MOCK_JWT })),
       http.get('*/api/auth/me', () => HttpResponse.json({ id: 'u1', email: 'logoutuser@example.com', roles: ['Customer'] })),
       http.post('*/api/auth/logout', () => HttpResponse.json({ success: true }))

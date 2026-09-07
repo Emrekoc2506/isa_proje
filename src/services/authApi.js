@@ -50,6 +50,13 @@ export async function logoutAll() {
   }
 }
 
+export function getSessionState() {
+  return request("/auth/session-state", {
+    method: "GET",
+    credentials: "include",
+  });
+}
+
 export function refreshToken() {
   return request("/auth/refresh-token", {
     method: "POST",
