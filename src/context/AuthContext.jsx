@@ -69,6 +69,14 @@ export function AuthProvider ({ children }) {
         safeRemoveItem('accessToken')
       }
 
+      const hasLoggedIn = safeGetItem('has_logged_in') === '1'
+      if (!token && !hasLoggedIn) {
+        safeSetState(setUser, null)
+        safeSetState(setRoles, [])
+        safeSetState(setIsLoading, false)
+        return null
+      }
+
       // Check session state first: does a refresh cookie actually exist?
       // For guest users, skip /refresh-token to prevent 401 error in browser console.
       try {
@@ -216,20 +224,29 @@ export function AuthProvider ({ children }) {
     async credentials => {
       try {
         const res = await authApi.login(credentials)
+        if (res?.accessToken) {
+          safeSetItem('accessToken', res.accessToken)
+        }
         safeSetItem('has_logged_in', '1')
         const userProfile = await reloadUser()
         if (userProfile) {
           return { ...res, user: userProfile }
         }
+        if (res?.user) {
+          safeSetState(setUser, res.user)
+          safeSetState(setRoles, res.user.roles || [])
+          return res
+        }
         throw new Error('Giriş bilgileri alınamadı.')
       } catch (err) {
+        safeRemoveItem('accessToken')
         safeRemoveItem('has_logged_in')
         setUser(null)
         setRoles([])
         throw err
       }
     },
-    [reloadUser]
+    [reloadUser, safeSetState]
   )
 
   const register = useCallback(async payload => {

@@ -94,7 +94,38 @@ describe('AuthContext Tests', () => {
     expect(screen.getByTestId('auth-state').textContent).toBe('logged-out');
   });
 
+  test('should not call refresh-token or session-state for guest visitor when has_logged_in is absent', async () => {
+    localStorage.clear();
+    let refreshTokenCalled = false;
+    let sessionStateCalled = false;
+    server.use(
+      http.get('*/api/auth/session-state', () => {
+        sessionStateCalled = true;
+        return HttpResponse.json({ isAuthenticated: true });
+      }),
+      http.post('*/api/auth/refresh-token', () => {
+        refreshTokenCalled = true;
+        return HttpResponse.json({ accessToken: MOCK_JWT });
+      })
+    );
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    await act(async () => {
+      await new Promise(r => setTimeout(r, 50));
+    });
+
+    expect(sessionStateCalled).toBe(false);
+    expect(refreshTokenCalled).toBe(false);
+    expect(screen.getByTestId('auth-state').textContent).toBe('logged-out');
+  });
+
   test('should not call refresh-token when session-state is unauthenticated', async () => {
+    localStorage.setItem('has_logged_in', '1');
     let refreshTokenCalled = false;
     server.use(
       http.get('*/api/auth/session-state', () => {
@@ -121,6 +152,7 @@ describe('AuthContext Tests', () => {
   });
 
   test('should call refresh-token and restore session when session-state is authenticated', async () => {
+    localStorage.setItem('has_logged_in', '1');
     let refreshTokenCalled = false;
     server.use(
       http.get('*/api/auth/session-state', () => {

@@ -198,7 +198,7 @@ describe('Muhristan Anti-Abuse & Ban Frontend Integration Test Suite', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Bu işlem gerçekleştirilemiyor. Yardım için destek ekibiyle iletişime geçebilirsiniz.')
+          screen.getByText('Bu işlem gerçekleştirilemiyor. Destek ekibiyle iletişime geçebilirsiniz.')
         ).toBeInTheDocument();
       });
 

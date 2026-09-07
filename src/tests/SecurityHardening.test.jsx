@@ -86,6 +86,7 @@ describe('Security Hardening Requirements Suite (Section 13)', () => {
   });
 
   it('3. Page reload with cookie refresh restores user session', async () => {
+    localStorage.setItem('has_logged_in', '1');
     server.use(
       http.get('*/api/auth/session-state', () => HttpResponse.json({ isAuthenticated: true })),
       http.post('*/api/auth/refresh-token', () => HttpResponse.json({ accessToken: MOCK_JWT })),
@@ -107,6 +108,7 @@ describe('Security Hardening Requirements Suite (Section 13)', () => {
   });
 
   it('4. Refresh failure → clears token and sets null user state', async () => {
+    localStorage.setItem('has_logged_in', '1');
     server.use(
       http.get('*/api/auth/session-state', () => HttpResponse.json({ isAuthenticated: true })),
       http.post('*/api/auth/refresh-token', () => new HttpResponse(null, { status: 401 }))
@@ -127,6 +129,7 @@ describe('Security Hardening Requirements Suite (Section 13)', () => {
   });
 
   it('5. Logout → session state is cleared', async () => {
+    localStorage.setItem('has_logged_in', '1');
     server.use(
       http.get('*/api/auth/session-state', () => HttpResponse.json({ isAuthenticated: true })),
       http.post('*/api/auth/refresh-token', () => HttpResponse.json({ accessToken: MOCK_JWT })),

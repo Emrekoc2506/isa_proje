@@ -132,7 +132,7 @@ export default function AuthPage() {
 
     try {
       setLoginLoading(true);
-      await login({ email: loginEmail, password: loginPassword });
+      const loginResult = await login({ email: loginEmail, password: loginPassword });
 
       // Beni hatırla kaydı
       if (rememberMe) {
@@ -164,20 +164,21 @@ export default function AuthPage() {
         alert(errMsg);
       }
 
+      const loginRoles = loginResult?.user?.roles || [];
       const fromObj = location.state?.from;
       const targetFrom = fromObj
         ? `${fromObj.pathname || ""}${fromObj.search || ""}${fromObj.hash || ""}`
         : null;
       const destination =
         targetFrom ||
-        (roles.includes("SuperAdmin") || roles.includes("Admin")
+        (loginRoles.includes("SuperAdmin") || loginRoles.includes("Admin")
           ? "/admin"
           : "/");
       navigate(destination, { replace: true });
     } catch (err) {
       if (err.code === "abuse_blocked") {
         setLoginError(
-          "Bu işlem gerçekleştirilemiyor. Yardım için destek ekibiyle iletişime geçebilirsiniz."
+          "Bu işlem gerçekleştirilemiyor. Destek ekibiyle iletişime geçebilirsiniz."
         );
         return;
       }
@@ -260,7 +261,7 @@ export default function AuthPage() {
     } catch (err) {
       if (err.code === "abuse_blocked") {
         setRegError(
-          "Bu işlem gerçekleştirilemiyor. Yardım için destek ekibiyle iletişime geçebilirsiniz."
+          "Bu işlem gerçekleştirilemiyor. Destek ekibiyle iletişime geçebilirsiniz."
         );
         return;
       }
