@@ -60,3 +60,13 @@ export function updateAdminOrderStatus(id, status) {
   console.warn("Order status updates are read-only on the backend.");
   return Promise.resolve();
 }
+
+export function deleteAdminOrder(id) {
+  const orderId = normalizeOrderId(id);
+  return orderId
+    ? request(`/admin/orders/${encodeURIComponent(orderId)}`, {
+        method: "DELETE"
+      })
+    : Promise.reject(invalidOrderIdError());
+}
+

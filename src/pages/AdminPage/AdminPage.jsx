@@ -23,6 +23,7 @@ import {
 import logoImage from "../../assets/images/logo-2.png";
 import ChatUI from "../../components/ChatUI/ChatUI";
 import ThemeToggle from "../../components/ThemeToggle";
+import AdminPushToggle from "../../components/AdminPushToggle/AdminPushToggle";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import SEO from "../../components/SEO/SEO";
@@ -300,25 +301,35 @@ export default function AdminPage() {
               marginLeft: "auto",
               display: "flex",
               alignItems: "center",
-              gap: "10px",
-              background: "var(--bg-dark)",
-              padding: "6px 14px",
-              borderRadius: "var(--radius-pill)",
-              border: "1px solid var(--border-gold)",
+              gap: "12px",
+              flexWrap: "wrap",
             }}
           >
-            <span
+            <AdminPushToggle />
+            <div
               style={{
-                fontSize: "12px",
-                fontWeight: "700",
-                color: "var(--gold-light)",
-                letterSpacing: "0.05em",
-                textTransform: "uppercase",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                background: "var(--bg-dark)",
+                padding: "6px 14px",
+                borderRadius: "var(--radius-pill)",
+                border: "1px solid var(--border-gold)",
               }}
             >
-              Tema
-            </span>
-            <ThemeToggle id="admin-topbar-theme-toggle" />
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  color: "var(--gold-light)",
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Tema
+              </span>
+              <ThemeToggle id="admin-topbar-theme-toggle" />
+            </div>
           </div>
         </header>
 

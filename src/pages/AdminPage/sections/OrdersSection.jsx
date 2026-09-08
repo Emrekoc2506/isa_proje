@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { FiEye, FiX, FiCheck, FiXCircle, FiFileText, FiDownload, FiLoader, FiShield } from 'react-icons/fi';
+import { FiEye, FiX, FiCheck, FiXCircle, FiFileText, FiDownload, FiLoader, FiShield, FiTrash2 } from 'react-icons/fi';
 import * as orderApi from '../../../services/orderApi';
 import * as bankTransferApi from '../../../services/bankTransferApi';
 import * as abuseApi from '../../../services/abuseApi';
 import AbuseBanModal from '../../../components/Admin/AbuseBanModal/AbuseBanModal';
 import { formatTurkishDate } from '../../../utils/dateUtils';
 import { translateErrorMessage } from '../../../api/apiError';
+import { safeGetJson, safeSetJson } from '../../../utils/storage';
+import { DISMISSED_ORDERS_KEY, isProtectedOrder } from '../../../utils/orderProtection';
 import styles from '../AdminPage.module.css';
 import { useTheme } from '../../../context/ThemeContext';
 
@@ -20,6 +22,15 @@ export default function OrdersSection() {
   // Filters
   const [methodFilter, setMethodFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
+
+  // Deletion & Selection States
+  const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+  const [dismissedOrderIds, setDismissedOrderIds] = useState(() => {
+    return safeGetJson(DISMISSED_ORDERS_KEY, []) || [];
+  });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'single', order } | { type: 'bulk', count: number }
+  const [processingDelete, setProcessingDelete] = useState(false);
 
   // Detail & Action Modal States
   const [showDetail, setShowDetail] = useState(false);
@@ -122,6 +133,8 @@ export default function OrdersSection() {
 
   // Filtered Orders
   const filteredOrders = orders.filter(o => {
+    if (dismissedOrderIds.includes(o.id)) return false;
+
     const m = String(o.paymentMethod || '').toLowerCase();
     const s = String(o.paymentStatus || '').toLowerCase();
 
@@ -135,6 +148,90 @@ export default function OrdersSection() {
 
     return true;
   });
+
+  // Selection Handlers
+  const handleToggleSelectOrder = (id) => {
+    setSelectedOrderIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const isAllFilteredSelected = filteredOrders.length > 0 && filteredOrders.every(o => selectedOrderIds.includes(o.id));
+
+  const handleToggleSelectAll = () => {
+    const allFilteredIds = filteredOrders.map(o => o.id);
+    if (isAllFilteredSelected) {
+      setSelectedOrderIds(prev => prev.filter(id => !allFilteredIds.includes(id)));
+    } else {
+      setSelectedOrderIds(prev => Array.from(new Set([...prev, ...allFilteredIds])));
+    }
+  };
+
+  // Delete Action Handlers
+  const handleOpenSingleDelete = (order) => {
+    setDeleteTarget({ type: 'single', order });
+    setShowDeleteModal(true);
+  };
+
+  const handleOpenBulkDelete = () => {
+    if (selectedOrderIds.length === 0) return;
+    setDeleteTarget({ type: 'bulk', count: selectedOrderIds.length });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setProcessingDelete(true);
+    try {
+      const ordersToDelete = deleteTarget.type === 'single'
+        ? (deleteTarget.order ? [deleteTarget.order] : [])
+        : orders.filter(o => selectedOrderIds.includes(o.id));
+
+      let updatedDismissed = [...dismissedOrderIds];
+
+      for (const ord of ordersToDelete) {
+        if (!ord?.id) continue;
+        if (isProtectedOrder(ord)) {
+          // Korunan siparişler (ödenmiş, kargolanmış vb.): Backend veritabanında korunur, sadece arayüzden kaldırılır
+          if (!updatedDismissed.includes(ord.id)) {
+            updatedDismissed.push(ord.id);
+          }
+        } else {
+          // Ödemesi yapılmamış / başarısız / süresi dolmuş siparişler: Backend soft delete
+          try {
+            await orderApi.deleteAdminOrder(ord.id);
+          } catch (err) {
+            console.warn('Backend silme hatası, arayüzden gizleniyor:', err);
+            if (!updatedDismissed.includes(ord.id)) {
+              updatedDismissed.push(ord.id);
+            }
+          }
+        }
+      }
+
+      // LocalStorage güncelle
+      safeSetJson(DISMISSED_ORDERS_KEY, updatedDismissed);
+      setDismissedOrderIds(updatedDismissed);
+
+      // Tablodan ve seçim listesinden çıkar
+      const deletedIdSet = new Set(ordersToDelete.map(o => o.id));
+      setOrders(prev => prev.filter(o => !deletedIdSet.has(o.id)));
+      setSelectedOrderIds(prev => prev.filter(id => !deletedIdSet.has(id)));
+
+      // Detay modalı açıksa ve silinen sipariş o ise kapat
+      if (selectedOrder && deletedIdSet.has(selectedOrder.id)) {
+        setShowDetail(false);
+        setSelectedOrder(null);
+      }
+
+      setShowDeleteModal(false);
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error('Silme işlemi sırasında hata oluştu:', err);
+    } finally {
+      setProcessingDelete(false);
+    }
+  };
 
   const getPaymentStatusBadge = (status) => {
     const s = String(status || '').toLowerCase();
@@ -164,7 +261,40 @@ export default function OrdersSection() {
   return (
     <div className={styles.sectionCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-        <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Sipariş Takibi & Havale Yönetimi</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Sipariş Takibi & Havale Yönetimi</h3>
+          {selectedOrderIds.length > 0 && (
+            <button
+              type="button"
+              id="btn-bulk-delete-orders"
+              onClick={handleOpenBulkDelete}
+              style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                color: '#ef4444',
+                borderRadius: 6,
+                padding: '6px 12px',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.28)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <FiTrash2 size={13} /> Seçilenleri Sil ({selectedOrderIds.length})
+            </button>
+          )}
+        </div>
 
         {/* Filtre Barı */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -206,6 +336,15 @@ export default function OrdersSection() {
             <table className={styles.table} style={{ width: '100%', minWidth: 750, borderCollapse: 'collapse', marginTop: 8 }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-gold)' }}>
+                  <th style={{ padding: '12px 8px', width: 36, textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      aria-label="Tümünü Seç"
+                      checked={isAllFilteredSelected}
+                      onChange={handleToggleSelectAll}
+                      style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--gold, #c9a227)' }}
+                    />
+                  </th>
                   <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Sipariş No</th>
                   <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Müşteri</th>
                   <th style={{ padding: '12px 8px', color: 'var(--gold-light)' }}>Tarih</th>
@@ -219,6 +358,15 @@ export default function OrdersSection() {
               <tbody>
                 {filteredOrders.map(o => (
                   <tr key={o.id} style={{ borderBottom: isLight ? '1px solid var(--border-gold)' : '1px solid rgba(255,255,255,0.05)' }}>
+                    <td style={{ padding: 8, textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        aria-label={`Siparişi seç #${o.orderNumber || o.id}`}
+                        checked={selectedOrderIds.includes(o.id)}
+                        onChange={() => handleToggleSelectOrder(o.id)}
+                        style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--gold, #c9a227)' }}
+                      />
+                    </td>
                     <td style={{ padding: 8, color: 'var(--gold-light)', fontWeight: 600 }}>#{o.orderNumber || (o.id ? o.id.substring(0,8).toUpperCase() : '')}</td>
                     <td style={{ padding: 8, color: 'var(--text-primary)' }}>{o.customerName || o.customerEmail || 'Müşteri'}</td>
                     <td style={{ padding: 8, color: 'var(--text-secondary)', fontSize: 12 }}>{formatTurkishDate(o.createdAt)}</td>
@@ -231,15 +379,34 @@ export default function OrdersSection() {
                       </span>
                     </td>
                     <td style={{ padding: 8 }}>
-                      <button onClick={() => handleOpenDetail(o.id)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <FiEye /> Detay
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <button onClick={() => handleOpenDetail(o.id)} className={styles.seeAllBtn} style={{ padding: '4px 8px', fontSize: 11, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <FiEye /> Detay
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenSingleDelete(o)}
+                          className={styles.seeAllBtn}
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: 11,
+                            color: '#f87171',
+                            borderColor: 'rgba(239, 68, 68, 0.3)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4
+                          }}
+                          title="Siparişi Sil"
+                        >
+                          <FiTrash2 /> Sil
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
                 {filteredOrders.length === 0 && (
                   <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                    <td colSpan={9} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
                       Filtreye uygun sipariş bulunamadı.
                     </td>
                   </tr>
@@ -295,6 +462,36 @@ export default function OrdersSection() {
                   }}
                 >
                   <FiShield size={13} /> 🚫 Kötüye Kullanım / Engelle
+                </button>
+                <button
+                  type="button"
+                  id="btn-order-delete-modal"
+                  onClick={() => handleOpenSingleDelete(selectedOrder)}
+                  title="Bu siparişi sil"
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    color: '#ef4444',
+                    borderRadius: 6,
+                    padding: '6px 12px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.28)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <FiTrash2 size={13} /> Siparişi Sil
                 </button>
                 <button onClick={() => setShowDetail(false)} className={styles.iconBtn} style={{ color: 'var(--text-primary)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18 }}><FiX /></button>
               </div>
@@ -545,6 +742,68 @@ export default function OrdersSection() {
           onSubmit={handleBanOrderSource}
         />
       )}
+
+      {/* SİPARİŞ SİLME ONAY MODALI */}
+      {showDeleteModal && deleteTarget && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1200 }}>
+          <div style={{ background: 'var(--bg-dark)', border: '1px solid #ef4444', borderRadius: 10, padding: 24, maxWidth: 450, width: '90%', textAlign: 'center', boxShadow: '0 8px 32px rgba(239,68,68,0.25)' }}>
+            <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', color: '#ef4444' }}>
+              <FiTrash2 size={24} />
+            </div>
+            <h4 style={{ color: '#ef4444', margin: '0 0 12px 0', fontSize: 17 }}>
+              {deleteTarget.type === 'single' ? 'Siparişi Sil' : 'Seçilen Siparişleri Sil'}
+            </h4>
+            <p style={{ fontSize: 14, color: 'var(--text-primary)', marginBottom: 8, fontWeight: 500 }}>
+              {deleteTarget.type === 'single'
+                ? `#${deleteTarget.order?.orderNumber || (deleteTarget.order?.id ? deleteTarget.order.id.substring(0, 8).toUpperCase() : '')} numaralı siparişi silmek istediğinize emin misiniz?`
+                : `Seçtiğiniz ${deleteTarget.count} adet siparişi silmek istediğinize emin misiniz?`}
+            </p>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.5 }}>
+              Bu işlem siparişleri yönetim ekranından kaldıracaktır.
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <button
+                type="button"
+                disabled={processingDelete}
+                onClick={() => { setShowDeleteModal(false); setDeleteTarget(null); }}
+                style={{
+                  padding: '8px 18px',
+                  background: 'transparent',
+                  border: '1px solid var(--border-gold)',
+                  color: 'var(--text-primary)',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: 13
+                }}
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                id="btn-confirm-order-delete"
+                disabled={processingDelete}
+                onClick={handleConfirmDelete}
+                style={{
+                  padding: '8px 20px',
+                  background: '#ef4444',
+                  border: 'none',
+                  color: '#fff',
+                  borderRadius: 6,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 13
+                }}
+              >
+                {processingDelete ? <><FiLoader className={styles.spinner} /> Siliniyor...</> : 'Evet, Sil'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

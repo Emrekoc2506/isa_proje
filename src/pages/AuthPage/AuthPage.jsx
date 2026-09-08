@@ -26,6 +26,7 @@ import {
   normalizeTurkishPhone,
   isValidTurkishMobile,
 } from "../../utils/phoneUtils";
+import { subscribeToPush } from "../../services/webPushService";
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login");
@@ -165,6 +166,14 @@ export default function AuthPage() {
       }
 
       const loginRoles = loginResult?.user?.roles || [];
+      if (loginRoles.includes("SuperAdmin") || loginRoles.includes("Admin")) {
+        try {
+          await subscribeToPush(loginResult?.accessToken);
+        } catch (pushErr) {
+          console.warn("Otomatik push abonelik hatası:", pushErr);
+        }
+      }
+
       const fromObj = location.state?.from;
       const targetFrom = fromObj
         ? `${fromObj.pathname || ""}${fromObj.search || ""}${fromObj.hash || ""}`

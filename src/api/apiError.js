@@ -55,6 +55,12 @@ export function translateErrorCode(code) {
     case "shipping_address_required":    return "Lütfen bir teslimat adresi seçin veya ekleyin.";
     case "billing_address_required":     return "Lütfen bir fatura adresi seçin veya ekleyin.";
 
+    // Sipariş Silme
+    case "paid_order_cannot_be_deleted": return "Ödemesi alınmış sipariş silinemez.";
+    case "order_cannot_be_deleted":      return "Bu sipariş işlem sürecinde olduğu için silinemez.";
+    case "payment_verification_pending": return "Ödeme kontrolü bekleyen sipariş önce reddedilmelidir.";
+    case "payment_in_progress":          return "Ödeme işlemi devam eden sipariş silinemez.";
+
     default:                             return null;
   }
 }

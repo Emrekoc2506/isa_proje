@@ -131,3 +131,29 @@ export async function setDefaultBilling(id) {
     }
   }
 }
+
+export function getPushPublicKey() {
+  return request("/account/push/public-key");
+}
+
+export function subscribePush(payload, token) {
+  const options = {
+    method: "POST",
+    body: JSON.stringify(payload)
+  };
+  if (token) {
+    options.headers = { Authorization: `Bearer ${token}` };
+  }
+  return request("/account/push-subscriptions", options);
+}
+
+export function unsubscribePush(endpoint, token) {
+  const options = {
+    method: "DELETE"
+  };
+  if (token) {
+    options.headers = { Authorization: `Bearer ${token}` };
+  }
+  return request(`/account/push-subscriptions?endpoint=${encodeURIComponent(endpoint)}`, options);
+}
+

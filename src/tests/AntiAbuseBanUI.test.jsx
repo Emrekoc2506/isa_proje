@@ -455,7 +455,7 @@ describe('Muhristan Anti-Abuse & Ban Frontend Integration Test Suite', () => {
         userFullName: 'Kötü IP Kaynağı',
         reason: 'Saldırı girişimi',
         createdAt: '2026-09-01T10:00:00Z',
-        expiresAt: '2026-09-08T10:00:00Z',
+        expiresAt: '2026-12-31T10:00:00Z',
         isRevoked: false
       };
 
