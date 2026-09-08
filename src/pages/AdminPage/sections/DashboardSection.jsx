@@ -9,6 +9,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import * as reportApi from '../../../services/reportApi';
+import * as orderApi from '../../../services/orderApi';
+import { safeGetJson } from '../../../utils/storage';
+import { DISMISSED_ORDERS_KEY } from '../../../utils/orderProtection';
 import styles from '../AdminPage.module.css';
 
 // ─── Renk paleti ───────────────────────────────────────────
@@ -41,13 +44,13 @@ function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'az önce';
-  if (mins < 60) return `${mins} dakika önce`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} saat önce`;
-  return `${Math.floor(hrs / 24)} gün önce`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} sa önce`;
+  const days = Math.floor(hours / 24);
+  return `${days} gün önce`;
 }
 
-// ─── Metrik Kartı Bileşeni ─────────────────────────────────
+// ─── Stat Kartı (Özet Metrikler) ───────────────────────────
 function MetricCard({ label, value, sub, icon: Icon, color, loading }) {
   return (
     <div className={styles.dashMetricCard} style={{ '--mc-color': color }}>
@@ -62,6 +65,20 @@ function MetricCard({ label, value, sub, icon: Icon, color, loading }) {
         {sub && <div className={styles.dashMetricSub}>{sub}</div>}
       </div>
     </div>
+  );
+}
+
+// ─── Hızlı Eylem Butonu ────────────────────────────────────
+function QuickActionBtn({ icon: Icon, label, onClick, color }) {
+  return (
+    <button
+      className={styles.dashActionBtn}
+      onClick={onClick}
+      style={{ '--action-color': color }}
+    >
+      <Icon size={16} />
+      <span>{label}</span>
+    </button>
   );
 }
 
@@ -86,13 +103,13 @@ export default function DashboardSection({ onNavigate }) {
   const [summary, setSummary] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [adminOrders, setAdminOrders] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [salesReport, setSalesReport] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
-
 
   const fetchAll = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -104,13 +121,14 @@ export default function DashboardSection({ onNavigate }) {
       weekAgo.setDate(weekAgo.getDate() - 7);
       const weekAgoStr = weekAgo.toISOString().slice(0, 10);
 
-      const [summ, custs, recent, prods, sales, revs] = await Promise.allSettled([
+      const [summ, custs, recent, prods, sales, revs, ords] = await Promise.allSettled([
         reportApi.getAdminDashboardSummary(),
         reportApi.getCustomersReport(),
         reportApi.getRecentOrders(5),
         reportApi.getProductsReport({ dateFrom: `${weekAgoStr}T00:00:00Z` }),
         reportApi.getSalesReport({ dateFrom: `${todayStr}T00:00:00Z` }),
         reportApi.getReviewsReport(),
+        orderApi.getAdminOrders({ pageSize: 100 }),
       ]);
 
       setSummary(summ.status === 'fulfilled' ? summ.value : null);
@@ -119,6 +137,7 @@ export default function DashboardSection({ onNavigate }) {
       setTopProducts(prods.status === 'fulfilled' ? (prods.value || []).slice(0, 5) : []);
       setSalesReport(sales.status === 'fulfilled' ? sales.value : null);
       setReviews(revs.status === 'fulfilled' ? (revs.value?.items || []) : []);
+      setAdminOrders(ords.status === 'fulfilled' ? (ords.value?.items || (Array.isArray(ords.value) ? ords.value : [])) : []);
       setLastUpdated(new Date());
     } catch (e) {
       console.error(e);
@@ -136,6 +155,19 @@ export default function DashboardSection({ onNavigate }) {
     return () => clearInterval(iv);
   }, [fetchAll]);
 
+  // Sipariş silindiğinde / gizlendiğinde anında güncelle
+  useEffect(() => {
+    const handleOrdersUpdated = () => {
+      fetchAll(true);
+    };
+    window.addEventListener('storage', handleOrdersUpdated);
+    window.addEventListener('isa_orders_updated', handleOrdersUpdated);
+    return () => {
+      window.removeEventListener('storage', handleOrdersUpdated);
+      window.removeEventListener('isa_orders_updated', handleOrdersUpdated);
+    };
+  }, [fetchAll]);
+
   // ─── Hesaplanan Metrikler ─────────────────────────────
   const totalCustomers = customers.length;
   const today = new Date().toISOString().slice(0, 10);
@@ -149,9 +181,27 @@ export default function DashboardSection({ onNavigate }) {
   ).length;
   const pendingReviews = reviews.filter(r => !r.isApproved && !r.isDeleted).length;
   const lowStockCount = summary?.lowStockCount || 0;
-  const todayCiro = salesReport?.totalRevenue || 0;
-  const totalCiro = summary?.totalRevenue || 0;
-  const totalOrders = summary?.totalOrders || 0;
+  
+  // Sipariş ekranındaki siparişlerle birebir senkronizasyon
+  const dismissedOrderIds = safeGetJson(DISMISSED_ORDERS_KEY, []) || [];
+  const dismissedCount = dismissedOrderIds.length;
+  
+  // Aktif siparişler listesi (gizlenenler / silinenler hariç)
+  const visibleOrders = adminOrders.filter(o => !dismissedOrderIds.includes(o.id));
+  
+  // Sipariş ekranında kaç sipariş varsa tam o kadar sipariş gösterilir
+  const totalOrders = adminOrders.length > 0
+    ? visibleOrders.length
+    : Math.max(0, (summary?.totalOrders || 0) - dismissedCount);
+
+  const totalCiro = totalOrders === 0 ? 0 : (summary?.totalRevenue || 0);
+  const todayCiro = totalOrders === 0 ? 0 : (salesReport?.totalRevenue || 0);
+
+  const activeRecentOrders = (visibleOrders.length > 0
+    ? visibleOrders
+    : recentOrders.filter(o => !dismissedOrderIds.includes(o.id))
+  ).slice(0, 5);
+
   const recentCustomers = [...customers]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 5);
@@ -160,7 +210,7 @@ export default function DashboardSection({ onNavigate }) {
   const last7Days = getLast7Days();
   const orderChartData = last7Days.map(day => ({
     name: day.label,
-    Siparişler: recentOrders.filter(o => o.createdAt?.slice(0, 10) === day.iso).length,
+    Siparişler: activeRecentOrders.filter(o => o.createdAt?.slice(0, 10) === day.iso).length,
   }));
 
   // ─── Kategori Pasta Grafiği ───────────────────────────
@@ -173,7 +223,7 @@ export default function DashboardSection({ onNavigate }) {
 
   // ─── Aktivite Akışı ───────────────────────────────────
   const activityFeed = [
-    ...recentOrders.slice(0, 3).map(o => ({
+    ...activeRecentOrders.slice(0, 3).map(o => ({
       icon: FiShoppingBag,
       color: GOLD,
       text: `${o.customerName || 'Müşteri'} sipariş verdi`,
@@ -276,11 +326,11 @@ export default function DashboardSection({ onNavigate }) {
               </button>
             )}
           </div>
-          {recentOrders.length === 0 ? (
+          {activeRecentOrders.length === 0 ? (
             <p className={styles.dashEmpty}>Henüz sipariş bulunmamaktadır.</p>
           ) : (
             <div className={styles.dashOrderList}>
-              {recentOrders.map((o, i) => (
+              {activeRecentOrders.map((o, i) => (
                 <div key={i} className={styles.dashOrderRow}>
                   <div className={styles.dashOrderAvatar}>
                     {(o.customerName || 'M')[0].toUpperCase()}

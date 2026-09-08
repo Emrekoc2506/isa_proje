@@ -58,7 +58,7 @@ export default function OrdersSection() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const params = { page, pageSize: 20 };
+      const params = { page, pageSize: 50 };
       if (statusFilter !== 'ALL') params.status = statusFilter;
       const data = await orderApi.getAdminOrders(params);
       if (data && data.items) {
@@ -212,6 +212,9 @@ export default function OrdersSection() {
       // LocalStorage güncelle
       safeSetJson(DISMISSED_ORDERS_KEY, updatedDismissed);
       setDismissedOrderIds(updatedDismissed);
+      try {
+        window.dispatchEvent(new CustomEvent('isa_orders_updated'));
+      } catch (_) {}
 
       // Tablodan ve seçim listesinden çıkar
       const deletedIdSet = new Set(ordersToDelete.map(o => o.id));
@@ -263,6 +266,20 @@ export default function OrdersSection() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Sipariş Takibi & Havale Yönetimi</h3>
+          <span
+            id="orders-count-badge"
+            style={{
+              fontSize: 12,
+              padding: '4px 10px',
+              borderRadius: 6,
+              background: 'rgba(201, 162, 39, 0.15)',
+              color: 'var(--gold-light)',
+              border: '1px solid var(--border-gold)',
+              fontWeight: 600
+            }}
+          >
+            Toplam {filteredOrders.length} Sipariş
+          </span>
           {selectedOrderIds.length > 0 && (
             <button
               type="button"

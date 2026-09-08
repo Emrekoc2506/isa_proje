@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { FiDownload, FiCalendar, FiFilter, FiActivity, FiTrendingUp, FiShoppingBag } from 'react-icons/fi';
 import * as reportApi from '../../../services/reportApi';
+import { safeGetJson } from '../../../utils/storage';
+import { DISMISSED_ORDERS_KEY } from '../../../utils/orderProtection';
 import styles from '../AdminPage.module.css';
 
 export default function ReportsSection() {
@@ -62,6 +64,12 @@ export default function ReportsSection() {
     }
   };
 
+  const dismissedOrderIds = safeGetJson(DISMISSED_ORDERS_KEY, []) || [];
+  const dismissedCount = dismissedOrderIds.length;
+  const totalOrders = Math.max(0, (ordersReport?.totalOrders || 0) - dismissedCount);
+  const totalRevenue = totalOrders === 0 ? 0 : (salesReport?.totalRevenue || 0);
+  const avgOrderValue = totalOrders === 0 ? 0 : (ordersReport?.averageOrderValue || 0);
+
   return (
     <div className={styles.sectionCard}>
       <div className={styles.sectionHeader} style={{ marginBottom: 20 }}>
@@ -99,15 +107,15 @@ export default function ReportsSection() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
             <div style={{ padding: 16, background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-mid)', borderRadius: 6 }}>
               <span style={{ color: 'var(--gold-light)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}><FiActivity /> Toplam Ciro</span>
-              <span style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>{salesReport?.totalRevenue || 0} ₺</span>
+              <span style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>{totalRevenue} ₺</span>
             </div>
             <div style={{ padding: 16, background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-mid)', borderRadius: 6 }}>
               <span style={{ color: 'var(--gold-light)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}><FiShoppingBag /> Toplam Sipariş</span>
-              <span style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>{ordersReport?.totalOrders || 0}</span>
+              <span style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>{totalOrders}</span>
             </div>
             <div style={{ padding: 16, background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-mid)', borderRadius: 6 }}>
               <span style={{ color: 'var(--gold-light)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}><FiTrendingUp /> Ortalama Sepet Değeri</span>
-              <span style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>{ordersReport?.averageOrderValue || 0} ₺</span>
+              <span style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>{avgOrderValue} ₺</span>
             </div>
           </div>
 

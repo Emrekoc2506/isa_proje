@@ -128,6 +128,7 @@ export function NotificationProvider({ children }) {
       return;
     }
 
+    let isCancelled = false;
     let hubConn = new signalR.HubConnectionBuilder()
       .withUrl(`${signalrUrl}/notifications`, {
         accessTokenFactory: () => safeGetItem("accessToken") || ""
@@ -137,6 +138,10 @@ export function NotificationProvider({ children }) {
 
     hubConn.start()
       .then(async () => {
+        if (isCancelled) {
+          hubConn.stop().catch(() => null);
+          return;
+        }
         setConnection(hubConn);
 
         if (user && user.id) {
@@ -147,7 +152,7 @@ export function NotificationProvider({ children }) {
 
     // Real-time bildirim alıcısı
     hubConn.on("ReceiveNotification", (notif) => {
-      if (notif) {
+      if (notif && !isCancelled) {
         const deletedIds = getDeletedIdsFromStorage();
         if (deletedIds.includes(notif.id)) return;
 
@@ -166,11 +171,12 @@ export function NotificationProvider({ children }) {
     });
 
     return () => {
+      isCancelled = true;
       if (hubConn) {
         hubConn.stop().catch(() => null);
       }
     };
-  }, [isAuthenticated, user, getDeletedIdsFromStorage]);
+  }, [isAuthenticated, user?.id]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
