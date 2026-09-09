@@ -7,8 +7,8 @@ import {
   safeJsonLdStringify
 } from '../../utils/seoHelpers';
 
-const DEFAULT_TITLE = 'Muhristan | Takı Esans Dünyası';
-const DEFAULT_DESCRIPTION = "Muhristan'da en kaliteli takı ve esansları bulun, ruhunuzu keşfedin.";
+const DEFAULT_TITLE = 'Muhristan | Tılsımlı Yüzük, Kolye, Buhur, Esans & Ezoterik Ürünler';
+const DEFAULT_DESCRIPTION = "Muhristan'da en kaliteli tılsımlı yüzükler, kolyeler, buhurlar, esanslar ve ezoterik ürünleri keşfedin.";
 const DEFAULT_IMAGE = 'https://muhristan.com/logo-2.png';
 
 export default function SEO({

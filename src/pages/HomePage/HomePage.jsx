@@ -91,8 +91,8 @@ export default function HomePage() {
   return (
     <main id="main-content" className={styles.main}>
       <SEO 
-        title="Muhristan | Takı Esans Dünyası"
-        description="Muhristan'da en kaliteli takı ve esansları bulun, ruhunuzu keşfedin."
+        title="Muhristan | Tılsımlı Yüzük, Kolye, Buhur, Esans & Ezoterik Ürünler"
+        description="Muhristan'da en kaliteli tılsımlı yüzükler, kolyeler, buhurlar, esanslar ve ezoterik ürünleri keşfedin."
         canonical="https://muhristan.com/"
         jsonLd={[orgSchema, websiteSchema]}
       />
