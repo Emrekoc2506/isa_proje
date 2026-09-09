@@ -24,12 +24,14 @@ let refreshQueue = [];
 let activeRefreshPromise = null;
 
 const PUBLIC_PREFIXES = [
+  "/home/bootstrap",
   "/products",
   "/categories",
   "/banners",
   "/blog",
   "/coupons/validate",
   "/payment-methods",
+  "/seo",
 ];
 
 function isPublicEndpoint(path, method = "GET") {
@@ -38,9 +40,45 @@ function isPublicEndpoint(path, method = "GET") {
   if (p.includes("/admin/")) return false;
   if (p.includes("/auth/me")) return false;
   if (p.includes("/auth/")) return true;
-  if (m === "GET") {
+  if (m === "GET" || m === "HEAD") {
     return PUBLIC_PREFIXES.some((prefix) => p.startsWith(prefix) || p.includes(prefix));
   }
+  return false;
+}
+
+function shouldSendGuestSession(path, method = "GET", options = {}) {
+  if (options.guestSession === false || options.sendGuestSession === false) {
+    return false;
+  }
+  if (options.guestSession === true || options.sendGuestSession === true) {
+    return true;
+  }
+
+  const p = (path || "").toLowerCase();
+  const m = (method || "GET").toUpperCase();
+
+  // 1. Public read-only endpoint'lere asla guest-session header eklenmez
+  if (isPublicEndpoint(path, m)) {
+    return false;
+  }
+
+  // 2. Admin endpoint'lerine guest header eklenmez
+  if (p.includes("/admin/")) {
+    return false;
+  }
+
+  // 3. Cart, checkout, guest-specific ve chat işlemlerinde guest header gönderilir
+  if (
+    p.includes("/cart") ||
+    p.includes("/checkout") ||
+    p.includes("/orders/guest") ||
+    p.includes("guest") ||
+    p.includes("/wishlist") ||
+    p.includes("/chat")
+  ) {
+    return true;
+  }
+
   return false;
 }
 
@@ -79,17 +117,39 @@ async function request(path, options = {}) {
   const headers = new Headers(options.headers || {});
   const credentials = options.credentials ?? "include";
 
-  if (!(options.body instanceof FormData)) {
-    headers.set("Content-Type", "application/json");
+  const method = (options.method || "GET").toUpperCase();
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
+  const hasBody = options.body !== undefined && options.body !== null;
+
+  // 1. CONTENT-TYPE KURALLARI:
+  // - FormData için Content-Type elle set edilmez (tarayıcı multipart boundary ekler)
+  // - Yalnızca gerçekten body gönderilen POST/PUT/PATCH/DELETE isteklerinde application/json eklenir
+  // - GET, HEAD ve body bulunmayan isteklerde Content-Type eklenmez
+  if (isFormData) {
+    headers.delete("Content-Type");
+  } else if (hasBody && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+  } else if (!hasBody || method === "GET" || method === "HEAD") {
+    if (!hasBody) {
+      headers.delete("Content-Type");
+    }
   }
 
-  // Guest Session Headers
+  // 2. GUEST SESSION HEADERS:
+  // - Public read-only endpoint'lerde ASLA guest header gönderilmez (CORS Simple Request korunur)
+  // - Cart, checkout ve guest-specific işlemlerde gönderilir
   const guestSessionId = getGuestSessionId();
-  if (guestSessionId) {
+  if (guestSessionId && shouldSendGuestSession(path, method, options)) {
     headers.set("X-Guest-Session-Id", guestSessionId);
     headers.set("X-Guest-SessionId", guestSessionId); // Legacy compatibility
+  } else {
+    headers.delete("X-Guest-Session-Id");
+    headers.delete("X-Guest-SessionId");
   }
 
+  // 3. AUTHENTICATION:
   // Handle expired tokens before sending request
   if (token && isJwtExpired(token)) {
     safeRemoveItem("accessToken");
@@ -101,7 +161,7 @@ async function request(path, options = {}) {
   }
 
   // Timeout logic: isUpload ? 60000 : 15000 (options.timeout takes precedence)
-  const isUpload = options.body instanceof FormData;
+  const isUpload = isFormData;
   const timeoutMs = options.timeout ?? (isUpload ? 60000 : 15000);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -143,13 +203,6 @@ async function request(path, options = {}) {
       if (currentToken && currentToken !== token && !isJwtExpired(currentToken)) {
         const retryOptions = { ...options, _isRetry: true };
         const retryHeaders = new Headers(options.headers || {});
-        if (!(options.body instanceof FormData)) {
-          retryHeaders.set("Content-Type", "application/json");
-        }
-        if (guestSessionId) {
-          retryHeaders.set("X-Guest-Session-Id", guestSessionId);
-          retryHeaders.set("X-Guest-SessionId", guestSessionId);
-        }
         retryHeaders.set("Authorization", `Bearer ${currentToken}`);
         retryOptions.headers = retryHeaders;
         return request(path, retryOptions);
@@ -181,13 +234,6 @@ async function request(path, options = {}) {
           (newAccessToken) => {
             const newOptions = { ...options, _isRetry: true };
             const newHeaders = new Headers(options.headers || {});
-            if (!(options.body instanceof FormData)) {
-              newHeaders.set("Content-Type", "application/json");
-            }
-            if (guestSessionId) {
-              newHeaders.set("X-Guest-Session-Id", guestSessionId);
-              newHeaders.set("X-Guest-SessionId", guestSessionId);
-            }
             newHeaders.set("Authorization", `Bearer ${newAccessToken}`);
             newOptions.headers = newHeaders;
 
@@ -288,4 +334,11 @@ function handleLogoutRedirect() {
   }
 }
 
-export { apiBaseUrl, request, refreshAccessToken };
+export {
+  apiBaseUrl,
+  request,
+  refreshAccessToken,
+  isPublicEndpoint,
+  shouldSendGuestSession,
+  PUBLIC_PREFIXES,
+};
