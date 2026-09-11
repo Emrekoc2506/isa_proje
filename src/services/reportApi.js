@@ -1,4 +1,5 @@
 import { request, apiBaseUrl } from "./apiClient";
+import { getAccessToken } from "../auth/tokenStore";
 
 export function getAdminDashboardSummary(params = {}) {
   const query = new URLSearchParams();
@@ -33,7 +34,7 @@ export async function downloadOrdersCsv(params = {}) {
   if (params.dateFrom) query.append("dateFrom", params.dateFrom);
   if (params.dateTo) query.append("dateTo", params.dateTo);
   
-  const token = localStorage.getItem("accessToken");
+  const token = getAccessToken();
   const response = await fetch(`${apiBaseUrl}/admin/reports/orders/export?${query.toString()}`, {
     headers: {
       "Authorization": `Bearer ${token}`

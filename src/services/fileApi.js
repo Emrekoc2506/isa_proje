@@ -1,6 +1,6 @@
 import { apiBaseUrl, request } from "./apiClient";
 import { getGuestSessionId } from "../utils/guestSession";
-import { safeGetItem } from "../utils/storage";
+import { getAccessToken } from "../auth/tokenStore";
 
 export function uploadFile(
   file,
@@ -53,7 +53,7 @@ export function uploadFile(
       const xhr = new XMLHttpRequest();
       xhr.open("POST", `${apiBaseUrl}${endpoint}`);
 
-      const token = safeGetItem("accessToken");
+      const token = getAccessToken();
       if (token) {
         xhr.setRequestHeader("Authorization", `Bearer ${token}`);
       }

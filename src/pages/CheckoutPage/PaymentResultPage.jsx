@@ -150,14 +150,14 @@ export default function PaymentResultPage () {
     setRegisterError('')
     setRegisterSuccess('')
 
-    const emailToRegister = emailParam || orderDetails?.customerEmail || order?.customerEmail
-    if (!emailToRegister) {
-      setRegisterError('E-posta adresi bulunamadı.')
+    if (!registerPassword || registerPassword.length < 8) {
+      setRegisterError('Şifre en az 8 karakter olmalıdır.')
       return
     }
 
-    if (!registerPassword || registerPassword.length < 6) {
-      setRegisterError('Şifre en az 6 karakter olmalıdır.')
+    const emailToRegister = emailParam || orderDetails?.customerEmail || order?.customerEmail
+    if (!emailToRegister) {
+      setRegisterError('E-posta adresi bulunamadı.')
       return
     }
 
@@ -170,7 +170,8 @@ export default function PaymentResultPage () {
       })
       setRegisterSuccess('Hesabınız başarıyla oluşturuldu! Artık giriş yapabilirsiniz.')
     } catch (err) {
-      setRegisterError(err.message || 'Hesap oluşturulurken bir hata meydana geldi.')
+      const fieldMsg = err.fieldErrors?.password?.[0] || err.fieldErrors?.Password?.[0]
+      setRegisterError(fieldMsg || err.message || 'Hesap oluşturulurken bir hata meydana geldi.')
     } finally {
       setRegisterLoading(false)
     }

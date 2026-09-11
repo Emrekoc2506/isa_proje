@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSend, FiSearch, FiCheckCircle, FiPlusCircle, FiTrash2, FiMessageCircle, FiCheck, FiRefreshCw, FiArrowLeft } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import { getAccessToken } from '../../auth/tokenStore';
 import { useTheme } from '../../context/ThemeContext';
 import { useNotifications } from '../../context/NotificationContext';
 import {
@@ -518,7 +519,7 @@ export default function ChatUI({ isAdmin = false, initialUserId = null, initialU
   // ── Yeni konuşma (müşteri) ────────────────────────────────────────
   const handleCreateNewConversation = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = getAccessToken();
       let payload = { subject: 'Destek Talebi' };
       if (!token) {
         const guestName  = prompt('Adınızı girin:') || 'Misafir';

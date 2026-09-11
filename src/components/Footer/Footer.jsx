@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import styles from "./Footer.module.css";
 import {
@@ -11,6 +12,8 @@ import { footerLinks } from "../../data/index";
 import logoImage from "../../assets/images/logo-2.png";
 import PaymentBadges from "../PaymentLogos/PaymentLogos";
 import { useProducts } from "../../context/ProductContext";
+import { subscribeNewsletter } from "../../services/authApi";
+import FieldError, { getFieldAriaProps } from "../common/FieldError";
 
 export default function Footer() {
   let dynamicCategories = [];
@@ -30,6 +33,54 @@ export default function Footer() {
         { label: 'Blog', href: '/blog' }
       ]
     : footerLinks.categories;
+
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [newsletterSuccess, setNewsletterSuccess] = useState("");
+  const [newsletterError, setNewsletterError] = useState("");
+  const [newsletterFieldErrors, setNewsletterFieldErrors] = useState({});
+
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault();
+    const emailTrimmed = newsletterEmail.trim();
+    setNewsletterError("");
+    setNewsletterSuccess("");
+    setNewsletterFieldErrors({});
+
+    if (!emailTrimmed) {
+      setNewsletterFieldErrors({ email: ["Lütfen bir e-posta adresi girin."] });
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrimmed)) {
+      setNewsletterFieldErrors({ email: ["Geçerli bir e-posta adresi giriniz."] });
+      return;
+    }
+
+    setNewsletterLoading(true);
+    try {
+      await subscribeNewsletter(emailTrimmed);
+      setNewsletterSuccess("Bültenimize başarıyla abone oldunuz!");
+      setNewsletterEmail("");
+    } catch (err) {
+      // Duplicate check: if duplicate or 409 conflict, return generic success
+      if (
+        err.status === 409 ||
+        err.code === "duplicate" ||
+        err.code === "already_subscribed" ||
+        (err.message && err.message.toLowerCase().includes("zaten"))
+      ) {
+        setNewsletterSuccess("Bültenimize başarıyla abone oldunuz!");
+        setNewsletterEmail("");
+      } else if (err.code === "validation_error" || err.fieldErrors) {
+        setNewsletterFieldErrors(err.fieldErrors || {});
+      } else {
+        setNewsletterError(err.message || "Abonelik gerçekleştirilemedi. Lütfen tekrar deneyin.");
+      }
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
 
   return (
     <footer className={styles.footer}>
@@ -73,21 +124,47 @@ export default function Footer() {
             </p>
             <form
               className={styles.newsletterForm}
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleNewsletterSubmit}
+              noValidate
             >
               <div className={styles.inputGroup}>
                 <FiMail className={styles.inputIcon} />
                 <input
                   type="email"
+                  id="newsletter-email"
                   className={styles.newsletterInput}
                   placeholder="eposta@adresiniz.com"
                   aria-label="E-posta adresi"
+                  value={newsletterEmail}
+                  onChange={(e) => {
+                    setNewsletterEmail(e.target.value);
+                    if (newsletterFieldErrors.email) {
+                      setNewsletterFieldErrors((prev) => ({ ...prev, email: undefined }));
+                    }
+                  }}
+                  disabled={newsletterLoading}
+                  {...getFieldAriaProps("newsletter-email", newsletterFieldErrors.email)}
                 />
               </div>
-              <button type="submit" className={styles.newsletterBtn}>
-                Abone Ol
+              <button
+                type="submit"
+                className={styles.newsletterBtn}
+                disabled={newsletterLoading}
+              >
+                {newsletterLoading ? "Kaydediliyor..." : "Abone Ol"}
               </button>
             </form>
+            <FieldError error={newsletterFieldErrors.email} id="newsletter-email-error" />
+            {newsletterSuccess && (
+              <p style={{ color: "#16a34a", fontSize: "12.5px", marginTop: "8px" }} role="status">
+                {newsletterSuccess}
+              </p>
+            )}
+            {newsletterError && (
+              <p style={{ color: "#dc2626", fontSize: "12.5px", marginTop: "8px" }} role="alert">
+                {newsletterError}
+              </p>
+            )}
           </div>
         </div>
 

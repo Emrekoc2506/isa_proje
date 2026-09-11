@@ -328,6 +328,7 @@ export default function CategoriesSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCats, setExpandedCats] = useState({});
   const [parentError, setParentError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [updatingId, setUpdatingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [hoveredRow, setHoveredRow] = useState(null);

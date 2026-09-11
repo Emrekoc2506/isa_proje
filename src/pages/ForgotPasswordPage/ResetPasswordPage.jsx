@@ -6,6 +6,7 @@ import { FiLock, FiLoader, FiCheckCircle } from "react-icons/fi";
 import SEO from "../../components/SEO/SEO";
 import { resetPassword } from "../../services/authApi";
 import logoImage from "../../assets/images/logo-2.png";
+import FieldError, { getFieldAriaProps } from "../../components/common/FieldError";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -19,19 +20,24 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newPassword || !confirmPassword) return;
+    setErrorMsg("");
+    setFieldErrors({});
 
-    if (newPassword.length < 8) {
-      setErrorMsg("Yeni şifre en az 8 karakter olmalıdır.");
-      return;
+    const clientErrors = {};
+    if (!newPassword) {
+      clientErrors.password = "Yeni şifre zorunludur.";
+    } else if (newPassword.length < 8) {
+      clientErrors.password = "Yeni şifre en az 8 karakter olmalıdır.";
     }
 
-    if (newPassword !== confirmPassword) {
-      setErrorMsg("Şifreler eşleşmiyor.");
-      return;
+    if (!confirmPassword) {
+      clientErrors.confirmPassword = "Şifre tekrarı zorunludur.";
+    } else if (newPassword !== confirmPassword) {
+      clientErrors.confirmPassword = "Şifreler eşleşmiyor.";
     }
 
     if (!userId || !token) {
@@ -39,9 +45,13 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    if (Object.keys(clientErrors).length > 0) {
+      setFieldErrors(clientErrors);
+      return;
+    }
+
     try {
       setLoading(true);
-      setErrorMsg("");
       await resetPassword({
         userId,
         token,
@@ -50,15 +60,13 @@ export default function ResetPasswordPage() {
       });
       setSuccess(true);
     } catch (err) {
-      let errorMessage =
-        err.message ||
-        "Şifreniz sıfırlanamadı. Bağlantının süresi dolmuş olabilir.";
-      if (err.errors) {
-        errorMessage = Object.entries(err.errors)
-          .map(([key, value]) => `${key}: ${value.join(", ")}`)
-          .join(" | ");
+      if (err.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
+        setFieldErrors(err.fieldErrors);
+      } else {
+        setErrorMsg(
+          err.message || "Şifreniz sıfırlanamadı. Bağlantının süresi dolmuş olabilir."
+        );
       }
-      setErrorMsg(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -127,7 +135,13 @@ export default function ResetPasswordPage() {
                   type="password"
                   required
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  {...getFieldAriaProps(fieldErrors.password || fieldErrors.newPassword, undefined, "password-error")}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    if (fieldErrors.password || fieldErrors.newPassword) {
+                      setFieldErrors(prev => ({ ...prev, password: null, newPassword: null }));
+                    }
+                  }}
                   placeholder="Yeni Şifre"
                   style={{
                     width: "100%",
@@ -141,6 +155,7 @@ export default function ResetPasswordPage() {
                     outline: "none",
                   }}
                 />
+                <FieldError error={fieldErrors.password || fieldErrors.newPassword} id="password-error" />
               </div>
 
               <div
@@ -154,7 +169,11 @@ export default function ResetPasswordPage() {
                   type="password"
                   required
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  {...getFieldAriaProps(fieldErrors, "confirmPassword")}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (fieldErrors.confirmPassword) setFieldErrors(prev => ({ ...prev, confirmPassword: null }));
+                  }}
                   placeholder="Yeni Şifre Tekrarı"
                   style={{
                     width: "100%",
@@ -168,6 +187,7 @@ export default function ResetPasswordPage() {
                     outline: "none",
                   }}
                 />
+                <FieldError errors={fieldErrors} name="confirmPassword" />
               </div>
 
               <button

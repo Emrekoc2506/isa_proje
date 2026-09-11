@@ -6,6 +6,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { request } from '../services/apiClient';
 import { getGuestSessionId } from '../utils/guestSession';
+import { getAccessToken, clearAccessToken } from '../auth/tokenStore';
 
 const MOCK_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjI1MjQ2MDgwMDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
 
@@ -16,6 +17,7 @@ afterEach(() => {
   server.resetHandlers();
   localStorage.clear();
   sessionStorage.clear();
+  clearAccessToken();
 });
 afterAll(() => server.close());
 
@@ -61,7 +63,8 @@ describe('Security Hardening Requirements Suite (Section 13)', () => {
       expect(screen.getByTestId('user-email').textContent).toBe('user@example.com');
     });
 
-    expect(localStorage.getItem('accessToken')).toBe(MOCK_JWT);
+    expect(localStorage.getItem('accessToken')).toBeNull();
+    expect(getAccessToken()).toBe(MOCK_JWT);
     expect(localStorage.getItem('refreshToken')).toBeNull();
     expect(sessionStorage.getItem('refreshToken')).toBeNull();
   });
@@ -103,7 +106,8 @@ describe('Security Hardening Requirements Suite (Section 13)', () => {
       expect(screen.getByTestId('user-email').textContent).toBe('cookieuser@example.com');
     });
 
-    expect(localStorage.getItem('accessToken')).toBe(MOCK_JWT);
+    expect(localStorage.getItem('accessToken')).toBeNull();
+    expect(getAccessToken()).toBe(MOCK_JWT);
     expect(localStorage.getItem('refreshToken')).toBeNull();
   });
 

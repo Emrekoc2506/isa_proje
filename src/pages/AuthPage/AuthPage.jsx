@@ -27,12 +27,14 @@ import {
   isValidTurkishMobile,
 } from "../../utils/phoneUtils";
 import { subscribeToPush } from "../../services/webPushService";
+import FieldError, { getFieldAriaProps } from "../../components/common/FieldError";
 
-export default function AuthPage() {
-  const [mode, setMode] = useState("login");
+export default function AuthPage({ initialMode = "login" } = {}) {
+  const [mode, setMode] = useState(initialMode);
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loginError, setLoginError] = useState(null);
+  const [regFieldErrors, setRegFieldErrors] = useState({});
   const [regError, setRegError] = useState(null);
 
   // Controlled inputs state
@@ -121,13 +123,13 @@ export default function AuthPage() {
     setLoginError(null);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(loginEmail)) {
+    if (!loginEmail || !emailRegex.test(loginEmail)) {
       setLoginError("Geçersiz e-posta formatı.");
       return;
     }
 
-    if (loginPassword.length < 8) {
-      setLoginError("Şifre en az 8 karakter olmalıdır.");
+    if (!loginPassword || !loginPassword.trim()) {
+      setLoginError("Lütfen şifrenizi girin.");
       return;
     }
 
@@ -225,30 +227,41 @@ export default function AuthPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setRegError(null);
+    setRegFieldErrors({});
+
+    const clientErrors = {};
+
+    if (!regName.trim()) {
+      clientErrors.fullName = "Ad Soyad zorunludur.";
+    }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(regEmail)) {
-      setRegError("Geçersiz e-posta formatı.");
-      return;
+    if (!regEmail.trim()) {
+      clientErrors.email = "E-posta adresi zorunludur.";
+    } else if (!emailRegex.test(regEmail)) {
+      clientErrors.email = "Geçersiz e-posta formatı.";
     }
 
     if (!regPhone.trim()) {
-      setRegError("Telefon numarası zorunludur.");
-      return;
+      clientErrors.phoneNumber = "Telefon numarası zorunludur.";
+    } else if (!isValidTurkishMobile(regPhone)) {
+      clientErrors.phoneNumber = "Lütfen geçerli bir cep telefonu numarası girin (5XX XXX XX XX).";
     }
 
-    if (!isValidTurkishMobile(regPhone)) {
-      setRegError("Lütfen geçerli bir cep telefonu numarası girin (5XX XXX XX XX).");
-      return;
+    if (!regPassword) {
+      clientErrors.password = "Şifre zorunludur.";
+    } else if (regPassword.length < 8) {
+      clientErrors.password = "Şifre en az 8 karakter olmalıdır.";
     }
 
-    if (regPassword.length < 8) {
-      setRegError("Şifre en az 8 karakter olmalıdır.");
-      return;
+    if (!regConfirm) {
+      clientErrors.confirmPassword = "Şifre tekrarı zorunludur.";
+    } else if (regPassword !== regConfirm) {
+      clientErrors.confirmPassword = "Şifreler uyuşmuyor!";
     }
 
-    if (regPassword !== regConfirm) {
-      setRegError("Şifreler uyuşmuyor!");
+    if (Object.keys(clientErrors).length > 0) {
+      setRegFieldErrors(clientErrors);
       return;
     }
 
@@ -274,13 +287,11 @@ export default function AuthPage() {
         );
         return;
       }
-      let errorMessage = err.message || "Kayıt işlemi başarısız.";
-      if (err.errors) {
-        errorMessage = Object.entries(err.errors)
-          .map(([key, value]) => `${key}: ${value.join(", ")}`)
-          .join(" | ");
+      if (err.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
+        setRegFieldErrors(err.fieldErrors);
+      } else {
+        setRegError(err.message || "Kayıt işlemi başarısız.");
       }
-      setRegError(errorMessage);
     } finally {
       setRegLoading(false);
     }
@@ -565,12 +576,15 @@ export default function AuthPage() {
                     className={styles.input}
                     autoComplete="name"
                     value={regName}
+                    {...getFieldAriaProps(regFieldErrors, "fullName")}
                     onChange={(e) => {
                       setRegName(e.target.value);
                       if (regError) setRegError(null);
+                      if (regFieldErrors.fullName) setRegFieldErrors(prev => ({ ...prev, fullName: null }));
                     }}
                   />
                   <label htmlFor="reg-name" className={styles.label}>Ad Soyad</label>
+                  <FieldError errors={regFieldErrors} name="fullName" />
                 </div>
 
                 <div className={styles.inputBox}>
@@ -581,12 +595,15 @@ export default function AuthPage() {
                     className={styles.input}
                     autoComplete="email"
                     value={regEmail}
+                    {...getFieldAriaProps(regFieldErrors, "email")}
                     onChange={(e) => {
                       setRegEmail(e.target.value);
                       if (regError) setRegError(null);
+                      if (regFieldErrors.email) setRegFieldErrors(prev => ({ ...prev, email: null }));
                     }}
                   />
                   <label htmlFor="reg-email" className={styles.label}>E-posta</label>
+                  <FieldError errors={regFieldErrors} name="email" />
                 </div>
 
                 <div className={styles.inputBox}>
@@ -598,12 +615,15 @@ export default function AuthPage() {
                     autoComplete="tel"
                     placeholder="5XX XXX XX XX"
                     value={regPhone}
+                    {...getFieldAriaProps(regFieldErrors, "phoneNumber")}
                     onChange={(e) => {
                       setRegPhone(formatTurkishPhone(e.target.value));
                       if (regError) setRegError(null);
+                      if (regFieldErrors.phoneNumber) setRegFieldErrors(prev => ({ ...prev, phoneNumber: null }));
                     }}
                   />
                   <label htmlFor="reg-phone" className={styles.label}>Telefon Numarası</label>
+                  <FieldError errors={regFieldErrors} name="phoneNumber" />
                 </div>
 
                 <div className={styles.inputBox}>
@@ -614,9 +634,11 @@ export default function AuthPage() {
                     className={styles.input}
                     autoComplete="new-password"
                     value={regPassword}
+                    {...getFieldAriaProps(regFieldErrors, "password")}
                     onChange={(e) => {
                       setRegPassword(e.target.value);
                       if (regError) setRegError(null);
+                      if (regFieldErrors.password) setRegFieldErrors(prev => ({ ...prev, password: null }));
                     }}
                   />
                   <label htmlFor="reg-password" className={styles.label}>Şifre</label>
@@ -676,6 +698,7 @@ export default function AuthPage() {
                         </div>
                       );
                     })()}
+                  <FieldError errors={regFieldErrors} name="password" />
                 </div>
 
                 <div className={styles.inputBox}>
@@ -686,9 +709,11 @@ export default function AuthPage() {
                     className={styles.input}
                     autoComplete="new-password"
                     value={regConfirm}
+                    {...getFieldAriaProps(regFieldErrors, "confirmPassword")}
                     onChange={(e) => {
                       setRegConfirm(e.target.value);
                       if (regError) setRegError(null);
+                      if (regFieldErrors.confirmPassword) setRegFieldErrors(prev => ({ ...prev, confirmPassword: null }));
                     }}
                   />
                   <label htmlFor="reg-confirm" className={styles.label}>Şifre Tekrar</label>
@@ -700,6 +725,7 @@ export default function AuthPage() {
                   >
                     {showConfirm ? <FiEyeOff /> : <FiEye />}
                   </button>
+                  <FieldError errors={regFieldErrors} name="confirmPassword" />
                 </div>
 
                 <AnimatePresence>

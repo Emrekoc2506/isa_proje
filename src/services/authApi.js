@@ -1,5 +1,5 @@
 import { request } from "./apiClient";
-import { safeGetItem, safeSetItem } from "../utils/storage";
+import { setAccessToken } from "../auth/tokenStore";
 
 export async function login(payload) {
   const result = await request("/auth/login", {
@@ -9,10 +9,24 @@ export async function login(payload) {
   });
 
   if (result?.accessToken) {
-    safeSetItem("accessToken", result.accessToken);
+    setAccessToken(result.accessToken);
   }
 
   return result;
+}
+
+export function submitContactForm(payload) {
+  return request("/contact", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function subscribeNewsletter(email) {
+  return request("/newsletter/subscribe", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
 }
 
 export function register(payload) {

@@ -10,12 +10,13 @@ import {
 import * as authApi from '../services/authApi'
 import { safeGetItem, safeSetItem, safeRemoveItem } from '../utils/storage'
 import { isJwtExpired, getJwtRemainingTimeMs, getJwtPayload } from '../utils/jwt'
+import { getAccessToken, setAccessToken, clearAccessToken } from '../auth/tokenStore'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider ({ children }) {
   const [user, setUser] = useState(() => {
-    const token = safeGetItem('accessToken')
+    const token = getAccessToken()
     if (token && !isJwtExpired(token)) {
       const payload = getJwtPayload(token)
       if (payload) {
@@ -32,7 +33,7 @@ export function AuthProvider ({ children }) {
   })
 
   const [roles, setRoles] = useState(() => {
-    const token = safeGetItem('accessToken')
+    const token = getAccessToken()
     if (token && !isJwtExpired(token)) {
       const payload = getJwtPayload(token)
       if (payload) {
@@ -44,7 +45,7 @@ export function AuthProvider ({ children }) {
   })
 
   const [isLoading, setIsLoading] = useState(() => {
-    return Boolean(safeGetItem('accessToken'))
+    return Boolean(getAccessToken() || safeGetItem('has_logged_in') === '1')
   })
 
   const isMountedRef = useRef(true)
@@ -62,11 +63,11 @@ export function AuthProvider ({ children }) {
   }, [])
 
   const reloadUser = useCallback(async () => {
-    let token = safeGetItem('accessToken')
+    let token = getAccessToken()
 
     if (!token || isJwtExpired(token)) {
       if (token) {
-        safeRemoveItem('accessToken')
+        clearAccessToken()
       }
 
       const hasLoggedIn = safeGetItem('has_logged_in') === '1'
@@ -83,6 +84,7 @@ export function AuthProvider ({ children }) {
         const session = await authApi.getSessionState()
         if (!session?.isAuthenticated) {
           safeRemoveItem('has_logged_in')
+          clearAccessToken()
           safeSetState(setUser, null)
           safeSetState(setRoles, [])
           safeSetState(setIsLoading, false)
@@ -90,6 +92,7 @@ export function AuthProvider ({ children }) {
         }
       } catch {
         safeRemoveItem('has_logged_in')
+        clearAccessToken()
         safeSetState(setUser, null)
         safeSetState(setRoles, [])
         safeSetState(setIsLoading, false)
@@ -99,11 +102,12 @@ export function AuthProvider ({ children }) {
       try {
         const refreshRes = await authApi.refreshToken()
         if (refreshRes?.accessToken) {
-          safeSetItem('accessToken', refreshRes.accessToken)
+          setAccessToken(refreshRes.accessToken)
           safeSetItem('has_logged_in', '1')
           token = refreshRes.accessToken
         } else {
           safeRemoveItem('has_logged_in')
+          clearAccessToken()
           safeSetState(setUser, null)
           safeSetState(setRoles, [])
           safeSetState(setIsLoading, false)
@@ -111,6 +115,7 @@ export function AuthProvider ({ children }) {
         }
       } catch {
         safeRemoveItem('has_logged_in')
+        clearAccessToken()
         safeSetState(setUser, null)
         safeSetState(setRoles, [])
         safeSetState(setIsLoading, false)
@@ -121,7 +126,7 @@ export function AuthProvider ({ children }) {
     try {
       safeSetState(setIsLoading, true)
       const res = await authApi.me()
-      if (res && safeGetItem('accessToken')) {
+      if (res && getAccessToken()) {
         safeSetItem('has_logged_in', '1')
         safeSetState(setUser, res)
         safeSetState(setRoles, res.roles || [])
@@ -129,6 +134,7 @@ export function AuthProvider ({ children }) {
       }
     } catch (err) {
       safeRemoveItem('has_logged_in')
+      clearAccessToken()
       safeSetState(setUser, null)
       safeSetState(setRoles, [])
     } finally {
@@ -142,7 +148,7 @@ export function AuthProvider ({ children }) {
 
     if (typeof window === 'undefined') return
     const handleSessionExpired = () => {
-      safeRemoveItem('accessToken')
+      clearAccessToken()
       safeRemoveItem('has_logged_in')
       setUser(null)
       setRoles([])
@@ -164,7 +170,7 @@ export function AuthProvider ({ children }) {
         refreshTimer = null
       }
 
-      const token = safeGetItem('accessToken')
+      const token = getAccessToken()
       if (!token || !user) return
 
       const remainingMs = getJwtRemainingTimeMs(token)
@@ -178,7 +184,7 @@ export function AuthProvider ({ children }) {
         try {
           const refreshRes = await authApi.refreshToken()
           if (refreshRes?.accessToken) {
-            safeSetItem('accessToken', refreshRes.accessToken)
+            setAccessToken(refreshRes.accessToken)
             scheduleTokenRefresh()
           }
         } catch {
@@ -194,14 +200,14 @@ export function AuthProvider ({ children }) {
 
     const handleVisibilityOrFocus = async () => {
       if (document.visibilityState === 'visible') {
-        const currentToken = safeGetItem('accessToken')
+        const currentToken = getAccessToken()
         if (currentToken && user) {
           const remMs = getJwtRemainingTimeMs(currentToken)
           if (remMs > 0 && remMs < 2 * 60 * 1000) {
             try {
               const res = await authApi.refreshToken()
               if (res?.accessToken) {
-                safeSetItem('accessToken', res.accessToken)
+                setAccessToken(res.accessToken)
               }
             } catch {}
           }
@@ -225,7 +231,7 @@ export function AuthProvider ({ children }) {
       try {
         const res = await authApi.login(credentials)
         if (res?.accessToken) {
-          safeSetItem('accessToken', res.accessToken)
+          setAccessToken(res.accessToken)
         }
         safeSetItem('has_logged_in', '1')
         const userProfile = await reloadUser()
@@ -239,7 +245,7 @@ export function AuthProvider ({ children }) {
         }
         throw new Error('Giriş bilgileri alınamadı.')
       } catch (err) {
-        safeRemoveItem('accessToken')
+        clearAccessToken()
         safeRemoveItem('has_logged_in')
         setUser(null)
         setRoles([])
@@ -259,7 +265,7 @@ export function AuthProvider ({ children }) {
     } catch (err) {
       // Ignore logout errors
     } finally {
-      safeRemoveItem('accessToken')
+      clearAccessToken()
       safeRemoveItem('has_logged_in')
       setUser(null)
       setRoles([])
@@ -272,7 +278,7 @@ export function AuthProvider ({ children }) {
     } catch (err) {
       // Ignore logout errors
     } finally {
-      safeRemoveItem('accessToken')
+      clearAccessToken()
       safeRemoveItem('has_logged_in')
       setUser(null)
       setRoles([])
@@ -283,11 +289,11 @@ export function AuthProvider ({ children }) {
     try {
       const res = await authApi.refreshToken()
       if (res?.accessToken) {
-        safeSetItem('accessToken', res.accessToken)
+        setAccessToken(res.accessToken)
         return await reloadUser()
       }
     } catch (err) {
-      safeRemoveItem('accessToken')
+      clearAccessToken()
       setUser(null)
       setRoles([])
     }

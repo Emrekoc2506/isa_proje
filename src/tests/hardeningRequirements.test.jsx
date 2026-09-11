@@ -8,6 +8,7 @@ import * as cartApi from '../services/cartApi';
 import * as paymentApi from '../services/paymentApi';
 import * as authApi from '../services/authApi';
 import { request } from '../services/apiClient';
+import { setAccessToken, getAccessToken, clearAccessToken } from '../auth/tokenStore';
 import fs from 'fs';
 import path from 'path';
 
@@ -65,6 +66,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
 afterEach(() => {
   server.resetHandlers();
   localStorage.clear();
+  clearAccessToken();
   resetCartMergePromise();
 });
 afterAll(() => server.close());
@@ -406,7 +408,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         })
       );
 
-      localStorage.setItem('accessToken', MOCK_JWT);
+      setAccessToken(MOCK_JWT);
       render(<AuthProvider><CartProvider><div /></CartProvider></AuthProvider>);
       await act(async () => { await new Promise(r => setTimeout(r, 100)); });
 
@@ -422,7 +424,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         })
       );
 
-      localStorage.setItem('accessToken', MOCK_JWT);
+      setAccessToken(MOCK_JWT);
       render(<AuthProvider><CartProvider><div /></CartProvider></AuthProvider>);
       await act(async () => { await new Promise(r => setTimeout(r, 100)); });
 
@@ -439,7 +441,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         })
       );
 
-      localStorage.setItem('accessToken', MOCK_JWT);
+      setAccessToken(MOCK_JWT);
       let authRes;
       function TestComp() {
         authRes = useAuth();
@@ -449,7 +451,8 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
       await act(async () => { await new Promise(r => setTimeout(r, 100)); });
 
       expect(authRes).toBeDefined();
-      expect(localStorage.getItem('accessToken')).toBe(MOCK_JWT);
+      expect(getAccessToken()).toBe(MOCK_JWT);
+      expect(localStorage.getItem('accessToken')).toBeNull();
     });
 
     test('22. Parallel render cycles do not create duplicate merge requests', async () => {
@@ -461,7 +464,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         })
       );
 
-      localStorage.setItem('accessToken', MOCK_JWT);
+      setAccessToken(MOCK_JWT);
       render(
         <AuthProvider>
           <CartProvider>
@@ -492,7 +495,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         })
       );
 
-      localStorage.setItem('accessToken', MOCK_JWT);
+      setAccessToken(MOCK_JWT);
       render(<AuthProvider><CartProvider><div /></CartProvider></AuthProvider>);
       await act(async () => { await new Promise(r => setTimeout(r, 600)); });
 
@@ -514,7 +517,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
       expect(contextRes.items.some(i => i.source === 'mock')).toBe(true);
 
       // Now trigger merge by setting token and re-rendering
-      localStorage.setItem('accessToken', MOCK_JWT);
+      setAccessToken(MOCK_JWT);
       await act(async () => {
         await contextRes.refreshCart();
       });
@@ -621,7 +624,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         })
       );
 
-      localStorage.setItem('accessToken', MOCK_JWT);
+      setAccessToken(MOCK_JWT);
 
       let authRes;
       function TestComp() {
@@ -636,6 +639,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
       });
 
       expect(logoutCalled).toBe(true);
+      expect(getAccessToken()).toBeNull();
       expect(localStorage.getItem('accessToken')).toBeNull();
       expect(localStorage.getItem('refreshToken')).toBeNull();
     });
@@ -647,7 +651,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         })
       );
 
-      localStorage.setItem('accessToken', MOCK_JWT);
+      setAccessToken(MOCK_JWT);
 
       let authRes;
       function TestComp() {
@@ -661,6 +665,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         await authRes.logout();
       });
 
+      expect(getAccessToken()).toBeNull();
       expect(localStorage.getItem('accessToken')).toBeNull();
       expect(localStorage.getItem('refreshToken')).toBeNull();
     });
@@ -674,7 +679,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         })
       );
 
-      localStorage.setItem('accessToken', MOCK_JWT);
+      setAccessToken(MOCK_JWT);
 
       let authRes;
       function TestComp() {
@@ -705,7 +710,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         })
       );
 
-      localStorage.setItem('accessToken', 'expired-token');
+      setAccessToken('expired-token');
 
       const res = await request('/test-queued');
       expect(res.success).toBe(true);
@@ -721,7 +726,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         })
       );
 
-      localStorage.setItem('accessToken', 'expired-token');
+      setAccessToken('expired-token');
 
       let rejected = false;
       try {
@@ -745,7 +750,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         })
       );
 
-      localStorage.setItem('accessToken', 'exp');
+      setAccessToken('exp');
 
       await Promise.allSettled([
         request('/test-concurrent-1'),
@@ -761,13 +766,13 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         http.post('*/api/auth/refresh-token', () => HttpResponse.json({ accessToken: 'tok-1' }))
       );
 
-      localStorage.setItem('accessToken', 'exp');
+      setAccessToken('exp');
 
       await expect(request('/test-repeat-401')).rejects.toThrow();
     });
 
     test('42 & 43. Session expired event clears AuthContext state and removes listener on unmount', async () => {
-      localStorage.setItem('accessToken', MOCK_JWT);
+      setAccessToken(MOCK_JWT);
 
       let authRes;
       function TestComp() {
@@ -781,6 +786,7 @@ describe('Hardening Requirements - Comprehensive Suite (63 Verification Points)'
         window.dispatchEvent(new CustomEvent('auth:session-expired'));
       });
 
+      expect(getAccessToken()).toBeNull();
       expect(localStorage.getItem('accessToken')).toBeNull();
       expect(authRes.user).toBeNull();
       unmount();

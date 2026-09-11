@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import * as signalR from "@microsoft/signalr";
 import { getMyNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, deleteAllNotifications } from '../services/notificationApi';
 import { useAuth } from './AuthContext';
-import { safeGetItem } from '../utils/storage';
+import { getAccessToken } from '../auth/tokenStore';
 
 const NotificationContext = createContext(null);
 const signalrUrl = import.meta.env.VITE_SIGNALR_BASE_URL ?? "https://localhost:7148/hubs";
@@ -131,7 +131,7 @@ export function NotificationProvider({ children }) {
     let isCancelled = false;
     let hubConn = new signalR.HubConnectionBuilder()
       .withUrl(`${signalrUrl}/notifications`, {
-        accessTokenFactory: () => safeGetItem("accessToken") || ""
+        accessTokenFactory: () => getAccessToken() || ""
       })
       .withAutomaticReconnect()
       .build();

@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 
+import { setAccessToken, getAccessToken, clearAccessToken } from '../auth/tokenStore';
+
 const MOCK_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjI1MjQ2MDgwMDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
 
 const server = setupServer(
@@ -29,11 +31,18 @@ const server = setupServer(
       fullName: 'Admin User',
       roles: ['SuperAdmin']
     });
+  }),
+  http.post('*/api/auth/logout', () => {
+    return HttpResponse.json({ success: true });
   })
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  localStorage.clear();
+  clearAccessToken();
+});
 afterAll(() => server.close());
 
 function TestComponent() {
@@ -71,13 +80,14 @@ describe('AuthContext Tests', () => {
       loginBtn.click();
     });
 
-    expect(localStorage.getItem('accessToken')).toBe(MOCK_JWT);
+    expect(getAccessToken()).toBe(MOCK_JWT);
+    expect(localStorage.getItem('accessToken')).toBeNull();
     expect(screen.getByTestId('auth-state').textContent).toBe('logged-in');
     expect(screen.getByTestId('user-email').textContent).toBe('admin@gmail.com');
   });
 
   test('should clear tokens on logout', async () => {
-    localStorage.setItem('accessToken', 'test-token');
+    setAccessToken('test-token');
     render(
       <AuthProvider>
         <TestComponent />
@@ -90,6 +100,7 @@ describe('AuthContext Tests', () => {
       await new Promise(r => setTimeout(r, 50));
     });
 
+    expect(getAccessToken()).toBeNull();
     expect(localStorage.getItem('accessToken')).toBeNull();
     expect(screen.getByTestId('auth-state').textContent).toBe('logged-out');
   });

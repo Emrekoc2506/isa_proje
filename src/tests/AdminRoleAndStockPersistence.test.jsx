@@ -7,6 +7,7 @@ import CustomersSection from '../pages/AdminPage/sections/CustomersSection';
 import InventorySection from '../pages/AdminPage/sections/InventorySection';
 import { AuthProvider } from '../context/AuthContext';
 import * as productApi from '../services/productApi';
+import { setAccessToken, clearAccessToken } from '../auth/tokenStore';
 
 const MOCK_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjI1MjQ2MDgwMDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
 
@@ -17,6 +18,7 @@ afterEach(() => {
   server.resetHandlers();
   localStorage.clear();
   sessionStorage.clear();
+  clearAccessToken();
   vi.restoreAllMocks();
 });
 afterAll(() => server.close());
@@ -42,7 +44,7 @@ describe('Admin Role & Stock Persistence Suite (Section 14 Tests)', () => {
       })
     );
 
-    localStorage.setItem('accessToken', MOCK_JWT);
+    setAccessToken(MOCK_JWT);
     vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     render(
@@ -78,7 +80,7 @@ describe('Admin Role & Stock Persistence Suite (Section 14 Tests)', () => {
       http.post('*/api/admin/customers/c1/role', () => HttpResponse.json({ userId: 'c1', roles: ['Admin'] }))
     );
 
-    localStorage.setItem('accessToken', MOCK_JWT);
+    setAccessToken(MOCK_JWT);
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     vi.spyOn(window, 'alert').mockImplementation(() => {});
 
@@ -109,7 +111,7 @@ describe('Admin Role & Stock Persistence Suite (Section 14 Tests)', () => {
       http.post('*/api/admin/customers/c1/role', () => new HttpResponse(null, { status: 403 }))
     );
 
-    localStorage.setItem('accessToken', MOCK_JWT);
+    setAccessToken(MOCK_JWT);
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
@@ -252,7 +254,7 @@ describe('Admin Role & Stock Persistence Suite (Section 14 Tests)', () => {
       })
     );
 
-    localStorage.setItem('accessToken', MOCK_JWT);
+    setAccessToken(MOCK_JWT);
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     vi.spyOn(window, 'alert').mockImplementation(() => {});
 

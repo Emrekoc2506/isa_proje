@@ -7,6 +7,7 @@ import {
   PUBLIC_PREFIXES,
 } from "../services/apiClient";
 import { getGuestSessionId } from "../utils/guestSession";
+import { setAccessToken, getAccessToken, clearAccessToken } from "../auth/tokenStore";
 
 const MOCK_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMiLCJuYW1lIjoiQWxpIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjI1MjQ2MDgwMDB9.123";
 
@@ -157,7 +158,7 @@ describe("CORS Preflight & apiClient Optimization Tests", () => {
     });
 
     it("7. Authenticated request: Authorization VAR", async () => {
-      localStorage.setItem("accessToken", MOCK_TOKEN);
+      setAccessToken(MOCK_TOKEN);
 
       await request("/account/profile");
 
@@ -197,11 +198,12 @@ describe("CORS Preflight & apiClient Optimization Tests", () => {
         return new Response(JSON.stringify({ ok: true }), { status: 200 });
       });
 
-      localStorage.setItem("accessToken", MOCK_TOKEN);
+      setAccessToken(MOCK_TOKEN);
 
       const result = await request("/account/profile");
       expect(result).toEqual({ id: "u-1", fullName: "Ali Veli", updated: true });
-      expect(localStorage.getItem("accessToken")).toBe(NEW_TOKEN);
+      expect(getAccessToken()).toBe(NEW_TOKEN);
+      expect(localStorage.getItem("accessToken")).toBeNull();
     });
   });
 });

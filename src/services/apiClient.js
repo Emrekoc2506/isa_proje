@@ -5,7 +5,7 @@ import {
   translateErrorMessage,
 } from "../api/apiError";
 import { isJwtExpired } from "../utils/jwt";
-import { safeGetItem, safeSetItem, safeRemoveItem } from "../utils/storage";
+import { getAccessToken, setAccessToken, clearAccessToken } from "../auth/tokenStore";
 
 let apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7148/api";
@@ -111,7 +111,7 @@ function dispatchSessionExpired() {
 }
 
 async function request(path, options = {}) {
-  let token = safeGetItem("accessToken");
+  let token = getAccessToken();
   const isPublic = isPublicEndpoint(path, options.method);
   const isRetry = options._isRetry === true;
   const headers = new Headers(options.headers || {});
@@ -152,7 +152,7 @@ async function request(path, options = {}) {
   // 3. AUTHENTICATION:
   // Handle expired tokens before sending request
   if (token && isJwtExpired(token)) {
-    safeRemoveItem("accessToken");
+    clearAccessToken();
     token = null;
   }
 
@@ -198,8 +198,8 @@ async function request(path, options = {}) {
         return request(path, publicRetryOptions);
       }
 
-      // If token in localStorage changed while this request was in flight, retry with new token
-      const currentToken = safeGetItem("accessToken");
+      // If token in memory store changed while this request was in flight, retry with new token
+      const currentToken = getAccessToken();
       if (currentToken && currentToken !== token && !isJwtExpired(currentToken)) {
         const retryOptions = { ...options, _isRetry: true };
         const retryHeaders = new Headers(options.headers || {});
@@ -290,7 +290,7 @@ function refreshAccessToken() {
 
     const data = await response.json();
     if (data && data.accessToken) {
-      safeSetItem("accessToken", data.accessToken);
+      setAccessToken(data.accessToken);
       if (typeof window !== "undefined") {
         window.dispatchEvent(
           new CustomEvent("auth:token-refreshed", {
@@ -309,8 +309,8 @@ function refreshAccessToken() {
 }
 
 function handleLogoutRedirect() {
-  const hadToken = Boolean(safeGetItem("accessToken"));
-  safeRemoveItem("accessToken");
+  const hadToken = Boolean(getAccessToken());
+  clearAccessToken();
 
   if (hadToken && typeof window !== "undefined") {
     const currentPath = window.location.pathname.toLowerCase();

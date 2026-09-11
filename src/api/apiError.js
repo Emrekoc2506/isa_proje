@@ -240,21 +240,64 @@ export function translateErrorMessage(msg) {
   return msg;
 }
 
+/**
+ * Converts PascalCase or dotted keys (e.g. "Email", "Product.Name") to camelCase.
+ */
+export function toCamelCaseKey(key) {
+  if (!key || typeof key !== 'string') return key;
+  const parts = key.split('.');
+  const lastPart = parts[parts.length - 1];
+  if (lastPart.toLowerCase() === 'id') return 'id';
+  return lastPart.charAt(0).toLowerCase() + lastPart.slice(1);
+}
+
+/**
+ * Normalizes backend validation errors (PascalCase keys) into camelCase keys
+ * suitable for direct frontend form state mapping.
+ * @param {Record<string, string[] | string> | null | undefined} errors
+ * @returns {Record<string, string>}
+ */
+export function normalizeValidationErrors(errors) {
+  if (!errors || typeof errors !== 'object' || Array.isArray(errors)) return {};
+  const normalized = {};
+
+  Object.entries(errors).forEach(([rawKey, val]) => {
+    if (!rawKey) return;
+    const camelKey = toCamelCaseKey(rawKey);
+    let messages = [];
+    if (Array.isArray(val)) {
+      messages = val.map(String);
+    } else if (typeof val === 'string') {
+      messages = [val];
+    } else if (val != null) {
+      messages = [String(val)];
+    }
+
+    normalized[camelKey] = messages;
+    if (camelKey !== rawKey && !normalized[rawKey]) {
+      normalized[rawKey] = messages;
+    }
+  });
+
+  return normalized;
+}
+
 export class ApiError extends Error {
-  constructor({ message, code, status, traceId, errors }) {
+  constructor({ message, code, status, traceId, errors, fieldErrors }) {
     super(message || "Bilinmeyen bir hata oluştu.");
     this.name = "ApiError";
     this.code = code || "unknown_error";
     this.status = status || 500;
     this.traceId = traceId || null;
     this.errors = errors || null;
+    this.fieldErrors = fieldErrors || (errors ? normalizeValidationErrors(errors) : null);
   }
 }
 
 /**
  * Parses raw error responses into standard ApiError instances.
  * Supports both business errors ({success, message, code, traceId})
- * and validation errors (ProblemDetails with errors property).
+ * and validation errors (ProblemDetails or FluentValidation format).
  */
 export async function parseResponseError(response) {
   const status = response.status;
@@ -285,25 +328,35 @@ export async function parseResponseError(response) {
     });
   }
 
-  // RFC ProblemDetails checking
-  if (responseData.errors && typeof responseData.errors === "object" && !Array.isArray(responseData.errors)) {
-    // Validation error
-    // Extract first error message if available for the main message
-    let validationMsg = "Lütfen form alanlarını kontrol edin.";
-    const keys = Object.keys(responseData.errors);
-    if (keys.length > 0) {
-      const firstKeyErrors = responseData.errors[keys[0]];
-      if (Array.isArray(firstKeyErrors) && firstKeyErrors.length > 0) {
-        validationMsg = firstKeyErrors[0];
+  // RFC ProblemDetails & FluentValidation { code: "validation_error", errors: { FieldName: [...] } }
+  const isValidationResponse =
+    responseData.code === "validation_error" ||
+    (responseData.errors && typeof responseData.errors === "object" && !Array.isArray(responseData.errors));
+
+  if (isValidationResponse) {
+    const rawErrors = responseData.errors || null;
+    const normalized = rawErrors ? normalizeValidationErrors(rawErrors) : null;
+    let validationMsg = responseData.message || "Lütfen form alanlarını kontrol edin.";
+    
+    if (rawErrors) {
+      const keys = Object.keys(rawErrors);
+      if (keys.length > 0) {
+        const firstKeyErrors = rawErrors[keys[0]];
+        if (Array.isArray(firstKeyErrors) && firstKeyErrors.length > 0) {
+          validationMsg = firstKeyErrors[0];
+        } else if (typeof firstKeyErrors === "string") {
+          validationMsg = firstKeyErrors;
+        }
       }
     }
 
     return new ApiError({
       message: translateErrorMessage(validationMsg),
       code: "validation_error",
-      status,
+      status: status || 400,
       traceId,
-      errors: responseData.errors
+      errors: rawErrors,
+      fieldErrors: normalized
     });
   }
 
@@ -316,6 +369,7 @@ export async function parseResponseError(response) {
     code,
     status,
     traceId: responseData.traceId || traceId,
-    errors: responseData.errors
+    errors: responseData.errors || null,
+    fieldErrors: responseData.errors ? normalizeValidationErrors(responseData.errors) : null
   });
 }

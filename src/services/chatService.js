@@ -1,7 +1,7 @@
 import * as signalR from "@microsoft/signalr";
 import { request } from "./apiClient";
 import { getGuestSessionId } from "../utils/guestSession";
-import { safeGetItem } from "../utils/storage";
+import { getAccessToken } from "../auth/tokenStore";
 
 const signalrUrl = import.meta.env.VITE_SIGNALR_BASE_URL ?? "https://localhost:7148/hubs";
 let connection = null;
@@ -27,7 +27,7 @@ export const startChatConnection = async () => {
   connection = new signalR.HubConnectionBuilder()
     .withUrl(url, {
       accessTokenFactory: () => {
-        const t = safeGetItem("accessToken");
+        const t = getAccessToken();
         return t ? t : undefined;
       }
     })

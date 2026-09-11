@@ -34,6 +34,7 @@ import ChatUI from "../../components/ChatUI/ChatUI";
 import NotificationDropdown from "../../components/NotificationDropdown/NotificationDropdown";
 import AddressesSection from "./AddressesSection";
 import * as accountApi from "../../services/accountApi";
+import FieldError, { getFieldAriaProps } from "../../components/common/FieldError";
 
 const NAV_ITEMS = [
   { id: "overview", label: "Genel Bakış", icon: FiGrid },
@@ -78,6 +79,7 @@ export default function DashboardPage({ activeTab = "overview" }) {
   const [passLoading, setPassLoading] = useState(false);
   const [passSuccess, setPassSuccess] = useState(false);
   const [passError, setPassError] = useState("");
+  const [passFieldErrors, setPassFieldErrors] = useState({});
 
   // Email Değiştirme State'leri
   const [newEmail, setNewEmail] = useState("");
@@ -199,14 +201,27 @@ export default function DashboardPage({ activeTab = "overview" }) {
     e.preventDefault();
     setPassError("");
     setPassSuccess(false);
+    setPassFieldErrors({});
 
-    if (newPass.length < 8) {
-      setPassError("Yeni şifre en az 8 karakter olmalıdır.");
-      return;
+    const clientErrors = {};
+    if (!curPass) {
+      clientErrors.currentPassword = "Lütfen mevcut şifrenizi giriniz.";
     }
 
-    if (newPass !== confPass) {
-      setPassError("Yeni şifreler uyuşmuyor.");
+    if (!newPass) {
+      clientErrors.newPassword = "Lütfen yeni şifrenizi giriniz.";
+    } else if (newPass.length < 8) {
+      clientErrors.newPassword = "Yeni şifre en az 8 karakter olmalıdır.";
+    }
+
+    if (!confPass) {
+      clientErrors.confirmPassword = "Yeni şifre tekrarı zorunludur.";
+    } else if (newPass !== confPass) {
+      clientErrors.confirmPassword = "Yeni şifreler uyuşmuyor.";
+    }
+
+    if (Object.keys(clientErrors).length > 0) {
+      setPassFieldErrors(clientErrors);
       return;
     }
 
@@ -223,19 +238,15 @@ export default function DashboardPage({ activeTab = "overview" }) {
       setNewPass("");
       setConfPass("");
     } catch (err) {
-      let errorMessage;
-      if (err.status === 405 || err.message?.includes('405') || err.message?.includes('ERR_FAILED') || err.message?.toLowerCase().includes('failed to fetch')) {
-        errorMessage = "Sunucu bu isteği şu an kabul etmiyor (405). Lütfen backend ekibinin Nginx/CORS yapılandırmasını kontrol etmesini isteyin.";
+      if (err.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
+        setPassFieldErrors(err.fieldErrors);
       } else if (err.status === 401 || err.message?.includes('401')) {
-        errorMessage = "Mevcut şifreniz hatalı.";
-      } else if (err.errors) {
-        errorMessage = Object.entries(err.errors)
-          .map(([key, value]) => `${key}: ${value.join(", ")}`)
-          .join(" | ");
+        setPassError("Mevcut şifreniz hatalı.");
+      } else if (err.status === 405 || err.message?.includes('405') || err.message?.includes('ERR_FAILED') || err.message?.toLowerCase().includes('failed to fetch')) {
+        setPassError("Sunucu bu isteği şu an kabul etmiyor (405). Lütfen backend ekibinin Nginx/CORS yapılandırmasını kontrol etmesini isteyin.");
       } else {
-        errorMessage = err.message || "Şifre değiştirilemedi. Lütfen daha sonra tekrar deneyin.";
+        setPassError(err.message || "Şifre değiştirilemedi. Lütfen daha sonra tekrar deneyin.");
       }
-      setPassError(errorMessage);
     } finally {
       setPassLoading(false);
     }
@@ -1075,13 +1086,16 @@ export default function DashboardPage({ activeTab = "overview" }) {
                           type="password"
                           required
                           value={curPass}
+                          {...getFieldAriaProps(passFieldErrors, "currentPassword")}
                           onChange={(e) => {
                             setCurPass(e.target.value);
                             if (passError) setPassError("");
                             if (passSuccess) setPassSuccess(false);
+                            if (passFieldErrors.currentPassword) setPassFieldErrors(prev => ({ ...prev, currentPassword: null }));
                           }}
                           className={styles.fieldInput}
                         />
+                        <FieldError errors={passFieldErrors} name="currentPassword" />
                       </div>
                       <div className={styles.formField}>
                         <label className={styles.fieldLabel}>Yeni Şifre</label>
@@ -1089,13 +1103,16 @@ export default function DashboardPage({ activeTab = "overview" }) {
                           type="password"
                           required
                           value={newPass}
+                          {...getFieldAriaProps(passFieldErrors, "newPassword")}
                           onChange={(e) => {
                             setNewPass(e.target.value);
                             if (passError) setPassError("");
                             if (passSuccess) setPassSuccess(false);
+                            if (passFieldErrors.newPassword) setPassFieldErrors(prev => ({ ...prev, newPassword: null }));
                           }}
                           className={styles.fieldInput}
                         />
+                        <FieldError errors={passFieldErrors} name="newPassword" />
 
                         {newPass &&
                           (() => {
@@ -1154,13 +1171,16 @@ export default function DashboardPage({ activeTab = "overview" }) {
                           type="password"
                           required
                           value={confPass}
+                          {...getFieldAriaProps(passFieldErrors, "confirmPassword")}
                           onChange={(e) => {
                             setConfPass(e.target.value);
                             if (passError) setPassError("");
                             if (passSuccess) setPassSuccess(false);
+                            if (passFieldErrors.confirmPassword) setPassFieldErrors(prev => ({ ...prev, confirmPassword: null }));
                           }}
                           className={styles.fieldInput}
                         />
+                        <FieldError errors={passFieldErrors} name="confirmPassword" />
                       </div>
                     </div>
                     <button

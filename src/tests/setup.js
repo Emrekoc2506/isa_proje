@@ -96,11 +96,14 @@ export const handlers = [
   })
 ];
 
+import { clearAccessToken } from '../auth/tokenStore';
+
 const server = setupServer(...handlers);
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
 afterEach(() => {
   server.resetHandlers();
   localStorage.clear();
+  clearAccessToken();
 });
 afterAll(() => server.close());

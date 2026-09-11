@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { FiMapPin, FiPhone, FiMail, FiClock } from 'react-icons/fi';
 import SEO from '../../components/SEO/SEO';
+import { submitContactForm } from '../../services/authApi';
+import FieldError, { getFieldAriaProps } from '../../components/common/FieldError';
 import s from './StaticPage.module.css';
 
 const contactDetails = [
@@ -11,16 +13,61 @@ const contactDetails = [
 ];
 
 export default function IletisimPage() {
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [form, setForm] = useState({ fullName: '', email: '', phoneNumber: '', subject: '', message: '' });
+  const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [generalError, setGeneralError] = useState('');
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSent(true);
-    setForm({ name: '', email: '', subject: '', message: '' });
-    setTimeout(() => setSent(false), 4000);
+    if (loading) return;
+
+    setFieldErrors({});
+    setGeneralError('');
+
+    // Basic client validation
+    const errors = {};
+    if (!form.fullName.trim()) errors.fullName = ['Adınız ve soyadınız zorunludur.'];
+    if (!form.email.trim()) errors.email = ['E-posta adresi zorunludur.'];
+    if (!form.subject.trim()) errors.subject = ['Konu zorunludur.'];
+    if (!form.message.trim()) errors.message = ['Mesaj zorunludur.'];
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await submitContactForm({
+        fullName: form.fullName.trim(),
+        name: form.fullName.trim(),
+        email: form.email.trim(),
+        phoneNumber: form.phoneNumber.trim(),
+        phone: form.phoneNumber.trim(),
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+      });
+      setSent(true);
+      setForm({ fullName: '', email: '', phoneNumber: '', subject: '', message: '' });
+    } catch (err) {
+      if (err.code === 'validation_error' || err.fieldErrors) {
+        setFieldErrors(err.fieldErrors || {});
+      } else {
+        setGeneralError(err.message || 'Mesajınız gönderilemedi. Lütfen tekrar deneyin.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,24 +94,99 @@ export default function IletisimPage() {
               Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.
             </p>
           ) : (
-            <form className={s.contactForm} onSubmit={handleSubmit}>
+            <form className={s.contactForm} onSubmit={handleSubmit} noValidate>
+              {generalError && (
+                <div style={{ color: '#dc2626', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }} role="alert">
+                  {generalError}
+                </div>
+              )}
+
               <div className={s.formGroup}>
-                <label className={s.formLabel}>Adınız Soyadınız</label>
-                <input className={s.formInput} type="text" name="name" value={form.name} onChange={handleChange} required placeholder="Adınız ve soyadınız" />
+                <label className={s.formLabel} htmlFor="contact-fullName">Adınız Soyadınız *</label>
+                <input
+                  id="contact-fullName"
+                  className={s.formInput}
+                  type="text"
+                  name="fullName"
+                  value={form.fullName}
+                  onChange={handleChange}
+                  required
+                  placeholder="Adınız ve soyadınız"
+                  disabled={loading}
+                  {...getFieldAriaProps("contact-fullName", fieldErrors.fullName || fieldErrors.name)}
+                />
+                <FieldError error={fieldErrors.fullName || fieldErrors.name} id="contact-fullName-error" />
               </div>
+
               <div className={s.formGroup}>
-                <label className={s.formLabel}>E-posta Adresiniz</label>
-                <input className={s.formInput} type="email" name="email" value={form.email} onChange={handleChange} required placeholder="ornek@email.com" />
+                <label className={s.formLabel} htmlFor="contact-email">E-posta Adresiniz *</label>
+                <input
+                  id="contact-email"
+                  className={s.formInput}
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  placeholder="ornek@email.com"
+                  disabled={loading}
+                  {...getFieldAriaProps("contact-email", fieldErrors.email)}
+                />
+                <FieldError error={fieldErrors.email} id="contact-email-error" />
               </div>
+
               <div className={s.formGroup}>
-                <label className={s.formLabel}>Konu</label>
-                <input className={s.formInput} type="text" name="subject" value={form.subject} onChange={handleChange} required placeholder="Mesajınızın konusu" />
+                <label className={s.formLabel} htmlFor="contact-phoneNumber">Telefon Numaranız</label>
+                <input
+                  id="contact-phoneNumber"
+                  className={s.formInput}
+                  type="tel"
+                  name="phoneNumber"
+                  value={form.phoneNumber}
+                  onChange={handleChange}
+                  placeholder="05XX XXX XX XX"
+                  disabled={loading}
+                  {...getFieldAriaProps("contact-phoneNumber", fieldErrors.phoneNumber || fieldErrors.phone)}
+                />
+                <FieldError error={fieldErrors.phoneNumber || fieldErrors.phone} id="contact-phoneNumber-error" />
               </div>
+
               <div className={s.formGroup}>
-                <label className={s.formLabel}>Mesajınız</label>
-                <textarea className={s.formTextarea} name="message" value={form.message} onChange={handleChange} required placeholder="Mesajınızı buraya yazın..." />
+                <label className={s.formLabel} htmlFor="contact-subject">Konu *</label>
+                <input
+                  id="contact-subject"
+                  className={s.formInput}
+                  type="text"
+                  name="subject"
+                  value={form.subject}
+                  onChange={handleChange}
+                  required
+                  placeholder="Mesajınızın konusu"
+                  disabled={loading}
+                  {...getFieldAriaProps("contact-subject", fieldErrors.subject)}
+                />
+                <FieldError error={fieldErrors.subject} id="contact-subject-error" />
               </div>
-              <button type="submit" className={s.formBtn}>Mesajı Gönder</button>
+
+              <div className={s.formGroup}>
+                <label className={s.formLabel} htmlFor="contact-message">Mesajınız *</label>
+                <textarea
+                  id="contact-message"
+                  className={s.formTextarea}
+                  name="message"
+                  value={form.message}
+                  onChange={handleChange}
+                  required
+                  placeholder="Mesajınızı buraya yazın..."
+                  disabled={loading}
+                  {...getFieldAriaProps("contact-message", fieldErrors.message)}
+                />
+                <FieldError error={fieldErrors.message} id="contact-message-error" />
+              </div>
+
+              <button type="submit" className={s.formBtn} disabled={loading}>
+                {loading ? 'Gönderiliyor...' : 'Mesajı Gönder'}
+              </button>
             </form>
           )}
         </div>
