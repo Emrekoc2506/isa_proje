@@ -19,6 +19,7 @@ import {
   FiBookOpen,
   FiStar,
   FiShield,
+  FiZap,
 } from "react-icons/fi";
 import logoImage from "../../assets/images/logo-2.png";
 import ChatUI from "../../components/ChatUI/ChatUI";
@@ -41,6 +42,7 @@ import ReportsSection from "./sections/ReportsSection";
 import BlogAdminSection from "./sections/BlogAdminSection";
 import ReviewsSection from "./sections/ReviewsSection";
 import AbuseBansSection from "./sections/AbuseBansSection";
+import MediaOptimizationSection from "./sections/MediaOptimizationSection";
 
 const NAV_ITEMS = [
   { id: "overview", label: "Yönetim Özeti", icon: FiGrid },
@@ -56,6 +58,7 @@ const NAV_ITEMS = [
   { id: "customers", label: "Müşteri Hesapları", icon: FiUser },
   { id: "abuse-bans", label: "Engellemeler", icon: FiShield },
   { id: "reports", label: "Satış Raporları", icon: FiTrendingUp },
+  { id: "media-optimization", label: "Medya Optimizasyonu", icon: FiZap },
 ];
 
 export default function AdminPage() {
@@ -383,6 +386,8 @@ export default function AdminPage() {
               {active === "abuse-bans" && <AbuseBansSection />}
 
               {active === "reports" && <ReportsSection />}
+
+              {active === "media-optimization" && <MediaOptimizationSection />}
             </motion.div>
           </AnimatePresence>
         </div>

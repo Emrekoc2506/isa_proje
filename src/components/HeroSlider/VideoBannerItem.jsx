@@ -35,6 +35,12 @@ export function getYoutubeEmbedUrl(url, autoplay, muted, loop) {
   return `https://www.youtube.com/embed/${videoId}?autoplay=${autoParam}&mute=${muteParam}&loop=${loopParam}&playlist=${videoId}&playsinline=1`;
 }
 
+export function getBannerAlt(slide) {
+  if (slide?.title?.trim()) return slide.title.trim();
+  if (slide?.subtitle?.trim()) return slide.subtitle.trim();
+  return '';
+}
+
 export default function VideoBannerItem({
   slide,
   className = '',
@@ -49,9 +55,16 @@ export default function VideoBannerItem({
   const mediaType = slide?.mediaType || (slide?.videoUrl ? 'video' : 'image');
   const isVideo = Boolean(slide) && (mediaType === 'video' || Boolean(slide?.videoUrl));
 
-  // Mobil öncelik sıralaması:
-  // mobileVideoUrl -> videoUrl -> mobilePosterImageUrl -> posterImageUrl
-  const videoSrc = isMobile && slide?.mobileVideoUrl ? slide.mobileVideoUrl : (slide?.videoUrl || '');
+  // Mobil cihazda:
+  // mobileVideoUrl VARSA -> mobil videoyu kullan.
+  // mobileVideoUrl YOKSA -> ağır desktop videoyu indirmek yerine poster/mobile poster göster.
+  const videoSrc = isMobile
+    ? (slide?.mobileVideoUrl || '')
+    : (slide?.videoUrl || '');
+
+  // Poster öncelik sıralaması:
+  // Mobilde: mobilePosterImageUrl -> mobileImageUrl -> posterImageUrl -> imageUrl
+  // Desktopta: posterImageUrl -> imageUrl -> mobilePosterImageUrl -> mobileImageUrl
   const posterSrc = isMobile
     ? (slide?.mobilePosterImageUrl || slide?.mobileImageUrl || slide?.posterImageUrl || slide?.imageUrl || '')
     : (slide?.posterImageUrl || slide?.imageUrl || slide?.mobilePosterImageUrl || slide?.mobileImageUrl || '');
@@ -106,14 +119,14 @@ export default function VideoBannerItem({
 
   if (!slide) return null;
 
-  // Görsel banner veya video hatası durumunda poster render et
+  // Görsel banner, mobil videosuz durum veya video hatası durumunda poster render et
   if (!isVideo || hasError || !videoSrc) {
     return (
       <picture style={{ width: '100%', height: '100%', display: 'block' }}>
         <source media="(max-width: 768px)" srcSet={slide.mobilePosterImageUrl || slide.mobileImageUrl || posterSrc} />
         <img
-          src={posterSrc || slide.imageUrl}
-          alt={slide.title || 'Banner'}
+          src={posterSrc || slide.imageUrl || ''}
+          alt={getBannerAlt(slide)}
           className={className}
           loading={isFirst ? 'eager' : 'lazy'}
           fetchPriority={isFirst ? 'high' : 'auto'}
@@ -131,7 +144,7 @@ export default function VideoBannerItem({
       <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
         <iframe
           src={embedUrl}
-          title={slide.title || 'Video Banner'}
+          title={getBannerAlt(slide) || 'Video Banner'}
           className={className}
           loading="lazy"
           style={{ width: '100%', height: '100%', border: 'none', objectFit: 'cover' }}
@@ -156,7 +169,7 @@ export default function VideoBannerItem({
         muted={muted}
         loop={loop}
         playsInline
-        preload={isFirst && !isMobile ? 'auto' : 'metadata'}
+        preload="metadata"
         className={className}
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         onError={() => setHasError(true)}

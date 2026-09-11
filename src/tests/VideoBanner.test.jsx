@@ -121,8 +121,8 @@ describe('Video Banner & Upload Functionality', () => {
     expect(uploadFile).not.toHaveBeenCalled();
   });
 
-  // 4. 100 MB üstü reddedilir
-  test('rejects video file exceeding 100 MB size limit', async () => {
+  // 4. 25 MB üstü reddedilir
+  test('rejects video file exceeding 25 MB size limit', async () => {
     render(<BannersSection />);
     fireEvent.click(await screen.findByText(/Yeni (İlan|Billboard) Ekle/i));
     fireEvent.change(screen.getByLabelText(/Başlık \*/i), { target: { value: 'Big File Test' } });
@@ -131,11 +131,11 @@ describe('Video Banner & Upload Functionality', () => {
 
     const fileInput = document.getElementById('videoFile');
     const hugeFile = new File(['a'], 'huge.mp4', { type: 'video/mp4' });
-    Object.defineProperty(hugeFile, 'size', { value: 101 * 1024 * 1024 });
+    Object.defineProperty(hugeFile, 'size', { value: 26 * 1024 * 1024 });
 
     fireEvent.change(fileInput, { target: { files: [hugeFile] } });
 
-    expect(window.alert).toHaveBeenCalledWith("Video boyutu en fazla 100 MB olabilir.");
+    expect(window.alert).toHaveBeenCalledWith("Video boyutu en fazla 25 MB olabilir.");
     expect(uploadFile).not.toHaveBeenCalled();
   });
 

@@ -35,7 +35,7 @@ export default function ArticleCard({ article, onClick }) {
       <div className={styles.imgWrapper}>
         <img
           src={displayImage}
-          alt={title || 'Blog görseli'}
+          alt={title || ''}
           className={styles.img}
           loading="lazy"
           decoding="async"

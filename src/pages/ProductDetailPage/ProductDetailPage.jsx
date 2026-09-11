@@ -1686,7 +1686,7 @@ function RelatedCard({ product, navigate, addToCart }) {
         </button>
         <img
           src={product?.image || "/ornek resim.jpg"}
-          alt={product?.name || "Ürün Görseli"}
+          alt={product?.name || ""}
           loading="lazy"
           className={styles.relImg}
         />

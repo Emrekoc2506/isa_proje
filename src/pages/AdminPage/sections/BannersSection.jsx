@@ -14,6 +14,8 @@ import styles from '../AdminPage.module.css';
 import { useTheme } from '../../../context/ThemeContext';
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
+export const MAX_BANNER_VIDEO_SIZE = 25 * 1024 * 1024; // 25 MB
+
 const STEPS = [
   { id: 1, label: 'Billboard Bilgileri & Link', icon: FiTag   },
   { id: 2, label: 'Görsel & Medya Yükleme',     icon: FiImage },
@@ -186,7 +188,7 @@ function VideoUploadDropzone({ label, value, onFile, onClear, uploading, progres
           <input id={id} type="file" accept={accept} onChange={onFile} style={{ display: 'none' }} disabled={uploading} />
           <FiVideo size={24} style={{ color: 'var(--gold-light)' }} />
           <span style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: '600' }}>
-            {uploading ? `Video Yükleniyor (%${progress || 0})...` : 'Video yüklemek için tıklayın (MP4/WebM max 100MB)'}
+            {uploading ? `Video Yükleniyor (%${progress || 0})...` : 'Video yüklemek için tıklayın (MP4 / WebM — Maks. 25 MB)'}
           </span>
         </div>
       ) : (
@@ -338,9 +340,8 @@ export default function BannersSection() {
       return;
     }
 
-    const MAX_SIZE = 100 * 1024 * 1024; // 100 MB
-    if (file.size > MAX_SIZE) {
-      const errorMsg = "Video boyutu en fazla 100 MB olabilir.";
+    if (file.size > MAX_BANNER_VIDEO_SIZE) {
+      const errorMsg = "Video boyutu en fazla 25 MB olabilir.";
       setUploadError(errorMsg);
       alert(errorMsg);
       e.target.value = '';
@@ -1062,7 +1063,7 @@ export default function BannersSection() {
                               {form.mediaSource === 'file' ? (
                                 <>
                                   <VideoUploadDropzone
-                                    label="Video Dosyası (MP4 / WebM — Max 100 MB) *"
+                                    label="Video Dosyası (MP4 / WebM — Maks. 25 MB) *"
                                     value={form.videoUrl}
                                     onFile={(e) => handleVideoUpload(e, 'videoUrl')}
                                     onClear={() => setVal('videoUrl', '')}
@@ -1072,7 +1073,7 @@ export default function BannersSection() {
                                     accept=".mp4,.webm,video/mp4,video/webm"
                                   />
                                   <VideoUploadDropzone
-                                    label="Mobil Video Dosyası (İsteğe Bağlı)"
+                                    label="Mobil Video Dosyası (MP4 / WebM — Maks. 25 MB - İsteğe Bağlı)"
                                     value={form.mobileVideoUrl}
                                     onFile={(e) => handleVideoUpload(e, 'mobileVideoUrl')}
                                     onClear={() => setVal('mobileVideoUrl', '')}
