@@ -186,34 +186,34 @@ export default function AdminPushToggle() {
           </div>
 
           {status.isIos && !status.isStandalone ? (
-            <div style={{ color: "var(--text-light, #e5e7eb)" }}>
-              <p style={{ marginBottom: "8px", fontWeight: "600", color: "#60a5fa" }}>
+            <div className={styles.iosNotice}>
+              <p className={styles.iosTitle}>
                 📱 iPhone / iPad Kullanıcıları İçin:
               </p>
-              <p>
+              <p className={styles.popoverText}>
                 Apple iOS kısıtlaması gereği, ekran veya sekme kapalıyken bildirim alabilmek için:
               </p>
-              <ol style={{ paddingLeft: "16px", marginTop: "6px", lineHeight: "1.6" }}>
+              <ol className={styles.iosList}>
                 <li>Safari alt menüsünden <strong>Paylaş</strong> simgesine dokunun.</li>
                 <li><strong>&quot;Ana Ekrana Ekle&quot;</strong> seçeneğini seçin.</li>
                 <li>Ana ekrandan uygulamayı açıp buradan bildirimleri aktif edin.</li>
               </ol>
             </div>
           ) : (
-            <div>
-              {message && <p style={{ marginBottom: "8px" }}>{message}</p>}
+            <div className={styles.popoverBody}>
+              {message && <p className={styles.popoverText}>{message}</p>}
               {!message && status.isSubscribed && (
-                <p>
+                <p className={styles.popoverText}>
                   ✅ Bildirimler aktif. Yeni bir sipariş geldiğinde cihazınıza anında sesli uyarı düşecektir.
                 </p>
               )}
               {!message && !status.isSubscribed && status.permission !== "denied" && (
-                <p>
+                <p className={styles.popoverText}>
                   Yeni siparişleri kaçırmamak için bildirim izni verin. Site kapalıyken bile bildirim alabilirsiniz.
                 </p>
               )}
               {!message && status.permission === "denied" && (
-                <p style={{ color: "#f87171" }}>
+                <p className={styles.deniedNotice}>
                   <FiAlertCircle style={{ verticalAlign: "middle", marginRight: "4px" }} />
                   Tarayıcınız bu sitede bildirimleri engellemiş. Adres çubuğundaki ayarlar simgesinden izin veriniz.
                 </p>
@@ -225,7 +225,7 @@ export default function AdminPushToggle() {
             {status.isSubscribed && (
               <button
                 type="button"
-                className={styles.actionBtn}
+                className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
                 onClick={handleSendTestNotification}
               >
                 🔔 Test Bildirimi Gönder

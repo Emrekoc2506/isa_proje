@@ -14,16 +14,16 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid var(--border-gold, rgba(197, 160, 89, 0.3));
-  background: var(--bg-dark, #121316);
-  color: var(--text-main, #f5f5f7);
+  border: 1px solid var(--border-gold, rgba(201, 162, 39, 0.35));
+  background: var(--bg-dark, #1C0F35);
+  color: var(--text-primary, #EDE0C8);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .toggleBtn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  border-color: var(--gold, #c5a059);
+  border-color: var(--gold, #C9A227);
 }
 
 .toggleBtn:disabled {
@@ -32,32 +32,32 @@
   transform: none;
 }
 
-/* Durum renkleri */
+/* Durum renkleri - Koyu Tema */
 .statusActive {
   border-color: #10b981;
-  background: rgba(16, 185, 129, 0.12);
+  background: rgba(16, 185, 129, 0.14);
   color: #34d399;
 }
 
 .statusActive:hover {
   border-color: #34d399;
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.22);
 }
 
 .statusInactive {
-  border-color: rgba(197, 160, 89, 0.4);
-  color: var(--gold-light, #e0c896);
+  border-color: var(--border-gold, rgba(201, 162, 39, 0.35));
+  color: var(--gold-light, #E8C547);
 }
 
 .statusDenied {
   border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.12);
+  background: rgba(239, 68, 68, 0.14);
   color: #f87171;
 }
 
 .statusIos {
   border-color: #3b82f6;
-  background: rgba(59, 130, 246, 0.12);
+  background: rgba(59, 130, 246, 0.14);
   color: #60a5fa;
 }
 
@@ -75,7 +75,7 @@
 }
 
 .dotInactive {
-  background: var(--gold, #c5a059);
+  background: var(--gold, #C9A227);
 }
 
 .dotDenied {
@@ -90,70 +90,248 @@
   font-size: 14px;
 }
 
-/* Popover / Modal Uyarısı */
+/* Popover / Modal Uyarısı - Koyu Tema */
 .popover {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: 290px;
-  background: var(--bg-card, #1a1c22);
-  border: 1px solid var(--border-gold, rgba(197, 160, 89, 0.3));
+  width: 300px;
+  background: var(--bg-card, #2A1845);
+  border: 1px solid var(--border-gold, rgba(201, 162, 39, 0.35));
   border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  padding: 16px;
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(201, 162, 39, 0.15);
   z-index: 100;
   font-size: 12px;
   line-height: 1.5;
-  color: var(--text-main, #f5f5f7);
+  color: var(--text-primary, #EDE0C8);
 }
 
 .popoverHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
   font-weight: 700;
   font-size: 13px;
-  color: var(--gold-light, #e0c896);
+  color: var(--gold-light, #E8C547);
+  border-bottom: 1px solid rgba(201, 162, 39, 0.2);
 }
 
-.popoverActions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
+.popoverBody {
+  margin-bottom: 12px;
 }
 
-.actionBtn {
-  flex: 1;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 11px;
+.popoverText {
+  color: var(--text-primary, #EDE0C8);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.popoverText + .popoverText {
+  margin-top: 8px;
+}
+
+.iosNotice {
+  color: var(--text-primary, #EDE0C8);
+}
+
+.iosTitle {
   font-weight: 600;
-  cursor: pointer;
-  border: 1px solid var(--border-gold, rgba(197, 160, 89, 0.3));
-  background: var(--bg-dark, #121316);
-  color: var(--text-main, #f5f5f7);
-  transition: all 0.2s;
+  margin-bottom: 8px;
+  color: #60a5fa;
 }
 
-.actionBtn:hover {
-  background: var(--gold, #c5a059);
-  color: #000;
+.iosList {
+  padding-left: 18px;
+  margin-top: 6px;
+  line-height: 1.6;
+  color: var(--text-primary, #EDE0C8);
+}
+
+.deniedNotice {
+  color: #f87171;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .closeBtn {
   background: none;
   border: none;
-  color: var(--text-muted, #9ca3af);
+  color: var(--text-secondary, #A89BC2);
   cursor: pointer;
-  padding: 2px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s;
 }
 
 .closeBtn:hover {
-  color: #fff;
+  color: var(--text-primary, #EDE0C8);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.popoverActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-gold, rgba(201, 162, 39, 0.35));
+  background: var(--bg-dark, #1C0F35);
+  color: var(--text-primary, #EDE0C8);
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.actionBtn:hover {
+  background: var(--gold, #C9A227);
+  color: #12091F;
+  border-color: var(--gold, #C9A227);
+}
+
+.actionBtnPrimary {
+  background: rgba(201, 162, 39, 0.15);
+  color: var(--gold-pale, #F5DFA0);
+  border-color: var(--gold, #C9A227);
+}
+
+.actionBtnPrimary:hover {
+  background: var(--gold, #C9A227);
+  color: #12091F;
+}
+
+/* ============================================================
+   GÜNDÜZ MODU (LIGHT TEMA) UYUMLULUĞU
+   ============================================================ */
+
+:global([data-theme="light"]) .toggleBtn {
+  background: var(--bg-dark, #F4EFE6);
+  color: var(--text-primary, #2C1A4D);
+  border-color: var(--border-gold, rgba(184, 134, 11, 0.3));
+  box-shadow: 0 2px 8px rgba(44, 26, 77, 0.08);
+}
+
+:global([data-theme="light"]) .toggleBtn:hover {
+  box-shadow: 0 4px 12px rgba(44, 26, 77, 0.12);
+  border-color: var(--gold, #B8860B);
+}
+
+:global([data-theme="light"]) .statusActive {
+  border-color: #059669;
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+:global([data-theme="light"]) .statusActive:hover {
+  border-color: #047857;
+  background: rgba(16, 185, 129, 0.22);
+}
+
+:global([data-theme="light"]) .statusInactive {
+  border-color: var(--border-gold, rgba(184, 134, 11, 0.3));
+  color: var(--gold-light, #8B6508);
+}
+
+:global([data-theme="light"]) .statusDenied {
+  border-color: #dc2626;
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+:global([data-theme="light"]) .statusIos {
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+}
+
+:global([data-theme="light"]) .dotInactive {
+  background: var(--gold, #B8860B);
+}
+
+:global([data-theme="light"]) .dotDenied {
+  background: #dc2626;
+}
+
+:global([data-theme="light"]) .dotIos {
+  background: #2563eb;
+}
+
+/* Light Mode Popover */
+:global([data-theme="light"]) .popover {
+  background: var(--bg-card, #FFFFFF);
+  border: 1px solid var(--border-gold, rgba(184, 134, 11, 0.3));
+  color: var(--text-primary, #2C1A4D);
+  box-shadow: 0 12px 30px -4px rgba(44, 26, 77, 0.18), 0 2px 8px rgba(44, 26, 77, 0.06);
+}
+
+:global([data-theme="light"]) .popoverHeader {
+  color: var(--gold-light, #8B6508);
+  border-bottom: 1px solid rgba(44, 26, 77, 0.08);
+}
+
+:global([data-theme="light"]) .closeBtn {
+  color: var(--text-secondary, #63527D);
+}
+
+:global([data-theme="light"]) .closeBtn:hover {
+  color: var(--text-primary, #2C1A4D);
+  background: rgba(44, 26, 77, 0.06);
+}
+
+:global([data-theme="light"]) .popoverText {
+  color: var(--text-primary, #2C1A4D);
+}
+
+:global([data-theme="light"]) .iosNotice {
+  color: var(--text-primary, #2C1A4D);
+}
+
+:global([data-theme="light"]) .iosTitle {
+  color: #1d4ed8;
+}
+
+:global([data-theme="light"]) .iosList {
+  color: var(--text-primary, #2C1A4D);
+}
+
+:global([data-theme="light"]) .deniedNotice {
+  color: #b91c1c;
+}
+
+/* Light Mode Buttons */
+:global([data-theme="light"]) .actionBtn {
+  background: var(--bg-dark, #F4EFE6);
+  color: var(--text-primary, #2C1A4D);
+  border: 1px solid var(--border-gold, rgba(184, 134, 11, 0.35));
+}
+
+:global([data-theme="light"]) .actionBtn:hover {
+  background: var(--gold, #B8860B);
+  color: #FFFFFF;
+  border-color: var(--gold, #B8860B);
+}
+
+:global([data-theme="light"]) .actionBtnPrimary {
+  background: rgba(184, 134, 11, 0.12);
+  color: var(--gold-light, #8B6508);
+  border-color: var(--gold, #B8860B);
+}
+
+:global([data-theme="light"]) .actionBtnPrimary:hover {
+  background: var(--gold, #B8860B);
+  color: #FFFFFF;
 }
 
 @keyframes pulse {

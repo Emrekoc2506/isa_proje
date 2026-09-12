@@ -9,6 +9,7 @@
   --bg-dark:        #1C0F35;   /* Section arkaplanı           */
   --bg-mid:         #2A1845;   /* Kart arka planı             */
   --bg-light:       #3D2060;   /* Hover, vurgu                */
+  --bg-card:        #2A1845;   /* Kart / popover arka planı   */
   --bg-overlay:     rgba(18, 9, 31, 0.85);
 
   /* ── Altın Tonları (Gold) ───────────────────────────────── */
@@ -26,6 +27,7 @@
   --text-light:     #EDE0C8;   /* Warm cream (text-primary ile aynı) */
   --text-gold:      #C9A227;   /* Altın metin                 */
   --text-white:     #FFFFFF;
+  --text-main:      #EDE0C8;   /* Ana metin rengi             */
 
   /* ── Vurgu / Aksan Renkleri ─────────────────────────────── */
   --accent-purple:  #7B4EA6;   /* Mor vurgu                   */
@@ -105,6 +107,7 @@
   --bg-dark:        #F4EFE6;   /* Section arkaplanı (Yumuşak Krem) */
   --bg-mid:         #FFFFFF;   /* Kart arka planı (Saf Beyaz)  */
   --bg-light:       #EFE7DA;   /* Hover, vurgu alanı           */
+  --bg-card:        #FFFFFF;   /* Kart / popover arka planı (Saf Beyaz) */
   --bg-overlay:     rgba(28, 15, 53, 0.4);
 
   /* ── Altın Tonları (Gold) ───────────────────────────────── */
@@ -122,6 +125,7 @@
   --text-light:     #2C1A4D;   /* Derin Mor Metin              */
   --text-gold:      #A87C11;   /* Krem zeminde net okunan Koyu Altın */
   --text-white:     #1C0F35;   /* Gündüz modunda zeminler açık olduğu için koyu mor */
+  --text-main:      #2C1A4D;   /* Derin Mistik Mor Ana Metin   */
 
   /* ── Vurgu / Aksan Renkleri ─────────────────────────────── */
   --accent-purple:  #7B4EA6;   /* Mor vurgu                   */
