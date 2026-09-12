@@ -17,11 +17,15 @@
     <title>Muhristan | Tılsımlı Yüzük, Kolye, Buhur, Esans & Ezoterik Ürünler</title>
     <meta name="description" content="Muhristan'da en kaliteli tılsımlı yüzükler, kolyeler, buhurlar, esanslar ve ezoterik ürünleri keşfedin." />
     <meta name="keywords" content="tılsımlı yüzük, kolye, buhur, esans, ezoterik ürünler, doğal taşlar, doğal esanslar, Muhristan" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://muhristan.com/" />
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Muhristan | Tılsımlı Yüzük, Kolye, Buhur, Esans & Ezoterik Ürünler" />
     <meta property="og:description" content="Muhristan'da en kaliteli tılsımlı yüzükler, kolyeler, buhurlar, esanslar ve ezoterik ürünleri keşfedin." />
-    <meta property="og:image" content="/logo-2.png" />
+    <meta property="og:image" content="https://muhristan.com/logo-2.png" />
+    <meta property="og:url" content="https://muhristan.com/" />
+    <meta property="og:site_name" content="Muhristan" />
     <!-- Google Fonts: Cinzel (mystik başlık) + Roboto (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -29,6 +33,19 @@
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Roboto:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <style>
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
     <script>
       (function() {
         try {
@@ -61,7 +78,23 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- SEO Fallback Content for Crawlers (Replaced on React mount) -->
+      <header class="visually-hidden">
+        <h1>Muhristan | Tılsımlı Yüzük, Kolye, Buhur, Esans &amp; Ezoterik Ürünler</h1>
+        <p>Muhristan'da en kaliteli tılsımlı yüzükler, kolyeler, buhurlar, esanslar ve ezoterik ürünleri keşfedin.</p>
+        <nav aria-label="Ana Menü">
+          <a href="/kategori/yuzuk">Tılsımlı Yüzükler</a>
+          <a href="/kategori/kolye">Kolyeler</a>
+          <a href="/kategori/buhur">Doğal Buhurlar</a>
+          <a href="/kategori/esans">Doğal Esanslar</a>
+          <a href="/urunler">Tüm Ürünler</a>
+          <a href="/blog">Blog &amp; Makaleler</a>
+          <a href="/hakkimizda">Hakkımızda</a>
+          <a href="/iletisim">İletişim</a>
+        </nav>
+      </header>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

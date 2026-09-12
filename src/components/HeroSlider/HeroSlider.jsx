@@ -113,7 +113,7 @@ export default function HeroSlider() {
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 {slide.subtitle && <span className={styles.slideSubtitle}>{slide.subtitle}</span>}
-                {slide.title && <h1 className={styles.slideTitle}>{slide.title}</h1>}
+                {slide.title && <h2 className={styles.slideTitle}>{slide.title}</h2>}
               </motion.div>
             )}
           </motion.div>

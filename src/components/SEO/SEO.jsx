@@ -71,6 +71,7 @@ export default function SEO({
       <meta name="description" content={cleanDescription} />
       {keywordsStr && <meta name="keywords" content={keywordsStr} />}
       <meta name="robots" content={effectiveRobots} />
+      {is404 && <meta name="prerender-status-code" content="404" />}
 
       {/* Canonical Link */}
       {!is404 && <link rel="canonical" href={canonicalUrl} />}

@@ -96,6 +96,12 @@ export default function HomePage() {
         canonical="https://muhristan.com/"
         jsonLd={[orgSchema, websiteSchema]}
       />
+
+      {/* ── SEO Tekil Sayfa H1 Başlığı ───────────────────────── */}
+      <h1 className="visually-hidden">
+        Muhristan | Tılsımlı Yüzük, Kolye, Buhur, Esans &amp; Ezoterik Ürünler
+      </h1>
+
       {/* ── Hero Slider (1. Banner / Billboard) ──────────────── */}
       <HeroSlider />
 
