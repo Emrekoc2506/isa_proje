@@ -1,5 +1,5 @@
 import { FiSearch, FiInfo, FiGlobe, FiAlertCircle } from 'react-icons/fi';
-import { stripHtml } from '../../utils/seoHelpers';
+import { stripHtml, slugify, generateSeoDescription, generateSeoKeywords } from '../../utils/seoHelpers';
 
 export default function AdminSEOSection({
   seoTitle = '',
@@ -19,10 +19,10 @@ export default function AdminSEOSection({
   // Live Calculated Display Values
   const titleVal = seoTitle.trim();
   const descVal = seoDescription.trim();
-  const slugVal = slug.trim().toLowerCase().replace(/\s+/g, '-');
+  const slugVal = slugify(slug.trim());
 
   const displayTitle = titleVal || (fallbackTitle ? `${fallbackTitle} | ${siteBrand}` : `${siteBrand}`);
-  const displayDesc = descVal || (stripHtml(fallbackDescription) || `${siteBrand} özel tasarım ${typeLabel} koleksiyonu.`);
+  const displayDesc = descVal || (generateSeoDescription(fallbackDescription, fallbackTitle) || `${siteBrand} özel tasarım ${typeLabel} koleksiyonu.`);
   const displayUrl = `${baseUrl}${slugVal || 'sayfa-adresi'}`;
 
   const titleLength = seoTitle.length;
@@ -50,13 +50,11 @@ export default function AdminSEOSection({
           onClick={() => {
             if (fallbackTitle) {
               onChangeSeoTitle(`${fallbackTitle.trim()} | ${siteBrand}`);
-              const generatedSlug = fallbackTitle.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+              const generatedSlug = slugify(fallbackTitle);
               onChangeSlug(generatedSlug);
-              const clean = stripHtml(fallbackDescription || '');
-              const autoDesc = clean ? clean.slice(0, 160) : `${fallbackTitle} - Muhristan güvencesiyle sipariş verin.`;
+              const autoDesc = generateSeoDescription(fallbackDescription, fallbackTitle);
               onChangeSeoDescription(autoDesc);
-              const words = fallbackTitle.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-              const keywords = Array.from(new Set([fallbackTitle.toLowerCase(), ...words, 'muhristan', 'özel tasarım'])).join(', ');
+              const keywords = generateSeoKeywords(fallbackTitle);
               onChangeSeoKeywords(keywords);
             }
           }}
@@ -217,8 +215,7 @@ export default function AdminSEOSection({
               <button
                 type="button"
                 onClick={() => {
-                  const clean = stripHtml(fallbackDescription || '');
-                  const autoDesc = clean ? clean.slice(0, 160) : `${fallbackTitle || 'Özel tasarım ürün'} - Muhristan güvencesiyle sipariş verin.`;
+                  const autoDesc = generateSeoDescription(fallbackDescription, fallbackTitle);
                   onChangeSeoDescription(autoDesc);
                 }}
                 style={{
@@ -234,7 +231,7 @@ export default function AdminSEOSection({
                   alignItems: 'center',
                   gap: '4px'
                 }}
-                title="Ürün açıklamasından otomatik SEO açıklaması türet"
+                title="Ürün/yazı açıklamasından otomatik SEO açıklaması türet"
               >
                 ✨ Otomatik Oluştur
               </button>
@@ -287,8 +284,7 @@ export default function AdminSEOSection({
               type="button"
               onClick={() => {
                 if (!fallbackTitle) return;
-                const words = fallbackTitle.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-                const keywords = Array.from(new Set([fallbackTitle.toLowerCase(), ...words, 'muhristan', 'özel tasarım'])).join(', ');
+                const keywords = generateSeoKeywords(fallbackTitle);
                 onChangeSeoKeywords(keywords);
               }}
               style={{
@@ -304,7 +300,7 @@ export default function AdminSEOSection({
                 alignItems: 'center',
                 gap: '4px'
               }}
-              title="Ürün adından otomatik anahtar kelimeler türet"
+              title="Başlıktan otomatik anahtar kelimeler türet"
             >
               ✨ Otomatik Oluştur
             </button>
@@ -339,7 +335,7 @@ export default function AdminSEOSection({
             <button
               type="button"
               onClick={() => {
-                const generatedSlug = (fallbackTitle || 'urun').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                const generatedSlug = slugify(fallbackTitle || 'sayfa');
                 onChangeSlug(generatedSlug);
               }}
               style={{
@@ -355,7 +351,7 @@ export default function AdminSEOSection({
                 alignItems: 'center',
                 gap: '4px'
               }}
-              title="Ürün adından otomatik URL adresi (slug) türet"
+              title="Başlıktan Türkçe karaktersiz otomatik URL adresi (slug) türet"
             >
               ✨ Otomatik Oluştur
             </button>

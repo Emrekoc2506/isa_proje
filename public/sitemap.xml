@@ -121,6 +121,12 @@
     <priority>0.80</priority>
   </url>
   <url>
+    <loc>https://muhristan.com/urunler?kategori=tablolar</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://muhristan.com/urunler?kategori=t-ts-ler</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
@@ -137,6 +143,24 @@
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://muhristan.com/urun/hane-koruma-ni-yetli-tablo-el-i-ili-i</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://muhristan.com/urun/i-yerlerine-m-teri-celbi-niyetli-tablo</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://muhristan.com/urun/toplum-icinde-kabul-ve-soz-tesiri-akik-kolye</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
   </url>
   <url>
     <loc>https://muhristan.com/urun/heybet-s-z-tesi-ri-toplumsal-kabul-ama-li-tilsimli-y-z-k-i-925-g-m-aki-k-ta-li-ki-i-ye-zel</loc>
@@ -503,6 +527,12 @@
     <lastmod>2026-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://muhristan.com/blog/blog-tilsimli-tablolar-nedir</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
   </url>
   <url>
     <loc>https://muhristan.com/blog/do-al-ta-lar-n-tarihi-ve-k-lt-rel-anlamlar</loc>

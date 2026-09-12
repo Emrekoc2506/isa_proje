@@ -15,6 +15,7 @@ import {
 import { uploadFile } from '../../../services/fileApi';
 import RichTextEditor from '../../../components/RichTextEditor/RichTextEditor';
 import AdminSEOSection from '../../../components/AdminSEOSection/AdminSEOSection';
+import { slugify } from '../../../utils/seoHelpers';
 
 // ── Hata kodu → Türkçe mesaj ──────────────────────────────
 function resolveErrorMsg(err) {
@@ -220,11 +221,15 @@ export default function BlogAdminSection() {
     }
     setSaving(true);
     setError('');
+    const payload = {
+      ...form,
+      slug: slugify(form.slug || form.title)
+    };
     try {
       if (editingId) {
-        await updateAdminBlogArticle(editingId, form);
+        await updateAdminBlogArticle(editingId, payload);
       } else {
-        await createAdminBlogArticle(form);
+        await createAdminBlogArticle(payload);
       }
       setShowModal(false);
       await loadArticles();
@@ -695,11 +700,3 @@ const inputStyle = {
   outline: 'none', fontFamily: 'inherit',
 };
 
-function slugify(str) {
-  return (str || '')
-    .toLowerCase()
-    .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
-    .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '');
-}

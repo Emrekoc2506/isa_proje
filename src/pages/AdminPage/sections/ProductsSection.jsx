@@ -9,6 +9,7 @@ import * as categoryApi from '../../../services/categoryApi';
 import { uploadFile } from '../../../services/fileApi';
 import RichTextEditor from '../../../components/RichTextEditor/RichTextEditor';
 import AdminSEOSection from '../../../components/AdminSEOSection/AdminSEOSection';
+import { slugify } from '../../../utils/seoHelpers';
 import { getHardDeleteErrorMessage } from '../../../utils/apiErrorHelpers';
 import { getSafeStockQuantity } from '../../../utils/stockUtils';
 import { useProducts } from '../../../context/ProductContext';
@@ -604,7 +605,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       weightGram: weightGram !== '' && weightGram !== null ? parseFloat(weightGram) || weightGram : null,
       dimensions: dimensions ? dimensions.trim() : null,
       discount: discount || null,
-      slug: (slug || cleanName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ('urun-' + Date.now()),
+      slug: slugify(slug || cleanName) || ('urun-' + Date.now()),
       isFreeShipping: Boolean(isFreeShipping),
       shippingFee: isFreeShipping ? 0 : (shippingFee !== '' && shippingFee !== null ? parseFloat(shippingFee) || 0 : null),
       seoTitle: seoTitle ? seoTitle.trim() : null,

@@ -5,6 +5,7 @@
  *      Bunların yerine POST /{id}/update, /{id}/status, /{id}/delete kullanılır.
  */
 import { request } from "./apiClient";
+import { slugify } from "../utils/seoHelpers";
 
 // ─────────────────────────────────────────────────────────────
 // Response normalizasyonu (public + admin makaleler için ortak)
@@ -318,12 +319,8 @@ function buildBlogPayload(payload) {
   const isActiveBool = !isDraft && !isArchived;
 
   // Slug üret (backend de üretir ama gönderiyoruz)
-  const resolvedSlug = slug ||
-    (title ? title.toLowerCase()
-      .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
-      .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
-      .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
-    : '');
+  const resolvedSlug = slugify(slug || title);
+
 
   // GUID Doğrulaması — Eğer blogCategoryId geçerli bir GUID değilse null gönder
   const isGuid = typeof blogCategoryId === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(blogCategoryId);
