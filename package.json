@@ -9,6 +9,7 @@
     "sitemap": "node scripts/generate-sitemap.js",
     "merchant": "node scripts/generate-google-merchant.js",
     "feeds": "node scripts/generate-sitemap.js && node scripts/generate-google-merchant.js",
+    "validate:feed": "node scripts/validate-feed.js",
     "lint": "oxlint",
     "test": "vitest run",
     "test:ci": "vitest run",
