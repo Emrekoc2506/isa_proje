@@ -268,10 +268,9 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     setPrice('');
     setOldPrice('');
     setStockQuantity('');
-    const firstCat = categories[0]?.id || '';
-    setSelectedMainCatId(firstCat);
+    setSelectedMainCatId('');
     setSelectedSubCatId('');
-    setCategoryId(firstCat);
+    setCategoryId('');
     setImageUrls([]);
     setIsNew(false);
     setIsSale(false);
