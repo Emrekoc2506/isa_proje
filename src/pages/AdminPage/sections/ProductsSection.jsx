@@ -112,7 +112,40 @@ export default function ProductsSection({ onSelectProductForVariants }) {
     const pCatName = (p.categoryName || p.CategoryName || (typeof p.category === 'string' ? p.category : p.category?.name) || '').toLowerCase().trim();
     const targetCatId = p.categoryId || p.CategoryId || p.category?.id || p.Category?.Id;
 
-    // 1. Ürün adı veya kategori adı içerisindeki anahtar kelimelere göre öncelikli eşleşme
+    // 1. ÖNCE GERÇEK KATEGORİ ID ÜZERİNDEN EŞLEŞME (Veritabanındaki gerçek kayıt esastır)
+    if (targetCatId) {
+      const matchedCat = all.find(c => 
+        String(c.id).toLowerCase() === String(targetCatId).toLowerCase() || 
+        String(c.databaseId || '').toLowerCase() === String(targetCatId).toLowerCase()
+      );
+      if (matchedCat) {
+        return {
+          id: matchedCat.id,
+          name: matchedCat.name || matchedCat.label,
+          slug: matchedCat.slug || matchedCat.name,
+          catObj: matchedCat
+        };
+      }
+    }
+
+    // 2. Kategori Adı / Slug üzerinden eşleşme
+    if (pCatName) {
+      const matchedCat = all.find(c => 
+        (c.name || '').toLowerCase() === pCatName || 
+        (c.label || '').toLowerCase() === pCatName || 
+        (c.slug || '').toLowerCase() === pCatName
+      );
+      if (matchedCat) {
+        return {
+          id: matchedCat.id,
+          name: matchedCat.name || matchedCat.label,
+          slug: matchedCat.slug || matchedCat.name,
+          catObj: matchedCat
+        };
+      }
+    }
+
+    // 3. EN SON ÇARE: Sadece ürünün kategorisi hiç yoksa isimden tahmin yap
     const keywords = [
       { key: 'buhurdanl', match: 'buhurdanlık' },
       { key: 'tütsü', match: 'tütsü' },
@@ -132,7 +165,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
 
     let foundByKeyword = null;
     for (const item of keywords) {
-      if (pName.includes(item.key) || pCatName.includes(item.key)) {
+      if (pName.includes(item.key)) {
         foundByKeyword = all.find(c => {
           const cLower = (c.name || c.label || '').toLowerCase();
           return cLower.includes(item.match);
@@ -150,34 +183,7 @@ export default function ProductsSection({ onSelectProductForVariants }) {
       };
     }
 
-    // 2. ID üzerinden eşleşme
-    if (targetCatId) {
-      const matchedCat = all.find(c => String(c.id) === String(targetCatId) || String(c.databaseId) === String(targetCatId));
-      if (matchedCat) {
-        return {
-          id: matchedCat.id,
-          name: matchedCat.name || matchedCat.label,
-          slug: matchedCat.slug || matchedCat.name,
-          catObj: matchedCat
-        };
-      }
-    }
-
-    // 3. Kategori Adı / Slug üzerinden eşleşme
-    if (pCatName) {
-      const matchedCat = all.find(c => 
-        (c.name || '').toLowerCase() === pCatName || 
-        (c.label || '').toLowerCase() === pCatName || 
-        (c.slug || '').toLowerCase() === pCatName
-      );
-      if (matchedCat) {
-        return {
-          id: matchedCat.id,
-          name: matchedCat.name || matchedCat.label,
-          slug: matchedCat.slug || matchedCat.name,
-          catObj: matchedCat
-        };
-      }
+    if (pCatName || targetCatId) {
       return {
         id: targetCatId || pCatName,
         name: p.categoryName || p.CategoryName || (typeof p.category === 'string' ? p.category : p.category?.name),

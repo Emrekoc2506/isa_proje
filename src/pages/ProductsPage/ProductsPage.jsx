@@ -216,9 +216,11 @@ export default function ProductsPage () {
 
     const pCatId = String(product.categoryId || '').toLowerCase().trim()
     const pSubCatId = String(product.subcategoryId || '').toLowerCase().trim()
+    const hasAssignedCategory = Boolean(pCatId || pCatName || pSubCatId || pSubCatName)
 
     const pName = (product.name || '').toLowerCase();
-    const matchesKeyword = Array.from(validKeys).some(key => {
+    // Sadece ürünün hiçbir kategorisi atanmamışsa isimden tahmin yap
+    const matchesKeyword = !hasAssignedCategory && Array.from(validKeys).some(key => {
       const cleanKey = key.replace(/lar$|ler$/i, '');
       return cleanKey.length >= 4 && pName.includes(cleanKey);
     });
